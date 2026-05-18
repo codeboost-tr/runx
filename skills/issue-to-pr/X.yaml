@@ -436,7 +436,11 @@ runners:
             markdown spec. Use repo_snapshot, repo_snapshot_path, repo_context,
             approved spec contents, current thread context, and
             declared_file_context. Review declared_file_context.files before
-            deciding what to edit. fix_bundle.files must be an array of
+            deciding what to edit. declared_file_context is unwrapped and has
+            the shape { repo_root, declared_count, files }, where each file has
+            { path, exists, kind, declared_in, contents }. Treat files with
+            exists: true and contents as already read source evidence, not as
+            missing context. fix_bundle.files must be an array of
             { path, contents } entries covering every repo file needed to satisfy
             the approved spec. For documentation or process changes, the
             approved spec, thread, repo_snapshot, repo_context, and current
