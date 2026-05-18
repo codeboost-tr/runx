@@ -71,6 +71,11 @@ describe("issue-to-PR composite skill", () => {
     expect(graph.steps.find((step) => step.id === "author-fix")?.instructions).toContain("fix_bundle.status: blocked");
     expect(graph.steps.find((step) => step.id === "author-fix")?.instructions).toContain("one scoped docs edit is possible");
     expect(graph.steps.find((step) => step.id === "author-fix")?.instructions).toContain("repo_snapshot.recommended_files");
+    expect(graph.steps.find((step) => step.id === "author-fix")).toMatchObject({
+      context: {
+        declared_file_context: "read-declared-files.data.data",
+      },
+    });
     expect(graph.steps.find((step) => step.id === "normalize-spec")).toMatchObject({
       tool: "spec.normalize_scafld_frontmatter",
     });
