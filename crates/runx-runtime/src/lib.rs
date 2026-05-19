@@ -17,6 +17,7 @@ pub mod harness;
 pub mod hosted_http;
 pub mod journal;
 pub mod list;
+pub mod payment_authority;
 pub mod receipt_paths;
 pub mod receipt_store;
 pub mod receipt_tree;
@@ -69,6 +70,11 @@ pub use list::{
     RunxListEmit, RunxListItem, RunxListItemKind, RunxListOptions, RunxListReport,
     RunxListRequestedKind, RunxListSource, RunxListStatus, default_list_options,
     list_authoring_primitives,
+};
+pub use payment_authority::{
+    PaymentAuthorityError, PaymentRailAuthorization, PaymentRailAuthorizationDecision,
+    PaymentSpendCapabilityBinding, authorize_payment_rail,
+    payment_authority_requires_receipt_before_success, payment_authority_spends,
 };
 pub use receipt_paths::{
     INIT_CWD_ENV, RUNTIME_RECEIPTS_DIR_CONFIG_KEY, RUNX_CWD_ENV, RUNX_PROJECT_DIR_ENV,
