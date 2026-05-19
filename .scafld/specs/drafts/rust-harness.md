@@ -2,7 +2,7 @@
 spec_version: '2.0'
 task_id: rust-harness
 created: '2026-05-18T00:00:00Z'
-updated: '2026-05-18T14:06:29Z'
+updated: '2026-05-19T02:35:00Z'
 status: draft
 harden_status: in_progress
 size: medium
@@ -101,6 +101,9 @@ In scope:
 - Post-cutover fixture refresh for `fixtures/harness/**` so old receipt fields
   are replaced by canonical harness receipt payloads.
 - Receipt equality checks against canonical post-cutover harness receipts.
+- Receipt equality uses the explicit body/full digest APIs and proof verifier
+  from `rust-receipt-proof-verification`; serde output equivalence alone is not
+  sufficient cutover evidence.
 - Quality/framing checks as verification effects or harness receipt checks
   where applicable.
 
@@ -115,6 +118,11 @@ Out of scope:
 - `rust-runtime-skeleton`.
 - `runx-contract-spine-hard-cutover` for canonical harness, act, decision,
   signal, authority, and harness receipt shapes.
+- `rust-receipt-proof-verification` for canonical body/full digest checks and
+  proof-backed receipt equality.
+- `rust-receipt-tree-resolution` for child harness receipt verification.
+- `rust-runtime-receipt-path-discovery` for runtime-owned receipt fixture
+  loading and safe public projections.
 - `rust-runtime-adapters-{agent,a2a,mcp}` for adapter-specific fixture
   formats; harness can ship with cli-tool-only initially and gain coverage
   as adapters land.
@@ -218,5 +226,4 @@ Checks:
 
 Issues:
 - none
-
 

@@ -2,7 +2,7 @@
 spec_version: '2.0'
 task_id: rust-nitrosend-dogfood
 created: '2026-05-18T00:00:00Z'
-updated: '2026-05-18T00:00:00Z'
+updated: '2026-05-19T02:35:00Z'
 status: draft
 harden_status: not_run
 size: medium
@@ -20,7 +20,8 @@ Reason: draft created under `plans/rust-takeover.md`. First external-shaped
 customer for the Rust runtime; honest version of the "runtime has external
 adopters" story.
 Blockers: `rust-runtime-skeleton`, at least one impure adapter port
-(`rust-runtime-adapters-agent` recommended).
+(`rust-runtime-adapters-agent` recommended), and the reusable runx core specs
+for operational policy, target-repo runners, and post-merge outcome observer.
 Allowed follow-up command: `scafld harden rust-nitrosend-dogfood`
 Latest runner update: none
 Review gate: not_started
@@ -56,6 +57,12 @@ The actual nitrosend shape today (verified, not assumed):
   `scripts/runx-target-outcome.mjs` (278 lines) plus its test file.
 - 40+ completed scafld specs in `nitrosend/.scafld/specs/archive/2026-05/`
   document months of production hardening around this integration.
+
+The latest production dogfood also changed the target shape: Nitrosend should
+be a minimal adopter layer over reusable runx core. Repo-local policy and
+scripts are acceptable as reference fixtures during migration, but reusable
+routing, runner selection, PR dedupe, source-thread publishing, and final
+outcome observation belong upstream.
 
 Implication: the cutover dogfood is **preservation**, not adoption. If
 nitrosend's existing CI keeps publishing intake comments, routing
@@ -129,6 +136,12 @@ Invariants:
 - Coordinate with `rust-cli-feature-parity-matrix` so the
   nitrosend-specific surface (slash command parsing, policy file
   binding, skills-root layering) is in the matrix.
+- Validate that Nitrosend can express its API/App/workspace routing through
+  `runx-operational-policy-config` without a custom parser.
+- Validate that Nitrosend cross-repo issues use `runx-target-repo-runners` and
+  preserve Slack/GitHub source-thread metadata through PR creation.
+- Validate that post-merge outcome updates use
+  `runx-post-merge-outcome-observer`, not a Nitrosend-only observer path.
 - After parity is green, soak the Rust binary in nitrosend production
   via a side-by-side run before the launcher cutover.
 
@@ -156,6 +169,13 @@ Out of scope:
   gated).
 - `rust-cli-feature-parity-matrix` (slash-command, env-var, and policy
   binding parity).
+- `runx-operational-policy-config` for policy-backed routing and ownership.
+- `runx-target-repo-runners` for source-to-target PR creation.
+- `runx-post-merge-outcome-observer` for final merge/deploy/source-thread
+  outcomes.
+- `rust-receipt-proof-verification`, `rust-receipt-tree-resolution`, and
+  `rust-runtime-receipt-path-discovery` before receipts are accepted as final
+  evidence.
 
 ## Open Questions
 
@@ -164,9 +184,8 @@ Out of scope:
   preserving the SHA-pinning safety property nitrosend relies on today.
 - Whether nitrosend's wrapper scripts (`runx-target-outcome.mjs`,
   `issue-intake.mjs`, `post-issue-intake-comments.mjs`) stay in
-  nitrosend or migrate upstream into runx. Default: stay in nitrosend;
-  they are nitrosend's adoption shape and a useful reference for other
-  adopters.
+  nitrosend or migrate upstream into runx. Updated default: reusable behavior
+  migrates upstream; Nitrosend keeps only product policy, wiring, and fixtures.
 - Soak duration before the launcher flip. The honest answer is "until
   one full release cycle of nitrosend production issue-intake events
   completes on the Rust binary side-by-side"; calendar time alone is

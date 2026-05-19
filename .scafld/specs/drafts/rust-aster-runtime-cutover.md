@@ -2,7 +2,7 @@
 spec_version: '2.0'
 task_id: rust-aster-runtime-cutover
 created: '2026-05-18T00:00:00Z'
-updated: '2026-05-18T00:00:00Z'
+updated: '2026-05-19T02:35:00Z'
 status: draft
 harden_status: not_run
 size: large
@@ -144,6 +144,11 @@ Invariants:
   reset) through `rust-approval-gate-parity` contracts.
 - Build the agent-runner-side shim that bridges aster's TS context to
   the Rust runtime, honoring the chosen binding.
+- Surface runx operational policy readback in Aster so runner availability,
+  allowed targets, source-thread routing, and outcome behavior are visible
+  before execution.
+- Wire Aster-run issue-to-PR flows through the post-merge outcome observer so
+  the final human merge/deploy result is not a separate repo-local script.
 - Soak the Rust binding side-by-side with the TS path on aster
   production before the launcher cutover.
 
@@ -171,6 +176,10 @@ Out of scope:
 - `cloud-http-contract-stabilization` for any aster ↔ cloud HTTP surfaces
   the binding consumes.
 - `rust-ts-interop-boundary` for the cross-language crossing reference.
+- `runx-operational-policy-config` for policy/admin readback.
+- `runx-target-repo-runners` for Aster-scheduled source-to-target PR flows.
+- `runx-post-merge-outcome-observer` for final outcome observation and
+  source-thread updates.
 - `plans/aster-v1-reset.md` design pass.
 
 ## Open Questions

@@ -2,7 +2,7 @@
 spec_version: '2.0'
 task_id: rust-runtime-skill-execution
 created: '2026-05-18T00:00:00Z'
-updated: '2026-05-18T14:04:00Z'
+updated: '2026-05-19T02:35:00Z'
 status: draft
 harden_status: not_run
 size: medium
@@ -78,6 +78,8 @@ Invariants:
 - Run `oss/skills/issue-to-pr` to a green receipt on Rust runtime.
 - Run `oss/skills/issue-intake` to a green receipt on Rust runtime
   (nitrosend production dependency).
+- Verify the resulting receipts through the Rust proof verifier and receipt
+  tree resolver before claiming cutover-grade parity.
 - Include the current issue-intake harness shape with signal, evidence ref,
   artifact, decision, act, and verification context so the Rust runtime proves
   it can execute the production intake contract, not an older thin issue-only
@@ -111,6 +113,9 @@ Out of scope:
   claims typed harness/signal/decision/act/receipt parity. If this runtime spec
   executes first, the fixture may only prove old TS behavior and must be rerun
   after the hard cutover before it can gate the Rust launcher flip.
+- `rust-receipt-proof-verification`, `rust-receipt-tree-resolution`, and
+  `rust-runtime-receipt-path-discovery` before this spec can be used as cutover
+  evidence rather than an execution smoke test.
 - The skill's `X.yaml` must remain stable; any change to it during this
   spec triggers an explicit fixture refresh.
 

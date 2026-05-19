@@ -2,7 +2,7 @@
 spec_version: '2.0'
 task_id: rust-approval-gate-parity
 created: '2026-05-18T00:00:00Z'
-updated: '2026-05-18T00:00:00Z'
+updated: '2026-05-19T02:35:00Z'
 status: draft
 harden_status: not_run
 size: large
@@ -74,6 +74,11 @@ Invariants:
   the Rust port forces (enumerated gate types, payload schema) lands in TS
   first via a small clarification spec, not by Rust drift.
 - Receipts capture every gate request, decision, actor, and gate hash.
+- Approval receipt fixtures are proof-verifiable by
+  `rust-receipt-proof-verification`; structural capture alone is not enough for
+  this gate.
+- Gate request, actor, decision, and gate hash are included in the body digest
+  commitment so post-hoc mutation is detectable.
 - The cloud HTTP contract is documented before the Rust client consumes it.
 - Approval routing decisions remain in TS (cloud/db) until a cloud cutover.
   The Rust client is read/write over a stable HTTP surface, not a reimpl.
@@ -91,7 +96,10 @@ Invariants:
   POST/GET/PUT routes.
 - Add cross-language fixtures: sandbox-escalation gate, graph-step scope
   gate, destructive-action gate, denied gate, expired gate.
-- Update receipts to carry approval round-trip envelopes.
+- Update receipts to carry approval round-trip envelopes and proof-verifiable
+  body commitments.
+- Add at least one approval round-trip receipt fixture consumed by
+  `rust-receipt-proof-verification`.
 - Document the cloud HTTP surface explicitly in `cloud/packages/api`.
 
 ## Scope
@@ -109,6 +117,7 @@ Out of scope:
 ## Dependencies
 
 - `rust-runtime-skeleton`, `rust-receipts-parity`, `rust-contracts-parity`.
+- `rust-receipt-proof-verification` for approval receipt proof checks.
 - `cloud-http-contract-stabilization` (`.ai/specs/drafts/`) for the
   approval routing HTTP contract surface. This spec consumes a specific
   contract version produced there; it does not negotiate the contract
