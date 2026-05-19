@@ -396,6 +396,7 @@ fn output_refs(output: &SkillOutput) -> OutputRefs {
 }
 
 fn collect_payload_refs(payload: &JsonObject, refs: &mut OutputRefs) {
+    collect_packet_refs(payload, refs);
     if let Some(signal) = object_field(payload, "signal") {
         collect_signal_refs(signal, refs);
     }
@@ -407,6 +408,29 @@ fn collect_payload_refs(payload: &JsonObject, refs: &mut OutputRefs) {
     }
     if let Some(verification) = object_field(payload, "verification") {
         collect_verification_ref(verification, refs);
+    }
+    if let Some(rail_proof) = object_field(payload, "rail_proof") {
+        collect_rail_proof_ref(rail_proof, refs);
+    }
+    if let Some(credential_envelope) = object_field(payload, "credential_envelope") {
+        collect_credential_ref(credential_envelope, refs);
+    }
+}
+
+fn collect_packet_refs(payload: &JsonObject, refs: &mut OutputRefs) {
+    for packet_key in [
+        "payment_quote_packet",
+        "payment_reservation_packet",
+        "payment_approval",
+        "payment_rail_packet",
+        "payment_recovery_packet",
+    ] {
+        let Some(packet) = object_field(payload, packet_key) else {
+            continue;
+        };
+        if let Some(data) = object_field(packet, "data") {
+            collect_payload_refs(data, refs);
+        }
     }
 }
 
@@ -442,6 +466,32 @@ fn collect_verification_ref(verification: &JsonObject, refs: &mut OutputRefs) {
     if let Some(verification_id) = string_field(verification, "verification_id") {
         refs.verification_refs
             .push(reference(ReferenceType::Verification, verification_id));
+    }
+}
+
+fn collect_rail_proof_ref(rail_proof: &JsonObject, refs: &mut OutputRefs) {
+    if let Some(proof_ref) = string_field(rail_proof, "proof_ref") {
+        refs.verification_refs.push(Reference {
+            uri: proof_ref.to_owned(),
+            reference_type: ReferenceType::Verification,
+            provider: None,
+            locator: string_field(rail_proof, "idempotency_key").map(str::to_owned),
+            label: Some("payment rail proof".to_owned()),
+            observed_at: None,
+        });
+    }
+}
+
+fn collect_credential_ref(credential_envelope: &JsonObject, refs: &mut OutputRefs) {
+    if let Some(credential_ref) = string_field(credential_envelope, "credential_ref") {
+        refs.source_refs.push(Reference {
+            uri: credential_ref.to_owned(),
+            reference_type: ReferenceType::Credential,
+            provider: None,
+            locator: None,
+            label: Some("scoped payment credential".to_owned()),
+            observed_at: None,
+        });
     }
 }
 
