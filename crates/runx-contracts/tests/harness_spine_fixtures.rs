@@ -35,16 +35,16 @@ fn harness_spine_fixtures_roundtrip() -> Result<(), serde_json::Error> {
 }
 
 #[test]
-fn harness_receipt_rejects_unknown_governed_fields() {
+fn harness_receipt_rejects_unknown_governed_fields() -> Result<(), serde_json::Error> {
     let mut fixture: Fixture = serde_json::from_str(include_str!(
         "../../../fixtures/contracts/harness-spine/harness-receipt-success.json"
-    ))
-    .expect("fixture parses");
+    ))?;
     fixture.expected["harness"]["unexpected"] = serde_json::json!(true);
 
     let result = serde_json::from_value::<HarnessReceipt>(fixture.expected);
 
     assert!(result.is_err());
+    Ok(())
 }
 
 #[test]

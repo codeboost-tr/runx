@@ -48,11 +48,12 @@ fn aster_control_fixture_roundtrips() -> Result<(), serde_json::Error> {
 }
 
 #[test]
-fn feed_entry_rejects_unknown_governed_fields() {
-    let mut envelope: serde_json::Value = serde_json::from_str(FIXTURE).expect("fixture parses");
+fn feed_entry_rejects_unknown_governed_fields() -> Result<(), serde_json::Error> {
+    let mut envelope: serde_json::Value = serde_json::from_str(FIXTURE)?;
     envelope["expected"]["feed_entry"]["unexpected"] = serde_json::json!(true);
 
     let result = serde_json::from_value::<AsterControlSet>(envelope["expected"].clone());
 
     assert!(result.is_err());
+    Ok(())
 }
