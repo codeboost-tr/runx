@@ -7,7 +7,7 @@
   "durationMs": 0,
   "metadata": {
     "sandbox": {
-      "profile": "unrestricted-local-dev",
+      "profile": "workspace-write",
       "cwd": "<repo>/fixtures/runtime/adapters/catalog/local-precedence/tools/fixture/echo",
       "workspace_root": "<repo>/fixtures/runtime/adapters/catalog/local-precedence",
       "cwd_policy": "skill-directory",
@@ -27,22 +27,23 @@
       },
       "network": {
         "declared": false,
-        "enforcement": "host-ambient"
+        "enforcement": "not-enforced-local"
       },
       "writable_paths": [],
       "require_enforcement": false,
       "filesystem": {
-        "enforcement": "host-ambient",
-        "readonly_paths": false,
+        "enforcement": "not-enforced-local",
+        "readonly_paths": true,
         "writable_paths_enforced": false,
         "private_tmp": false
       },
       "approval": {
-        "required": true,
+        "required": false,
         "approved": false
       },
       "runtime": {
-        "enforcer": "direct"
+        "enforcer": "declared-policy-only",
+        "reason": "local sandbox profile 'workspace-write' requires Linux bubblewrap support for filesystem and network enforcement"
       }
     }
   }
