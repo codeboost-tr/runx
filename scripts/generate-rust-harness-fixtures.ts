@@ -17,12 +17,20 @@ interface OracleReceipt {
   readonly canonicalJson: string;
 }
 
+interface ActRefs {
+  readonly sourceRefs: Json[];
+  readonly surfaceRefs: Json[];
+  readonly artifactRefs: Json[];
+  readonly verificationRefs: Json[];
+}
+
 const write = process.argv.includes("--write") || process.argv.includes("--generate");
 const check = process.argv.includes("--check") || !write;
 
 const receipts = [
   oracleReceipt("echo-skill", "receipt", stepReceipt("echo-skill", "echo", "hello from harness")),
   ...sequentialGraphOracle(),
+  ...paymentApprovalGraphOracle(),
 ];
 
 if (write) {
@@ -48,7 +56,7 @@ if (check) {
       failed = true;
     }
   }
-  for (const fixture of ["echo-skill", "sequential-graph"]) {
+  for (const fixture of ["echo-skill", "sequential-graph", "payment-approval-graph"]) {
     const receipt = receipts.find((candidate) => candidate.fixture === fixture && candidate.name === "receipt");
     if (!receipt) {
       throw new Error(`missing generated receipt for ${fixture}`);
@@ -86,6 +94,17 @@ function sequentialGraphOracle(): OracleReceipt[] {
   ];
 }
 
+function paymentApprovalGraphOracle(): OracleReceipt[] {
+  const approval = stepReceipt("payment-approval", "approve-spend", approvalStdout());
+  const fulfill = stepReceipt("payment-approval", "fulfill", paymentRailStdout(), paymentRailRefs());
+  const graph = graphReceipt("payment-approval", [approval, fulfill]);
+  return [
+    oracleReceipt("payment-approval-graph", "receipt", graph),
+    oracleReceipt("payment-approval-graph", "approve-spend", approval),
+    oracleReceipt("payment-approval-graph", "fulfill", fulfill),
+  ];
+}
+
 function oracleReceipt(fixture: string, name: string, receipt: Record<string, Json>): OracleReceipt {
   refreshProof(receipt);
   const canonicalJson = canonicalJsonValue(receipt);
@@ -98,9 +117,14 @@ function oracleReceipt(fixture: string, name: string, receipt: Record<string, Js
   };
 }
 
-function stepReceipt(graphName: string, stepId: string, stdout: string): Record<string, Json> {
+function stepReceipt(
+  graphName: string,
+  stepId: string,
+  stdout: string,
+  refs: ActRefs = emptyRefs(),
+): Record<string, Json> {
   const disposition = "closed";
-  const act = observationAct(stepId, stdout, disposition);
+  const act = observationAct(stepId, stdout, disposition, refs);
   const receiptSeal = seal(disposition, `${stepId}_closed`, `step ${stepId} completed`);
   return {
     schema: "runx.harness_receipt.v1",
@@ -182,7 +206,12 @@ function harness(
   };
 }
 
-function observationAct(stepId: string, stdout: string, disposition: string): Record<string, Json> {
+function observationAct(
+  stepId: string,
+  stdout: string,
+  disposition: string,
+  refs: ActRefs,
+): Record<string, Json> {
   const summary = "cli-tool exited successfully";
   return {
     act_id: `act_${stepId}`,
@@ -205,19 +234,88 @@ function observationAct(stepId: string, stdout: string, disposition: string): Re
       {
         criterion_id: "process_exit",
         status: "verified",
-        evidence_refs: [],
-        verification_refs: [],
+        evidence_refs: refs.sourceRefs,
+        verification_refs: refs.verificationRefs,
         summary,
       },
     ],
-    source_refs: [],
+    source_refs: refs.sourceRefs,
     target_refs: [],
-    surface_refs: [],
-    artifact_refs: [],
-    verification_refs: [],
+    surface_refs: refs.surfaceRefs,
+    artifact_refs: refs.artifactRefs,
+    verification_refs: refs.verificationRefs,
     harness_refs: [],
     performed_at: createdAt,
   };
+}
+
+function emptyRefs(): ActRefs {
+  return {
+    sourceRefs: [],
+    surfaceRefs: [],
+    artifactRefs: [],
+    verificationRefs: [],
+  };
+}
+
+function paymentRailRefs(): ActRefs {
+  return {
+    sourceRefs: [
+      {
+        type: "credential",
+        uri: "credential:mock:payment-execution-001",
+        label: "scoped payment credential",
+      },
+    ],
+    surfaceRefs: [],
+    artifactRefs: [],
+    verificationRefs: [
+      {
+        type: "verification",
+        uri: "receipt-proof:mock:payment-execution-001",
+        locator: "payment:payment-execution-001",
+        label: "payment rail proof",
+      },
+    ],
+  };
+}
+
+function approvalStdout(): string {
+  return JSON.stringify({
+    payment_approval: {
+      data: {
+        actor: "human",
+        approved: true,
+        gate_id: "spend-approval",
+        idempotency_key:
+          "sha256:96d55a53b82f13d894e6cfc32bedccae12355a9c449c66c5026a9079c668f642",
+        status: "approved",
+      },
+    },
+  });
+}
+
+function paymentRailStdout(): string {
+  return JSON.stringify({
+    payment_rail_packet: {
+      data: {
+        rail_result: {
+          status: "fulfilled",
+          rail: "mock",
+          amount_minor: 125,
+          currency: "USD",
+        },
+        rail_proof: {
+          proof_ref: "receipt-proof:mock:payment-execution-001",
+          idempotency_key: "payment:payment-execution-001",
+        },
+        credential_envelope: {
+          form: "paid_tool_credential",
+          credential_ref: "credential:mock:payment-execution-001",
+        },
+      },
+    },
+  });
 }
 
 function decision(nodeId: string, acts: Json[]): Json[] {

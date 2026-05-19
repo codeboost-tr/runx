@@ -3,11 +3,15 @@
 // deterministic proof path until MCP replay creates a separate module boundary.
 use std::path::{Path, PathBuf};
 
-use runx_contracts::{ClosureDisposition, HarnessReceipt, JsonObject, JsonValue};
+use runx_contracts::{
+    ClosureDisposition, ExecutionEvent, HarnessReceipt, JsonObject, JsonValue, ResolutionRequest,
+    ResolutionResponse, ResolutionResponseActor,
+};
 use thiserror::Error;
 
 use crate::RuntimeError;
 use crate::adapter::{SkillAdapter, SkillInvocation, SkillOutput};
+use crate::caller::Caller;
 use crate::graph::load_skill;
 use crate::harness::assertions::{assert_expectations, status_from_disposition};
 use crate::harness::fixtures::{
@@ -454,9 +458,117 @@ where
 {
     options.env.extend(fixture.env.clone());
     let runtime = Runtime::new(adapter, options);
-    let graph_run = runtime.run_graph_file(graph_path)?;
+    let mut caller = FixtureCaller::new(fixture);
+    let graph_run = runtime.run_graph_file_with_caller(graph_path, &mut caller)?;
     let output = replay_output_from_graph(fixture, graph_run);
     Ok(output)
+}
+
+struct FixtureCaller<'a> {
+    fixture: &'a HarnessFixture,
+}
+
+impl<'a> FixtureCaller<'a> {
+    fn new(fixture: &'a HarnessFixture) -> Self {
+        Self { fixture }
+    }
+}
+
+impl Caller for FixtureCaller<'_> {
+    fn report(&mut self, _event: ExecutionEvent) -> Result<(), RuntimeError> {
+        Ok(())
+    }
+
+    fn resolve(
+        &mut self,
+        request: ResolutionRequest,
+    ) -> Result<Option<ResolutionResponse>, RuntimeError> {
+        match request {
+            ResolutionRequest::Approval { id, gate } => {
+                fixture_approval_response(self.fixture, &id, &gate.id)
+            }
+            ResolutionRequest::Input { .. } | ResolutionRequest::AgentAct { .. } => Ok(None),
+        }
+    }
+}
+
+fn fixture_approval_response(
+    fixture: &HarnessFixture,
+    request_id: &str,
+    gate_id: &str,
+) -> Result<Option<ResolutionResponse>, RuntimeError> {
+    let Some(answer) = fixture_answer(fixture, "approvals", gate_id, request_id)
+        .or_else(|| fixture_answer(fixture, "answers", request_id, gate_id))
+    else {
+        return Ok(None);
+    };
+    let approved = fixture_bool_answer(answer, request_id, gate_id)?;
+    Ok(Some(ResolutionResponse {
+        actor: fixture_answer_actor(answer, request_id, gate_id)?,
+        payload: JsonValue::Bool(approved),
+    }))
+}
+
+fn fixture_answer<'a>(
+    fixture: &'a HarnessFixture,
+    group: &str,
+    primary_key: &str,
+    secondary_key: &str,
+) -> Option<&'a JsonValue> {
+    fixture
+        .caller
+        .get(group)
+        .and_then(json_object)
+        .and_then(|answers| {
+            answers
+                .get(primary_key)
+                .or_else(|| answers.get(secondary_key))
+        })
+}
+
+fn fixture_bool_answer(
+    answer: &JsonValue,
+    request_id: &str,
+    gate_id: &str,
+) -> Result<bool, RuntimeError> {
+    match answer {
+        JsonValue::Bool(value) => Ok(*value),
+        JsonValue::Object(object) => match object.get("approved").or_else(|| object.get("payload"))
+        {
+            Some(JsonValue::Bool(value)) => Ok(*value),
+            Some(_) | None => Err(invalid_fixture_answer(request_id, gate_id)),
+        },
+        JsonValue::Null | JsonValue::Number(_) | JsonValue::String(_) | JsonValue::Array(_) => {
+            Err(invalid_fixture_answer(request_id, gate_id))
+        }
+    }
+}
+
+fn fixture_answer_actor(
+    answer: &JsonValue,
+    request_id: &str,
+    gate_id: &str,
+) -> Result<ResolutionResponseActor, RuntimeError> {
+    let Some(actor) = json_object(answer).and_then(|object| object.get("actor")) else {
+        return Ok(ResolutionResponseActor::Human);
+    };
+    match actor {
+        JsonValue::String(value) if value == "human" => Ok(ResolutionResponseActor::Human),
+        JsonValue::String(value) if value == "agent" => Ok(ResolutionResponseActor::Agent),
+        _ => Err(RuntimeError::ReceiptInvalid {
+            message: format!(
+                "harness fixture approval answer for request {request_id} gate {gate_id} has invalid actor"
+            ),
+        }),
+    }
+}
+
+fn invalid_fixture_answer(request_id: &str, gate_id: &str) -> RuntimeError {
+    RuntimeError::ReceiptInvalid {
+        message: format!(
+            "harness fixture approval answer for request {request_id} gate {gate_id} must be a boolean or object with a boolean approved field"
+        ),
+    }
 }
 
 fn replay_output_from_graph(fixture: &HarnessFixture, graph_run: GraphRun) -> HarnessReplayOutput {

@@ -14,6 +14,7 @@ fn loads_active_harness_fixtures_without_retired_receipt_fields() -> Result<(), 
     for path in [
         "fixtures/harness/echo-skill.yaml",
         "fixtures/harness/sequential-graph.yaml",
+        "fixtures/harness/payment-approval-graph.yaml",
     ] {
         let fixture = load_harness_fixture(fixture_path(path))?;
         assert_eq!(fixture.expect.status, Some(HarnessExpectedStatus::Success));
@@ -178,6 +179,45 @@ fn replays_active_harness_graph_fixture() -> Result<(), Box<dyn std::error::Erro
 }
 
 #[test]
+fn replays_payment_approval_graph_fixture_with_rail_proof() -> Result<(), Box<dyn std::error::Error>>
+{
+    let output = run_fixture_with_test_adapter("fixtures/harness/payment-approval-graph.yaml")?;
+
+    assert_eq!(output.status, HarnessExpectedStatus::Success);
+    assert_eq!(
+        output.receipt.harness.harness_id,
+        "hrn_payment-approval_graph"
+    );
+    assert_eq!(output.receipt.seal.disposition, ClosureDisposition::Closed);
+    assert_eq!(output.step_receipts.len(), 2);
+    assert_eq!(
+        output.step_receipts[0].harness.harness_id,
+        "hrn_payment-approval_approve-spend"
+    );
+    assert_eq!(
+        output.step_receipts[1].harness.harness_id,
+        "hrn_payment-approval_fulfill"
+    );
+    let fulfill_act =
+        output.step_receipts[1]
+            .harness
+            .acts
+            .first()
+            .ok_or(HarnessFixtureError::Required {
+                field: "fulfill act".to_owned(),
+            })?;
+    assert_eq!(
+        fulfill_act
+            .verification_refs
+            .iter()
+            .map(|reference| reference.uri.as_str())
+            .collect::<Vec<_>>(),
+        vec!["receipt-proof:mock:payment-execution-001"]
+    );
+    Ok(())
+}
+
+#[test]
 fn replay_receipts_match_checked_in_canonical_oracles() -> Result<(), Box<dyn std::error::Error>> {
     let echo = run_fixture_with_test_adapter("fixtures/harness/echo-skill.yaml")?;
     assert_oracle(
@@ -197,6 +237,20 @@ fn replay_receipts_match_checked_in_canonical_oracles() -> Result<(), Box<dyn st
     assert_oracle(
         "fixtures/harness/oracle/sequential-graph.second.json",
         &canonical_receipt_json(&graph.step_receipts[1])?,
+    )?;
+
+    let payment = run_fixture_with_test_adapter("fixtures/harness/payment-approval-graph.yaml")?;
+    assert_oracle(
+        "fixtures/harness/oracle/payment-approval-graph.receipt.json",
+        &canonical_receipt_json(&payment.receipt)?,
+    )?;
+    assert_oracle(
+        "fixtures/harness/oracle/payment-approval-graph.approve-spend.json",
+        &canonical_receipt_json(&payment.step_receipts[0])?,
+    )?;
+    assert_oracle(
+        "fixtures/harness/oracle/payment-approval-graph.fulfill.json",
+        &canonical_receipt_json(&payment.step_receipts[1])?,
     )?;
     Ok(())
 }
@@ -231,15 +285,19 @@ impl SkillAdapter for TestAdapter {
     }
 
     fn invoke(&self, request: SkillInvocation) -> Result<SkillOutput, runx_runtime::RuntimeError> {
-        let stdout = request
-            .inputs
-            .get("message")
-            .and_then(|value| match value {
-                JsonValue::String(value) => Some(value.as_str()),
-                _ => None,
-            })
-            .unwrap_or_default()
-            .to_owned();
+        let stdout = if request.skill_name == "payment-fulfill" {
+            r#"{"payment_rail_packet":{"data":{"rail_result":{"status":"fulfilled","rail":"mock","amount_minor":125,"currency":"USD"},"rail_proof":{"proof_ref":"receipt-proof:mock:payment-execution-001","idempotency_key":"payment:payment-execution-001"},"credential_envelope":{"form":"paid_tool_credential","credential_ref":"credential:mock:payment-execution-001"}}}}"#.to_owned()
+        } else {
+            request
+                .inputs
+                .get("message")
+                .and_then(|value| match value {
+                    JsonValue::String(value) => Some(value.as_str()),
+                    _ => None,
+                })
+                .unwrap_or_default()
+                .to_owned()
+        };
         Ok(SkillOutput {
             status: InvocationStatus::Success,
             stdout,
