@@ -1,0 +1,133 @@
+name: "feature-needs-decomposition"
+kind: "agent_step"
+runner: "issue-intake"
+inputs:
+  thread_title: "Add abandoned cart recovery across email and SMS"
+  thread_body: "We need a generated workflow, copy, timing rules, and reporting for abandoned cart recovery."
+  thread_locator: "support://request/982"
+  product_context: "Multi-channel marketing automation product"
+caller:
+  answers:
+    agent_step.issue-intake.output:
+      intake_report:
+        category: "feature_request"
+        severity: "medium"
+        summary: "The request is a multi-step product capability that spans workflow design, content, and reporting."
+        suggested_reply: "This needs decomposition into a governed implementation plan before code changes start."
+        recommended_lane: "work-plan"
+        rationale: "The request spans multiple deliverables and should be broken into governed steps first."
+        needs_human: true
+        commence_decision: "approve"
+        action_decision: "proceed_to_plan"
+        review_target: "none"
+        operator_notes:
+          - "Confirm the target repos and user-facing scope before mutation."
+        workspace_change_plan_request:
+          change_set_id: "change_set_abandoned_cart_982"
+          objective: "Add abandoned cart recovery across email and SMS"
+          project_context: "Multi-channel marketing automation product"
+          thread_locator: "support://request/982"
+          target_surfaces:
+            - 
+              surface: "api"
+              kind: "repo"
+              mutating: true
+              rationale: "Backend flow state and trigger rules will need product changes."
+            - 
+              surface: "app"
+              kind: "repo"
+              mutating: true
+              rationale: "The UI and operator surfaces will need coordinated updates."
+            - 
+              surface: "mcp"
+              kind: "repo"
+              mutating: true
+              rationale: "The MCP contract may need new surfaced capabilities."
+          shared_invariants:
+            - "Preserve existing checkout and cart event semantics."
+            - "Keep rollout behind governed approvals."
+          success_criteria:
+            - "One shared plan exists before repo mutation starts."
+            - "Repo-scoped workers receive explicit shared invariants."
+      change_set:
+        change_set_id: "change_set_abandoned_cart_982"
+        thread_locator: "support://request/982"
+        summary: "Add abandoned cart recovery across email and SMS with coordinated backend, UI, and MCP work."
+        category: "feature_request"
+        severity: "medium"
+        recommended_lane: "work-plan"
+        commence_decision: "approve"
+        action_decision: "proceed_to_plan"
+        target_surfaces:
+          - 
+            surface: "api"
+            kind: "repo"
+            mutating: true
+            rationale: "Backend automation and policy changes are required."
+          - 
+            surface: "app"
+            kind: "repo"
+            mutating: true
+            rationale: "UI configuration and user-visible messaging will change."
+          - 
+            surface: "mcp"
+            kind: "repo"
+            mutating: true
+            rationale: "The surfaced tools and contracts may need updates."
+        shared_invariants:
+          - "Preserve current checkout and cart tracking semantics."
+          - "Plan before mutation; do not start repo workers from support text alone."
+        success_criteria:
+          - "A phased workspace change plan is authored before repo mutation."
+          - "Child workers preserve one shared abandoned-cart objective."
+      signal:
+        schema: "runx.signal.v1"
+        signal_id: "sig_abandoned_cart_982"
+        state: "planning_ready"
+        source_events:
+          - 
+            provider: "other"
+            source_locator: "support://request/982"
+            thread_locator: "support://request/982"
+            title: "Add abandoned cart recovery across email and SMS"
+            body_preview: "We need a generated workflow, copy, timing rules, and reporting for abandoned cart recovery."
+        dedupe:
+          algorithm: "sha256"
+          source_locator: "support://request/982"
+          fingerprint: "sha256:abandoned-cart-recovery"
+        triage:
+          category: "feature_request"
+          severity: "medium"
+          confidence: 0.86
+          action: "work-plan"
+          recommended_lane: "work-plan"
+          needs_human: true
+          rationale: "The request spans multiple deliverables and should be planned before mutation."
+        change_set:
+          change_set_id: "change_set_abandoned_cart_982"
+        status_summary: "Cross-surface feature request is ready for work-plan."
+        created_at: "2026-05-15T00:00:00Z"
+        updated_at: "2026-05-15T00:00:00Z"
+      decision:
+        schema: "runx.decision.v1"
+        decision_id: "dec_feature-needs-decomposition"
+        choice: "open"
+        summary: "The request spans multiple deliverables and should be broken into governed steps first."
+        recommended_lane: "work-plan"
+expect:
+  status: "success"
+  receipt:
+    schema: "runx.harness_receipt.v1"
+    receipt_id: "hrn_rcpt_feature-needs-decomposition_feature-needs-decomposition"
+    harness_id: "hrn_feature-needs-decomposition_feature-needs-decomposition"
+    state: "sealed"
+    disposition: "closed"
+    reason_code: "feature-needs-decomposition_closed"
+    act_ids:
+      - "act_feature-needs-decomposition"
+    decision_ids:
+      - "dec_feature-needs-decomposition"
+metadata:
+  product_skill: "issue-intake"
+  source_case: "feature-needs-decomposition"
+  runner_kind: "agent_step"

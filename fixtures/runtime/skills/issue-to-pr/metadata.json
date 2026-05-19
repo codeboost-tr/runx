@@ -1,0 +1,15 @@
+{
+  "schema": "runx.runtime.skill_fixture.v1",
+  "generated_at": "2026-05-18T00:00:00Z",
+  "source": {
+    "skill": "skills/issue-to-pr/SKILL.md",
+    "profile": "skills/issue-to-pr/X.yaml"
+  },
+  "skill_name": "issue-to-pr",
+  "manifest_hash": "sha256:1c063b28a3235cef0b29a2ecdf9711d1bf202751fca2a0b98c10274b72413a98",
+  "harness_schema": "runx.harness_receipt.v1",
+  "case_names": [
+    "issue-to-pr-dispatches-first-step",
+    "issue-to-pr-reaches-fix-boundary"
+  ]
+}

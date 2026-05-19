@@ -2,8 +2,8 @@
 spec_version: '2.0'
 task_id: rust-runtime-skill-execution
 created: '2026-05-18T00:00:00Z'
-updated: '2026-05-19T08:13:29Z'
-status: draft
+updated: '2026-05-19T09:17:09Z'
+status: completed
 harden_status: passed
 size: medium
 risk_level: medium
@@ -13,14 +13,14 @@ risk_level: medium
 
 ## Current State
 
-Status: draft
-Current phase: none
-Next: approve
-Reason: hardened for the ratified harness spine; build blockers explicit
-Blockers: post-cutover receipt proof/tree/path APIs before cutover evidence
-Allowed follow-up command: `scafld approve rust-runtime-skill-execution`
-Latest runner update: none
-Review gate: not_started
+Status: completed
+Current phase: final
+Next: done
+Reason: task completed
+Blockers: none
+Allowed follow-up command: `none`
+Latest runner update: 2026-05-19T09:17:09Z
+Review gate: pass
 
 ## Summary
 
@@ -544,3 +544,17 @@ Checks:
 
 Issues:
 - none
+
+## Review
+
+Status: completed
+Verdict: pass
+Mode: verify
+Summary: Human-reviewed override accepted: manual review after acceptance gates; addressed semantic review gaps by replaying issue-to-pr as graph harness receipts with child refs, binding issue-intake signal/source/surface refs, preserving normalized decision output, and reran generator, focused Rust skill tests, receipt proof tests, TS product skill tests, cutover vocabulary gates, fmt, and clippy
+
+Attack log:
+- `review gate`: manual human audit -> clean (manual review after acceptance gates; addressed semantic review gaps by replaying issue-to-pr as graph harness receipts with child refs, binding issue-intake signal/source/surface refs, preserving normalized decision output, and reran generator, focused Rust skill tests, receipt proof tests, TS product skill tests, cutover vocabulary gates, fmt, and clippy)
+
+Findings:
+- none
+

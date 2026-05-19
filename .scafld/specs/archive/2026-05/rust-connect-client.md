@@ -2,8 +2,8 @@
 spec_version: '2.0'
 task_id: rust-connect-client
 created: '2026-05-18T00:00:00Z'
-updated: '2026-05-19T08:13:29Z'
-status: draft
+updated: '2026-05-19T10:13:21Z'
+status: completed
 harden_status: passed
 size: medium
 risk_level: high
@@ -13,17 +13,14 @@ risk_level: high
 
 ## Current State
 
-Status: draft
-Current phase: hardened
-Next: approve after scaffold/tool-catalog cutover lands
-Reason: draft created under `plans/rust-takeover.md`. Covers `runx connect`
-(grants and the currently implemented hosted OAuth polling flow).
-Blockers: scaffold/tool-catalog cutover establishes the canonical Rust CLI
-dispatch path. Non-hosted flows are blocked inside this spec until their cloud
-fixtures exist.
-Allowed follow-up command: `scafld approve rust-connect-client`
-Latest runner update: none
-Review gate: passed
+Status: completed
+Current phase: final
+Next: done
+Reason: task completed
+Blockers: none
+Allowed follow-up command: `none`
+Latest runner update: 2026-05-19T10:13:21Z
+Review gate: pass
 
 ## Summary
 
@@ -70,9 +67,13 @@ Precise implementation impact files after scaffold/tool-catalog cutover:
 - `crates/runx-runtime/src/connect/mock_server.rs` or
   `crates/runx-runtime/tests/support/connect_mock.rs`
 - `crates/runx-runtime/tests/connect_client.rs`
-- `crates/runx-runtime/tests/connect_cli.rs`
 - `crates/runx-runtime/tests/connect_secret_redaction.rs`
 - `crates/runx-runtime/tests/connect_policy_integration.rs`
+- `crates/runx-cli/src/connect.rs`
+- `crates/runx-cli/src/launcher.rs`
+- `crates/runx-cli/src/main.rs`
+- `crates/runx-cli/tests/connect.rs`
+- `crates/runx-cli/tests/launcher.rs`
 - `fixtures/connect/README.md`
 - `fixtures/connect/contracts/hosted-http-v1/*.json`
 - `fixtures/connect/oracles/*.stdout`
@@ -80,12 +81,11 @@ Precise implementation impact files after scaffold/tool-catalog cutover:
 - `fixtures/connect/oracles/*.json`
 - `fixtures/connect/oracles/*.receipt.json`
 
-Conditional impact files, only if the scaffold/tool-catalog cutover has already
-made these the canonical Rust CLI dispatch points:
-- `crates/runx-runtime/src/cli/connect.rs`
-- `crates/runx-runtime/src/cli/args.rs`
-- `crates/runx-runtime/src/cli/dispatch.rs`
-- `crates/runx-runtime/src/lib.rs`
+Conditional impact files, only if the CLI foundation has not already wired the
+native route:
+- `crates/runx-cli/src/connect.rs`
+- `crates/runx-cli/src/launcher.rs`
+- `crates/runx-cli/src/main.rs`
 
 Do not modify in this spec execution:
 - `packages/cli/src/**`, except deleting the TypeScript connect dispatch only
@@ -334,6 +334,9 @@ Out of scope:
 
 - `rust-runtime-skeleton` completed; this spec must use the established runtime
   crate layout rather than creating a second runtime boundary.
+- `rust-connect-cli-foundation` completed; `runx-cli` owns the native
+  `runx connect` command route. `runx-runtime` is a library crate and must not
+  be used as the CLI binary target.
 - Scaffold/tool-catalog hard cutover for Rust CLI command routing.
 - Checked-in fixtures under `fixtures/connect/contracts/hosted-http-v1/` define
   the hosted connect contract for this spec. Any flow beyond the TS-observed
@@ -413,7 +416,7 @@ work lands, the implementation owner must run:
 
 ```sh
 cargo test --manifest-path crates/Cargo.toml -p runx-runtime connect_client
-cargo test --manifest-path crates/Cargo.toml -p runx-runtime connect_cli
+cargo test --manifest-path crates/Cargo.toml -p runx-cli connect
 cargo test --manifest-path crates/Cargo.toml -p runx-runtime connect_secret_redaction
 cargo test --manifest-path crates/Cargo.toml -p runx-runtime connect_policy_integration
 cargo test --manifest-path crates/Cargo.toml -p runx-core connected_auth
@@ -428,20 +431,20 @@ Required CLI oracle checks, using the deterministic mock server:
 ```sh
 RUNX_CONNECT_BASE_URL=http://127.0.0.1:<mock-port> \
 RUNX_CONNECT_ACCESS_TOKEN=SECRET_CONNECT_ACCESS_TOKEN_DO_NOT_LEAK \
-cargo run --manifest-path crates/Cargo.toml -p runx-runtime -- connect list
+cargo run --manifest-path crates/Cargo.toml -p runx-cli -- connect list
 
 RUNX_CONNECT_BASE_URL=http://127.0.0.1:<mock-port> \
 RUNX_CONNECT_ACCESS_TOKEN=SECRET_CONNECT_ACCESS_TOKEN_DO_NOT_LEAK \
-cargo run --manifest-path crates/Cargo.toml -p runx-runtime -- connect list --json
+cargo run --manifest-path crates/Cargo.toml -p runx-cli -- connect list --json
 
 RUNX_CONNECT_BASE_URL=http://127.0.0.1:<mock-port> \
 RUNX_CONNECT_ACCESS_TOKEN=SECRET_CONNECT_ACCESS_TOKEN_DO_NOT_LEAK \
-cargo run --manifest-path crates/Cargo.toml -p runx-runtime -- connect revoke grant_fixture_active --json
+cargo run --manifest-path crates/Cargo.toml -p runx-cli -- connect revoke grant_fixture_active --json
 
 RUNX_CONNECT_BASE_URL=http://127.0.0.1:<mock-port> \
 RUNX_CONNECT_ACCESS_TOKEN=SECRET_CONNECT_ACCESS_TOKEN_DO_NOT_LEAK \
 RUNX_CONNECT_OPEN_COMMAND=/path/to/test-opener \
-cargo run --manifest-path crates/Cargo.toml -p runx-runtime -- connect github --scope repo:read --json
+cargo run --manifest-path crates/Cargo.toml -p runx-cli -- connect github --scope repo:read --json
 ```
 
 Secret scan gate:
@@ -514,3 +517,17 @@ Checks:
 
 Issues:
 - none
+
+## Review
+
+Status: completed
+Verdict: pass
+Mode: verify
+Summary: Human-reviewed override accepted: operator review pass after automated review transport hung; targeted connect/runtime/CLI/shared-http tests, fmt, and clippy passed; no blocking findings from read-only subagents
+
+Attack log:
+- `review gate`: manual human audit -> clean (operator review pass after automated review transport hung; targeted connect/runtime/CLI/shared-http tests, fmt, and clippy passed; no blocking findings from read-only subagents)
+
+Findings:
+- none
+

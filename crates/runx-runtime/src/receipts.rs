@@ -4,9 +4,9 @@ use runx_contracts::{
     Act, ActForm, Authority, AuthorityAttenuation, Closure, ClosureDisposition, CriterionBinding,
     Decision, DecisionChoice, DecisionInputs, DecisionJustification, FanoutReceiptSyncPoint,
     Harness, HarnessEnforcement, HarnessIdempotency, HarnessReceipt, HarnessReceiptSchema,
-    HarnessRevision, HarnessSandbox, HarnessSeal, HarnessState, Intent, ReceiptIssuer,
-    ReceiptIssuerType, ReceiptVerificationSummary, Reference, ReferenceType, SealCriterion,
-    SignatureAlgorithm, SuccessCriterion,
+    HarnessRevision, HarnessSandbox, HarnessSeal, HarnessState, Intent, JsonObject, JsonValue,
+    ReceiptIssuer, ReceiptIssuerType, ReceiptVerificationSummary, Reference, ReferenceType,
+    SealCriterion, SignatureAlgorithm, SuccessCriterion,
 };
 use runx_receipts::{
     ReceiptProofContext, ReceiptSignature, SignatureVerificationFailure, SignatureVerifier,
@@ -24,28 +24,68 @@ pub fn step_receipt(
     created_at: &str,
 ) -> Result<HarnessReceipt, RuntimeError> {
     let disposition = disposition(output);
-    let act = observation_act(step_id, output, created_at, disposition.clone());
-    let seal = seal(
-        disposition,
-        format!("{step_id}_closed"),
-        format!("step {step_id} completed"),
+    step_receipt_with_disposition(StepReceiptWithDisposition {
+        graph_name,
+        step_id,
+        attempt,
+        output,
         created_at,
-        Vec::new(),
+        disposition,
+        reason_code: format!("{step_id}_closed"),
+        summary: format!("step {step_id} completed"),
+    })
+}
+
+pub(crate) struct StepReceiptWithDisposition<'a> {
+    pub(crate) graph_name: &'a str,
+    pub(crate) step_id: &'a str,
+    pub(crate) attempt: u32,
+    pub(crate) output: &'a SkillOutput,
+    pub(crate) created_at: &'a str,
+    pub(crate) disposition: ClosureDisposition,
+    pub(crate) reason_code: String,
+    pub(crate) summary: String,
+}
+
+pub(crate) fn step_receipt_with_disposition(
+    params: StepReceiptWithDisposition<'_>,
+) -> Result<HarnessReceipt, RuntimeError> {
+    let StepReceiptWithDisposition {
+        graph_name,
+        step_id,
+        attempt,
+        output,
+        created_at,
+        disposition,
+        reason_code,
+        summary,
+    } = params;
+    let output_refs = output_refs(output);
+    let act = observation_act(
+        step_id,
+        output,
+        created_at,
+        disposition.clone(),
+        &output_refs,
     );
+    let mut seal = seal(disposition, reason_code, summary, created_at, Vec::new());
+    seal.artifact_refs = output_refs.artifact_refs.clone();
     let mut receipt = HarnessReceipt {
         schema: HarnessReceiptSchema::V1,
         id: step_receipt_id(graph_name, step_id, attempt),
         created_at: created_at.to_owned(),
         issuer: local_issuer(),
         signature: placeholder_signature(),
-        harness: harness(
+        harness: harness(HarnessParts {
             graph_name,
             step_id,
-            HarnessState::Sealed,
-            vec![act],
-            Vec::new(),
-            seal.clone(),
-        ),
+            state: HarnessState::Sealed,
+            acts: vec![act],
+            child_refs: Vec::new(),
+            seal: seal.clone(),
+            signal_refs: output_refs.signal_refs,
+            artifact_refs: output_refs.artifact_refs,
+        }),
         seal,
         sync_points: Vec::new(),
         metadata: None,
@@ -60,31 +100,47 @@ pub fn graph_receipt(
     sync_points: Vec<FanoutReceiptSyncPoint>,
     created_at: &str,
 ) -> Result<HarnessReceipt, RuntimeError> {
+    graph_receipt_with_disposition(
+        graph_name,
+        steps,
+        sync_points,
+        created_at,
+        ClosureDisposition::Closed,
+        "graph_closed".to_owned(),
+        format!("graph {graph_name} completed"),
+    )
+}
+
+pub(crate) fn graph_receipt_with_disposition(
+    graph_name: &str,
+    steps: &[StepRun],
+    sync_points: Vec<FanoutReceiptSyncPoint>,
+    created_at: &str,
+    disposition: ClosureDisposition,
+    reason_code: String,
+    summary: String,
+) -> Result<HarnessReceipt, RuntimeError> {
     let child_refs = steps
         .iter()
         .map(|step| reference(ReferenceType::HarnessReceipt, &step.receipt.id))
         .collect::<Vec<_>>();
-    let seal = seal(
-        ClosureDisposition::Closed,
-        "graph_closed".to_owned(),
-        format!("graph {graph_name} completed"),
-        created_at,
-        Vec::new(),
-    );
+    let seal = seal(disposition, reason_code, summary, created_at, Vec::new());
     let mut receipt = HarnessReceipt {
         schema: HarnessReceiptSchema::V1,
         id: format!("hrn_rcpt_{graph_name}"),
         created_at: created_at.to_owned(),
         issuer: local_issuer(),
         signature: placeholder_signature(),
-        harness: harness(
+        harness: harness(HarnessParts {
             graph_name,
-            "graph",
-            HarnessState::Sealed,
-            Vec::new(),
+            step_id: "graph",
+            state: HarnessState::Sealed,
+            acts: Vec::new(),
             child_refs,
-            seal.clone(),
-        ),
+            seal: seal.clone(),
+            signal_refs: Vec::new(),
+            artifact_refs: Vec::new(),
+        }),
         seal,
         sync_points,
         metadata: None,
@@ -106,33 +162,48 @@ fn step_receipt_id(graph_name: &str, step_id: &str, attempt: u32) -> String {
     }
 }
 
-fn harness(
-    graph_name: &str,
-    node_id: &str,
+struct HarnessParts<'a> {
+    graph_name: &'a str,
+    step_id: &'a str,
     state: HarnessState,
     acts: Vec<Act>,
     child_refs: Vec<Reference>,
     seal: HarnessSeal,
-) -> Harness {
+    signal_refs: Vec<Reference>,
+    artifact_refs: Vec<Reference>,
+}
+
+fn harness(parts: HarnessParts<'_>) -> Harness {
+    let HarnessParts {
+        graph_name,
+        step_id,
+        state,
+        acts,
+        child_refs,
+        seal,
+        signal_refs,
+        artifact_refs,
+    } = parts;
+    let decisions = decision(step_id, &acts, &signal_refs, &artifact_refs);
     Harness {
         schema: None,
-        harness_id: format!("hrn_{graph_name}_{node_id}"),
+        harness_id: format!("hrn_{graph_name}_{step_id}"),
         parent_harness_ref: None,
         state,
         host_ref: reference(ReferenceType::Host, "cli"),
-        harness_ref: reference(ReferenceType::Harness, &format!("{graph_name}_{node_id}")),
+        harness_ref: reference(ReferenceType::Harness, &format!("{graph_name}_{step_id}")),
         authority: authority(),
         enforcement: enforcement(),
-        idempotency: idempotency(graph_name, node_id),
+        idempotency: idempotency(graph_name, step_id),
         revision: HarnessRevision {
             sequence: 1,
             previous_ref: None,
         },
-        signal_refs: Vec::new(),
-        decisions: decision(node_id),
+        signal_refs,
+        decisions,
         acts,
         child_harness_receipt_refs: child_refs,
-        artifact_refs: Vec::new(),
+        artifact_refs,
         seal: Some(seal),
     }
 }
@@ -142,6 +213,7 @@ fn observation_act(
     output: &SkillOutput,
     performed_at: &str,
     disposition: ClosureDisposition,
+    refs: &OutputRefs,
 ) -> Act {
     Act {
         schema: None,
@@ -172,15 +244,15 @@ fn observation_act(
             } else {
                 runx_contracts::CriterionStatus::Failed
             },
-            evidence_refs: Vec::new(),
-            verification_refs: Vec::new(),
+            evidence_refs: refs.source_refs.clone(),
+            verification_refs: refs.verification_refs.clone(),
             summary: Some(output_summary(output)),
         }],
-        source_refs: Vec::new(),
+        source_refs: refs.source_refs.clone(),
         target_refs: Vec::new(),
-        surface_refs: Vec::new(),
-        artifact_refs: Vec::new(),
-        verification_refs: Vec::new(),
+        surface_refs: refs.surface_refs.clone(),
+        artifact_refs: refs.artifact_refs.clone(),
+        verification_refs: refs.verification_refs.clone(),
         harness_refs: Vec::new(),
         revision: None,
         verification: None,
@@ -188,11 +260,19 @@ fn observation_act(
     }
 }
 
-fn decision(node_id: &str) -> Vec<Decision> {
+fn decision(
+    node_id: &str,
+    acts: &[Act],
+    signal_refs: &[Reference],
+    artifact_refs: &[Reference],
+) -> Vec<Decision> {
     vec![Decision {
         decision_id: format!("dec_{node_id}"),
         choice: DecisionChoice::Open,
-        inputs: DecisionInputs::default(),
+        inputs: DecisionInputs {
+            signal_refs: signal_refs.to_vec(),
+            ..DecisionInputs::default()
+        },
         proposed_intent: Intent {
             purpose: format!("Open runtime harness node {node_id}"),
             legitimacy: "Local graph execution requested this harness node".to_owned(),
@@ -200,14 +280,14 @@ fn decision(node_id: &str) -> Vec<Decision> {
             constraints: Vec::new(),
             derived_from: Vec::new(),
         },
-        selected_act_id: None,
+        selected_act_id: acts.first().map(|act| act.act_id.clone()),
         selected_harness_ref: None,
         justification: DecisionJustification {
             summary: "runtime graph planner selected this node".to_owned(),
-            evidence_refs: Vec::new(),
+            evidence_refs: signal_refs.to_vec(),
         },
         closure: None,
-        artifact_refs: Vec::new(),
+        artifact_refs: artifact_refs.to_vec(),
     }]
 }
 
@@ -286,6 +366,137 @@ fn idempotency(graph_name: &str, node_id: &str) -> HarnessIdempotency {
     }
 }
 
+#[derive(Clone, Debug, Default)]
+struct OutputRefs {
+    signal_refs: Vec<Reference>,
+    source_refs: Vec<Reference>,
+    surface_refs: Vec<Reference>,
+    artifact_refs: Vec<Reference>,
+    verification_refs: Vec<Reference>,
+}
+
+fn output_refs(output: &SkillOutput) -> OutputRefs {
+    let mut refs = OutputRefs::default();
+    if let Some(request_id) = string_field(&output.metadata, "agent_request_id") {
+        refs.source_refs.push(Reference {
+            uri: format!("runx:agent_act:{request_id}"),
+            reference_type: ReferenceType::Act,
+            provider: None,
+            locator: Some(request_id.to_owned()),
+            label: Some("agent act request".to_owned()),
+            observed_at: None,
+        });
+    }
+    let Ok(JsonValue::Object(payload)) = serde_json::from_str::<JsonValue>(&output.stdout) else {
+        return refs;
+    };
+    collect_payload_refs(&payload, &mut refs);
+    refs
+}
+
+fn collect_payload_refs(payload: &JsonObject, refs: &mut OutputRefs) {
+    if let Some(signal) = object_field(payload, "signal") {
+        collect_signal_refs(signal, refs);
+    }
+    if let Some(change_set) = object_field(payload, "change_set") {
+        collect_change_set_refs(change_set, refs);
+    }
+    if let Some(artifact) = object_field(payload, "artifact") {
+        collect_artifact_ref(artifact, refs);
+    }
+    if let Some(verification) = object_field(payload, "verification") {
+        collect_verification_ref(verification, refs);
+    }
+}
+
+fn collect_signal_refs(signal: &JsonObject, refs: &mut OutputRefs) {
+    if let Some(signal_id) = string_field(signal, "signal_id") {
+        refs.signal_refs
+            .push(reference(ReferenceType::Signal, signal_id));
+    }
+    if let Some(events) = array_field(signal, "source_events") {
+        refs.source_refs
+            .extend(events.iter().filter_map(source_event_ref));
+    }
+    if let Some(artifact) = object_field(signal, "artifact") {
+        collect_artifact_ref(artifact, refs);
+    }
+}
+
+fn collect_change_set_refs(change_set: &JsonObject, refs: &mut OutputRefs) {
+    if let Some(surfaces) = array_field(change_set, "target_surfaces") {
+        refs.surface_refs
+            .extend(surfaces.iter().filter_map(target_surface_ref));
+    }
+}
+
+fn collect_artifact_ref(artifact: &JsonObject, refs: &mut OutputRefs) {
+    if let Some(artifact_id) = string_field(artifact, "artifact_id") {
+        refs.artifact_refs
+            .push(reference(ReferenceType::Artifact, artifact_id));
+    }
+}
+
+fn collect_verification_ref(verification: &JsonObject, refs: &mut OutputRefs) {
+    if let Some(verification_id) = string_field(verification, "verification_id") {
+        refs.verification_refs
+            .push(reference(ReferenceType::Verification, verification_id));
+    }
+}
+
+fn source_event_ref(value: &JsonValue) -> Option<Reference> {
+    let JsonValue::Object(event) = value else {
+        return None;
+    };
+    let locator =
+        string_field(event, "source_locator").or_else(|| string_field(event, "thread_locator"))?;
+    let provider = string_field(event, "provider");
+    Some(Reference {
+        uri: locator.to_owned(),
+        reference_type: source_reference_type(provider),
+        provider: provider.map(str::to_owned),
+        locator: Some(locator.to_owned()),
+        label: string_field(event, "title").map(str::to_owned),
+        observed_at: None,
+    })
+}
+
+fn source_reference_type(provider: Option<&str>) -> ReferenceType {
+    match provider {
+        Some("github") => ReferenceType::GithubIssue,
+        Some("slack") => ReferenceType::SlackThread,
+        _ => ReferenceType::ExternalUrl,
+    }
+}
+
+fn target_surface_ref(value: &JsonValue) -> Option<Reference> {
+    let JsonValue::Object(surface) = value else {
+        return None;
+    };
+    string_field(surface, "surface").map(|surface_id| reference(ReferenceType::Surface, surface_id))
+}
+
+fn object_field<'a>(object: &'a JsonObject, field: &str) -> Option<&'a JsonObject> {
+    match object.get(field) {
+        Some(JsonValue::Object(value)) => Some(value),
+        _ => None,
+    }
+}
+
+fn array_field<'a>(object: &'a JsonObject, field: &str) -> Option<&'a Vec<JsonValue>> {
+    match object.get(field) {
+        Some(JsonValue::Array(value)) => Some(value),
+        _ => None,
+    }
+}
+
+fn string_field<'a>(object: &'a JsonObject, field: &str) -> Option<&'a str> {
+    match object.get(field) {
+        Some(JsonValue::String(value)) => Some(value),
+        _ => None,
+    }
+}
+
 fn disposition(output: &SkillOutput) -> ClosureDisposition {
     if output.succeeded() {
         ClosureDisposition::Closed
@@ -297,6 +508,8 @@ fn disposition(output: &SkillOutput) -> ClosureDisposition {
 fn output_summary(output: &SkillOutput) -> String {
     if output.succeeded() {
         "cli-tool exited successfully".to_owned()
+    } else if !output.stderr.is_empty() {
+        output.stderr.clone()
     } else {
         format!("cli-tool failed with exit code {:?}", output.exit_code)
     }
@@ -315,11 +528,41 @@ fn reference(reference_type: ReferenceType, id: &str) -> Reference {
 
 fn reference_type_name(reference_type: &ReferenceType) -> &'static str {
     match reference_type {
+        ReferenceType::GithubIssue => "github_issue",
+        ReferenceType::GithubPullRequest => "github_pull_request",
+        ReferenceType::GithubRepo => "github_repo",
+        ReferenceType::SlackThread => "slack_thread",
+        ReferenceType::SentryEvent => "sentry_event",
+        ReferenceType::Signal => "signal",
+        ReferenceType::Act => "act",
+        ReferenceType::Receipt => "receipt",
+        ReferenceType::GraphReceipt => "graph_receipt",
         ReferenceType::HarnessReceipt => "harness_receipt",
+        ReferenceType::Artifact => "artifact",
+        ReferenceType::Verification => "verification",
         ReferenceType::Harness => "harness",
         ReferenceType::Host => "host",
+        ReferenceType::Deployment => "deployment",
+        ReferenceType::Surface => "surface",
+        ReferenceType::Target => "target",
+        ReferenceType::Opportunity => "opportunity",
+        ReferenceType::ThesisAssessment => "thesis_assessment",
+        ReferenceType::Selection => "selection",
+        ReferenceType::SkillBinding => "skill_binding",
+        ReferenceType::TargetTransitionEntry => "target_transition_entry",
+        ReferenceType::SelectionCycle => "selection_cycle",
+        ReferenceType::Decision => "decision",
+        ReferenceType::ReflectionEntry => "reflection_entry",
+        ReferenceType::FeedEntry => "feed_entry",
         ReferenceType::Principal => "principal",
-        _ => "reference",
+        ReferenceType::AuthorityProof => "authority_proof",
+        ReferenceType::ScopeAdmission => "scope_admission",
+        ReferenceType::Grant => "grant",
+        ReferenceType::Mandate => "mandate",
+        ReferenceType::Credential => "credential",
+        ReferenceType::WebhookDelivery => "webhook_delivery",
+        ReferenceType::RedactionPolicy => "redaction_policy",
+        ReferenceType::ExternalUrl => "external_url",
     }
 }
 

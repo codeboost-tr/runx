@@ -42,10 +42,11 @@ pub struct ValidatedTool {
 }
 
 pub fn parse_tool_manifest_yaml(yaml: &str) -> Result<RawToolManifestIr, ParseError> {
-    let parsed: JsonValue = serde_yml::from_str(yaml).map_err(|error| ParseError::InvalidYaml {
-        field: "tool_manifest".to_owned(),
-        message: error.to_string(),
-    })?;
+    let parsed: JsonValue =
+        serde_norway::from_str(yaml).map_err(|error| ParseError::InvalidYaml {
+            field: "tool_manifest".to_owned(),
+            message: error.to_string(),
+        })?;
     manifest_from_value(parsed, yaml, "Tool manifest YAML must parse to an object.")
 }
 

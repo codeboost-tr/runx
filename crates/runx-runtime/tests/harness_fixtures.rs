@@ -100,6 +100,35 @@ expect:
 }
 
 #[test]
+fn retired_receipt_expectations_are_rejected() {
+    for field in [
+        "skill_execution",
+        "graph_execution",
+        "skill_name",
+        "source_type",
+        "graph_name",
+        "owner",
+    ] {
+        let result = parse_harness_fixture(&format!(
+            r#"
+name: old
+kind: skill
+target: ../skills/echo
+expect:
+  receipt:
+    {field}: value
+"#,
+        ));
+
+        assert!(matches!(
+            result,
+            Err(HarnessFixtureError::RetiredReceiptField { field_path })
+                if field_path == format!("expect.receipt.{field}")
+        ));
+    }
+}
+
+#[test]
 fn rejects_unsupported_fixture_mode_with_stable_path() {
     let result = parse_harness_fixture(
         r#"

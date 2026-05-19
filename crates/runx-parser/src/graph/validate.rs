@@ -13,7 +13,7 @@ use crate::{ParseError, ValidationError};
 
 pub fn parse_graph_yaml(source: &str) -> Result<RawGraphIr, ParseError> {
     let document: JsonObject =
-        serde_yml::from_str(source).map_err(|error| ParseError::InvalidYaml {
+        serde_norway::from_str(source).map_err(|error| ParseError::InvalidYaml {
             field: "graph".to_owned(),
             message: error.to_string(),
         })?;

@@ -10,8 +10,8 @@ use runx_parser::{
 use serde_json::{Value, json};
 use sha2::{Digest, Sha256};
 
-use crate::refs::safe_skill_package_parts;
-use crate::types::TrustTier;
+use super::refs::safe_skill_package_parts;
+use super::types::TrustTier;
 
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct InstallCandidate {

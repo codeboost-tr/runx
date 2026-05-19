@@ -2,6 +2,8 @@
 use std::ffi::{OsStr, OsString};
 use std::path::PathBuf;
 
+use crate::connect::ConnectPlan;
+
 pub const DEFAULT_NPM_PACKAGE: &str = "@runxhq/cli@latest";
 
 #[derive(Debug, Eq, PartialEq)]
@@ -12,6 +14,7 @@ pub enum LauncherAction {
     RunNew(NewPlan),
     RunHistory(HistoryPlan),
     RunHarness(HarnessPlan),
+    RunConnect(ConnectPlan),
     RunTool(ToolPlan),
     PrintHelp,
     PrintVersion,
@@ -69,7 +72,7 @@ pub fn plan_launcher(
     npm_package: Option<OsString>,
     js_bin: Option<OsString>,
 ) -> LauncherAction {
-    plan_launcher_with_rust_harness(args, npm_package, js_bin, None)
+    plan_launcher_with_native_options(args, npm_package, js_bin, NativeLauncherOptions::default())
 }
 
 pub fn plan_launcher_with_rust_harness(
@@ -77,6 +80,29 @@ pub fn plan_launcher_with_rust_harness(
     npm_package: Option<OsString>,
     js_bin: Option<OsString>,
     rust_harness: Option<OsString>,
+) -> LauncherAction {
+    plan_launcher_with_native_options(
+        args,
+        npm_package,
+        js_bin,
+        NativeLauncherOptions {
+            rust_cli: None,
+            rust_harness,
+        },
+    )
+}
+
+#[derive(Default)]
+pub struct NativeLauncherOptions {
+    pub rust_cli: Option<OsString>,
+    pub rust_harness: Option<OsString>,
+}
+
+pub fn plan_launcher_with_native_options(
+    args: Vec<OsString>,
+    npm_package: Option<OsString>,
+    js_bin: Option<OsString>,
+    native: NativeLauncherOptions,
 ) -> LauncherAction {
     if has_arg(&args, "--shim-version") {
         return LauncherAction::PrintVersion;
@@ -86,24 +112,34 @@ pub fn plan_launcher_with_rust_harness(
         return LauncherAction::PrintHelp;
     }
 
-    if rust_harness_requested(rust_harness.as_deref()) && first_arg_is(&args, "harness") {
+    if native_signal_requested(native.rust_harness.as_deref()) && first_arg_is(&args, "harness") {
         return native_harness_plan(&args);
     }
 
-    if first_arg_is(&args, "new") {
-        return parse_new_plan(&args).map_or_else(LauncherAction::Error, LauncherAction::RunNew);
-    }
+    if native_signal_requested(native.rust_cli.as_deref()) {
+        if first_arg_is(&args, "connect") {
+            return crate::connect::parse_connect_plan(&args)
+                .map_or_else(LauncherAction::Error, LauncherAction::RunConnect);
+        }
 
-    if first_arg_is(&args, "init") {
-        return parse_init_plan(&args).map_or_else(LauncherAction::Error, LauncherAction::RunInit);
-    }
+        if first_arg_is(&args, "new") {
+            return parse_new_plan(&args)
+                .map_or_else(LauncherAction::Error, LauncherAction::RunNew);
+        }
 
-    if first_arg_is(&args, "history") {
-        return LauncherAction::RunHistory(HistoryPlan { args });
-    }
+        if first_arg_is(&args, "init") {
+            return parse_init_plan(&args)
+                .map_or_else(LauncherAction::Error, LauncherAction::RunInit);
+        }
 
-    if first_arg_is(&args, "tool") && tool_subcommand_is_native(&args) {
-        return parse_tool_plan(&args).map_or_else(LauncherAction::Error, LauncherAction::RunTool);
+        if first_arg_is(&args, "history") {
+            return LauncherAction::RunHistory(HistoryPlan { args });
+        }
+
+        if first_arg_is(&args, "tool") && tool_subcommand_is_native(&args) {
+            return parse_tool_plan(&args)
+                .map_or_else(LauncherAction::Error, LauncherAction::RunTool);
+        }
     }
 
     if let Some(js_bin) = non_empty_os(js_bin) {
@@ -146,12 +182,14 @@ Usage:
 Environment:
   RUNX_NPM_PACKAGE  npm package spec to execute, defaults to {DEFAULT_NPM_PACKAGE}
   RUNX_JS_BIN       local JavaScript runx entrypoint to execute with node
+  RUNX_RUST_CLI     opt into native Rust candidate commands before the CLI cutover
   RUNX_RUST_HARNESS opt into native Rust `runx harness <fixture>` replay
 
 Native commands:
   runx new <name> [--directory dir] [--json]
   runx init [-g|--global] [--prefetch official] [--json]
   runx history [query] [--skill s] [--status s] [--source s] [--actor a] [--artifact-type t] [--since iso] [--until iso] [--receipt-dir dir] [--json]
+  runx connect list|revoke <grant-id>|<provider> [--scope scope] [--scope-family family] [--authority-kind read_only|constructive|destructive] [--target-repo owner/repo] [--target-locator locator] [--json]
   runx tool build <tool-dir>|--all [--json]
   runx tool search <query> [--source source] [--json]
   runx tool inspect <ref> [--source source] [--json]
@@ -179,7 +217,7 @@ fn non_empty_os(value: Option<OsString>) -> Option<OsString> {
     value.filter(|value| !value.is_empty())
 }
 
-fn rust_harness_requested(value: Option<&OsStr>) -> bool {
+fn native_signal_requested(value: Option<&OsStr>) -> bool {
     value.is_some_and(|value| !value.is_empty() && value != OsStr::new("0"))
 }
 

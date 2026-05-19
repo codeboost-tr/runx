@@ -1,9 +1,9 @@
 use std::cell::RefCell;
 use std::path::Path;
 
-use runx_registry_client::{
-    AcquireOptions, HttpRequest, HttpResponse, InstallCandidate, InstallError,
-    InstallLocalSkillOptions, InstallStatus, RegistryClient, RegistryClientError,
+use runx_runtime::registry::{
+    AcquireOptions, HostedHttpError, HttpMethod, HttpRequest, HttpResponse, InstallCandidate,
+    InstallError, InstallLocalSkillOptions, InstallStatus, RegistryClient, RegistryClientError,
     RegistryResolveError, Transport, TrustTier, install_local_skill, materialization_cache_path,
     materialization_digest_marker, parse_registry_ref,
 };
@@ -43,7 +43,7 @@ impl MockTransport {
 }
 
 impl Transport for &MockTransport {
-    fn send(&self, request: HttpRequest) -> Result<HttpResponse, RegistryClientError> {
+    fn send(&self, request: HttpRequest) -> Result<HttpResponse, HostedHttpError> {
         self.requests.borrow_mut().push(request);
         Ok(self.responses.borrow_mut().remove(0))
     }
@@ -61,6 +61,7 @@ fn search_builds_url_and_parses_trust_tier() -> Result<(), Box<dyn std::error::E
         transport.requests()[0].url,
         "https://registry.example/v1/skills?q=echo&limit=20"
     );
+    assert_eq!(transport.requests()[0].method, HttpMethod::Get);
     Ok(())
 }
 
@@ -170,6 +171,8 @@ fn acquire_requires_installation_id_and_posts_default_channel()
     assert!(transport.requests()[0].body.as_ref().is_some_and(|body| {
         body.contains("\"installation_id\":\"inst_1\"") && body.contains("\"channel\":\"cli\"")
     }));
+    assert_eq!(transport.requests()[0].method, HttpMethod::Post);
+    assert_eq!(transport.requests()[0].headers[0].name, "content-type");
     Ok(())
 }
 

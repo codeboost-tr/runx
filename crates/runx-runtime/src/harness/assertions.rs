@@ -144,12 +144,14 @@ fn assert_receipt_digests(
     expected: &HarnessReceiptExpectation,
     actual: &HarnessReceipt,
 ) -> Result<(), HarnessReplayError> {
-    let body_digest = canonical_receipt_body_digest(actual).map_err(receipt_digest_error)?;
-    assert_equal(
-        "expect.receipt.body_digest",
-        &expected.body_digest,
-        body_digest,
-    )?;
+    if let Some(expected_body_digest) = &expected.body_digest {
+        let body_digest = canonical_receipt_body_digest(actual).map_err(receipt_digest_error)?;
+        assert_equal(
+            "expect.receipt.body_digest",
+            expected_body_digest,
+            body_digest,
+        )?;
+    }
     if let Some(expected_digest) = &expected.receipt_digest {
         let receipt_digest = canonical_receipt_digest(actual).map_err(receipt_digest_error)?;
         assert_equal(

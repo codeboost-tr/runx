@@ -28,10 +28,11 @@ pub struct SkillRunnerManifest {
 }
 
 pub fn parse_runner_manifest_yaml(yaml: &str) -> Result<RawRunnerManifestIr, ParseError> {
-    let parsed: JsonValue = serde_yml::from_str(yaml).map_err(|error| ParseError::InvalidYaml {
-        field: "runner_manifest".to_owned(),
-        message: error.to_string(),
-    })?;
+    let parsed: JsonValue =
+        serde_norway::from_str(yaml).map_err(|error| ParseError::InvalidYaml {
+            field: "runner_manifest".to_owned(),
+            message: error.to_string(),
+        })?;
     let JsonValue::Object(document) = parsed else {
         return Err(ParseError::InvalidDocument {
             field: "runner_manifest".to_owned(),

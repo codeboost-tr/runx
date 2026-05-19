@@ -2,8 +2,8 @@
 spec_version: '2.0'
 task_id: rust-local-config
 created: '2026-05-18T00:00:00Z'
-updated: '2026-05-19T00:00:00Z'
-status: draft
+updated: '2026-05-19T09:28:44Z'
+status: completed
 harden_status: blocked
 size: small
 risk_level: medium
@@ -13,18 +13,14 @@ risk_level: medium
 
 ## Current State
 
-Status: draft
-Current phase: none
-Next: approve
-Reason: draft created under `plans/rust-takeover.md`. Hardened for
-implementation readiness after reading the current TS config sources. Covers
-`runx config` plus the Rust local config API needed by managed-agent loading and
-skill profile resolution.
-Blockers: `rust-runtime-skeleton`; choose/land the Rust module boundary because
-`crates/runx-runtime/src/config/*` does not exist today.
-Allowed follow-up command: `scafld harden rust-local-config`
-Latest runner update: none
-Review gate: not_started
+Status: completed
+Current phase: final
+Next: done
+Reason: task completed
+Blockers: none
+Allowed follow-up command: `none`
+Latest runner update: 2026-05-19T09:28:44Z
+Review gate: pass
 
 ## Summary
 
@@ -186,3 +182,17 @@ Out of scope:
   move to `runx-core`. For this draft, keep implementation in `runx-runtime`
   because that is the existing impacted package, but export a narrow API so it
   can move later without changing callers.
+
+## Review
+
+Status: completed
+Verdict: pass
+Mode: verify
+Summary: Human-reviewed override accepted: Implemented Rust local config parity with encrypted local agent keys, managed-agent env overlay, profile resolution, missing/malformed config handling, private file mode checks, and TS-compatible blank env behavior. Validation passed: pnpm targeted config/agent/cli tests, cargo test -p runx-runtime config, cargo test -p runx-runtime, cargo fmt --all --check, cargo clippy -p runx-runtime --all-targets -D warnings.
+
+Attack log:
+- `review gate`: manual human audit -> clean (Implemented Rust local config parity with encrypted local agent keys, managed-agent env overlay, profile resolution, missing/malformed config handling, private file mode checks, and TS-compatible blank env behavior. Validation passed: pnpm targeted config/agent/cli tests, cargo test -p runx-runtime config, cargo test -p runx-runtime, cargo fmt --all --check, cargo clippy -p runx-runtime --all-targets -D warnings.)
+
+Findings:
+- none
+

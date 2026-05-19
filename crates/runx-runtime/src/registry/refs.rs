@@ -1,7 +1,7 @@
 use std::path::{Path, PathBuf};
 
-use crate::http::{RegistryClient, RegistryClientError};
-use crate::types::ResolvedRegistryRef;
+use super::http::{RegistryClient, RegistryClientError};
+use super::types::ResolvedRegistryRef;
 
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct ParsedRegistryRef {
@@ -44,7 +44,7 @@ pub fn parse_registry_ref(value: &str) -> ParsedRegistryRef {
     }
 }
 
-pub fn resolve_remote_registry_ref<T: crate::http::Transport>(
+pub fn resolve_remote_registry_ref<T: super::http::Transport>(
     client: &RegistryClient<T>,
     registry_ref: &str,
     version_override: Option<&str>,

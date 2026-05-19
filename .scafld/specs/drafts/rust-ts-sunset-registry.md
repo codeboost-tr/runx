@@ -16,11 +16,11 @@ risk_level: high
 Status: draft
 Current phase: hardened
 Next: approve
-Reason: hardened against the active `rust-registry-client` plan and the
+Reason: hardened against the active `runx-runtime::registry` plan and the
 harness-spine vocabulary. Sixth TS sunset.
-Blockers: `rust-ts-sunset-receipts` complete; `rust-registry-client` complete;
-`crates/runx-registry-client` consumed by every registry IO surface in the CLI
-and runtime.
+Blockers: `rust-ts-sunset-receipts` complete; `runx-runtime::registry` complete;
+`crates/runx-runtime/src/registry/` consumed by every registry IO surface in the
+CLI and runtime.
 Allowed follow-up command: `scafld approve rust-ts-sunset-registry`
 Latest runner update: none
 Review gate: not_started
@@ -29,7 +29,7 @@ Review gate: not_started
 
 Delete the TypeScript registry core domain and its public subpath export:
 `packages/core/src/registry/**` and `@runxhq/core/registry`. Registry IO becomes
-Rust-owned through `crates/runx-registry-client`; TS does not retain compat
+Rust-owned through `crates/runx-runtime/src/registry/`; TS does not retain compat
 shims, legacy emitted registry shapes, or a second-version registry surface.
 
 Product registry names stay product names. Keep registry skill names, package
@@ -48,8 +48,7 @@ Packages:
 - `@runxhq/core`
 - `@runxhq/cli`
 - `@runxhq/runtime-local`
-- `crates/runx-registry-client`
-- `crates/runx-runtime` (thin runtime integration only)
+- `crates/runx-runtime` (`registry` module owns registry IO and install logic)
 - `cloud/packages/api` (registry HTTP routes; not touched)
 
 Current TypeScript sources:
@@ -64,13 +63,13 @@ Files impacted:
 - `packages/core/package.json` (`"./registry"` export removed)
 - TS importers only as needed to stop using `@runxhq/core/registry`
 - Registry fixture/test references only as needed to point at
-  `runx-registry-client`
+  `runx-runtime::registry`
 
 Invariants:
 - Rust source of truth: all registry search, read, acquire, resolve, and local
-  install semantics are owned by `crates/runx-registry-client`.
+  install semantics are owned by `crates/runx-runtime/src/registry/`.
 - Hosted registry HTTP behavior is unchanged. This sunset consumes the surface
-  already implemented by `runx-registry-client`; it does not add endpoints,
+  already implemented by `runx-runtime::registry`; it does not add endpoints,
   negotiate a new version, or invent fallback payloads.
 - There is no `@runxhq/core/registry` re-export, proxy module, TS wrapper,
   cross-language adapter, compat shim, legacy shape emitter, or `/v2` registry
@@ -78,7 +77,7 @@ Invariants:
 - Trust tiers (`first_party`, `verified`, `community`) remain exact
   server-provided values. TS deletion must not reintroduce owner-derived trust
   logic.
-- Registry install package paths keep the `runx-registry-client`
+- Registry install package paths keep the `runx-runtime::registry`
   normalization: namespaced refs derive owner/name path components; bare refs
   derive from the skill name.
 - Direct `runx skill add` / `runx add` remains a local install action. When
@@ -91,8 +90,9 @@ Invariants:
 
 ## Objectives
 
-- Prove every live registry IO caller has moved to `crates/runx-registry-client`
-  or a Rust-owned launcher/runtime boundary before deleting TS.
+- Prove every live registry IO caller has moved to
+  `crates/runx-runtime/src/registry/` or a Rust-owned launcher/runtime boundary
+  before deleting TS.
 - Delete `packages/core/src/registry/**` and remove the `@runxhq/core/registry`
   package export.
 - Remove or port TS tests whose only purpose was to validate the deleted TS
@@ -115,7 +115,7 @@ Out of scope:
 - Cloud-side registry routes / logic.
 - Hosted namespace ownership and publisher authorization policy.
 - Registry signing / attestation hierarchy beyond pass-through validation that
-  already belongs to `runx-registry-client`.
+  already belongs to `runx-runtime::registry`.
 - Adding a TS-to-Rust compatibility layer.
 - Adding a second registry API version.
 - Changing product registry skill names, owner/name refs, or install package
@@ -124,16 +124,15 @@ Out of scope:
 ## Dependencies
 
 - `rust-ts-sunset-receipts`.
-- `rust-registry-client` completed and handed off, with
-  `crates/runx-registry-client` accepted as the source for registry search,
-  read, acquire, resolve, and local install.
+- `runx-runtime::registry` completed and handed off, accepted as the source for
+  registry search, read, acquire, resolve, and local install.
 - `rust-harness` or equivalent harness-spine receipt support completed before
   any registry install evidence is used as cutover proof.
 
 ## Sequencing
 
-1. Finish `rust-registry-client` first. The crate must expose and test the
-   surfaces currently represented by `RegistryClient`, `RegistryStore`,
+1. Finish `runx-runtime::registry` first. The runtime module must expose and
+   test the surfaces currently represented by `RegistryClient`, `RegistryStore`,
    `resolveRegistrySkill`, `acquireRegistrySkill`, `materializeRegistrySkill`,
    and local skill install helpers.
 2. Confirm CLI/runtime registry callers use the Rust client path. This includes
@@ -150,7 +149,7 @@ Out of scope:
    harness-spine vocabulary only.
 6. Run the full acceptance command set before approval. If a command needs new
    Rust integration that is not yet present, stop and return to
-   `rust-registry-client` rather than adding a TS shim here.
+   `runx-runtime::registry` rather than adding a TS shim here.
 
 ## Acceptance Criteria
 
@@ -160,7 +159,7 @@ Out of scope:
   `@runxhq/core/registry` or reaches into `packages/core/src/registry`.
 - Registry search, read, acquire, bare-name resolution, idempotent install,
   digest/profile digest validation, runner manifest validation, and safe package
-  path derivation are covered by `runx-registry-client` tests.
+  path derivation are covered by `runx-runtime::registry` tests.
 - CLI/runtime registry flows use the Rust registry client as the source for
   registry IO. TS may invoke a Rust binary or launcher boundary, but it must not
   duplicate registry semantics in TS.
@@ -182,11 +181,11 @@ Out of scope:
 test ! -d packages/core/src/registry
 node -e 'const pkg = require("./packages/core/package.json"); if (pkg.exports && pkg.exports["./registry"]) process.exit(1)'
 ! rg -n '@runxhq/core/registry|packages/core/src/registry|from "\.?\.?/.*registry/store|from "\.?\.?/.*registry/resolve' packages tests scripts tools skills --glob '!**/dist/**' --glob '!**/node_modules/**'
-cargo test --manifest-path crates/Cargo.toml -p runx-registry-client
+cargo test --manifest-path crates/Cargo.toml -p runx-runtime --test registry_client
 cargo test --manifest-path crates/Cargo.toml -p runx-runtime registry
 pnpm test -- tests/graph-registry-refs.test.ts tests/graph-registry-refs.integration.test.ts tests/skill-add.test.ts tests/skill-search.test.ts tests/skill-publish.test.ts tests/registry-ce.test.ts packages/cli/src/index.test.ts
-! rg -n 'skill_execution|graph_execution|skill_name|graph_name' fixtures/registry crates/runx-registry-client crates/runx-runtime
-cargo clippy --manifest-path crates/Cargo.toml -p runx-registry-client -p runx-runtime --all-targets -- -D warnings
+! rg -n 'skill_execution|graph_execution|skill_name|graph_name' fixtures/registry crates/runx-runtime
+cargo clippy --manifest-path crates/Cargo.toml -p runx-runtime --all-targets -- -D warnings
 cargo fmt --manifest-path crates/Cargo.toml --all --check
 pnpm typecheck
 ```
@@ -194,13 +193,13 @@ pnpm typecheck
 ## Rollback And Repair
 
 - Pre-merge rollback is to back out the whole sunset implementation patch and
-  return to the `rust-registry-client` blocker. Do not add an interim
+  return to the `runx-runtime::registry` blocker. Do not add an interim
   `@runxhq/core/registry` proxy to keep partial deletion alive.
-- Post-merge repair is forward through `crates/runx-registry-client`,
+- Post-merge repair is forward through `crates/runx-runtime/src/registry/`,
   `crates/runx-runtime`, or the launcher boundary. Do not resurrect TS registry
   modules, legacy emitted shapes, or a second registry version.
 - If a CLI/runtime caller still needs a registry capability, add it to
-  `runx-registry-client` with tests, then wire the caller to that Rust-owned
+  `runx-runtime::registry` with tests, then wire the caller to that Rust-owned
   capability.
 - If hosted payload validation is too strict for the live registry, repair the
   Rust payload parser and fixture against the hosted surface; do not tolerate
@@ -224,14 +223,14 @@ Started: 2026-05-19T06:13:24Z
 Ended: 2026-05-19T06:13:24Z
 Verdict: passed
 Provider: manual
-Summary: Reframed the draft around `crates/runx-registry-client` ownership,
+Summary: Reframed the draft around `runx-runtime::registry` ownership,
 explicit TS deletion, harness-spine receipt vocabulary, acceptance commands,
 sequencing, and repair rules.
 
 Checks:
 - registry client alignment
   - Result: passed
-  - Evidence: The spec names `crates/runx-registry-client` as the source for
+  - Evidence: The spec names `runx-runtime::registry` as the source for
     registry search, read, acquire, resolve, and local install.
 - sunset target
   - Result: passed

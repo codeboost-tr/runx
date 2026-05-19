@@ -6,11 +6,14 @@
 
 pub mod adapter;
 pub mod caller;
+pub mod config;
+pub mod connect;
 pub mod doctor;
 pub mod error;
 mod fanout;
 mod graph;
 pub mod harness;
+pub mod hosted_http;
 pub mod journal;
 pub mod receipt_paths;
 pub mod receipt_store;
@@ -33,6 +36,20 @@ pub mod adapters;
 
 pub use adapter::{InvocationStatus, SkillAdapter, SkillInvocation, SkillOutput};
 pub use caller::{Caller, NoopCaller};
+pub use config::{
+    ConfigError, ConfigKey, LocalProfileSource, ManagedAgentConfig, ManagedAgentProvider,
+    ResolvedLocalProfile, RunxAgentConfig, RunxConfigFile, load_local_agent_api_key,
+    load_managed_agent_config, load_runx_config_file, lookup_runx_config_value,
+    mask_runx_config_file, parse_config_key, resolve_local_skill_profile,
+    resolve_path_from_user_input, resolve_runx_global_home_dir, resolve_runx_home_dir,
+    update_runx_config_value, write_runx_config_file,
+};
+pub use connect::{
+    ConnectClient, ConnectClientOptions, ConnectError, ConnectOpener, ConnectResult,
+    HttpConnectGrant, HttpConnectListResponse, HttpConnectPreprovisionRequest,
+    HttpConnectReadyResponse, HttpConnectRevokeResponse, ProcessConnectOpener,
+    load_connect_options_from_env,
+};
 pub use doctor::{DoctorOptions, default_doctor_options, run_doctor};
 pub use error::RuntimeError;
 pub use harness::{

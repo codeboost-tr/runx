@@ -1,77 +1,27 @@
 use serde_json::{Value, json};
 use url::Url;
 
-use crate::payload::{parse_acquire, parse_read, parse_search};
-use crate::refs::{RegistryResolveError, resolve_remote_registry_ref};
-use crate::types::{
+use super::payload::{parse_acquire, parse_read, parse_search};
+use super::refs::{RegistryResolveError, resolve_remote_registry_ref};
+use super::types::{
     AcquiredRegistrySkill, RegistrySearchResult, RegistrySkillDetail, ResolvedRegistryRef,
 };
 
-#[derive(Clone, Debug, PartialEq, Eq)]
-pub struct HttpRequest {
-    pub method: String,
-    pub url: String,
-    pub body: Option<String>,
-}
-
-#[derive(Clone, Debug, PartialEq, Eq)]
-pub struct HttpResponse {
-    pub status: u16,
-    pub body: String,
-}
-
-pub trait Transport {
-    fn send(&self, request: HttpRequest) -> Result<HttpResponse, RegistryClientError>;
-}
+pub use crate::hosted_http::{
+    CommandHttpTransport as DefaultHostedTransport, HostedHttpError, HostedHttpHeader,
+    HostedHttpRequest as HttpRequest, HostedHttpResponse as HttpResponse,
+    HostedTransport as Transport, HttpMethod,
+};
 
 #[derive(Clone, Debug)]
-pub struct ReqwestTransport {
-    client: reqwest::blocking::Client,
-}
-
-impl ReqwestTransport {
-    pub fn new() -> Self {
-        Self {
-            client: reqwest::blocking::Client::new(),
-        }
-    }
-}
-
-impl Default for ReqwestTransport {
-    fn default() -> Self {
-        Self::new()
-    }
-}
-
-impl Transport for ReqwestTransport {
-    fn send(&self, request: HttpRequest) -> Result<HttpResponse, RegistryClientError> {
-        let method = match request.method.as_str() {
-            "GET" => reqwest::Method::GET,
-            "POST" => reqwest::Method::POST,
-            method => return Err(RegistryClientError::UnsupportedMethod(method.to_owned())),
-        };
-        let mut builder = self.client.request(method, &request.url);
-        if let Some(body) = request.body {
-            builder = builder
-                .header(reqwest::header::CONTENT_TYPE, "application/json")
-                .body(body);
-        }
-        let response = builder.send()?;
-        let status = response.status().as_u16();
-        let body = response.text()?;
-        Ok(HttpResponse { status, body })
-    }
-}
-
-#[derive(Clone, Debug)]
-pub struct RegistryClient<T = ReqwestTransport> {
+pub struct RegistryClient<T = DefaultHostedTransport> {
     base_url: String,
     transport: T,
 }
 
-impl RegistryClient<ReqwestTransport> {
+impl RegistryClient<DefaultHostedTransport> {
     pub fn new(base_url: impl AsRef<str>) -> Result<Self, RegistryClientError> {
-        Self::with_transport(base_url, ReqwestTransport::new())
+        Self::with_transport(base_url, DefaultHostedTransport::new())
     }
 }
 
@@ -81,7 +31,8 @@ impl<T: Transport> RegistryClient<T> {
         transport: T,
     ) -> Result<Self, RegistryClientError> {
         let base_url = strip_one_trailing_slash(base_url.as_ref());
-        Url::parse(&base_url)?;
+        Url::parse(&base_url)
+            .map_err(|error| RegistryClientError::HostedHttp(HostedHttpError::InvalidUrl(error)))?;
         Ok(Self {
             base_url,
             transport,
@@ -97,7 +48,8 @@ impl<T: Transport> RegistryClient<T> {
         query: &str,
         limit: usize,
     ) -> Result<Vec<RegistrySearchResult>, RegistryClientError> {
-        let mut url = Url::parse(&format!("{}/v1/skills", self.base_url))?;
+        let mut url = Url::parse(&format!("{}/v1/skills", self.base_url))
+            .map_err(|error| RegistryClientError::HostedHttp(HostedHttpError::InvalidUrl(error)))?;
         {
             let mut pairs = url.query_pairs_mut();
             let trimmed = query.trim();
@@ -108,8 +60,9 @@ impl<T: Transport> RegistryClient<T> {
         }
         let route = route_path(url.path(), url.query());
         let response = self.transport.send(HttpRequest {
-            method: "GET".to_owned(),
+            method: HttpMethod::Get,
             url: url.to_string(),
+            headers: Vec::new(),
             body: None,
         })?;
         ensure_success(&route, response.status)?;
@@ -132,8 +85,9 @@ impl<T: Transport> RegistryClient<T> {
             encode_segment(&suffix)
         );
         let response = self.transport.send(HttpRequest {
-            method: "GET".to_owned(),
+            method: HttpMethod::Get,
             url: format!("{}{}", self.base_url, route),
+            headers: Vec::new(),
             body: None,
         })?;
         if response.status == 404 {
@@ -166,8 +120,9 @@ impl<T: Transport> RegistryClient<T> {
         })
         .to_string();
         let response = self.transport.send(HttpRequest {
-            method: "POST".to_owned(),
+            method: HttpMethod::Post,
             url: format!("{}{}", self.base_url, route),
+            headers: vec![HostedHttpHeader::new("content-type", "application/json")],
             body: Some(body),
         })?;
         ensure_success(&route, response.status)?;
@@ -193,12 +148,8 @@ pub struct AcquireOptions<'a> {
 
 #[derive(Debug, thiserror::Error)]
 pub enum RegistryClientError {
-    #[error("invalid registry url: {0}")]
-    InvalidUrl(#[from] url::ParseError),
-    #[error("registry transport failed: {0}")]
-    Transport(#[from] reqwest::Error),
-    #[error("unsupported HTTP method: {0}")]
-    UnsupportedMethod(String),
+    #[error(transparent)]
+    HostedHttp(#[from] HostedHttpError),
     #[error("invalid registry skill id '{0}'. Expected '<owner>/<name>'.")]
     InvalidSkillId(String),
     #[error("registry route {route} failed with HTTP {status}")]

@@ -2,7 +2,7 @@
 spec_version: '2.0'
 task_id: runx-target-repo-runners
 created: '2026-05-19T02:08:02Z'
-updated: '2026-05-19T02:30:00Z'
+updated: '2026-05-19T12:11:22Z'
 status: draft
 harden_status: not_run
 size: large
@@ -45,9 +45,11 @@ Production shape to generalize:
 - Source thread: Slack/GitHub/Sentry-originated issue intake.
 - Source issue: a GitHub issue used as durable runx source thread.
 - Target repo: the actual codebase receiving the PR.
-- Runner: a governed scafld/runx worker inside the target repo.
+- Runner: a governed scafld/runx worker inside the target repo, executed as a
+  child harness with attenuated authority.
 - Follow-up publishing: source Slack thread and source GitHub issue receive the
-  issue link, triage result, PR link, review gate, and outcome.
+  issue link, triage result, PR link, review gate, and closure/proof
+  projection.
 
 Candidate touchpoints:
 - `skills/issue-intake/**`
@@ -62,16 +64,18 @@ Invariants:
 - Target repo selection is policy-driven and fail-closed.
 - Runner availability is explicit; no hidden fallback to the source repo.
 - A target repo must be scafld-ready before mutating issue-to-PR work runs.
+- Target execution runs inside a governed harness; the PR-producing act uses
+  `form: "revision"` and is proved only by the sealing harness receipt.
 - Dedupe runs before creating a new PR.
 - PR packaging records `metadata.dedupe.strategy`, `metadata.dedupe.key`, and
   `metadata.dedupe.result` so retries are auditable and provider pushers can
   reuse an existing PR path.
-- Source issue/thread ids are carried through every milestone event.
+- Source issue/thread ids are carried through every milestone act receipt.
 - Public comments use repo names and URLs, not operator-local checkout paths.
 
 ## Objectives
 
-- Define target repo runner model and source-to-target context contract.
+- Define target repo runner model and source-to-target harness context.
 - Add policy-backed target repo selection and runner availability checks.
 - Add PR dedupe before creating a new branch/PR.
 - Preserve source issue/thread metadata through runner execution and outbox
@@ -82,15 +86,16 @@ Invariants:
 ## Scope
 
 In scope:
-- Core issue-to-PR target repo runner contract.
+- Core source-to-target harness runner contract for product issue-to-pr flows.
 - Policy-backed repository and runner selection.
 - Dedupe query and reuse behavior.
 - Source-thread/source-issue carry-through.
 - Tests and fixtures.
 
 Out of scope:
-- Post-merge deployment observation; owned by
-  `runx-post-merge-outcome-observer`.
+- Post-merge deployment observation and source closure publication; owned by
+  `runx-post-merge-outcome-observer`, which now seals closure/proof as harness
+  receipts rather than a peer terminal packet.
 - Slack-specific event listener implementation.
 - Auto-merge behavior.
 - Nitrosend-only wrapper script details except as fixture input.
@@ -112,9 +117,9 @@ Out of scope:
 
 ## Touchpoints
 
-- Issue intake contract payload.
-- Issue-to-PR runner context.
-- GitHub adapter/outbox event builders.
+- Issue intake product payload.
+- Source-to-target harness runner context.
+- GitHub adapter/outbox act/receipt builders.
 - Policy config loader.
 - Dedupe provider query.
 - Aster runner scheduling.
@@ -144,10 +149,10 @@ Required behavior:
 - [ ] Target repo without scafld readiness fails before mutation.
 - [ ] Existing open PR for the dedupe key is reused and linked instead of
   creating another PR.
-- [ ] Pull-request outbox metadata records whether the PR path was created or
-  reused for the dedupe key.
+- [ ] Pull-request outbox metadata and the sealed pull-request harness receipt
+  record whether the PR path was created or reused for the dedupe key.
 - [ ] Source GitHub issue receives the target PR link.
-- [ ] Source Slack thread metadata survives through all outbox events.
+- [ ] Source Slack thread metadata survives through all outbox receipt nodes.
 - [ ] Public output excludes local checkout paths and env-secret values.
 
 ## Phase 1: Contract
@@ -170,15 +175,18 @@ Acceptance:
 Status: pending
 Dependencies: Phase 1
 
-Objective: Execute issue-to-PR work in the selected target repo.
+Objective: Execute product issue-to-pr work through the selected target harness.
 
 Changes:
-- Thread target repo context into runner invocation.
+- Thread target repo context into runner invocation as role-named References.
 - Carry source issue/thread metadata through execution.
 - Ensure public output uses URLs and repo names.
+- Seal target runner execution as a harness receipt containing a `revision`
+  act for branch/PR creation or reuse.
 
 Acceptance:
-- [ ] Cross-repo fixture produces target PR event and source issue/thread event.
+- [ ] Cross-repo fixture produces target PR receipt and source issue/thread
+  reply receipt.
 
 ## Phase 3: Dedupe
 
@@ -190,7 +198,8 @@ Objective: Avoid duplicate PRs for the same issue/fix.
 Changes:
 - Add dedupe key generation and provider lookup.
 - Reuse/link existing PR when policy says so.
-- Preserve the dedupe decision in the pull-request outbox entry metadata.
+- Preserve the dedupe decision in pull-request outbox metadata and in the
+  sealed harness receipt proof path.
 
 Acceptance:
 - [ ] Duplicate fixture reuses the existing PR and produces no new branch.
@@ -198,8 +207,8 @@ Acceptance:
 ## Rollback
 
 - Keep current same-repo path available only until target runner parity is green.
-  Remove duplicate old path during cutover; no legacy aliases or compatibility
-  shims remain.
+  Remove duplicate old path during cutover; do not introduce legacy aliases or
+  compatibility shims.
 
 ## Review
 
@@ -236,5 +245,6 @@ Source: plan
 
 - 2026-05-19: Expanded placeholder into target-repo runner contract after
   Nitrosend source-thread dogfood review.
-- 2026-05-19: Locked the PR dedupe packet shape to outbox metadata so the Rust
-  runner and provider pushers keep retry behavior observable.
+- 2026-05-19: Locked PR dedupe to outbox metadata plus the sealed pull-request
+  harness receipt node so the Rust runner and provider pushers keep retry
+  behavior observable.

@@ -3,7 +3,7 @@
 runx issue automation is governed by harness receipts, not by a tracker-style
 queue object. Source adapters admit signals, decisions open or decline harness
 nodes, contained acts perform revision, reply, review, observation, or
-verification effects, and each harness seals to a receipt.
+verification acts, and each harness seals to a receipt.
 
 ## Ownership
 
@@ -36,7 +36,7 @@ The durable lifecycle is explicit:
 1. A signal records the admitted source event.
 2. A decision opens, defers, declines, or routes a harness.
 3. The harness admits authority and records idempotency.
-4. Acts inside the harness record intent and effect.
+4. Acts inside the harness record intent, form, and closure.
 5. Child harnesses carry attenuated authority.
 6. The harness seals normally or abnormally to a receipt.
 

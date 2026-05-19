@@ -2,7 +2,7 @@
 spec_version: '2.0'
 task_id: rust-aster-runtime-cutover
 created: '2026-05-18T00:00:00Z'
-updated: '2026-05-19T02:35:00Z'
+updated: '2026-05-19T12:11:22Z'
 status: draft
 harden_status: not_run
 size: large
@@ -19,8 +19,9 @@ Next: approve
 Reason: draft created under `plans/rust-takeover.md`. Companion to
 `plans/aster-v1-reset.md`; aster v1 builds against the Rust runtime from
 its first commit.
-Blockers: `rust-runtime-skeleton` complete, `rust-approval-gate-parity`
-complete.
+Blockers: `runx-contract-spine-hard-cutover`, post-cutover harness receipt
+proof/tree APIs, `rust-runtime-skeleton`, and the local slice of
+`rust-approval-gate-parity` complete.
 Allowed follow-up command: `scafld harden rust-aster-runtime-cutover`
 Latest runner update: none
 Review gate: not_started
@@ -150,9 +151,9 @@ Invariants:
 - Use the same `runx.operational_policy.v1` semantic validator/readback that
   backs `runx policy inspect|lint`; Aster must not infer policy by scraping
   adopter config.
-- Wire Aster-run issue-to-PR flows through the post-merge outcome observer so
-  the final human merge/deploy result is a `runx.issue_to_pr_outcome.v1`
-  packet, not a separate repo-local script.
+- Wire Aster-run issue-to-pr flows through the post-merge closure observer so
+  final human merge/deploy state is represented as sealed harness receipt
+  closure/proof, not a separate repo-local script or peer terminal packet.
 - Soak the Rust binding side-by-side with the TS path on aster
   production before the launcher cutover.
 
@@ -182,7 +183,7 @@ Out of scope:
 - `rust-ts-interop-boundary` for the cross-language crossing reference.
 - `runx-operational-policy-config` for policy/admin readback.
 - `runx-target-repo-runners` for Aster-scheduled source-to-target PR flows.
-- `runx-post-merge-outcome-observer` for final outcome observation and
+- `runx-post-merge-outcome-observer` for final closure/proof observation and
   source-thread updates.
 - `plans/aster-v1-reset.md` design pass.
 

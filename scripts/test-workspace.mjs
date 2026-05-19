@@ -5,7 +5,7 @@ import { fileURLToPath } from "node:url";
 
 const workspaceRoot = path.resolve(fileURLToPath(new URL("..", import.meta.url)));
 const pnpm = process.platform === "win32" ? "pnpm.cmd" : "pnpm";
-const forwardedArgs = process.argv.slice(2);
+const forwardedArgs = process.argv.slice(2).filter((arg) => arg !== "--");
 const cliPackageTestTargets = forwardedArgs.filter(isCliPackageTarget);
 const forwardedArgsWithoutCliPackageTest = forwardedArgs.filter((arg) => !isCliPackageTarget(arg));
 

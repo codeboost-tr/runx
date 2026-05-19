@@ -7,8 +7,8 @@ expect:
   status: success
   receipt:
     schema: runx.harness_receipt.v1
-    body_digest: sha256:b2bb0194c93ebafcfb0e60d27b14eda7b360a8468a3b9ae2304e7292c37d91c8
-    receipt_digest: sha256:d9d92cfc962548bf79acd3579e7158b9d091ab95dae50bc5e27572fdd6f38e3e
+    body_digest: sha256:d35cbd4581ceebfcb97fecb90c07a120759940e65af576dc96e1a4f9337443ad
+    receipt_digest: sha256:c97459f56eaebdd3a46a0d956283b4693fd17ed8620d1cf48f192959d3460ce1
     harness_id: hrn_echo-skill_echo
     state: sealed
     disposition: closed

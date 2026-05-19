@@ -2,14 +2,14 @@
 spec_version: '2.0'
 task_id: runx-post-merge-outcome-observer
 created: '2026-05-19T02:08:02Z'
-updated: '2026-05-19T02:30:00Z'
+updated: '2026-05-19T12:11:22Z'
 status: draft
 harden_status: not_run
 size: large
 risk_level: high
 ---
 
-# Runx post-merge outcome observer
+# Runx post-merge closure observer
 
 ## Current State
 
@@ -17,9 +17,9 @@ Status: draft
 Current phase: none
 Next: harden
 Reason: issue-to-PR currently tells a good story through PR creation, but the
-final outcome is still too dependent on repo-local glue. runx core needs an
-observer for merge, close, deploy verification, final source-thread update, and
-issue closure.
+post-merge closure/proof path is still too dependent on repo-local glue. runx
+core needs an observer for merge, close, deploy verification, final
+source-thread update, and issue closure.
 Blockers: `runx-operational-policy-config`; target/source context from
 `runx-target-repo-runners` for cross-repo flows.
 Allowed follow-up command: `scafld harden runx-post-merge-outcome-observer`
@@ -28,10 +28,11 @@ Review gate: not_started
 
 ## Summary
 
-Add a reusable post-merge outcome observer for runx issue-to-PR flows. It
-observes PR merge/close state, runs policy-defined verification, records the
-outcome in receipts/events, updates the source GitHub issue, posts the final
-Slack/source-thread reply, and closes or marks the issue according to policy.
+Add a reusable post-merge closure/proof observer for runx issue-to-PR flows. It
+observes PR merge/close state, runs policy-defined verification, seals the
+observed state and verification proof into harness receipts, updates the source
+GitHub issue, posts the final Slack/source-thread reply, and closes or marks
+the issue according to policy.
 
 The observer does not auto-merge. Human merge remains the default final gate;
 the observer publishes what happened after that gate.
@@ -46,44 +47,49 @@ Production story to support:
 3. Human reviewer approves/merges or closes the PR.
 4. runx observes the result.
 5. runx runs verification appropriate to the target.
-6. runx posts a concise final outcome to the original Slack thread and source
+6. runx posts a concise final reply to the original Slack thread and source
    GitHub issue.
 7. runx closes or labels the issue when policy allows.
 
 Candidate touchpoints:
-- GitHub adapter/outbox event builders.
+- GitHub adapter/outbox receipt builders.
 - `skills/issue-to-pr/**`
 - `skills/work-plan/**`
-- Runtime receipt/event model.
+- Runtime receipt projection model.
 - Aster observer scheduling and status surfaces.
 
 Invariants:
-- Observer is idempotent by issue/PR/outcome key.
+- Observer is idempotent by source issue, PR, act form, and closure key.
 - Source thread metadata must be present before Slack publishing.
-- Closed-unmerged, merged-unverified, merged-verified, failed-verification, and
-  superseded states are distinct.
+- Closed-unmerged, merged-pending-verification, merged-verified,
+  failed-verification, and superseded closures are distinct.
 - Verification output is reviewer-safe and redacted.
 - No hidden auto-merge path is introduced.
-- Terminal observer output normalizes to `runx.issue_to_pr_outcome.v1` before
-  any source issue closure or final source-thread publication.
+- The observer never emits a peer outcome/effect/report packet. It seals a
+  follow-on harness receipt whose contained acts use `form: "observation"`,
+  `form: "verification"`, `form: "reply"`, or `form: "revision"` as needed.
+- Source issue closure and final source-thread publication require a sealed
+  harness receipt with proof-bound closure and verification criteria.
 
 ## Objectives
 
-- Define outcome event model for merged, closed-unmerged, superseded,
-  verification-passed, and verification-failed.
-- Define the `runx.issue_to_pr_outcome.v1` packet for provider outcome, PR
-  state, human gate, verification, close policy, and source-thread target.
+- Define the harness receipt closure/proof model for merged, closed-unmerged,
+  superseded, verification-passed, and verification-failed observations.
+- Define criterion ids, reference roles, closure reason codes, and idempotency
+  keys for provider state, PR state, human gate, verification, close policy,
+  and source-thread targets.
 - Add provider observer for GitHub PR state changes.
-- Add policy-driven verification hook.
-- Publish final outcome to source GitHub issue and Slack/source thread.
+- Add policy-driven verification hook that records verification as a contained
+  act with `form: "verification"` inside a sealed harness receipt.
+- Publish final reply to source GitHub issue and Slack/source thread.
 - Add idempotency/dedupe for repeated webhook or scheduled observer runs.
 - Add fixtures for merged verified, merged failed verify, closed unmerged,
-  missing source thread, and repeated observer events.
+  missing source thread, and repeated observer signals.
 
 ## Scope
 
 In scope:
-- Core outcome observer contract.
+- Core post-merge observer harness contract.
 - GitHub PR state observer.
 - Policy-driven verification command/hook contract.
 - Final issue and source-thread publishing.
@@ -100,22 +106,22 @@ Out of scope:
 
 - `runx-operational-policy-config`.
 - `runx-target-repo-runners` for cross-repo source/target context.
-- `rust-runtime-receipt-path-discovery` for outcome receipt storage.
-- `rust-receipt-proof-verification` for proof-backed final receipts.
+- `rust-runtime-receipt-path-discovery` for harness receipt storage.
+- `rust-receipt-proof-verification` for sealed receipt proof verification.
 
 ## Assumptions
 
 - GitHub is the initial PR provider.
 - Deploy verification can start as command/provider hook output with a stable
   contract before richer hosted integrations land.
-- Source-thread publishing can use the same outbox/event model as earlier
-  milestone comments.
+- Source-thread publishing can use the same outbox act/receipt projection model
+  as earlier milestone comments.
 
 ## Touchpoints
 
 - Provider adapter for PR state.
-- Outbox/feed event builders.
-- Runtime receipt/event summaries.
+- Outbox/feed receipt builders.
+- Runtime receipt summaries.
 - Policy config.
 - Aster observer scheduling/status.
 
@@ -133,41 +139,52 @@ Profile: strict
 Validation:
 - `pnpm test`
 - `cargo test --manifest-path crates/Cargo.toml`
-- outcome-observer fixture command
+- post-merge-observer fixture command
 - `git diff --check`
 
 Required behavior:
 - [ ] Merged PR with passing verification posts one final source issue comment,
   one final source-thread reply, and closes/labels according to policy.
-- [ ] Merged PR with failing verification posts a failure outcome and leaves the
-  source issue open unless policy explicitly says otherwise.
-- [ ] Closed-unmerged PR posts a distinct outcome and does not claim a fix
-  shipped.
-- [ ] Repeated observer event is idempotent.
+- [ ] Merged PR with failing verification posts a final reply projected from a
+  failed verification act and leaves the source issue open unless policy
+  explicitly says otherwise.
+- [ ] Closed-unmerged PR posts a distinct observation closure and does not claim
+  a fix shipped.
+- [ ] Repeated observer signal is idempotent.
 - [ ] Missing source Slack thread fails Slack publish cleanly without posting to
   channel root.
-- [ ] Final outcome includes issue link, PR link, merge sha when available,
-  verification summary, and next human action.
-- [ ] Final outcome validates against `runx.issue_to_pr_outcome.v1` before it
-  is published or used to close the source issue.
-- [ ] Final outcome excludes absolute local paths, raw env vars, secrets, and
-  excessive logs.
+- [ ] Final publication is backed by a sealed harness receipt containing issue
+  link, PR link, merge sha when available, verification summary, closure reason,
+  and next human action.
+- [ ] Final publication validates by reading the sealed harness receipt and
+  proof-bound verification criteria before it is published or used to close the
+  source issue.
+- [ ] Final publication excludes absolute local paths, raw env vars, secrets,
+  and excessive logs.
+- [ ] No fixture, emitted artifact, schema id, or persisted receipt uses
+  `runx.issue_to_pr_outcome.v1`, `issue_to_pr_outcome`, `effect`,
+  `verification_report`, `verification-report`, or `target_outcome`.
 
-## Phase 1: Outcome Model
+## Phase 1: Closure/Proof Model
 
 Status: pending
 Dependencies: `runx-operational-policy-config`
 
-Objective: Define the events, states, and idempotency keys.
+Objective: Define the observer harness, contained acts, closures, references,
+criterion ids, and idempotency keys.
 
 Changes:
-- Add outcome state contract.
-- Add `runx.issue_to_pr_outcome.v1` contract and semantic validation.
+- Add observer harness receipt fixture shape.
+- Add contained act forms for provider observation, deployment verification,
+  source-thread reply, and policy-authorized issue close/label revision.
+- Add closure reason code rules and criterion id binding to harness receipt
+  proof.
 - Add idempotency key rules.
-- Add policy validation for outcome actions.
+- Add policy validation for closure and publication actions.
 
 Acceptance:
-- [ ] Fixtures cover every outcome state.
+- [ ] Fixtures cover every closure state and contain no retired terminal/effect
+  peer artifacts.
 
 ## Phase 2: Observer
 
@@ -179,32 +196,37 @@ Objective: Observe provider PR state and run verification.
 Changes:
 - Add GitHub PR observer adapter.
 - Add verification hook contract.
-- Record outcome receipt/event.
+- Seal observer harness receipts and link them to the source harness receipt
+  tree.
 
 Acceptance:
-- [ ] Merged, closed, and repeated event fixtures produce correct outcomes.
+- [ ] Merged, closed, and repeated signal fixtures produce correct closures,
+  verification proof, and idempotent harness receipt refs.
 
 ## Phase 3: Publishing
 
 Status: pending
 Dependencies: Phase 2
 
-Objective: Publish final outcome to the original source surfaces.
+Objective: Publish the final reply and issue updates to the original source
+surfaces from sealed receipt projections.
 
 Changes:
-- Publish source issue comment.
+- Publish source issue comment from sealed harness receipt projection.
 - Publish source Slack/source-thread reply only when thread metadata is present.
-- Close/label source issue according to policy.
+- Close/label source issue according to policy through a contained revision act.
 
 Acceptance:
 - [ ] Source-thread fixture posts no root-channel messages.
-- [ ] Final comment is concise but contains all review-gate state.
+- [ ] Final comment is concise but contains review-gate, closure, and
+  verification state projected from the sealed harness receipt.
 
 ## Rollback
 
-- Keep repo-local outcome scripts until core observer fixtures are green, then
-  migrate adopters and remove duplicated observer logic. No compatibility alias
-  remains after cutover.
+- Keep repo-local observer scripts until core observer fixtures are green, then
+  migrate adopters and remove duplicated observer logic. Do not introduce
+  compatibility aliases or shim artifacts; cutover removes duplicated observer
+  logic directly.
 
 ## Review
 
@@ -217,7 +239,8 @@ Findings:
 ## Self Eval
 
 - Target score: 9.5. Passing means humans get a complete issue-to-PR-to-merge
-  story without watching multiple channels manually.
+  story backed by sealed harness receipts without watching multiple channels
+  manually.
 
 ## Deviations
 
@@ -226,7 +249,7 @@ Findings:
 ## Metadata
 
 - created_by: scafld
-- planning_reason: make final outcome publishing a reusable runx capability
+- planning_reason: make final post-merge publication a reusable runx capability
 
 ## Origin
 
@@ -239,7 +262,8 @@ Source: plan
 
 ## Planning Log
 
-- 2026-05-19: Expanded placeholder into post-merge outcome observer contract.
-- 2026-05-19: Locked the terminal outcome packet to
-  `runx.issue_to_pr_outcome.v1`; Rust, Aster, and repo wrappers must consume
-  this shape rather than publishing bespoke terminal payloads.
+- 2026-05-19: Expanded placeholder into post-merge observer contract.
+- 2026-05-19: Reconciled with the harness-spine hard cutover. The observer no
+  longer defines a terminal packet; Rust, Aster, and repo wrappers must
+  consume sealed harness receipts with contained observation, verification,
+  reply, and revision acts.

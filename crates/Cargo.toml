@@ -5,7 +5,6 @@ members = [
     "runx-core",
     "runx-parser",
     "runx-receipts",
-    "runx-registry-client",
     "runx-runtime",
     "runx-sdk",
 ]
@@ -16,12 +15,11 @@ runx-contracts = { path = "runx-contracts", version = "0.0.1" }
 runx-core = { path = "runx-core", version = "0.0.1" }
 runx-parser = { path = "runx-parser", version = "0.0.1" }
 runx-receipts = { path = "runx-receipts", version = "0.0.1" }
-runx-registry-client = { path = "runx-registry-client", version = "0.0.1" }
 runx-runtime = { path = "runx-runtime", version = "0.0.1" }
 regex = "1.12.2"
 serde = { version = "1.0.228", features = ["derive"] }
 serde_json = "1.0.149"
-serde_yml = "0.0.12"
+serde_norway = "0.9.42"
 sha2 = "0.10.9"
 thiserror = "2.0.17"
 

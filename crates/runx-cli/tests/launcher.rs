@@ -1,10 +1,35 @@
+use runx_cli::connect::{ConnectAction, ConnectAuthorityKind, ConnectPlan};
 use std::path::PathBuf;
 
 use runx_cli::launcher::{
-    CommandPlan, DEFAULT_NPM_PACKAGE, HarnessPlan, HistoryPlan, InitPlan, LauncherAction, NewPlan,
-    ToolAction, ToolPlan, node_command, npm_command, plan_launcher,
-    plan_launcher_with_rust_harness,
+    CommandPlan, DEFAULT_NPM_PACKAGE, HarnessPlan, HistoryPlan, InitPlan, LauncherAction,
+    NativeLauncherOptions, NewPlan, ToolAction, ToolPlan, node_command, npm_command, plan_launcher,
+    plan_launcher_with_native_options, plan_launcher_with_rust_harness,
 };
+
+fn plan_with_rust_cli(args: Vec<std::ffi::OsString>) -> LauncherAction {
+    plan_launcher_with_native_options(
+        args,
+        None,
+        None,
+        NativeLauncherOptions {
+            rust_cli: Some("1".into()),
+            rust_harness: None,
+        },
+    )
+}
+
+fn plan_with_rust_cli_and_js(args: Vec<std::ffi::OsString>) -> LauncherAction {
+    plan_launcher_with_native_options(
+        args,
+        Some("@runxhq/cli@0.5.22".into()),
+        Some("/repo/oss/packages/cli/bin/runx.js".into()),
+        NativeLauncherOptions {
+            rust_cli: Some("1".into()),
+            rust_harness: None,
+        },
+    )
+}
 
 #[test]
 fn defaults_to_latest_npm_cli_package() {
@@ -122,18 +147,98 @@ fn harness_without_rust_signal_still_delegates() {
 }
 
 #[test]
-fn history_routes_to_native_cli_even_with_js_fallback_configured() {
+fn connect_delegates_without_rust_cli_signal_even_with_js_fallback_configured() {
     let action = plan_launcher(
-        vec![
-            "history".into(),
-            "sourcey".into(),
-            "--json".into(),
-            "--receipt-dir".into(),
-            ".runx/receipts".into(),
-        ],
+        vec!["connect".into(), "list".into(), "--json".into()],
         Some("@runxhq/cli@0.5.22".into()),
         Some("/repo/oss/packages/cli/bin/runx.js".into()),
     );
+
+    assert_eq!(
+        action,
+        LauncherAction::Delegate(CommandPlan {
+            program: node_command().into(),
+            args: vec![
+                "/repo/oss/packages/cli/bin/runx.js".into(),
+                "connect".into(),
+                "list".into(),
+                "--json".into(),
+            ],
+        })
+    );
+}
+
+#[test]
+fn rust_cli_signal_routes_connect_to_native_plan() {
+    let action = plan_with_rust_cli(vec!["connect".into(), "list".into(), "--json".into()]);
+
+    assert_eq!(
+        action,
+        LauncherAction::RunConnect(ConnectPlan {
+            action: ConnectAction::List,
+            provider: None,
+            grant_id: None,
+            scopes: Vec::new(),
+            scope_family: None,
+            authority_kind: None,
+            target_repo: None,
+            target_locator: None,
+            json: true,
+        })
+    );
+}
+
+#[test]
+fn connect_routes_provider_command_to_native_plan() {
+    let action = plan_with_rust_cli_and_js(vec![
+        "connect".into(),
+        "github".into(),
+        "--scope".into(),
+        "repo:read,checks:read".into(),
+        "--scope-family".into(),
+        "github_repo".into(),
+        "--authority-kind".into(),
+        "read_only".into(),
+        "--target-repo".into(),
+        "runxhq/aster".into(),
+        "--json".into(),
+    ]);
+
+    assert_eq!(
+        action,
+        LauncherAction::RunConnect(ConnectPlan {
+            action: ConnectAction::Preprovision,
+            provider: Some("github".to_owned()),
+            grant_id: None,
+            scopes: vec!["repo:read".to_owned(), "checks:read".to_owned()],
+            scope_family: Some("github_repo".to_owned()),
+            authority_kind: Some(ConnectAuthorityKind::ReadOnly),
+            target_repo: Some("runxhq/aster".to_owned()),
+            target_locator: None,
+            json: true,
+        })
+    );
+}
+
+#[test]
+fn connect_rejects_invalid_connect_shape() {
+    let action = plan_with_rust_cli(vec!["connect".into(), "revoke".into()]);
+
+    assert_eq!(
+        action,
+        LauncherAction::Error("runx connect revoke requires exactly one grant id".to_owned())
+    );
+}
+
+#[test]
+fn history_routes_to_native_cli_even_with_js_fallback_configured() {
+    let action = plan_with_rust_cli_and_js(vec![
+        "history".into(),
+        "sourcey".into(),
+        "--json".into(),
+        "--receipt-dir".into(),
+        ".runx/receipts".into(),
+    ]);
 
     assert_eq!(
         action,
@@ -151,17 +256,13 @@ fn history_routes_to_native_cli_even_with_js_fallback_configured() {
 
 #[test]
 fn new_routes_to_native_cli_even_with_js_fallback_configured() {
-    let action = plan_launcher(
-        vec![
-            "new".into(),
-            "docs-demo".into(),
-            "--directory".into(),
-            "tmp/docs-demo".into(),
-            "--json".into(),
-        ],
-        Some("@runxhq/cli@0.5.22".into()),
-        Some("/repo/oss/packages/cli/bin/runx.js".into()),
-    );
+    let action = plan_with_rust_cli_and_js(vec![
+        "new".into(),
+        "docs-demo".into(),
+        "--directory".into(),
+        "tmp/docs-demo".into(),
+        "--json".into(),
+    ]);
 
     assert_eq!(
         action,
@@ -175,11 +276,7 @@ fn new_routes_to_native_cli_even_with_js_fallback_configured() {
 
 #[test]
 fn new_accepts_positional_directory() {
-    let action = plan_launcher(
-        vec!["new".into(), "docs-demo".into(), "out".into()],
-        None,
-        None,
-    );
+    let action = plan_with_rust_cli(vec!["new".into(), "docs-demo".into(), "out".into()]);
 
     assert_eq!(
         action,
@@ -193,17 +290,13 @@ fn new_accepts_positional_directory() {
 
 #[test]
 fn init_routes_to_native_cli_even_with_js_fallback_configured() {
-    let action = plan_launcher(
-        vec![
-            "init".into(),
-            "-g".into(),
-            "--prefetch".into(),
-            "official".into(),
-            "--json".into(),
-        ],
-        Some("@runxhq/cli@0.5.22".into()),
-        Some("/repo/oss/packages/cli/bin/runx.js".into()),
-    );
+    let action = plan_with_rust_cli_and_js(vec![
+        "init".into(),
+        "-g".into(),
+        "--prefetch".into(),
+        "official".into(),
+        "--json".into(),
+    ]);
 
     assert_eq!(
         action,
@@ -217,16 +310,12 @@ fn init_routes_to_native_cli_even_with_js_fallback_configured() {
 
 #[test]
 fn tool_build_routes_to_native_cli_even_with_js_fallback_configured() {
-    let action = plan_launcher(
-        vec![
-            "tool".into(),
-            "build".into(),
-            "tools/docs/echo".into(),
-            "--json".into(),
-        ],
-        Some("@runxhq/cli@0.5.22".into()),
-        Some("/repo/oss/packages/cli/bin/runx.js".into()),
-    );
+    let action = plan_with_rust_cli_and_js(vec![
+        "tool".into(),
+        "build".into(),
+        "tools/docs/echo".into(),
+        "--json".into(),
+    ]);
 
     assert_eq!(
         action,
@@ -243,11 +332,7 @@ fn tool_build_routes_to_native_cli_even_with_js_fallback_configured() {
 
 #[test]
 fn tool_build_all_routes_to_native_cli() {
-    let action = plan_launcher(
-        vec!["tool".into(), "build".into(), "--all".into()],
-        None,
-        None,
-    );
+    let action = plan_with_rust_cli(vec!["tool".into(), "build".into(), "--all".into()]);
 
     assert_eq!(
         action,
@@ -264,19 +349,15 @@ fn tool_build_all_routes_to_native_cli() {
 
 #[test]
 fn tool_search_routes_to_native_cli_even_with_js_fallback_configured() {
-    let action = plan_launcher(
-        vec![
-            "tool".into(),
-            "search".into(),
-            "echo".into(),
-            "writer".into(),
-            "--source".into(),
-            "fixture-mcp".into(),
-            "--json".into(),
-        ],
-        Some("@runxhq/cli@0.5.22".into()),
-        Some("/repo/oss/packages/cli/bin/runx.js".into()),
-    );
+    let action = plan_with_rust_cli_and_js(vec![
+        "tool".into(),
+        "search".into(),
+        "echo".into(),
+        "writer".into(),
+        "--source".into(),
+        "fixture-mcp".into(),
+        "--json".into(),
+    ]);
 
     assert_eq!(
         action,
@@ -293,16 +374,12 @@ fn tool_search_routes_to_native_cli_even_with_js_fallback_configured() {
 
 #[test]
 fn tool_inspect_routes_to_native_cli_even_with_js_fallback_configured() {
-    let action = plan_launcher(
-        vec![
-            "tool".into(),
-            "inspect".into(),
-            "fixture.echo".into(),
-            "--source=fixture-mcp".into(),
-        ],
-        Some("@runxhq/cli@0.5.22".into()),
-        Some("/repo/oss/packages/cli/bin/runx.js".into()),
-    );
+    let action = plan_with_rust_cli_and_js(vec![
+        "tool".into(),
+        "inspect".into(),
+        "fixture.echo".into(),
+        "--source=fixture-mcp".into(),
+    ]);
 
     assert_eq!(
         action,
@@ -347,7 +424,7 @@ fn tool_unknown_subcommand_still_delegates() {
 #[test]
 fn init_accepts_truthy_prefetch_forms() {
     assert_eq!(
-        plan_launcher(vec!["init".into(), "--prefetch".into()], None, None),
+        plan_with_rust_cli(vec!["init".into(), "--prefetch".into()]),
         LauncherAction::RunInit(InitPlan {
             global: false,
             prefetch_official: true,
@@ -355,7 +432,7 @@ fn init_accepts_truthy_prefetch_forms() {
         })
     );
     assert_eq!(
-        plan_launcher(vec!["init".into(), "--prefetchOfficial".into()], None, None),
+        plan_with_rust_cli(vec!["init".into(), "--prefetchOfficial".into()]),
         LauncherAction::RunInit(InitPlan {
             global: false,
             prefetch_official: true,

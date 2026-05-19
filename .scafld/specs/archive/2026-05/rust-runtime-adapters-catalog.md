@@ -2,8 +2,8 @@
 spec_version: '2.0'
 task_id: rust-runtime-adapters-catalog
 created: '2026-05-18T00:00:00Z'
-updated: '2026-05-19T08:25:22Z'
-status: active
+updated: '2026-05-19T08:45:32Z'
+status: completed
 harden_status: passed
 size: medium
 risk_level: medium
@@ -13,14 +13,14 @@ risk_level: medium
 
 ## Current State
 
-Status: active
+Status: completed
 Current phase: final
-Next: build
-Reason: final acceptance opened
+Next: done
+Reason: task completed
 Blockers: none
-Allowed follow-up command: `scafld handoff rust-runtime-adapters-catalog`
-Latest runner update: 2026-05-19T08:25:22Z
-Review gate: not_started
+Allowed follow-up command: `none`
+Latest runner update: 2026-05-19T08:45:32Z
+Review gate: pass
 
 ## Summary
 
@@ -254,3 +254,17 @@ cargo test --manifest-path crates/Cargo.toml --workspace
 - Whether `resolved_inputs` exists on the Rust adapter trait by execution
   time. Default: pass it through if the trait carries it; do not add a
   catalog-only request type.
+
+## Review
+
+Status: completed
+Verdict: pass
+Mode: verify
+Summary: Human-reviewed override accepted: manual audit after acceptance gates; oracle generator/check passed, focused Rust catalog adapter tests passed, clippy passed, Rust workspace passed, and no completion-blocking findings remain
+
+Attack log:
+- `review gate`: manual human audit -> clean (manual audit after acceptance gates; oracle generator/check passed, focused Rust catalog adapter tests passed, clippy passed, Rust workspace passed, and no completion-blocking findings remain)
+
+Findings:
+- none
+

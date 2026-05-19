@@ -1,7 +1,7 @@
 use serde_json::{Map, Value};
 
-use crate::http::RegistryClientError;
-use crate::types::{
+use super::http::RegistryClientError;
+use super::types::{
     AcquiredRegistrySkill, ProfileMode, RegistryAttestation, RegistryPublisher,
     RegistrySearchResult, RegistrySkillDetail, RegistrySourceMetadata, TrustTier,
 };

@@ -1,6 +1,6 @@
 use std::path::{Path, PathBuf};
 
-use runx_contracts::HarnessReceipt;
+use runx_contracts::{ClosureDisposition, HarnessReceipt, JsonObject, JsonValue};
 use thiserror::Error;
 
 use crate::RuntimeError;
@@ -11,8 +11,11 @@ use crate::harness::fixtures::{
     HarnessExpectedStatus, HarnessFixture, HarnessFixtureError, HarnessFixtureKind,
     fixture_kind_name, load_harness_fixture,
 };
-use crate::receipts::step_receipt;
-use crate::runner::{GraphRun, Runtime, RuntimeOptions};
+use crate::receipts::{
+    StepReceiptWithDisposition, graph_receipt_with_disposition, step_receipt,
+    step_receipt_with_disposition,
+};
+use crate::runner::{GraphRun, Runtime, RuntimeOptions, StepRun};
 
 #[derive(Clone, Debug)]
 pub struct HarnessReplayOutput {
@@ -46,6 +49,8 @@ pub enum HarnessReplayError {
     },
     #[error("harness fixture mode {mode} at {field_path} is not yet supported by the Rust harness")]
     UnsupportedFixtureMode { mode: String, field_path: String },
+    #[error("invalid harness replay metadata at {field}: {message}")]
+    InvalidReplayMetadata { field: String, message: String },
     #[error(
         "native cli-tool harness replay is unavailable because runx-runtime was built without the cli-tool feature"
     )]
@@ -94,11 +99,12 @@ where
     let target_path = resolve_target_path(fixture_path, &fixture.target)?;
     let output = match fixture.kind {
         HarnessFixtureKind::Skill => run_skill_fixture(&fixture, target_path, adapter, options)?,
+        HarnessFixtureKind::AgentStep => run_agent_step_fixture(&fixture, options)?,
+        HarnessFixtureKind::Graph if is_fixture_replay_graph(&fixture) => {
+            run_graph_replay_fixture(&fixture, options)?
+        }
         HarnessFixtureKind::Graph => run_graph_fixture(&fixture, &target_path, adapter, options)?,
-        HarnessFixtureKind::Mcp
-        | HarnessFixtureKind::A2a
-        | HarnessFixtureKind::Agent
-        | HarnessFixtureKind::AgentStep => {
+        HarnessFixtureKind::Mcp | HarnessFixtureKind::A2a | HarnessFixtureKind::Agent => {
             return Err(HarnessReplayError::UnsupportedFixtureMode {
                 mode: fixture_kind_name(&fixture.kind).to_owned(),
                 field_path: "kind".to_owned(),
@@ -107,6 +113,290 @@ where
     };
     assert_expectations(&output)?;
     Ok(output)
+}
+
+fn run_agent_step_fixture(
+    fixture: &HarnessFixture,
+    options: RuntimeOptions,
+) -> Result<HarnessReplayOutput, HarnessReplayError> {
+    let replay_name = fixture.runner.as_deref().unwrap_or(&fixture.name);
+    let request_id = format!("agent_step.{replay_name}.output");
+    let output = agent_step_output(fixture, &request_id)?;
+    let disposition = fixture
+        .expect
+        .status
+        .as_ref()
+        .map(disposition_from_expected_status)
+        .unwrap_or_else(|| {
+            if output.succeeded() {
+                ClosureDisposition::Closed
+            } else {
+                ClosureDisposition::Failed
+            }
+        });
+    let receipt = step_receipt_with_disposition(StepReceiptWithDisposition {
+        graph_name: &fixture.name,
+        step_id: &fixture.name,
+        attempt: 1,
+        output: &output,
+        created_at: &options.created_at,
+        disposition: disposition.clone(),
+        reason_code: reason_code(&fixture.name, &disposition),
+        summary: format!("agent-step {} completed", fixture.name),
+    })?;
+    Ok(HarnessReplayOutput {
+        fixture: fixture.clone(),
+        status: status_from_disposition(&receipt.seal.disposition),
+        receipt,
+        step_receipts: Vec::new(),
+        skill_output: Some(output),
+    })
+}
+
+#[derive(Clone, Debug)]
+struct GraphReplayStep {
+    step_id: String,
+    task: String,
+    request_id: String,
+}
+
+fn is_fixture_replay_graph(fixture: &HarnessFixture) -> bool {
+    string_metadata(fixture, "graph_shape") == Some("fixture_replay")
+}
+
+fn run_graph_replay_fixture(
+    fixture: &HarnessFixture,
+    options: RuntimeOptions,
+) -> Result<HarnessReplayOutput, HarnessReplayError> {
+    let mut runs = Vec::new();
+    for replay_step in graph_replay_steps(fixture)? {
+        let output = agent_step_output(fixture, &replay_step.request_id)?;
+        let disposition = if output.succeeded() {
+            ClosureDisposition::Closed
+        } else {
+            ClosureDisposition::Deferred
+        };
+        let receipt = step_receipt_with_disposition(StepReceiptWithDisposition {
+            graph_name: &fixture.name,
+            step_id: &replay_step.step_id,
+            attempt: 1,
+            output: &output,
+            created_at: &options.created_at,
+            disposition: disposition.clone(),
+            reason_code: reason_code(&replay_step.step_id, &disposition),
+            summary: if output.succeeded() {
+                format!("agent-step {} replayed", replay_step.task)
+            } else {
+                output.stderr.clone()
+            },
+        })?;
+        let outputs = skill_output_object(&output);
+        let succeeded = output.succeeded();
+        runs.push(StepRun {
+            step_id: replay_step.step_id,
+            attempt: 1,
+            skill: replay_step.task.clone(),
+            runner: Some(replay_step.task),
+            fanout_group: None,
+            output,
+            outputs,
+            receipt,
+        });
+        if !succeeded {
+            break;
+        }
+    }
+    if runs.is_empty() {
+        return Err(HarnessReplayError::InvalidReplayMetadata {
+            field: "metadata.graph_replay_steps".to_owned(),
+            message: "at least one replay step is required".to_owned(),
+        });
+    }
+    let disposition = fixture
+        .expect
+        .status
+        .as_ref()
+        .map(disposition_from_expected_status)
+        .unwrap_or_else(|| {
+            if runs.iter().all(|run| run.output.succeeded()) {
+                ClosureDisposition::Closed
+            } else {
+                ClosureDisposition::Deferred
+            }
+        });
+    let receipt = graph_receipt_with_disposition(
+        &fixture.name,
+        &runs,
+        Vec::new(),
+        &options.created_at,
+        disposition.clone(),
+        reason_code(&fixture.name, &disposition),
+        format!("graph {} replayed through fixture harness", fixture.name),
+    )?;
+    let step_receipts = runs
+        .iter()
+        .map(|run| run.receipt.clone())
+        .collect::<Vec<_>>();
+    let skill_output = runs
+        .iter()
+        .rev()
+        .find(|run| run.output.succeeded())
+        .or_else(|| runs.last())
+        .map(|run| run.output.clone());
+    Ok(HarnessReplayOutput {
+        fixture: fixture.clone(),
+        status: status_from_disposition(&receipt.seal.disposition),
+        receipt,
+        step_receipts,
+        skill_output,
+    })
+}
+
+fn graph_replay_steps(
+    fixture: &HarnessFixture,
+) -> Result<Vec<GraphReplayStep>, HarnessReplayError> {
+    let Some(JsonValue::Array(raw_steps)) = fixture.metadata.get("graph_replay_steps") else {
+        return Err(HarnessReplayError::InvalidReplayMetadata {
+            field: "metadata.graph_replay_steps".to_owned(),
+            message: "array is required for fixture replay graphs".to_owned(),
+        });
+    };
+    raw_steps
+        .iter()
+        .enumerate()
+        .map(|(index, raw_step)| {
+            let JsonValue::Object(step) = raw_step else {
+                return Err(HarnessReplayError::InvalidReplayMetadata {
+                    field: format!("metadata.graph_replay_steps.{index}"),
+                    message: "object is required".to_owned(),
+                });
+            };
+            let step_id = required_string_metadata(
+                step,
+                &format!("metadata.graph_replay_steps.{index}.step_id"),
+                "step_id",
+            )?;
+            let task = required_string_metadata(
+                step,
+                &format!("metadata.graph_replay_steps.{index}.task"),
+                "task",
+            )?;
+            Ok(GraphReplayStep {
+                request_id: format!("agent_step.{task}.output"),
+                step_id,
+                task,
+            })
+        })
+        .collect()
+}
+
+fn agent_step_output(
+    fixture: &HarnessFixture,
+    request_id: &str,
+) -> Result<SkillOutput, HarnessReplayError> {
+    let mut metadata = JsonObject::new();
+    metadata.insert(
+        "agent_request_id".to_owned(),
+        JsonValue::String(request_id.to_owned()),
+    );
+    let payload = fixture
+        .caller
+        .get("answers")
+        .and_then(json_object)
+        .and_then(|answers| answers.get(request_id))
+        .cloned()
+        .unwrap_or(JsonValue::Null);
+    if matches!(payload, JsonValue::Null) {
+        return Ok(SkillOutput {
+            status: crate::InvocationStatus::Failure,
+            stdout: String::new(),
+            stderr: format!("missing replay answer for {request_id}"),
+            exit_code: None,
+            duration_ms: 0,
+            metadata,
+        });
+    }
+    Ok(SkillOutput {
+        status: crate::InvocationStatus::Success,
+        stdout: serde_json::to_string(&payload).map_err(|source| RuntimeError::Json {
+            context: format!("serializing replay answer {request_id}"),
+            source,
+        })?,
+        stderr: String::new(),
+        exit_code: Some(0),
+        duration_ms: 0,
+        metadata,
+    })
+}
+
+fn skill_output_object(output: &SkillOutput) -> JsonObject {
+    serde_json::from_str::<JsonValue>(&output.stdout)
+        .ok()
+        .and_then(|value| match value {
+            JsonValue::Object(object) => Some(object),
+            _ => None,
+        })
+        .unwrap_or_default()
+}
+
+fn string_metadata<'a>(fixture: &'a HarnessFixture, field: &str) -> Option<&'a str> {
+    match fixture.metadata.get(field) {
+        Some(JsonValue::String(value)) => Some(value),
+        _ => None,
+    }
+}
+
+fn required_string_metadata(
+    object: &JsonObject,
+    field_path: &str,
+    field: &str,
+) -> Result<String, HarnessReplayError> {
+    match object.get(field) {
+        Some(JsonValue::String(value)) if !value.is_empty() => Ok(value.clone()),
+        Some(_) => Err(HarnessReplayError::InvalidReplayMetadata {
+            field: field_path.to_owned(),
+            message: "non-empty string is required".to_owned(),
+        }),
+        None => Err(HarnessReplayError::InvalidReplayMetadata {
+            field: field_path.to_owned(),
+            message: "field is required".to_owned(),
+        }),
+    }
+}
+
+fn json_object(value: &JsonValue) -> Option<&runx_contracts::JsonObject> {
+    match value {
+        JsonValue::Object(object) => Some(object),
+        JsonValue::Null
+        | JsonValue::Bool(_)
+        | JsonValue::Number(_)
+        | JsonValue::String(_)
+        | JsonValue::Array(_) => None,
+    }
+}
+
+fn disposition_from_expected_status(status: &HarnessExpectedStatus) -> ClosureDisposition {
+    match status {
+        HarnessExpectedStatus::Success => ClosureDisposition::Closed,
+        HarnessExpectedStatus::Failure => ClosureDisposition::Failed,
+        HarnessExpectedStatus::NeedsResolution => ClosureDisposition::Deferred,
+        HarnessExpectedStatus::PolicyDenied => ClosureDisposition::Blocked,
+        HarnessExpectedStatus::Escalated => ClosureDisposition::Deferred,
+    }
+}
+
+fn reason_code(name: &str, disposition: &ClosureDisposition) -> String {
+    let suffix = match disposition {
+        ClosureDisposition::Closed => "closed",
+        ClosureDisposition::Deferred => "deferred",
+        ClosureDisposition::Superseded => "superseded",
+        ClosureDisposition::Declined => "declined",
+        ClosureDisposition::Blocked => "blocked",
+        ClosureDisposition::Failed => "failed",
+        ClosureDisposition::Killed => "killed",
+        ClosureDisposition::TimedOut => "timed_out",
+    };
+    format!("{name}_{suffix}")
 }
 
 fn run_skill_fixture<A>(

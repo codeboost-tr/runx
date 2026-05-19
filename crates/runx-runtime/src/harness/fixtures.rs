@@ -26,7 +26,7 @@ pub enum HarnessFixtureKind {
     Mcp,
     A2a,
     Agent,
-    #[serde(alias = "agent-step")]
+    #[serde(rename = "agent_step", alias = "agent-step")]
     AgentStep,
 }
 
@@ -50,6 +50,7 @@ pub struct HarnessFixture {
     pub env: BTreeMap<String, String>,
     pub caller: JsonObject,
     pub expect: HarnessExpectation,
+    pub metadata: JsonObject,
 }
 
 #[derive(Clone, Debug, Default, PartialEq)]
@@ -62,7 +63,7 @@ pub struct HarnessExpectation {
 #[derive(Clone, Debug, PartialEq)]
 pub struct HarnessReceiptExpectation {
     pub schema: HarnessReceiptSchema,
-    pub body_digest: String,
+    pub body_digest: Option<String>,
     pub receipt_id: Option<String>,
     pub receipt_digest: Option<String>,
     pub harness_id: Option<String>,
@@ -80,6 +81,7 @@ pub struct HarnessReceiptExpectation {
 struct RawHarnessFixture {
     name: String,
     kind: HarnessFixtureKind,
+    #[serde(default)]
     target: Option<String>,
     runner: Option<String>,
     #[serde(default)]
@@ -90,6 +92,8 @@ struct RawHarnessFixture {
     caller: JsonObject,
     #[serde(default)]
     expect: RawHarnessExpectation,
+    #[serde(default)]
+    metadata: JsonObject,
 }
 
 #[derive(Debug, Default, Deserialize)]
@@ -132,7 +136,7 @@ pub enum HarnessFixtureError {
         source: std::io::Error,
     },
     #[error("failed to parse harness fixture YAML: {0}")]
-    Parse(#[from] serde_yml::Error),
+    Parse(#[from] serde_norway::Error),
     #[error("harness fixture {field} is required")]
     Required { field: String },
     #[error("harness fixture {field} must not be empty")]
@@ -155,19 +159,17 @@ pub fn load_harness_fixture(path: impl AsRef<Path>) -> Result<HarnessFixture, Ha
 }
 
 pub fn parse_harness_fixture(contents: &str) -> Result<HarnessFixture, HarnessFixtureError> {
-    let fixture = serde_yml::from_str::<RawHarnessFixture>(contents)?;
+    let fixture = serde_norway::from_str::<RawHarnessFixture>(contents)?;
     validate_fixture(fixture)
 }
 
 fn validate_fixture(fixture: RawHarnessFixture) -> Result<HarnessFixture, HarnessFixtureError> {
     require_non_empty(&fixture.name, "name")?;
     validate_supported_fixture_kind(&fixture.kind, "kind")?;
-    let target = fixture
-        .target
-        .ok_or_else(|| HarnessFixtureError::Required {
-            field: "target".to_owned(),
-        })?;
-    require_non_empty(&target, "target")?;
+    let target = fixture.target.unwrap_or_default();
+    if !matches!(fixture.kind, HarnessFixtureKind::AgentStep) {
+        require_non_empty(&target, "target")?;
+    }
     if let Some(runner) = &fixture.runner {
         require_non_empty(runner, "runner")?;
     }
@@ -180,6 +182,7 @@ fn validate_fixture(fixture: RawHarnessFixture) -> Result<HarnessFixture, Harnes
         env: fixture.env,
         caller: fixture.caller,
         expect: validate_expectation(fixture.expect)?,
+        metadata: fixture.metadata,
     })
 }
 
@@ -208,11 +211,7 @@ fn validate_receipt_expectation(
     }
     Ok(HarnessReceiptExpectation {
         schema: receipt.schema,
-        body_digest: receipt
-            .body_digest
-            .ok_or_else(|| HarnessFixtureError::Required {
-                field: "expect.receipt.body_digest".to_owned(),
-            })?,
+        body_digest: receipt.body_digest,
         receipt_id: receipt.receipt_id,
         receipt_digest: receipt.receipt_digest,
         harness_id: receipt.harness_id,
@@ -231,14 +230,15 @@ fn validate_supported_fixture_kind(
     field_path: &'static str,
 ) -> Result<(), HarnessFixtureError> {
     match kind {
-        HarnessFixtureKind::Skill | HarnessFixtureKind::Graph => Ok(()),
-        HarnessFixtureKind::Mcp
-        | HarnessFixtureKind::A2a
-        | HarnessFixtureKind::Agent
-        | HarnessFixtureKind::AgentStep => Err(HarnessFixtureError::UnsupportedFixtureMode {
-            mode: fixture_kind_name(kind).to_owned(),
-            field_path: field_path.to_owned(),
-        }),
+        HarnessFixtureKind::Skill | HarnessFixtureKind::Graph | HarnessFixtureKind::AgentStep => {
+            Ok(())
+        }
+        HarnessFixtureKind::Mcp | HarnessFixtureKind::A2a | HarnessFixtureKind::Agent => {
+            Err(HarnessFixtureError::UnsupportedFixtureMode {
+                mode: fixture_kind_name(kind).to_owned(),
+                field_path: field_path.to_owned(),
+            })
+        }
     }
 }
 

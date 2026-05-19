@@ -2,7 +2,7 @@
 spec_version: '2.0'
 task_id: rust-runtime-adapters-mcp
 created: '2026-05-18T00:00:00Z'
-updated: '2026-05-19T00:00:00Z'
+updated: '2026-05-19T12:11:22Z'
 status: draft
 harden_status: passed
 size: extra_large
@@ -20,8 +20,9 @@ Reason: draft created under `plans/rust-takeover.md`. The hardest adapter
 port; section 13 of `docs/rust-kernel-architecture.md` calls out rmcp +
 tokio + sandbox + spawn semantics as the highest-risk cross-language
 surface.
-Blockers: `rust-runtime-skeleton`, `rust-runtime-adapters-agent`, and at
-least one other adapter to validate the trait shape.
+Blockers: `runx-contract-spine-hard-cutover`, post-cutover harness receipt
+proof/tree APIs, `rust-runtime-skeleton`, `rust-runtime-adapters-agent`, and
+at least one other adapter to validate the trait shape.
 Allowed follow-up command: `scafld handoff rust-runtime-adapters-mcp`
 Latest runner update: none
 Review gate: hardened_spec_ready
@@ -144,6 +145,8 @@ Out of scope:
 - `rust-runtime-skeleton`.
 - `rust-runtime-adapters-agent`.
 - `rust-approval-gate-parity`.
+- `runx-contract-spine-hard-cutover`.
+- Post-cutover harness receipt proof and receipt-tree APIs.
 - At least one additional adapter complete so the trait shape is stable.
 
 ## Implementation Contract
@@ -194,9 +197,10 @@ for this command is assigned to this spec. The server must:
   MCP tool results with the same `content`, `structuredContent.runx`, and
   `isError` shape as TypeScript.
 
-The server must route skill execution through the Rust runtime/harness path
-available at execution time. It must not call TypeScript to execute served
-skills once routed.
+The server must route skill execution through the post-cutover Rust
+runtime/harness path that seals `runx.harness_receipt.v1` nodes and links child
+harness receipt refs. It must not call TypeScript to execute served skills once
+routed.
 
 ### Feature Boundaries
 
@@ -275,8 +279,11 @@ scripts/check-runtime-mcp-oracles.sh
 cargo fmt --manifest-path crates/Cargo.toml --all --check
 cargo test --manifest-path crates/Cargo.toml -p runx-runtime mcp --features mcp -- --nocapture
 cargo test --manifest-path crates/Cargo.toml -p runx-cli mcp --features mcp -- --nocapture
+cargo test --manifest-path crates/Cargo.toml -p runx-runtime receipt_tree -- --nocapture
+cargo test --manifest-path crates/Cargo.toml -p runx-receipts proof -- --nocapture
 cargo clippy --manifest-path crates/Cargo.toml -p runx-runtime -p runx-cli --all-targets --features mcp -- -D warnings
 node scripts/check-rust-core-style.mjs
+! rg -n "runx\\.issue_to_pr_outcome\\.v1|issue_to_pr_outcome|verification[_-]report|target[_-]?effect|\"effect\"\\s*:" fixtures/runtime/adapters/mcp crates/runx-runtime/src/adapters/mcp crates/runx-cli/src
 ```
 
 If the workspace-level Rust command is stable when this spec runs, also run:

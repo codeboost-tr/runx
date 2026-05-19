@@ -2,7 +2,7 @@
 spec_version: '2.0'
 task_id: rust-placeholder-crates-publish
 created: '2026-05-17T02:30:00Z'
-updated: '2026-05-17T12:35:00Z'
+updated: '2026-05-19T12:11:22Z'
 status: draft
 harden_status: not_run
 size: small
@@ -17,7 +17,9 @@ Status: draft
 Current phase: none
 Next: approve
 Reason: draft created
-Blockers: none
+Blockers: workspace Rust tests and cargo-deny supply-chain gates must be green;
+do not publish placeholder crates while banned dependencies, unreviewed
+licenses, or known advisories are present.
 Allowed follow-up command: `scafld harden rust-placeholder-crates-publish`
 Latest runner update: 2026-05-17T12:31:02Z - all seven crate names published and verified with cargo search.
 Review gate: not_started
@@ -66,6 +68,10 @@ Invariants:
 - Use Claude for review. Local review does not satisfy complete.
 - Do not publish if any crate name is already taken by an unrelated owner.
 - Do not publish if `cargo package --workspace --allow-dirty` fails.
+- Do not publish if `cargo test --workspace` fails.
+- Do not publish if `cargo deny --manifest-path crates/Cargo.toml check bans
+  licenses sources` fails. Placeholder publishing must not ship around banned
+  dependencies or unreviewed license/advisory findings.
 
 Related docs:
 - `docs/rust-kernel-architecture.md`
@@ -127,6 +133,8 @@ Definition of done:
   - Command: `pnpm rust:crate-graph && pnpm rust:style`
 - [ ] `dod2` command - `cargo package --workspace --allow-dirty` passes.
   - Command: `cargo package --workspace --allow-dirty`
+- [ ] `dod2a` command - workspace Rust tests and supply-chain gates pass.
+  - Command: `cargo test --workspace && cargo deny --manifest-path crates/Cargo.toml check bans licenses sources`
 - [ ] `dod3` command - all published crates are discoverable.
   - Command: `for p in runx-contracts runx-core runx-parser runx-receipts runx-runtime runx-sdk runx-cli; do cargo search "$p" --limit 5 | rg -n "^$p\\s=" >/dev/null || exit 1; done`
 - [ ] `dod4` command - placeholder crates are published or already owned by

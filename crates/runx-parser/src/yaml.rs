@@ -8,7 +8,7 @@ pub fn parse_yaml_document<T>(source: &str) -> Result<T, ParseError>
 where
     T: DeserializeOwned,
 {
-    serde_yml::from_str(source).map_err(|error| ParseError::InvalidYaml {
+    serde_norway::from_str(source).map_err(|error| ParseError::InvalidYaml {
         field: "yaml".to_owned(),
         message: error.to_string(),
     })

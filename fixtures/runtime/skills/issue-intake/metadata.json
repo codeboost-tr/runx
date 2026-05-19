@@ -1,0 +1,17 @@
+{
+  "schema": "runx.runtime.skill_fixture.v1",
+  "generated_at": "2026-05-18T00:00:00Z",
+  "source": {
+    "skill": "skills/issue-intake/SKILL.md",
+    "profile": "skills/issue-intake/X.yaml"
+  },
+  "skill_name": "issue-intake",
+  "manifest_hash": "sha256:a0de3748f15947e92286af55178adab1d45df22e037e6b4a5b9157a9f3cd1fc6",
+  "harness_schema": "runx.harness_receipt.v1",
+  "case_names": [
+    "bounded-docs-fix",
+    "feature-needs-decomposition",
+    "reply-only-question",
+    "request-review-before-mutation"
+  ]
+}

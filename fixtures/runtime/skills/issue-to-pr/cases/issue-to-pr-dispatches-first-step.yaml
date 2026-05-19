@@ -1,0 +1,41 @@
+name: "issue-to-pr-dispatches-first-step"
+kind: "graph"
+target: "../../../../../skills/issue-to-pr/X.yaml"
+runner: "issue-to-pr"
+inputs:
+  task_id: "issue-to-pr-smoke"
+  thread_title: "Fixture smoke test"
+  thread_body: "Minimal thread body for the harness."
+  thread_locator: "local://fixtures/issue-to-pr-smoke"
+  size: "small"
+  risk: "low"
+  scafld_bin: "./fixtures/issue-to-pr-harness-scafld.mjs"
+caller:
+  {}
+expect:
+  status: "needs_resolution"
+  receipt:
+    schema: "runx.harness_receipt.v1"
+    receipt_id: "hrn_rcpt_issue-to-pr-dispatches-first-step"
+    harness_id: "hrn_issue-to-pr-dispatches-first-step_graph"
+    state: "sealed"
+    disposition: "deferred"
+    reason_code: "issue-to-pr-dispatches-first-step_deferred"
+    decision_ids:
+      - "dec_graph"
+    child_receipt_refs:
+      - "runx:harness_receipt:hrn_rcpt_issue-to-pr-dispatches-first-step_author-spec"
+  steps:
+    - "author-spec"
+metadata:
+  product_skill: "issue-to-pr"
+  source_case: "issue-to-pr-dispatches-first-step"
+  runner_kind: "graph"
+  graph_shape: "fixture_replay"
+  graph_replay_steps:
+    - 
+      step_id: "author-spec"
+      task: "issue-to-pr-author-spec"
+    - 
+      step_id: "author-fix"
+      task: "issue-to-pr-apply-fix"

@@ -30,7 +30,7 @@ doc's pure-by-imports inventory). The marketplaces domain is small; this
 sunset is correspondingly small.
 
 A new `rust-marketplaces-port` spec ships the Rust equivalent before this
-sunset runs, or marketplaces folds into `runx-registry-client` if the
+sunset runs, or marketplaces folds into `runx-runtime::registry` if the
 domain doesn't justify its own crate at port time.
 
 ## Context
@@ -68,9 +68,9 @@ Out of scope:
 ## Dependencies
 
 - `rust-ts-sunset-registry`.
-- A `rust-marketplaces-port` spec (or merger into `rust-registry-client`).
+- A `rust-marketplaces-port` spec (or merger into `runx-runtime::registry`).
 
 ## Open Questions
 
-- Whether marketplaces ships as its own Rust module or folds into the
-  registry client. Defer until `rust-registry-client` Phase 1 ingest.
+- Whether marketplaces ships as its own Rust module or folds into
+  `runx-runtime::registry`. Defer until registry Phase 1 ingest.

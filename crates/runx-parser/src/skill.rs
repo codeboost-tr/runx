@@ -809,7 +809,7 @@ fn validate_mutating(
 
 fn parse_yaml_object(source: &str, object_error: &str) -> Result<JsonObject, ParseError> {
     let parsed: JsonValue =
-        serde_yml::from_str(source).map_err(|error| ParseError::InvalidYaml {
+        serde_norway::from_str(source).map_err(|error| ParseError::InvalidYaml {
             field: "skill_frontmatter".to_owned(),
             message: error.to_string(),
         })?;

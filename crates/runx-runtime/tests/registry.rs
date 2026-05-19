@@ -1,7 +1,7 @@
 use std::path::PathBuf;
 
 use runx_contracts::{JsonNumber, JsonValue};
-use runx_registry_client::{
+use runx_runtime::registry::{
     AcquiredRegistrySkill, InstallCandidate, InstallLocalSkillResult, InstallStatus,
     RegistryPublisher, TrustTier,
 };

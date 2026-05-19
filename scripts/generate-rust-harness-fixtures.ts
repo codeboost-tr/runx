@@ -174,7 +174,7 @@ function harness(
     },
     revision: { sequence: 1, previous_ref: null },
     signal_refs: [],
-    decisions: decision(nodeId),
+    decisions: decision(nodeId, acts),
     acts,
     child_harness_receipt_refs: childRefs,
     artifact_refs: [],
@@ -220,7 +220,8 @@ function observationAct(stepId: string, stdout: string, disposition: string): Re
   };
 }
 
-function decision(nodeId: string): Json[] {
+function decision(nodeId: string, acts: Json[]): Json[] {
+  const selectedAct = acts.find((act) => act !== null && typeof act === "object" && !Array.isArray(act));
   return [
     {
       decision_id: `dec_${nodeId}`,
@@ -233,7 +234,7 @@ function decision(nodeId: string): Json[] {
         constraints: [],
         derived_from: [],
       },
-      selected_act_id: null,
+      selected_act_id: selectedAct && "act_id" in selectedAct ? String(selectedAct.act_id) : null,
       selected_harness_ref: null,
       justification: { summary: "runtime graph planner selected this node", evidence_refs: [] },
       closure: null,

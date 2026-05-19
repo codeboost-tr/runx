@@ -62,8 +62,9 @@ source-thread locator against one validated policy packet. Unknown targets,
 unknown or unavailable runners, disallowed actions, and missing source-thread
 routes deny before PR packaging or provider dispatch.
 
-Terminal post-merge observation must emit `runx.issue_to_pr_outcome.v1` before
-publishing the final source-thread update or closing the source issue.
+Terminal post-merge observation must seal a harness receipt with closure and
+verification proof before publishing the final source-thread update or closing
+the source issue.
 
 Non-trigger cases:
 

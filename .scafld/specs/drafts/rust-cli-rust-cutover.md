@@ -2,7 +2,7 @@
 spec_version: '2.0'
 task_id: rust-cli-rust-cutover
 created: '2026-05-18T00:00:00Z'
-updated: '2026-05-19T06:13:12Z'
+updated: '2026-05-19T12:11:22Z'
 status: draft
 harden_status: passed
 size: extra_large
@@ -18,8 +18,11 @@ Current phase: hardened
 Next: approve
 Reason: hard cutover contract for moving the launcher/CLI boundary to Rust.
 Blockers: active Rust runtime, harness, registry, and journal work complete;
-`rust-aster-runtime-cutover` complete; binary distribution green; no legacy
-shape, no v2, no alias, and no JS fallback gates pass.
+`rust-aster-runtime-cutover` complete; `rust-nitrosend-dogfood` complete;
+`rust-cli-feature-parity-matrix` complete; `cargo test --workspace` and
+`cargo deny --manifest-path crates/Cargo.toml check bans licenses sources`
+green; binary distribution green; no legacy shape, no v2, no alias, and no JS
+fallback gates pass.
 Allowed follow-up command: `scafld review rust-cli-rust-cutover`
 Latest runner update: 2026-05-19T06:13:12Z
 Review gate: not_started
@@ -83,6 +86,13 @@ Invariants:
   decision (see `plans/rust-takeover.md` section 4 matrix and the completed
   `rust-cli-feature-parity-matrix`) has a Rust implementation with an oracle
   case or an explicit removal/migration note.
+- The Rust CLI must not be treated as authoritative merely because native
+  command dispatch exists in `crates/runx-cli/src/main.rs`. Until this cutover
+  is executed, native dispatch is candidate implementation only; release
+  authority stays with the npm/TypeScript CLI.
+- If native command dispatch lands before this cutover, the cutover gate must
+  prove it is not reachable from the released npm launcher except under an
+  explicit operator-controlled candidate path.
 - The current TS command set includes `runx policy inspect|lint <policy.json>`;
   the Rust CLI parity matrix must include its exit codes, JSON shape, and
   redacted human readback.
@@ -114,6 +124,10 @@ Invariants:
 - Publish the binary distribution pipeline.
 - Run the canonical CLI matrix, native runtime suites, and distribution checks
   as the cutover gate.
+- Run workspace parity and supply-chain gates as hard blockers, including
+  `cargo test --workspace` and `cargo deny --manifest-path crates/Cargo.toml
+  check bans licenses sources`. A red parity test or cargo-deny failure blocks
+  approval.
 - Prove no legacy shapes, v2 modes, aliases, or unscoped JS fallback remain in
   release artifacts.
 - Document rollback and repair without creating long-lived compatibility code.
@@ -125,7 +139,7 @@ In scope:
 - Canonical command table, help, parser, JSON output, human output, exit codes,
   and release-note migration text for removed aliases.
 - Rust runtime harness execution/receipts and CLI integration for `harness`.
-- Rust integration for registry-backed commands through `rust-registry-client`.
+- Rust integration for registry-backed commands through `runx-runtime::registry`.
 - Rust integration for history/journal projections through `rust-journal-local`.
 - Binary distribution pipeline, including checksums/signing, platform package
   resolution, and npm packaging.
@@ -152,8 +166,9 @@ Out of scope:
   authority.
 - `rust-harness` complete, including native harness execution, fixture replay,
   canonical harness receipts, and proof-backed receipt comparison.
-- `rust-registry-client` complete for search, inspect/read, acquire/install,
-  local materialization, trust-tier validation, and install receipt metadata.
+- The `runx-runtime::registry` module complete for search, inspect/read,
+  acquire/install, local materialization, trust-tier validation, and install
+  receipt metadata.
 - `rust-journal-local` complete for receipt-store-backed history and any
   accepted journal projection surface.
 - `rust-aster-runtime-cutover` complete for hosted aster execution against the
@@ -246,7 +261,7 @@ Phase 1: canonical surface freeze.
 Phase 2: native CLI and runtime integration.
 - Implement Rust parser/help/dispatch/presentation for every canonical command.
 - Wire harness execution to the Rust runtime harness APIs.
-- Wire registry commands through `rust-registry-client`.
+- Wire registry commands through `runx-runtime::registry`.
 - Wire history/journal commands through `rust-journal-local`.
 - Ensure policy inspect/lint consumes the same operational policy validator and
   redacted readback as the rest of the runtime.
@@ -294,7 +309,7 @@ Phase 5: release and rollback drill.
   projections.
 - `runx harness <path>` executes through the Rust runtime harness runner and
   stores/verifies canonical harness receipts through Rust receipt APIs.
-- Registry commands consume `rust-registry-client`; they do not duplicate
+- Registry commands consume `runx-runtime::registry`; they do not duplicate
   hosted namespace/trust logic or call TS registry modules.
 - History/journal commands consume `rust-journal-local` receipt-store
   projections and do not expose absolute local receipt paths.
@@ -314,11 +329,11 @@ pnpm exec tsx scripts/generate-cli-feature-parity.ts --check --canonical-only
 pnpm exec tsx scripts/generate-cli-feature-parity.ts --check-help-coverage --canonical-only
 pnpm exec tsx scripts/check-rust-cli-cutover.ts --candidate target/debug/runx --no-legacy-shapes --no-v2 --no-aliases --no-js-fallback
 cargo fmt --manifest-path crates/Cargo.toml --all --check
-cargo clippy --manifest-path crates/Cargo.toml -p runx-cli -p runx-runtime -p runx-registry-client --all-targets -- -D warnings
+cargo clippy --manifest-path crates/Cargo.toml -p runx-cli -p runx-runtime --all-targets -- -D warnings
 cargo test --manifest-path crates/Cargo.toml -p runx-cli
 cargo test --manifest-path crates/Cargo.toml -p runx-runtime
 cargo test --manifest-path crates/Cargo.toml -p runx-runtime harness
-cargo test --manifest-path crates/Cargo.toml -p runx-registry-client
+cargo test --manifest-path crates/Cargo.toml -p runx-runtime --test registry_client
 cargo test --manifest-path crates/Cargo.toml -p runx-receipts
 pnpm exec tsx scripts/package-rust-cli.ts --check
 pnpm exec tsx scripts/check-rust-cli-release-artifacts.ts --no-js-delegation --verify-signatures
@@ -346,7 +361,7 @@ pnpm exec tsx scripts/check-rust-cli-release-artifacts.ts --no-js-delegation --v
   runtime harness path. Do not delegate `runx harness` to
   `packages/runtime-local`.
 - If registry or journal behavior is incomplete, block this cutover until
-  `rust-registry-client` or `rust-journal-local` acceptance is complete.
+  `runx-runtime::registry` or `rust-journal-local` acceptance is complete.
 - If an external dogfood such as aster fails its Rust-runtime fixture, block the
   CLI cutover even if standalone CLI tests pass.
 

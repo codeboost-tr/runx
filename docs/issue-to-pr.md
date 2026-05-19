@@ -29,10 +29,10 @@ runx owns reusable machinery:
 - provider adapters such as GitHub issue comments and pull requests
 - idempotent update behavior for retries
 - the `runx.operational_policy.v1` schema for sources, target repos, runners,
-  owner routes, dedupe, outcomes, source-thread publishing, and automation
+  owner routes, dedupe, closure/proof publication, source-thread publishing, and automation
   permissions
-- the `runx.issue_to_pr_outcome.v1` packet for terminal post-merge observation,
-  verification, final source-thread update, and source-issue closure policy
+- sealed harness receipts for post-merge observation, verification, final
+  source-thread update, and source-issue closure policy
 
 Consuming repos own product policy:
 
@@ -216,10 +216,9 @@ Observe mode is intentionally narrow: it records `merged` or `closed` provider
 state back to the source issue with the PR URL, branch, scafld task id, and the
 human-gate statement. If the PR is still open, it returns
 `dogfood_pr_open_human_gate_pending` and does not post another comment.
-Terminal observe mode should normalize provider state into
-`runx.issue_to_pr_outcome.v1` before publishing, so wrappers can validate the
-verification result, human gate, close policy, and source-thread target as one
-packet.
+Terminal observe mode should seal provider state into a harness receipt before
+publishing, so wrappers can validate the verification result, human gate, close
+policy, and source-thread target from one proof-backed receipt projection.
 
 ## Fixtures
 

@@ -338,7 +338,7 @@ fn write_stderr(message: &str) -> ExitCode {
 }
 
 fn render_cli_error(message: &str) -> String {
-    format!("\n  ✗  {message}\n\n")
+    format!("\n  ✗  {message}\n")
 }
 
 #[derive(Debug)]

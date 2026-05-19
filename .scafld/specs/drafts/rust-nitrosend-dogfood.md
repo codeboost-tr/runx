@@ -2,7 +2,7 @@
 spec_version: '2.0'
 task_id: rust-nitrosend-dogfood
 created: '2026-05-18T00:00:00Z'
-updated: '2026-05-19T06:13:09Z'
+updated: '2026-05-19T12:11:22Z'
 status: draft
 harden_status: not_run
 size: medium
@@ -21,7 +21,7 @@ customer for the Rust runtime; honest version of the "runtime has external
 adopters" story.
 Blockers: `rust-runtime-skeleton`, at least one impure adapter port
 (`rust-runtime-adapters-agent` recommended), and the reusable runx core specs
-for operational policy, target-repo runners, and post-merge outcome observer.
+for operational policy, target-repo runners, and post-merge closure observer.
 Allowed follow-up command: `scafld harden rust-nitrosend-dogfood`
 Latest runner update: none
 Review gate: not_started
