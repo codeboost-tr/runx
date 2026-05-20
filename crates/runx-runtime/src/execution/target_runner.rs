@@ -408,16 +408,16 @@ fn target_repo_runner_revision_receipt(
         verification_refs: &verification_refs,
         runner_observation,
     });
-    let seal = receipt_seal(
-        execution.disposition,
-        &summary,
+    let seal = receipt_seal(ReceiptSealInputs {
+        disposition: execution.disposition,
+        summary: &summary,
         created_at,
         act_id,
         criterion_id,
-        &evidence_refs,
-        &verification_refs,
-        &artifact_refs,
-    );
+        evidence_refs: &evidence_refs,
+        verification_refs: &verification_refs,
+        artifact_refs: &artifact_refs,
+    });
     let receipt_id = format!(
         "hrn_rcpt_target_runner_{}_{}",
         safe_id(&execution.execution_plan.checkout.target_repo),
@@ -716,32 +716,33 @@ fn receipt_harness(
     }
 }
 
-#[allow(clippy::too_many_arguments)]
-fn receipt_seal(
+struct ReceiptSealInputs<'a> {
     disposition: TargetRepoRunnerPullRequestDisposition,
-    summary: &str,
-    created_at: &str,
-    act_id: &str,
-    criterion_id: &str,
-    evidence_refs: &[Reference],
-    verification_refs: &[Reference],
-    artifact_refs: &[Reference],
-) -> HarnessSeal {
+    summary: &'a str,
+    created_at: &'a str,
+    act_id: &'a str,
+    criterion_id: &'a str,
+    evidence_refs: &'a [Reference],
+    verification_refs: &'a [Reference],
+    artifact_refs: &'a [Reference],
+}
+
+fn receipt_seal(inputs: ReceiptSealInputs<'_>) -> HarnessSeal {
     HarnessSeal {
         disposition: ClosureDisposition::Closed,
-        reason_code: format!("target_runner_pr_{}", disposition_name(disposition)),
-        summary: summary.to_owned(),
-        closed_at: created_at.to_owned(),
-        last_observed_at: created_at.to_owned(),
+        reason_code: format!("target_runner_pr_{}", disposition_name(inputs.disposition)),
+        summary: inputs.summary.to_owned(),
+        closed_at: inputs.created_at.to_owned(),
+        last_observed_at: inputs.created_at.to_owned(),
         canonicalization: "runx.harness-receipt.c14n.v1".to_owned(),
         digest: "sha256:pending".to_owned(),
         criteria: vec![SealCriterion {
-            criterion_id: criterion_id.to_owned(),
+            criterion_id: inputs.criterion_id.to_owned(),
             status: CriterionStatus::Verified,
-            act_id: Some(act_id.to_owned()),
-            verification_refs: verification_refs.to_vec(),
-            evidence_refs: evidence_refs.to_vec(),
-            summary: Some(summary.to_owned()),
+            act_id: Some(inputs.act_id.to_owned()),
+            verification_refs: inputs.verification_refs.to_vec(),
+            evidence_refs: inputs.evidence_refs.to_vec(),
+            summary: Some(inputs.summary.to_owned()),
         }],
         verification_summary: Some(ReceiptVerificationSummary {
             signature_valid: true,
@@ -749,10 +750,10 @@ fn receipt_seal(
             authority_attenuation_valid: true,
             criteria_bound: true,
             redaction_valid: true,
-            external_attestations_present: !verification_refs.is_empty(),
+            external_attestations_present: !inputs.verification_refs.is_empty(),
         }),
         redaction_refs: Vec::new(),
-        artifact_refs: artifact_refs.to_vec(),
+        artifact_refs: inputs.artifact_refs.to_vec(),
         hash_commitments: Vec::new(),
     }
 }
