@@ -2,7 +2,7 @@
 spec_version: '2.0'
 task_id: payment-refund-skills-v1
 created: '2026-05-21T00:00:00Z'
-updated: '2026-05-20T15:34:49Z'
+updated: '2026-05-20T15:45:59Z'
 status: draft
 harden_status: needs_revision
 size: medium
@@ -16,8 +16,8 @@ risk_level: high
 Status: draft
 Current phase: planning
 Next: harden
-Reason: hardening found draft contract issues
-Blockers: check needs revision: scope/migration audit; check needs revision: path audit; check needs revision: command audit; check needs revision: acceptance timing audit; check needs revision: rollback/repair audit; check needs revision: design challenge; 7 approval-blocking issue(s)
+Reason: lockfile scope patched; remaining hardening issues still need revision
+Blockers: check needs revision: command audit; check needs revision: recovery surface; check needs revision: partial-refund depth; check needs revision: static refund dispatch
 Allowed follow-up command: `edit the draft, then run scafld harden payment-refund-skills-v1 --provider <provider>`
 Latest runner update: none
 Review gate: not_started
@@ -79,13 +79,18 @@ In scope for this v1:
   the explicit refund and dispute skill names above are parsed,
   package-ingested, graph-reference checked, and raw merchant secret fields are
   rejected.
+- Regenerate `packages/cli/src/official-skills.lock.json` with
+  `node scripts/generate-official-lock.mjs` after adding the first-party skill
+  directories.
 
 Out of scope for this v1:
 
 - No `skills/crypto-refund` directory or registry-installable placeholder.
-- No changes to `crates/runx-*`, `packages/*`, CLI commands, runtime graph
-  execution, payment authority contracts, receipt enforcement, or durable
-  refund indexes.
+- No changes to `crates/runx-*`, CLI commands, runtime graph execution,
+  payment authority contracts, receipt enforcement, or durable refund indexes.
+- No `packages/*` changes except the generated
+  `packages/cli/src/official-skills.lock.json` lockfile required for
+  first-party skill discovery.
 - No new public packet schemas under `dist/packets` unless a future scoped
   spec adds schemas and contract tests.
 - No live Stripe, MPP, x402, or on-chain refund.
@@ -123,8 +128,9 @@ partial-refund accounting is deferred.
    update the payment profile validation test to discover the declared refund
    and dispute skill names explicitly and run
    `pnpm exec vitest run tests/payment-skill-profile-validation.test.ts`.
-   No runtime, CLI, contract, durable index, or packet-schema changes are part
-   of this phase.
+   Then run `node scripts/generate-official-lock.mjs` and include the
+   refreshed `packages/cli/src/official-skills.lock.json`. No runtime, CLI,
+   contract, durable index, or packet-schema changes are part of this phase.
 
 ## Runtime Boundary
 
@@ -307,6 +313,9 @@ the above based on the linked original receipt's settlement family.
 - `tests/payment-skill-profile-validation.test.ts` explicitly discovers and
   validates all eight non-crypto refund/dispute X.yaml files.
 - `pnpm exec vitest run tests/payment-skill-profile-validation.test.ts` passes.
+- `node scripts/generate-official-lock.mjs` refreshes
+  `packages/cli/src/official-skills.lock.json`, and a second run leaves the
+  lockfile unchanged.
 - `dispute-respond` has a SKILL.md and an X.yaml profile, but no settlement
   step of its own; its output is an evidence packet plus a posture.
 - The `crypto-refund` slot is documented but neither installable nor
@@ -321,10 +330,11 @@ the above based on the linked original receipt's settlement family.
 ## Acceptance And Rollback
 
 Build rollback is mechanical: remove the eight non-crypto refund/dispute skill
-directories and revert any changes to
-`tests/payment-skill-profile-validation.test.ts`. Since this v1 is
-profile-only and non-mutating, there is no data migration, rail rollback, or
-durable receipt repair.
+directories, revert any changes to
+`tests/payment-skill-profile-validation.test.ts`, and regenerate or revert
+`packages/cli/src/official-skills.lock.json` back to the pre-refund skill set.
+Since this v1 is profile-only and non-mutating, there is no data migration,
+rail rollback, or durable receipt repair.
 
 Operational repair for future ambiguous refund state is out of scope.
 `refund-recover` is a skill/profile that reports the recommended terminal

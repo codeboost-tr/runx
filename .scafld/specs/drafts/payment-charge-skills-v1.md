@@ -2,9 +2,9 @@
 spec_version: '2.0'
 task_id: payment-charge-skills-v1
 created: '2026-05-21T00:00:00Z'
-updated: '2026-05-20T15:40:46Z'
+updated: '2026-05-20T15:44:19Z'
 status: draft
-harden_status: in_progress
+harden_status: passed
 size: medium
 risk_level: high
 ---
@@ -15,10 +15,10 @@ risk_level: high
 
 Status: draft
 Current phase: planning
-Next: harden
-Reason: external hardening provider running
-Blockers: provider hardening not yet recorded
-Allowed follow-up command: `scafld harden payment-charge-skills-v1 --provider <provider>`
+Next: approve
+Reason: hardening passed
+Blockers: none
+Allowed follow-up command: `scafld approve payment-charge-skills-v1`
 Latest runner update: none
 Review gate: not_started
 
@@ -77,12 +77,18 @@ In scope for this v1:
 - Update `tests/payment-skill-profile-validation.test.ts` only as needed so
   the explicit charge skill names above are parsed, package-ingested,
   graph-reference checked, and raw merchant secret fields are rejected.
+- Regenerate `packages/cli/src/official-skills.lock.json` with
+  `node scripts/generate-official-lock.mjs` after adding the first-party skill
+  directories.
 
 Out of scope for this v1:
 
 - No `skills/crypto-charge` directory or registry-installable placeholder.
-- No changes to `crates/runx-*`, `packages/*`, CLI commands, runtime graph
-  execution, payment authority contracts, or receipt enforcement.
+- No changes to `crates/runx-*`, CLI commands, runtime graph execution,
+  payment authority contracts, or receipt enforcement.
+- No `packages/*` changes except the generated
+  `packages/cli/src/official-skills.lock.json` lockfile required for
+  first-party skill discovery.
 - No new public packet schemas under `dist/packets` unless a future scoped
   spec adds schemas and contract tests.
 - No live Stripe, MPP, x402, or on-chain settlement.
@@ -112,7 +118,9 @@ spec if provider-side charge enforcement needs first-class contract support.
    update the payment profile validation test to discover the declared charge
    skill names explicitly and run
    `pnpm exec vitest run tests/payment-skill-profile-validation.test.ts`.
-   No runtime, CLI, contract, or packet-schema changes are part of this phase.
+   Then run `node scripts/generate-official-lock.mjs` and include the
+   refreshed `packages/cli/src/official-skills.lock.json`. No runtime, CLI,
+   contract, or packet-schema changes are part of this phase.
 
 ## Runtime Boundary
 
@@ -257,6 +265,9 @@ receipt proof refs.
 - `tests/payment-skill-profile-validation.test.ts` explicitly discovers and
   validates all seven non-crypto charge X.yaml files.
 - `pnpm exec vitest run tests/payment-skill-profile-validation.test.ts` passes.
+- `node scripts/generate-official-lock.mjs` refreshes
+  `packages/cli/src/official-skills.lock.json`, and a second run leaves the
+  lockfile unchanged.
 - The `crypto-charge` slot is documented but neither installable nor
   harnessed in this iteration.
 - No new `charge` authority schema, public packet schema, runtime behavior, or
@@ -268,9 +279,11 @@ receipt proof refs.
 ## Acceptance And Rollback
 
 Build rollback is mechanical: remove the seven non-crypto charge skill
-directories and revert any changes to
-`tests/payment-skill-profile-validation.test.ts`. Since this v1 is
-profile-only and non-mutating, there is no data migration or runtime repair.
+directories, revert any changes to
+`tests/payment-skill-profile-validation.test.ts`, and regenerate or revert
+`packages/cli/src/official-skills.lock.json` back to the pre-charge skill set.
+Since this v1 is profile-only and non-mutating, there is no data migration or
+runtime repair.
 
 Operational repair for a future state where verification seals but upstream
 forwarding fails is out of scope. Charge profiles should expose that eventuality
@@ -383,12 +396,94 @@ Issues:
 
 ### round-2
 
-Status: in_progress
+Status: needs_revision
 Started: 2026-05-20T15:40:46Z
-Ended: none
+Ended: 2026-05-20T15:40:46Z
+Verdict: needs_revision
+Provider: codex
+Output format: codex.output_file
+Summary: Most round-1 harden concerns are resolved: scope, authority reuse, runtime boundary, validation target, rollback, and product rationale are now clear. One approval blocker remains: the spec adds first-party skill directories that will require official-skill lock regeneration, while the current scope excludes `packages/*` and acceptance does not check the lock.
 
 Checks:
-- none
+- scope/migration audit
+  - Grounded in: code:packages/cli/src/commands/doctor-structure.ts:45
+  - Result: failed
+  - Evidence: The spec declares exact skill paths and excludes core/runtime/schema/live-money work, but adding seven first-party skill dirs with `SKILL.md` and `X.yaml` necessarily affects the official-skill lock generated under `packages/cli/src`, which the spec excludes.
+- path audit
+  - Grounded in: code:skills/payment-execute/X.yaml:1
+  - Result: passed
+  - Evidence: Declared charge paths are explicit future files. Existing payment profiles confirm the same `SKILL.md` + `X.yaml` shape.
+- command audit
+  - Grounded in: code:tests/payment-skill-profile-validation.test.ts:1
+  - Result: failed
+  - Evidence: `pnpm` is installed and the acceptance test exists, but the command cannot execute in this read-only sandbox because Vite attempts to write `node_modules/.vite-temp/vitest.config...mjs`. `go run ./cmd/scafld` also cannot execute because Go cannot create a temp build directory.
+- acceptance timing audit
+  - Grounded in: code:tests/payment-skill-profile-validation.test.ts:90
+  - Result: failed
+  - Evidence: The draft requires explicit discovery/validation of all seven charge profiles in `tests/payment-skill-profile-validation.test.ts`, which addresses the current heuristic that only discovers payment-named dirs or profiles containing payment markers. It does not include an acceptance check for the official-skill lock drift that these new first-party skill dirs will cause.
+- rollback/repair audit
+  - Grounded in: code:.scafld/specs/drafts/payment-charge-skills-v1.md:268
+  - Result: passed
+  - Evidence: Build rollback is mechanical deletion of the seven new skill dirs plus reverting the validation test; runtime repair for sealed-charge/no-forward is explicitly deferred and limited to modeled metadata.
+- design challenge
+  - Grounded in: code:.scafld/specs/drafts/payment-charge-skills-v1.md:55
+  - Result: passed
+  - Evidence: The product rationale distinguishes provider-side charge from consumer-side pay by authority direction and receipt-before-forward gating, while keeping this v1 profile-only.
 
 Issues:
-- none
+- [high/blocks approval] `HARDEN-9` scope_gap - Adding seven first-party skill packages will stale the official-skill lock, but the spec excludes the required `packages/cli` lockfile update.
+  - Status: open
+  - Grounded in: code:packages/cli/src/commands/doctor-structure.ts:45
+  - Evidence: The draft scope allows adding seven `skills/*/SKILL.md` + `X.yaml` packages and explicitly says no `packages/*` changes. However `discoverOfficialSkillsLockDoctorDiagnostics` renders `packages/cli/src/official-skills.lock.json` from every directory under `skills/` that has both files, and reports `runx.skill.lock.stale` when the checked-in lock differs. The stale-lock behavior is covered by `packages/cli/src/index.test.ts:1666`. The repair command is `node scripts/generate-official-lock.mjs`, which writes `packages/cli/src/official-skills.lock.json`.
+  - Recommendation: Revise Scope And Touchpoints and Acceptance Criteria to include regenerating `packages/cli/src/official-skills.lock.json` with `node scripts/generate-official-lock.mjs`, or explicitly change the implementation shape so these profiles do not participate in official-skill discovery. As written, approval would authorize a build that makes `runx doctor` report a stale official skills lock while forbidding the required `packages/*` repair.
+  - Question: Should this spec include official-skill lock regeneration for the seven new first-party charge skills, or are these charge profiles intentionally excluded from the official skills lock despite living under `skills/` with `SKILL.md` and `X.yaml`?
+  - Recommended answer: Include official-skill lock regeneration in this v1. These are first-party skill packages under `skills/`, so registry tooling should see them consistently; run `node scripts/generate-official-lock.mjs` after adding the profiles and include the resulting lockfile change in scope.
+  - If unanswered: Default to adding `packages/cli/src/official-skills.lock.json` to scope and acceptance, generated with `node scripts/generate-official-lock.mjs`; include dist lock syncing only if the build convention requires it for checked-in artifacts.
+- [low/advisory] `HARDEN-10` command_audit - The documented local `./bin/scafld` path is missing in this checkout; source fallback is available but blocked by the read-only sandbox.
+  - Status: open
+  - Grounded in: code:AGENTS.md:37
+  - Evidence: `./bin/scafld status payment-charge-skills-v1 --json` fails because `./bin/scafld` is absent. AGENTS.md permits the source checkout fallback `go run ./cmd/scafld`, but this read-only sandbox prevents Go from creating its temp build directory.
+  - Recommendation: Use `go run ./cmd/scafld` in a writable environment for lifecycle operations, or restore `./bin/scafld` if local workflows expect it.
+
+### round-3
+
+Status: passed
+Started: 2026-05-20T15:44:19Z
+Ended: 2026-05-20T15:44:19Z
+Verdict: pass
+Provider: codex
+Output format: codex.output_file
+Summary: Round 3 resolves the prior blockers. The spec is now executable as a profile-only, first-party skill catalog task: paths are declared, authority reuse is bounded to existing payment terms, runtime claims are deferred, validation and lockfile acceptance are concrete, and rollback is mechanical. No blocking harden issues remain.
+
+Checks:
+- scope/migration audit
+  - Grounded in: code:.scafld/specs/drafts/payment-charge-skills-v1.md:65
+  - Result: passed
+  - Evidence: Scope declares all seven non-crypto charge `SKILL.md` and `X.yaml` paths, the validation test path, and `packages/cli/src/official-skills.lock.json`; out-of-scope excludes `crates/runx-*`, CLI/runtime/contract changes, packet schemas, and live settlement.
+- path audit
+  - Grounded in: code:skills/payment-execute/X.yaml:1
+  - Result: passed
+  - Evidence: Declared charge skill files are intentional future files. Existing payment skills use the same `SKILL.md` + `X.yaml` package shape, for example `skills/payment-execute/X.yaml`.
+- command audit
+  - Grounded in: code:tests/payment-skill-profile-validation.test.ts:19
+  - Result: passed
+  - Evidence: `pnpm`, `node`, global `scafld`, `tests/payment-skill-profile-validation.test.ts`, and `scripts/generate-official-lock.mjs` are present. `pnpm exec vitest run tests/payment-skill-profile-validation.test.ts` fails here only because the read-only sandbox blocks Vite writing `node_modules/.vite-temp/...`; `node scripts/generate-official-lock.mjs` fails here only because the read-only sandbox blocks writing `packages/cli/src/official-skills.lock.json`.
+- acceptance timing audit
+  - Grounded in: code:tests/payment-skill-profile-validation.test.ts:90
+  - Result: passed
+  - Evidence: Acceptance now requires explicit discovery and validation of all seven non-crypto charge `X.yaml` files, plus lockfile refresh and a second generator run leaving the lock unchanged. This addresses the current heuristic in `discoverPaymentSkillDirs`, which otherwise discovers by payment-named dirs or payment markers.
+- rollback/repair audit
+  - Grounded in: code:.scafld/specs/drafts/payment-charge-skills-v1.md:279
+  - Result: passed
+  - Evidence: Rollback says to remove the seven charge directories, revert the validation test, and regenerate or revert the official skills lockfile. Runtime repair is explicitly out of scope and limited to modeled `reversal_required` or recovery hints.
+- design challenge
+  - Grounded in: code:.scafld/specs/drafts/payment-charge-skills-v1.md:55
+  - Result: passed
+  - Evidence: The spec distinguishes provider-side charge from consumer-side payment by pricing, challenge issuance, credential verification, and forwarding gate authority direction. Runtime boundary states graph profiles must not claim executable provider calls, forwarding, or repair.
+
+Issues:
+- [low/advisory] `HARDEN-11` command_audit - Local scafld source entrypoints named in AGENTS.md are absent; global scafld works.
+  - Status: open
+  - Grounded in: code:AGENTS.md:37
+  - Evidence: `AGENTS.md` says to use `./bin/scafld` or `go run ./cmd/scafld` inside the scafld repo. In this checkout, `./bin/scafld` and `cmd/scafld/main.go` are absent, while `/opt/homebrew/bin/scafld status payment-charge-skills-v1 --json` works and reports the task in draft/harden state.
+  - Recommendation: For lifecycle commands in this checkout, either restore the source-local scafld entrypoint expected by AGENTS.md or document that this workspace intentionally uses the installed `scafld` binary. This does not block this spec because the task status command succeeds and the build acceptance commands are project-local.
