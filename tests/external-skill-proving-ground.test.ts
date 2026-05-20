@@ -351,8 +351,8 @@ async function assertFreshBoundary(options: {
     runxHome: runtime.paths.runxHome,
   });
 
-  expect(result.status).toBe("needs_resolution");
-  if (result.status !== "needs_resolution") {
+  expect(result.status).toBe("needs_agent");
+  if (result.status !== "needs_agent") {
     return;
   }
 

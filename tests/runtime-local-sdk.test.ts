@@ -1,8 +1,9 @@
+import { spawnSync } from "node:child_process";
 import { mkdtemp, readFile, rm } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeAll, describe, expect, it, vi } from "vitest";
 import { createDefaultSkillAdapters } from "@runxhq/adapters";
 
 import { hashString } from "@runxhq/core/util";
@@ -17,6 +18,39 @@ import {
 } from "@runxhq/runtime-local/sdk";
 
 const originalFetch = globalThis.fetch;
+const workspaceRoot = process.cwd();
+const cargo = process.platform === "win32" ? "cargo.exe" : "cargo";
+const runxBinary = path.join(
+  workspaceRoot,
+  "crates",
+  "target",
+  "debug",
+  process.platform === "win32" ? "runx.exe" : "runx",
+);
+
+function sdkEnv(extra: NodeJS.ProcessEnv = {}): NodeJS.ProcessEnv {
+  return {
+    ...process.env,
+    RUNX_CWD: process.cwd(),
+    RUNX_KERNEL_EVAL_BIN: runxBinary,
+    ...extra,
+  };
+}
+
+beforeAll(() => {
+  const result = spawnSync(
+    cargo,
+    ["build", "--quiet", "--manifest-path", "crates/Cargo.toml", "-p", "runx-cli", "--bin", "runx"],
+    {
+      cwd: workspaceRoot,
+      encoding: "utf8",
+      env: process.env,
+    },
+  );
+  if (result.status !== 0) {
+    throw new Error(`failed to build runx binary for SDK tests: ${result.stderr || result.stdout}`);
+  }
+});
 
 afterEach(() => {
   vi.restoreAllMocks();
@@ -30,7 +64,7 @@ describe("TypeScript SDK", () => {
 
     try {
       const sdk = createRunxSdk({
-        env: { ...process.env, RUNX_CWD: process.cwd(), RUNX_HOME: path.join(tempDir, "home") },
+        env: sdkEnv({ RUNX_HOME: path.join(tempDir, "home") }),
         receiptDir,
         caller: createStructuredCaller({ answers: { message: "from-sdk" } }),
         adapters: createDefaultSkillAdapters(),
@@ -40,8 +74,8 @@ describe("TypeScript SDK", () => {
         skillPath: "fixtures/skills/echo",
       });
 
-      expect(result.status).toBe("success");
-      if (result.status !== "success") {
+      expect(result.status).toBe("sealed");
+      if (result.status !== "sealed") {
         return;
       }
       expect(result.execution.stdout).toBe("from-sdk");
@@ -68,14 +102,14 @@ describe("TypeScript SDK", () => {
   it("returns structured resolution requests without prompting", async () => {
     const caller = createStructuredCaller();
     const sdk = createRunxSdk({
-      env: { ...process.env, RUNX_CWD: process.cwd() },
+      env: sdkEnv(),
       caller,
       adapters: createDefaultSkillAdapters(),
     });
 
     const result = await sdk.runSkill({ skillPath: "fixtures/skills/echo" });
 
-    expect(result.status).toBe("needs_resolution");
+    expect(result.status).toBe("needs_agent");
     expect(caller.trace.resolutions).toEqual([
       expect.objectContaining({
         request: expect.objectContaining({
@@ -97,19 +131,19 @@ describe("TypeScript SDK", () => {
 
     try {
       const bridge = createRunxHostBridge({
-        env: { ...process.env, RUNX_CWD: process.cwd(), RUNX_HOME: path.join(tempDir, "home") },
+        env: sdkEnv({ RUNX_HOME: path.join(tempDir, "home") }),
         receiptDir,
         adapters: createDefaultSkillAdapters(),
       });
 
-      const paused = await bridge.run({
+      const needsAgent = await bridge.run({
         skillPath: "fixtures/skills/echo",
       });
-      expect(paused.status).toBe("paused");
-      if (paused.status !== "paused") {
+      expect(needsAgent.status).toBe("needs_agent");
+      if (needsAgent.status !== "needs_agent") {
         return;
       }
-      expect(paused).toMatchObject({
+      expect(needsAgent).toMatchObject({
         skillName: "echo",
         requests: [
           {
@@ -117,28 +151,28 @@ describe("TypeScript SDK", () => {
           },
         ],
       });
-      expect(paused.requests[0]?.id).toBeTruthy();
-      expect(Array.isArray(paused.events)).toBe(true);
+      expect(needsAgent.requests[0]?.id).toBeTruthy();
+      expect(Array.isArray(needsAgent.events)).toBe(true);
 
-      const inspectedPaused = await bridge.inspect(paused.runId, { receiptDir });
+      const inspectedPaused = await bridge.inspect(needsAgent.runId, { receiptDir });
       expect(inspectedPaused).toMatchObject({
-        status: "paused",
-        runId: paused.runId,
+        status: "needs_agent",
+        runId: needsAgent.runId,
         skillName: "echo",
       });
-      if (inspectedPaused.status !== "paused") {
+      if (inspectedPaused.status !== "needs_agent") {
         return;
       }
       expect(inspectedPaused.requests).toEqual(
         expect.arrayContaining([
           expect.objectContaining({
-            id: paused.requests[0]?.id,
+            id: needsAgent.requests[0]?.id,
             kind: "input",
           }),
         ]),
       );
 
-      const completed = await bridge.resume(paused.runId, {
+      const completed = await bridge.resume(needsAgent.runId, {
         receiptDir,
         resolver: ({ request }) => (
           request.kind === "input"
@@ -167,16 +201,16 @@ describe("TypeScript SDK", () => {
   });
 
   it("projects trusted first-party host outcomes without exposing a second public protocol", () => {
-    const paused = createTrustedHostOutcome(
+    const needsAgent = createTrustedHostOutcome(
       {
-        status: "paused",
+        status: "needs_agent",
         skillName: "echo",
         runId: "rx_paused",
         requests: [{ id: "req_1", kind: "input", questions: [] }],
         events: [],
       },
       {
-        status: "needs_resolution",
+        status: "needs_agent",
         skill: { name: "echo" },
         skillPath: "fixtures/skills/echo/SKILL.md",
         inputs: {},
@@ -184,8 +218,8 @@ describe("TypeScript SDK", () => {
         requests: [{ id: "req_1", kind: "input", questions: [] }],
       } as any,
     );
-    expect(paused).toMatchObject({
-      kernelStatus: "needs_resolution",
+    expect(needsAgent).toMatchObject({
+      kernelStatus: "needs_agent",
       kernelRunId: "rx_paused",
       ledgerRunId: "rx_paused",
       requests: [
@@ -205,7 +239,7 @@ describe("TypeScript SDK", () => {
         events: [],
       },
       {
-        status: "success",
+        status: "sealed",
         skill: { name: "echo" },
         inputs: {},
         execution: { stdout: "ok" },
@@ -214,7 +248,7 @@ describe("TypeScript SDK", () => {
       } as any,
     );
     expect(completed).toMatchObject({
-      kernelStatus: "success",
+      kernelStatus: "sealed",
       ledgerRunId: "rx_done",
       receiptId: "rx_done",
       receiptSchema: "runx.harness_receipt.v1",
@@ -262,11 +296,9 @@ describe("TypeScript SDK", () => {
 
   it("can inspect imported tools and local manifest-backed tools", async () => {
     const sdk = createRunxSdk({
-      env: {
-        ...process.env,
-        RUNX_CWD: process.cwd(),
+      env: sdkEnv({
         RUNX_ENABLE_FIXTURE_TOOL_CATALOG: "1",
-      },
+      }),
     });
 
     const imported = await sdk.inspectTool({
@@ -317,7 +349,7 @@ describe("TypeScript SDK", () => {
 
     try {
       const sdk = createRunxSdk({
-        env: { ...process.env, RUNX_CWD: process.cwd() },
+        env: sdkEnv(),
         registryDir,
         connect,
         adapters: createDefaultSkillAdapters(),
@@ -356,7 +388,7 @@ describe("TypeScript SDK", () => {
 
     try {
       const sdk = createRunxSdk({
-        env: { ...process.env, RUNX_CWD: process.cwd() },
+        env: sdkEnv(),
         registryDir,
         adapters: createDefaultSkillAdapters(),
       });
@@ -446,8 +478,7 @@ describe("TypeScript SDK", () => {
 
       const sdk = createRunxSdk({
         env: {
-          ...process.env,
-          RUNX_CWD: process.cwd(),
+          ...sdkEnv(),
           RUNX_HOME: path.join(tempDir, "home"),
           RUNX_REGISTRY_URL: "https://runx.example.test",
         },
@@ -535,8 +566,7 @@ describe("TypeScript SDK", () => {
 
       const sdk = createRunxSdk({
         env: {
-          ...process.env,
-          RUNX_CWD: process.cwd(),
+          ...sdkEnv(),
           RUNX_HOME: path.join(tempDir, "home"),
           RUNX_REGISTRY_URL: "https://runx.example.test",
         },

@@ -1,5 +1,5 @@
 {
-  "status": "success",
+  "status": "sealed",
   "stdout": "catalog fixture success",
   "stderr": "",
   "exitCode": 0,

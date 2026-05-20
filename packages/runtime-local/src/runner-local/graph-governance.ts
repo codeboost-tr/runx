@@ -49,7 +49,7 @@ import type { NormalizedExecutionSemantics } from "./execution-semantics.js";
 import type { ExecutionGraph, GraphStep, ValidatedSkill } from "../parser-types.js";
 
 export interface RuntimeReceiptExecution {
-  readonly status: "success" | "failure";
+  readonly status: "sealed" | "failure";
   readonly exitCode: number | null;
   readonly signal: NodeJS.Signals | null;
   readonly durationMs: number;
@@ -99,7 +99,7 @@ export interface WriteRunnerGraphReceiptOptions {
   readonly graphId: string;
   readonly graphName: string;
   readonly owner?: string;
-  readonly status: "success" | "failure";
+  readonly status: "sealed" | "failure";
   readonly inputs: Readonly<Record<string, unknown>>;
   readonly output: string;
   readonly steps: readonly GraphReceiptStep[];
@@ -128,7 +128,7 @@ export async function writeRunnerSkillReceipt(
   const disposition = sealDisposition(options.execution.status, options.disposition);
   const closure = closureRecord({
     disposition,
-    reasonCode: options.execution.status === "success" ? "process_closed" : "process_failed",
+    reasonCode: options.execution.status === "sealed" ? "process_closed" : "process_failed",
     summary: skillClosureSummary(options.skillName, options.execution),
     closedAt: completedAt,
   });
@@ -237,7 +237,7 @@ export async function writeRunnerGraphReceipt(
     .map(harnessReceiptReference);
   const seal = sealRecord({
     disposition,
-    reasonCode: options.status === "success" ? "graph_closed" : "graph_failed",
+    reasonCode: options.status === "sealed" ? "graph_closed" : "graph_failed",
     summary: graphClosureSummary(options.graphName, options.status, normalizedSteps.length),
     closedAt: completedAt,
     criteria: [],
@@ -301,8 +301,8 @@ export function uniqueRunnerReceiptId(prefix: "rx" | "gx"): string {
   return `hrn_rcpt_${prefix}_${randomUUID().replace(/-/g, "")}`;
 }
 
-export function runnerReceiptStatus(receipt: RunnerReceipt): "success" | "failure" {
-  return receipt.seal.disposition === "closed" ? "success" : "failure";
+export function runnerReceiptStatus(receipt: RunnerReceipt): "sealed" | "failure" {
+  return receipt.seal.disposition === "closed" ? "sealed" : "failure";
 }
 
 export function runnerReceiptCategory(receipt: RunnerReceipt): "skill" | "graph" | "harness" {
@@ -376,7 +376,7 @@ export interface GraphReceiptStep {
   readonly attempt: number;
   readonly skill: string;
   readonly runner?: string;
-  readonly status: "success" | "failure";
+  readonly status: "sealed" | "failure";
   readonly receipt_id?: string;
   readonly parent_receipt?: string;
   readonly fanout_group?: string;
@@ -778,7 +778,7 @@ interface RuntimeReceiptMetadata {
   readonly name?: string;
   readonly owner?: string;
   readonly source?: string;
-  readonly status?: "success" | "failure";
+  readonly status?: "sealed" | "failure";
   readonly started_at?: string;
   readonly completed_at?: string;
   readonly duration_ms?: number;
@@ -1044,7 +1044,7 @@ function runtimeReceiptMetadata(options: {
   readonly name: string;
   readonly owner?: string;
   readonly sourceType: string;
-  readonly status: "success" | "failure";
+  readonly status: "sealed" | "failure";
   readonly startedAt?: string;
   readonly completedAt: string;
   readonly durationMs: number;
@@ -1104,11 +1104,11 @@ function runtimeMetadata(receipt: RunnerReceipt): RuntimeReceiptMetadata {
 }
 
 function sealDisposition(
-  status: "success" | "failure",
+  status: "sealed" | "failure",
   disposition: NormalizedExecutionSemantics["disposition"] | undefined,
 ): HarnessSealDispositionContract {
   if (disposition === "policy_denied") return "declined";
-  if (disposition === "needs_resolution" || disposition === "approval_required") return "deferred";
+  if (disposition === "needs_agent" || disposition === "approval_required") return "deferred";
   if (disposition === "observing") return "deferred";
   if (disposition === "escalated") return "blocked";
   if (status === "failure") return "failed";
@@ -1116,13 +1116,13 @@ function sealDisposition(
 }
 
 function skillClosureSummary(skillName: string, execution: RuntimeReceiptExecution): string {
-  return execution.status === "success"
+  return execution.status === "sealed"
     ? `${skillName} closed successfully.`
     : `${skillName} closed with failure.`;
 }
 
-function graphClosureSummary(graphName: string, status: "success" | "failure", stepCount: number): string {
-  return status === "success"
+function graphClosureSummary(graphName: string, status: "sealed" | "failure", stepCount: number): string {
+  return status === "sealed"
     ? `${graphName} closed successfully with ${stepCount} step(s).`
     : `${graphName} closed with failure after ${stepCount} step(s).`;
 }

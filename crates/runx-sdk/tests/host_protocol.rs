@@ -29,7 +29,7 @@ fn sdk_decodes_host_run_result_fixtures() -> Result<(), Box<dyn std::error::Erro
 #[test]
 fn sdk_decodes_host_state_fixtures() -> Result<(), Box<dyn std::error::Error>> {
     let fixture: StateFixture = serde_json::from_str(include_str!(
-        "../../../fixtures/sdk-rust/host-protocol/inspect-host-state-paused.json"
+        "../../../fixtures/sdk-rust/host-protocol/inspect-host-state-needs-agent.json"
     ))?;
     let expected_json = serde_json::to_string(&fixture.expected)?;
     let decoded = decode_host_state(&expected_json)?;

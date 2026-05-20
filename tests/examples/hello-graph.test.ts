@@ -11,7 +11,7 @@ describe("hello-graph example", () => {
     if (result.source !== "fixture") {
       throw new Error("expected hello-graph harness.yaml to run as a single fixture");
     }
-    expect(result.status).toBe("success");
+    expect(result.status).toBe("sealed");
     expect(result.assertionErrors).toEqual([]);
     expect(result.graphReceipt).toBeDefined();
   });

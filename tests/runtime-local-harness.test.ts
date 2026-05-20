@@ -17,7 +17,7 @@ caller:
   approvals:
     gate: true
 expect:
-  status: success
+  status: sealed
   receipt:
     schema: runx.harness_receipt.v1
     harness_id: hrn_echo-skill_echo
@@ -46,7 +46,7 @@ expect:
   it("runs an echo skill fixture and asserts receipt shape", async () => {
     const result = await runHarness("fixtures/harness/echo-skill.yaml", { adapters: createDefaultSkillAdapters() });
 
-    expect(result.status).toBe("success");
+    expect(result.status).toBe("sealed");
     expect(result.assertionErrors).toEqual([]);
     expect(result.receipt).toBeDefined();
     expect(result.trace.events.map((event) => event.type)).toContain("completed");
@@ -55,7 +55,7 @@ expect:
   it("runs a sequential graph fixture and asserts migrated harness expectations", async () => {
     const result = await runHarness("fixtures/harness/sequential-graph.yaml", { adapters: createDefaultSkillAdapters() });
 
-    expect(result.status).toBe("success");
+    expect(result.status).toBe("sealed");
     expect(result.assertionErrors).toEqual([]);
     expect(result.graphReceipt).toBeDefined();
   });
@@ -72,7 +72,7 @@ expect:
       expect(result.status).toBe("success");
       expect(result.assertionErrors).toEqual([]);
       expect(result.cases.map((entry) => entry.fixture.name)).toEqual(["evolve-introspect", "evolve-plan-spec"]);
-      expect(result.cases[0]?.status).toBe("success");
+      expect(result.cases[0]?.status).toBe("sealed");
       expect(result.cases[0]?.receipt).toBeDefined();
       expect(result.cases[1]?.receipt).toBeDefined();
     },

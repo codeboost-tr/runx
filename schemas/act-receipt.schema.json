@@ -17,7 +17,7 @@
         "status": {
           "anyOf": [
             {
-              "const": "success",
+              "const": "sealed",
               "type": "string"
             },
             {
@@ -230,7 +230,7 @@
       ],
       "properties": {
         "status": {
-          "const": "needs_resolution",
+          "const": "needs_agent",
           "type": "string"
         },
         "stdout": {

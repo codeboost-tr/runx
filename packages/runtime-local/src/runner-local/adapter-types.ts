@@ -1,5 +1,4 @@
 import type {
-  ActReceiptEnvelopeContract,
   AgentContextProvenanceContract,
   ArtifactEnvelopeContract,
   ContextContract,
@@ -12,7 +11,30 @@ import type {
 import type { ToolCatalogAdapter } from "../tool-catalogs/index.js";
 import type { ValidatedSkill } from "../parser-types.js";
 
-export type ActReceiptEnvelope = ActReceiptEnvelopeContract;
+export type RuntimeTerminalStatus = "sealed" | "failure";
+
+export type ActReceiptEnvelope =
+  | {
+      readonly status: RuntimeTerminalStatus;
+      readonly stdout: string;
+      readonly stderr: string;
+      readonly exitCode: number | null;
+      readonly signal: NodeJS.Signals | null;
+      readonly durationMs: number;
+      readonly errorMessage?: string;
+      readonly metadata?: Readonly<Record<string, unknown>>;
+    }
+  | {
+      readonly status: "needs_agent";
+      readonly stdout: string;
+      readonly stderr: string;
+      readonly exitCode: null;
+      readonly signal: null;
+      readonly durationMs: number;
+      readonly request: ResolutionRequest;
+      readonly errorMessage?: string;
+      readonly metadata?: Readonly<Record<string, unknown>>;
+    };
 export type AgentContextProvenance = AgentContextProvenanceContract;
 export type Context = ContextContract;
 export type ContextDocument = ContextDocumentContract;
@@ -53,7 +75,7 @@ export interface NestedSkillInvocation {
 
 export type NestedSkillInvocationResult =
   | {
-      readonly status: "needs_resolution";
+      readonly status: "needs_agent";
       readonly request: ResolutionRequest;
       readonly receiptId?: string;
     }
@@ -64,7 +86,7 @@ export type NestedSkillInvocationResult =
       readonly errorMessage?: string;
     }
   | {
-      readonly status: "success" | "failure";
+      readonly status: RuntimeTerminalStatus;
       readonly stdout: string;
       readonly stderr: string;
       readonly exitCode: number | null;

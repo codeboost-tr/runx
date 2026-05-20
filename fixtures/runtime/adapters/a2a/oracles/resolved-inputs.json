@@ -1,5 +1,5 @@
 {
-  "status": "success",
+  "status": "sealed",
   "stdout": "{\"exact\":\"resolved\",\"embedded\":\"message=resolved\"}",
   "stderr": "",
   "exitCode": 0,

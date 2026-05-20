@@ -33,12 +33,12 @@ describe("host protocol", () => {
     const bridge = createHostBridge({ execute: sdk.runSkill.bind(sdk) });
     const adapter = createOpenAiHostAdapter(bridge);
 
-    const paused = await adapter.run({
+    const needsAgent = await adapter.run({
       skillPath: "fixtures/skills/echo",
     });
 
-    expect(paused.role).toBe("tool");
-    expect(paused.structuredContent.runx.status).toBe("paused");
+    expect(needsAgent.role).toBe("tool");
+    expect(needsAgent.structuredContent.runx.status).toBe("needs_agent");
   });
 
   it("maps escalated graph receipts to an explicit host status", async () => {

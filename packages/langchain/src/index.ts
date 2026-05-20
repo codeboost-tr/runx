@@ -90,9 +90,9 @@ export function createRunxLangChainTool(
         inputs: options.mapInput ? options.mapInput(input) : toInputRecord(input),
       });
 
-      if (result.status === "needs_resolution") {
+      if (isNeedsAgentResult(result)) {
         throw new Error(
-          `runx workflow '${options.name}' paused for resolution; LangChain tools must be fully specified before invocation.`,
+          `runx workflow '${options.name}' needs agent input; LangChain tools must be fully specified before invocation.`,
         );
       }
       if (result.status === "policy_denied") {
@@ -118,6 +118,10 @@ export function createRunxLangChainTool(
       schema: options.schema as never,
     },
   );
+}
+
+function isNeedsAgentResult(result: RunLocalSkillResult): result is RunLocalSkillResult & { readonly status: "needs_agent" } {
+  return (result as { readonly status?: string }).status === "needs_agent";
 }
 
 interface ImportedLangChainTool extends ToolCatalogResolvedTool {

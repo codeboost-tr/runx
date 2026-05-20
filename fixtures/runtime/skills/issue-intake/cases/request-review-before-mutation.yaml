@@ -89,14 +89,14 @@ caller:
         summary: "The maintainer needs to confirm the target surface before runx opens a downstream lane."
         recommended_lane: "manual-review"
 expect:
-  status: "success"
+  status: "sealed"
   receipt:
     schema: "runx.harness_receipt.v1"
     receipt_id: "hrn_rcpt_request-review-before-mutation_request-review-before-mutation"
     harness_id: "hrn_request-review-before-mutation_request-review-before-mutation"
     state: "sealed"
     disposition: "closed"
-    reason_code: "process_closed"
+    reason_code: "request-review-before-mutation_closed"
     act_ids:
       - "act_request-review-before-mutation"
     decision_ids:

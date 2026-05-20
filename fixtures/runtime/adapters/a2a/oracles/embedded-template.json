@@ -1,5 +1,5 @@
 {
-  "status": "success",
+  "status": "sealed",
   "stdout": "count=3 payload={\"ok\":true}",
   "stderr": "",
   "exitCode": 0,

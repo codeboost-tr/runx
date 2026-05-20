@@ -54,7 +54,7 @@ describe("history, inspect, and knowledge CLI", () => {
       );
       expect(historyExit).toBe(0);
       expect(JSON.parse(historyStdout.contents())).toMatchObject({
-        status: "success",
+        status: "sealed",
         query: "echo",
         receipts: [
           {
@@ -106,7 +106,7 @@ describe("history, inspect, and knowledge CLI", () => {
       );
       expect(knowledgeExit).toBe(0);
       expect(JSON.parse(knowledgeStdout.contents())).toMatchObject({
-        status: "success",
+        status: "sealed",
         project,
         projections: [
           {
@@ -140,7 +140,7 @@ describe("history, inspect, and knowledge CLI", () => {
             agent: "builder",
             task: "draft-pr",
             route: "provided",
-            status: "success",
+            status: "sealed",
           },
           runner: {
             provider: "openai",
@@ -201,7 +201,7 @@ describe("history, inspect, and knowledge CLI", () => {
       );
       expect(historyExit).toBe(0);
       expect(JSON.parse(historyStdout.contents())).toMatchObject({
-        status: "success",
+        status: "sealed",
         filters: {
           actor: "builder",
           artifact_type: "draft_pull_request",
@@ -252,7 +252,7 @@ Emit a history projection artifact.
   const adapter: SkillAdapter = {
     type: "agent-step",
     invoke: async () => ({
-      status: "success",
+      status: "sealed",
       stdout: JSON.stringify({ ok: true }),
       stderr: "",
       exitCode: 0,
@@ -274,8 +274,8 @@ Emit a history projection artifact.
     },
   });
 
-  expect(result.status).toBe("success");
-  if (result.status !== "success") {
+  expect(result.status).toBe("sealed");
+  if (result.status !== "sealed") {
     throw new Error("history seed run failed");
   }
   return result.receipt.id;

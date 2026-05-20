@@ -20,8 +20,6 @@ harness:
           agent_step.example-upstream.output:
             summary: ok
       expect:
-        status: success
+        status: sealed
         receipt:
-          kind: skill_execution
-          status: success
-          skill_name: example-upstream
+          status: sealed

@@ -2,9 +2,9 @@
 spec_version: '2.0'
 task_id: rust-dev
 created: '2026-05-18T00:00:00Z'
-updated: '2026-05-18T00:00:00Z'
+updated: '2026-05-20T10:34:14Z'
 status: draft
-harden_status: not_run
+harden_status: in_progress
 size: medium
 risk_level: medium
 ---
@@ -14,12 +14,12 @@ risk_level: medium
 ## Current State
 
 Status: draft
-Current phase: none
-Next: approve
-Reason: draft created under `plans/rust-takeover.md`. Covers `runx dev`.
-Blockers: `rust-runtime-skeleton`, `rust-harness`.
-Allowed follow-up command: `scafld harden rust-dev`
-Latest runner update: none
+Current phase: ready_for_harden
+Next: harden
+Reason: hardening round in progress
+Blockers: none
+Allowed follow-up command: `scafld harden rust-dev --mark-passed`
+Latest runner update: 2026-05-20T10:33:54Z
 Review gate: not_started
 
 ## Summary
@@ -69,9 +69,23 @@ Out of scope:
 
 ## Dependencies
 
-- `rust-runtime-skeleton`.
-- `rust-harness`.
+- `rust-runtime-skeleton` (archived completed; review gate pass).
+- `rust-harness` (archived completed; harden passed and review gate pass).
 
 ## Open Questions
 
 - File watch library choice (notify, watchexec). Defer to Phase 1.
+
+## Harden Rounds
+
+### round-1
+
+Status: in_progress
+Started: 2026-05-20T10:34:14Z
+Ended: none
+
+Checks:
+- none
+
+Issues:
+- none

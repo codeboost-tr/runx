@@ -36,9 +36,8 @@ export function writeUsage(stream: Writable, env: NodeJS.ProcessEnv = process.en
   stream.write(
     [
       "Usage:",
-      "  runx skill <skill-ref|skill-dir|SKILL.md> [--runner runner-name] [--input value] [--non-interactive] [--json] [--answers answers.json]",
-      "  runx evolve [objective] [--receipt run-id] [--non-interactive] [--json] [--answers answers.json]",
-      "  runx resume <run-id> [--non-interactive] [--json] [--answers answers.json]",
+      "  runx skill <skill-ref|skill-dir|SKILL.md> [--runner runner-name] [--run-id run-id] [--input value] [--non-interactive] [--json] [--answers answers.json]",
+      "  runx evolve [objective] [--run-id run-id] [--non-interactive] [--json] [--answers answers.json]",
       "  runx replay <run-id|receipt-id> [--receipt-dir dir] [--non-interactive] [--json] [--answers answers.json]",
       "  runx diff <left-run-or-receipt> <right-run-or-receipt> [--receipt-dir dir] [--json]",
       "  runx skill search <query> [--source registry|marketplace|fixture-marketplace] [--json]",
@@ -69,7 +68,7 @@ export function writeUsage(stream: Writable, env: NodeJS.ProcessEnv = process.en
       "  runx new docs-demo",
       "  runx init",
       "  runx init -g --prefetch official",
-      "  runx resume <run-id>",
+      "  runx skill <same-skill-ref> --run-id <run-id> --answers answers.json",
       "  runx replay <run-id>",
       "  runx diff <left> <right>",
       "  runx skill inspect <receipt-id>",
@@ -91,7 +90,7 @@ export function writeUsage(stream: Writable, env: NodeJS.ProcessEnv = process.en
       "  runx skill add <ref>",
       "  runx skill publish <skill-dir|SKILL.md> [--owner owner] [--version version] [--registry url-or-path] [--json]",
       "  runx skill inspect <receipt-id> [--receipt-dir dir] [--json]",
-      "  runx skill <skill-dir|SKILL.md>",
+      "  runx skill <skill-dir|SKILL.md> [--run-id run-id] [--answers answers.json]",
       "",
     ].join("\n"),
   );

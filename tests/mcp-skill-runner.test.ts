@@ -29,8 +29,8 @@ describe("MCP skill runner", () => {
         adapters: createDefaultSkillAdapters(),
       });
 
-      expect(result.status).toBe("success");
-      if (result.status !== "success") {
+      expect(result.status).toBe("sealed");
+      if (result.status !== "sealed") {
         return;
       }
 

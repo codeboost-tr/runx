@@ -273,7 +273,7 @@ target: skill
 inputs:
   topic: harness replay
 expect:
-  status: success
+  status: sealed
 "#,
     )?;
 
@@ -283,7 +283,7 @@ expect:
         RuntimeOptions::default(),
     )?;
 
-    assert_eq!(replay.status, runx_runtime::HarnessExpectedStatus::Success);
+    assert_eq!(replay.status, runx_runtime::HarnessExpectedStatus::Sealed);
     let output = replay
         .skill_output
         .ok_or_else(|| std::io::Error::other("missing replay skill output"))?;

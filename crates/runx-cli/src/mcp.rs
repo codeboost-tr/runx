@@ -28,7 +28,7 @@ pub fn parse_mcp_plan(args: &[OsString]) -> Result<McpPlan, String> {
         }
         let (flag, inline_value) = split_flag(token);
         match flag {
-            "--receipt-dir" | "--receiptDir" => {
+            "--receipt-dir" => {
                 let (value, next_index) = flag_value(args, index, flag, inline_value)?;
                 receipt_dir = Some(PathBuf::from(value));
                 index = next_index;

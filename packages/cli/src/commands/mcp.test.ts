@@ -1,14 +1,40 @@
 import { mkdtemp, rm } from "node:fs/promises";
+import { spawnSync } from "node:child_process";
 import os from "node:os";
 import path from "node:path";
 import { PassThrough } from "node:stream";
 
-import { describe, expect, it } from "vitest";
+import { beforeAll, describe, expect, it } from "vitest";
 
 import { handleMcpServeCommand } from "./mcp.js";
 
+const workspaceRoot = process.cwd();
+const cargo = process.platform === "win32" ? "cargo.exe" : "cargo";
+const runxBinary = path.join(
+  workspaceRoot,
+  "crates",
+  "target",
+  "debug",
+  process.platform === "win32" ? "runx.exe" : "runx",
+);
+
 describe("runx mcp serve", () => {
-  it("lists served skills, built-in resume, and executes through the local kernel", async () => {
+  beforeAll(() => {
+    const result = spawnSync(
+      cargo,
+      ["build", "--quiet", "--manifest-path", "crates/Cargo.toml", "-p", "runx-cli", "--bin", "runx"],
+      {
+        cwd: workspaceRoot,
+        encoding: "utf8",
+        env: process.env,
+      },
+    );
+    if (result.status !== 0) {
+      throw new Error(`failed to build runx binary for MCP test: ${result.stderr || result.stdout}`);
+    }
+  });
+
+  it("lists served skills and executes through the local kernel", async () => {
     const tempDir = await mkdtemp(path.join(os.tmpdir(), "runx-mcp-serve-"));
     const stdin = new PassThrough();
     const stdout = new PassThrough();
@@ -67,11 +93,11 @@ describe("runx mcp serve", () => {
               required: ["message"],
             }),
           }),
-          expect.objectContaining({
-            name: "runx_resume",
-          }),
         ]),
       );
+      if (!("result" in responses[3])) {
+        throw new Error(JSON.stringify(responses[3]));
+      }
       expect(responses[3]).toMatchObject({
         jsonrpc: "2.0",
         id: 3,
@@ -98,112 +124,6 @@ describe("runx mcp serve", () => {
     }
   });
 
-  it("returns paused runs as structured results and resumes them through runx_resume", async () => {
-    const tempDir = await mkdtemp(path.join(os.tmpdir(), "runx-mcp-resume-"));
-    const stdin = new PassThrough();
-    const stdout = new PassThrough();
-    const stderr = new PassThrough();
-
-    try {
-      const initialResponses = collectRpcResponses(stdout, 2);
-      const serverPromise = startServer(tempDir, stdin, stdout, stderr);
-
-      writeRpcMessage(stdin, {
-        jsonrpc: "2.0",
-        id: 1,
-        method: "initialize",
-        params: {},
-      });
-      writeRpcMessage(stdin, {
-        jsonrpc: "2.0",
-        id: 2,
-        method: "tools/call",
-        params: {
-          name: "echo",
-          arguments: {},
-        },
-      });
-
-      const responses = await initialResponses;
-      expect(responses[2]).toMatchObject({
-        jsonrpc: "2.0",
-        id: 2,
-        result: {
-          content: [
-            {
-              type: "text",
-            },
-          ],
-          structuredContent: {
-            runx: {
-              status: "paused",
-              skillName: "echo",
-            },
-          },
-        },
-      });
-
-      const paused = responses[2].result as {
-        structuredContent: {
-          runx: {
-            runId: string;
-            requests: Array<{ id: string; kind: string }>;
-          };
-        };
-      };
-      const runId = paused.structuredContent.runx.runId;
-      const requestId = paused.structuredContent.runx.requests[0]?.id;
-      expect(requestId).toMatch(/^input\./);
-      expect(paused.structuredContent.runx.requests[0]?.kind).toBe("input");
-
-      const resumeResponses = collectRpcResponses(stdout, 1);
-      writeRpcMessage(stdin, {
-        jsonrpc: "2.0",
-        id: 3,
-        method: "tools/call",
-        params: {
-          name: "runx_resume",
-          arguments: {
-            run_id: runId,
-            responses: [
-              {
-                request_id: requestId,
-                payload: {
-                  message: "resumed from mcp",
-                },
-              },
-            ],
-          },
-        },
-      });
-
-      const resumed = await resumeResponses;
-      expect(resumed[3]).toMatchObject({
-        jsonrpc: "2.0",
-        id: 3,
-        result: {
-          content: [
-            {
-              type: "text",
-              text: "resumed from mcp",
-            },
-          ],
-          structuredContent: {
-            runx: {
-              status: "completed",
-              skillName: "echo",
-              receiptId: runId,
-            },
-          },
-        },
-      });
-
-      stdin.end();
-      await serverPromise;
-    } finally {
-      await rm(tempDir, { recursive: true, force: true });
-    }
-  });
 });
 
 function startServer(
@@ -224,6 +144,7 @@ function startServer(
     {
       ...process.env,
       RUNX_CWD: process.cwd(),
+      RUNX_KERNEL_EVAL_BIN: runxBinary,
     },
     {
       resolveRegistryStoreForGraphs: async () => undefined,
@@ -288,6 +209,9 @@ async function collectRpcResponses(
         input = input.subarray(bodyEnd);
         const message = JSON.parse(body) as Record<string, unknown>;
         const id = Number(message.id);
+        if (!Number.isFinite(id)) {
+          continue;
+        }
         responses.set(id, message);
         if (responses.size >= expectedCount) {
           cleanup();

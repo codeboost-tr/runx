@@ -765,7 +765,7 @@ fn paused_run_from_checkpoint(checkpoint: &PausedRunCheckpoint) -> PausedRunSumm
         id: checkpoint.id.clone(),
         name: checkpoint.name.clone(),
         kind: checkpoint.kind.clone(),
-        status: "paused".to_owned(),
+        status: "needs_agent".to_owned(),
         started_at: checkpoint.started_at.clone(),
         selected_runner: checkpoint.selected_runner.clone(),
         step_ids: checkpoint.step_ids.clone(),
@@ -920,7 +920,7 @@ fn paused_run_from_events(run_id: &str, events: &[LedgerRunEvent]) -> Option<Pau
                     .clone()
                     .unwrap_or_else(|| run_id.to_owned()),
                 kind: run_kind(run_id),
-                status: "paused".to_owned(),
+                status: "needs_agent".to_owned(),
                 started_at: started_at.or_else(|| event.created_at.clone()),
                 selected_runner: event
                     .selected_runner
@@ -943,7 +943,7 @@ fn invalid_paused_run(run_id: &str, reason: String) -> PausedRunSummary {
         id: run_id.to_owned(),
         name: run_id.to_owned(),
         kind: run_kind(run_id),
-        status: "paused".to_owned(),
+        status: "needs_agent".to_owned(),
         started_at: None,
         selected_runner: None,
         step_ids: Vec::new(),
@@ -956,11 +956,8 @@ fn invalid_paused_run(run_id: &str, reason: String) -> PausedRunSummary {
 }
 
 fn run_kind(run_id: &str) -> String {
-    if run_id.starts_with("gx_") {
-        "graph_execution".to_owned()
-    } else {
-        "skill_execution".to_owned()
-    }
+    let _ = run_id;
+    "runx.harness.v1".to_owned()
 }
 
 fn clean_string_array(items: Vec<String>) -> Vec<String> {

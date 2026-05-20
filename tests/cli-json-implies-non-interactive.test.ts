@@ -66,7 +66,7 @@ describe("--json implies --non-interactive", () => {
       // No stdin input. With the bug, the CLI would block waiting on
       // "Approve? [y/N]". With the fix, the non-interactive caller
       // routes the approval through structured handling (denial or
-      // needs_resolution depending on the gate policy), and no
+      // needs_agent depending on the gate policy), and no
       // interactive prompt language is ever written to stdout.
       const exitCode = await runCli(
         ["skill", skillPath, "--receipt-dir", path.join(tempDir, "receipts"), "--json"],

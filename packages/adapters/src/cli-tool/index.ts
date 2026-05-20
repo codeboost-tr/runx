@@ -38,7 +38,7 @@ export interface CliToolInvokeRequest {
 }
 
 export interface CliToolInvokeResult {
-  readonly status: "success" | "failure";
+  readonly status: "sealed" | "failure";
   readonly stdout: string;
   readonly stderr: string;
   readonly exitCode: number | null;
@@ -186,7 +186,7 @@ export async function invokeCliTool(request: CliToolInvokeRequest): Promise<CliT
       const errorMessage = spawnError?.message
         ?? (aborted ? "cli-tool aborted" : undefined)
         ?? (timedOut ? `cli-tool timed out after ${timeoutMs}ms` : undefined);
-      const status = exitCode === 0 && !timedOut && !aborted && !spawnError ? "success" : "failure";
+      const status = exitCode === 0 && !timedOut && !aborted && !spawnError ? "sealed" : "failure";
 
       const stdout = truncateToBytes(Buffer.concat(stdoutChunks), outputLimitBytes);
       const stderr = truncateToBytes(Buffer.concat(stderrChunks), outputLimitBytes);

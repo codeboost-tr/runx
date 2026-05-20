@@ -19,7 +19,6 @@ import {
   defaultReceiptDir,
   installLocalSkill,
   readPendingRunState,
-  readPendingSkillPath,
   runLocalSkill,
   type Caller,
   type RegistryStore,
@@ -531,19 +530,8 @@ export async function dispatchCli(
       inputs: evolveInputs,
       parsed: {
         ...parsed,
-        runner: parsed.runner ?? (parsed.evolveObjective === undefined && !parsed.resumeReceiptId ? "introspect" : undefined),
+        runner: parsed.runner ?? (parsed.evolveObjective === undefined && !parsed.runId ? "introspect" : undefined),
       },
-      caller,
-      env,
-    });
-    return writeLocalSkillResult(io, env, parsed, result);
-  }
-
-  if (parsed.command === "resume" && parsed.resumeReceiptId) {
-    const result = await executeLocalSkillCommand({
-      skillPath: await resolveResumeSkillPath(parsed.resumeReceiptId, parsed.receiptDir, env),
-      inputs: parsed.inputs,
-      parsed,
       caller,
       env,
     });
@@ -583,10 +571,10 @@ async function executeLocalSkillCommand(options: {
   const hydratedLineage =
     options.lineage
     ?? (
-      options.parsed.resumeReceiptId
+      options.parsed.runId
         ? (await readPendingRunState(
           resolvedReceiptDir ?? resolveDefaultReceiptDir(env),
-          options.parsed.resumeReceiptId,
+          options.parsed.runId,
         ))?.lineage
         : undefined
     );
@@ -598,7 +586,7 @@ async function executeLocalSkillCommand(options: {
     env,
     receiptDir: resolvedReceiptDir,
     runner: options.parsed.runner,
-    resumeFromRunId: options.parsed.resumeReceiptId,
+    resumeFromRunId: options.parsed.runId,
     registryStore: await resolveRegistryStoreForGraphs(env),
     officialSkillResolver: createOfficialSkillResolver(env),
     adapters,
@@ -635,19 +623,4 @@ function resolveKnowledgeDir(env: NodeJS.ProcessEnv): string {
 
 function resolveDefaultReceiptDir(env: NodeJS.ProcessEnv): string {
   return defaultReceiptDir(env);
-}
-
-async function resolveResumeSkillPath(
-  runId: string,
-  receiptDir: string | undefined,
-  env: NodeJS.ProcessEnv,
-): Promise<string> {
-  const skillPath = await readPendingSkillPath(
-    receiptDir ? resolvePathFromUserInput(receiptDir, env) : resolveDefaultReceiptDir(env),
-    runId,
-  );
-  if (skillPath) {
-    return skillPath;
-  }
-  throw new Error(`Run '${runId}' cannot be resumed because no pending skill path was recorded.`);
 }

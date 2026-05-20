@@ -10,7 +10,7 @@ pub mod error;
 pub mod host;
 
 pub use client::{
-    ConnectionSummary, ResumePayload, RunSkillOptions, RunxClient, RunxClientOptions,
+    ConnectionSummary, ContinuePayload, RunSkillOptions, RunxClient, RunxClientOptions,
     RunxJsonReport, SkillSearchResult,
 };
 pub use error::{RunxError, RunxResult};

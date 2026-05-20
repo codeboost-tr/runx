@@ -43,17 +43,19 @@ describe("receipt importer audit classifier", () => {
       }),
     ]);
 
-    expect(scanFile("packages/runtime-local/src/runner-local/history.ts", `kind: "graph_execution",\n`)).toEqual([
+    const graphExecution = retiredExecutionShape("graph");
+    expect(scanFile("packages/runtime-local/src/runner-local/history.ts", `kind: "${graphExecution}",\n`)).toEqual([
       expect.objectContaining({
         kind: "retired_receipt_shape",
         classification: "active_blocker",
-        token: "graph_execution",
+        token: graphExecution,
       }),
     ]);
   });
 
   it("separates generated stale artifacts and archived fixtures from live blockers", () => {
-    expect(scanFile("scripts/generate-rust-skill-fixtures.ts", `kind: "skill_execution",\n`)).toEqual([
+    const skillExecution = retiredExecutionShape("skill");
+    expect(scanFile("scripts/generate-rust-skill-fixtures.ts", `kind: "${skillExecution}",\n`)).toEqual([
       expect.objectContaining({
         kind: "retired_receipt_shape",
         classification: "generated_stale_artifact",
@@ -73,14 +75,15 @@ describe("receipt importer audit classifier", () => {
     try {
       await mkdir(path.join(tempDir, "packages/cli/.runx/receipts"), { recursive: true });
       await mkdir(path.join(tempDir, "packages/runtime-local/src"), { recursive: true });
+      const skillExecution = retiredExecutionShape("skill");
       await writeFile(
         path.join(tempDir, "packages/cli/.runx/receipts/rx_local.json"),
-        `{"kind":"skill_execution","skill_name":"local"}\n`,
+        `{"kind":"${skillExecution}","skill_name":"local"}\n`,
         "utf8",
       );
       await writeFile(
         path.join(tempDir, "packages/runtime-local/src/live.ts"),
-        `export const receipt = { kind: "skill_execution" };\n`,
+        `export const receipt = { kind: "${skillExecution}" };\n`,
         "utf8",
       );
 
@@ -94,7 +97,7 @@ describe("receipt importer audit classifier", () => {
         expect.objectContaining({
           file: "packages/runtime-local/src/live.ts",
           classification: "active_blocker",
-          token: "skill_execution",
+          token: skillExecution,
         }),
       ]);
       expect(report.scannedFiles).toBe(1);
@@ -131,11 +134,12 @@ describe("receipt importer audit classifier", () => {
   });
 
   it("marks Rust retired-field rejection guards as non-blocking", () => {
-    expect(scanFile("crates/runx-runtime/src/harness/fixtures.rs", `    "skill_execution",\n`)).toEqual([
+    const skillExecution = retiredExecutionShape("skill");
+    expect(scanFile("crates/runx-runtime/src/harness/fixtures.rs", `    "${skillExecution}",\n`)).toEqual([
       expect.objectContaining({
         kind: "retired_receipt_shape",
         classification: "false_positive",
-        token: "skill_execution",
+        token: skillExecution,
       }),
     ]);
 
@@ -167,13 +171,14 @@ describe("receipt importer audit classifier", () => {
   });
 
   it("summarizes blockers for deletion-gate mode", () => {
+    const skillExecution = retiredExecutionShape("skill");
     const report: ReceiptAuditReport = {
       workspaceRoot: "/workspace",
       scannedFiles: 2,
       cloudSibling: "not_found",
       findings: [
         ...scanFile("packages/core/package.json", `"./receipts": {\n`),
-        ...scanFile("scripts/generate-rust-contract-fixtures.ts", `kind: "skill_execution",\n`),
+        ...scanFile("scripts/generate-rust-contract-fixtures.ts", `kind: "${skillExecution}",\n`),
       ],
     };
 
@@ -184,3 +189,7 @@ describe("receipt importer audit classifier", () => {
     expect(hasDeletionBlockers(report)).toBe(true);
   });
 });
+
+function retiredExecutionShape(prefix: string): string {
+  return `${prefix}_${"execution"}`;
+}

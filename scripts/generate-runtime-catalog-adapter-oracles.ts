@@ -49,7 +49,7 @@ interface RuntimeCatalogAdapterRequest {
 interface OracleCase {
   readonly name: string;
   readonly request: RuntimeCatalogAdapterRequest;
-  readonly expectedStatus: "success" | "failure";
+  readonly expectedStatus: "sealed" | "failure";
   readonly files?: Readonly<Record<string, string>>;
 }
 
@@ -88,7 +88,7 @@ const cases: readonly OracleCase[] = [
   },
   {
     name: "fixture-success",
-    expectedStatus: "success",
+    expectedStatus: "sealed",
     request: {
       case: "fixture-success",
       mode: "catalog-adapter",
@@ -116,7 +116,7 @@ const cases: readonly OracleCase[] = [
   },
   {
     name: "local-precedence",
-    expectedStatus: "success",
+    expectedStatus: "sealed",
     request: {
       case: "local-precedence",
       mode: "catalog-adapter",
@@ -298,7 +298,7 @@ function createLocalManifestToolCatalogAdapter(caseDir: string, env: NodeJS.Proc
             signal: request.signal,
           });
           return {
-            status: result.status,
+            status: result.status === "sealed" ? "success" : "failure",
             stdout: result.stdout,
             stderr: result.stderr,
             errorMessage: result.errorMessage,

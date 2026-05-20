@@ -18,9 +18,9 @@ describe("ide plugin actions", () => {
       });
 
       const missing = await core.runSkill({ skillPath: "fixtures/skills/echo" });
-      expect(missing.status).toBe("needs_resolution");
+      expect(missing.status).toBe("needs_agent");
       expect(missing.data).toMatchObject({
-        status: "needs_resolution",
+        status: "needs_agent",
         requests: [
           {
             kind: "input",

@@ -2,7 +2,7 @@ import { hashStable } from "@runxhq/core/util";
 
 export const GOVERNED_DISPOSITIONS = [
   "completed",
-  "needs_resolution",
+  "needs_agent",
   "policy_denied",
   "approval_required",
   "observing",

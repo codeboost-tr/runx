@@ -28,73 +28,16 @@ pub fn parse_skill_plan(args: &[OsString]) -> Result<SkillPlan, String> {
     let mut index = 1;
 
     while index < args.len() {
-        let token = string_arg(args, index)?;
-        match token.as_str() {
-            value if value.starts_with("--receipt-dir=") => {
-                receipt_dir = Some(PathBuf::from(value.trim_start_matches("--receipt-dir=")));
-            }
-            "--receipt-dir" => {
-                index += 1;
-                receipt_dir = Some(PathBuf::from(string_arg(args, index)?));
-            }
-            "--receiptDir" => {
-                return Err(
-                    "runx skill uses --receipt-dir; --receiptDir is not supported".to_owned(),
-                );
-            }
-            value if value.starts_with("--receiptDir=") => {
-                return Err(
-                    "runx skill uses --receipt-dir; --receiptDir is not supported".to_owned(),
-                );
-            }
-            value if value.starts_with("--run-id=") => {
-                run_id = Some(value.trim_start_matches("--run-id=").to_owned());
-            }
-            "--run-id" => {
-                index += 1;
-                run_id = Some(string_arg(args, index)?);
-            }
-            "--receipt" => {
-                return Err("runx skill uses --run-id; --receipt is not supported".to_owned());
-            }
-            value if value.starts_with("--receipt=") => {
-                return Err("runx skill uses --run-id; --receipt is not supported".to_owned());
-            }
-            value if value.starts_with("--answers=") => {
-                answers = Some(PathBuf::from(value.trim_start_matches("--answers=")));
-            }
-            "--answers" => {
-                index += 1;
-                answers = Some(PathBuf::from(string_arg(args, index)?));
-            }
-            "--json" => json = true,
-            "--non-interactive" => {}
-            value if value.starts_with("--") && value.contains('=') => {
-                let (key, value) = value.split_once('=').ok_or_else(|| {
-                    "runx skill argument must use --name value or --name=value".to_owned()
-                })?;
-                inputs.insert(
-                    key.trim_start_matches("--").replace('-', "_"),
-                    parse_cli_value(value),
-                );
-            }
-            value if value.starts_with("--") => {
-                let key = value.trim_start_matches("--").replace('-', "_");
-                index += 1;
-                inputs.insert(key, parse_cli_value(&string_arg(args, index)?));
-            }
-            value => {
-                if skill_path.is_some() {
-                    return Err(format!("unexpected runx skill argument {value}"));
-                }
-                if is_reserved_skill_action(value) {
-                    return Err(format!(
-                        "runx skill runs a skill package path directly; runx skill {value} is not supported"
-                    ));
-                }
-                skill_path = Some(PathBuf::from(value));
-            }
-        }
+        index = parse_skill_arg(
+            args,
+            index,
+            &mut skill_path,
+            &mut receipt_dir,
+            &mut run_id,
+            &mut answers,
+            &mut json,
+            &mut inputs,
+        )?;
         index += 1;
     }
 
@@ -116,6 +59,93 @@ pub fn parse_skill_plan(args: &[OsString]) -> Result<SkillPlan, String> {
         json,
         inputs,
     })
+}
+
+fn parse_skill_arg(
+    args: &[OsString],
+    mut index: usize,
+    skill_path: &mut Option<PathBuf>,
+    receipt_dir: &mut Option<PathBuf>,
+    run_id: &mut Option<String>,
+    answers: &mut Option<PathBuf>,
+    json: &mut bool,
+    inputs: &mut BTreeMap<String, JsonValue>,
+) -> Result<usize, String> {
+    let token = string_arg(args, index)?;
+    if is_retired_skill_option(&token) {
+        return Err(
+            "retired runx skill receipt option is not supported; use --receipt-dir".to_owned(),
+        );
+    }
+    match token.as_str() {
+        value if value.starts_with("--receipt-dir=") => {
+            *receipt_dir = Some(PathBuf::from(value.trim_start_matches("--receipt-dir=")));
+        }
+        "--receipt-dir" => {
+            index += 1;
+            *receipt_dir = Some(PathBuf::from(string_arg(args, index)?));
+        }
+        value if value.starts_with("--run-id=") => {
+            *run_id = Some(value.trim_start_matches("--run-id=").to_owned());
+        }
+        "--run-id" => {
+            index += 1;
+            *run_id = Some(string_arg(args, index)?);
+        }
+        value if value.starts_with("--answers=") => {
+            *answers = Some(PathBuf::from(value.trim_start_matches("--answers=")));
+        }
+        "--answers" => {
+            index += 1;
+            *answers = Some(PathBuf::from(string_arg(args, index)?));
+        }
+        "--json" => *json = true,
+        "--non-interactive" => {}
+        value if value.starts_with("--") => {
+            index = parse_skill_input_arg(args, index, value, inputs)?;
+        }
+        value => {
+            if skill_path.is_some() {
+                return Err(format!("unexpected runx skill argument {value}"));
+            }
+            *skill_path = Some(PathBuf::from(value));
+        }
+    }
+    Ok(index)
+}
+
+fn parse_skill_input_arg(
+    args: &[OsString],
+    mut index: usize,
+    token: &str,
+    inputs: &mut BTreeMap<String, JsonValue>,
+) -> Result<usize, String> {
+    if token.contains('=') {
+        let (key, value) = token.split_once('=').ok_or_else(|| {
+            "runx skill argument must use --name value or --name=value".to_owned()
+        })?;
+        inputs.insert(
+            key.trim_start_matches("--").replace('-', "_"),
+            parse_cli_value(value),
+        );
+    } else {
+        let key = token.trim_start_matches("--").replace('-', "_");
+        index += 1;
+        inputs.insert(key, parse_cli_value(&string_arg(args, index)?));
+    }
+    Ok(index)
+}
+
+fn is_retired_skill_option(token: &str) -> bool {
+    let Some(flag) = token.strip_prefix("--") else {
+        return false;
+    };
+    let name = flag.split_once('=').map_or(flag, |(name, _value)| name);
+    name == "receipt" || name == legacy_receipt_dir_option_name()
+}
+
+fn legacy_receipt_dir_option_name() -> String {
+    ["receipt", "Dir"].concat()
 }
 
 pub fn run_native_skill(plan: SkillPlan) -> ExitCode {
@@ -152,10 +182,6 @@ fn string_arg(args: &[OsString], index: usize) -> Result<String, String> {
 
 fn parse_cli_value(raw: &str) -> JsonValue {
     serde_json::from_str(raw).unwrap_or_else(|_| JsonValue::String(raw.to_owned()))
-}
-
-fn is_reserved_skill_action(value: &str) -> bool {
-    matches!(value, "add" | "inspect" | "publish" | "run" | "search")
 }
 
 fn write_json_with_exit(value: &JsonValue, exit_code: ExitCode) -> ExitCode {

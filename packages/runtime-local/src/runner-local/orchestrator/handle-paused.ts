@@ -89,7 +89,7 @@ export async function handlePausedPlan(
     return {
       kind: "return",
       result: {
-        status: "needs_resolution",
+        status: "needs_agent",
         graph: ctx.graph,
         stepIds,
         stepLabels,

@@ -35,7 +35,7 @@ export interface ParsedArgs {
   readonly skillRef?: string;
   readonly publishPath?: string;
   readonly receiptId?: string;
-  readonly resumeReceiptId?: string;
+  readonly runId?: string;
   readonly replayRef?: string;
   readonly diffLeft?: string;
   readonly diffRight?: string;
@@ -95,7 +95,7 @@ export function parseArgs(argv: readonly string[]): ParsedArgs {
   let json = false;
   let answersPath: string | undefined;
   let receiptDir: string | undefined;
-  let resumeReceiptId: string | undefined;
+  let runId: string | undefined;
   let runner: string | undefined;
 
   for (let index = 0; index < rest.length; index += 1) {
@@ -140,8 +140,8 @@ export function parseArgs(argv: readonly string[]): ParsedArgs {
       continue;
     }
 
-    if (knownKey === "receipt") {
-      resumeReceiptId = String(value);
+    if (knownKey === "runId") {
+      runId = String(value);
       continue;
     }
 
@@ -164,7 +164,6 @@ export function parseArgs(argv: readonly string[]): ParsedArgs {
   const isPolicy = command === "policy";
   const isNew = command === "new";
   const isInit = command === "init";
-  const isResume = command === "resume";
   const isReplay = command === "replay";
   const isDiff = command === "diff";
   const isDoctor = command === "doctor";
@@ -325,7 +324,7 @@ export function parseArgs(argv: readonly string[]): ParsedArgs {
     json,
     answersPath,
     receiptDir,
-    resumeReceiptId: isResume ? positionals[0] ?? resumeReceiptId : resumeReceiptId,
+    runId,
     runner,
     knowledgeProject,
     sourceFilter,
@@ -397,9 +396,6 @@ export function isSupportedCommand(parsed: ParsedArgs): boolean {
     return true;
   }
   if (parsed.command === "evolve") {
-    return true;
-  }
-  if (parsed.command === "resume" && parsed.resumeReceiptId) {
     return true;
   }
   if (parsed.command === "replay" && parsed.replayRef) {

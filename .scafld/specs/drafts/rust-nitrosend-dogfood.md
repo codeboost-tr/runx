@@ -150,9 +150,8 @@ Out of scope:
 - Editing Nitrosend production repositories.
 - Live external traffic capture.
 - Scafld hardening in this refresh.
-- Compatibility with `runx.issue_to_pr_outcome.v1`, `effect`,
-  `verification_report`, `target_outcome`, or any equivalent retired peer
-  artifact.
+- Compatibility with retired peer terminal artifacts, including legacy
+  outcome/effect packets and report-shaped verification payloads.
 
 ## Dependencies
 
@@ -182,9 +181,9 @@ Out of scope:
   `runx-post-merge-outcome-observer` only through closure/proof on sealed
   harness receipts.
 - [ ] No fixture, schema id, persisted receipt, or replay expectation uses
-  `runx.issue_to_pr_outcome.v1`, `issue_to_pr_outcome`, `outcome`, `effect`,
-  `verification_report`, `verification-report`, `target_outcome`, or
-  `target-effect`.
+  retired peer terminal artifacts, legacy outcome/effect packet fields, or
+  report-shaped verification payloads; completion is represented as harness
+  receipt closure with `proof.verification`.
 - [ ] Replaying the same external-shaped fixture twice produces identical
   canonical receipt bytes after normalized fixture ids/timestamps and passes
   proof verification.

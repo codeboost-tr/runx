@@ -90,25 +90,24 @@ harness:
                 kind: skill
                 target: ../ecosystem-brief
                 expect:
-                  status: success
+                  status: sealed
               - name: ecosystem-brief-missing-objective
                 kind: skill
                 target: ../ecosystem-brief
                 expect:
-                  status: needs_resolution
+                  status: needs_agent
             acceptance_checks:
               - structured context reaches write-harness
               - ecosystem-brief success fixture passes
       expect:
-        status: success
+        status: sealed
         receipt:
-          kind: graph_execution
-          status: success
+          schema: runx.harness_receipt.v1
 
     - name: design-skill-needs-objective
       inputs: {}
       expect:
-        status: needs_resolution
+        status: needs_agent
 
 
 runners:
@@ -126,7 +125,6 @@ runners:
         description: "Repo, product, or operator context that constrains the design."
     graph:
       name: design-skill
-      owner: runx
       steps:
         - id: decompose
           skill: ../work-plan

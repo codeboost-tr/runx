@@ -3,9 +3,9 @@
 Runx uses a small exit-code surface so scripts can branch without parsing
 human output.
 
-## Exit Code 0: Success
+## Exit Code 0: Sealed
 
-The command completed successfully. For `runx skill`, `runx harness`, and
+The command sealed successfully. For `runx skill`, `runx harness`, and
 inspection commands, the requested work or read operation succeeded.
 
 Common follow-up:
@@ -25,18 +25,17 @@ Common fixes:
 - Re-run with `--json` when the command supports it.
 - For harness failures, inspect `assertionErrors` in the JSON output.
 
-## Exit Code 2: Needs Resolution
+## Exit Code 2: Needs Agent
 
-The run paused because it needs input, approval, or agent act before it
+The run needs input, approval, or an agent act before it
 can continue. In production mode (`RUNX_PRODUCTION=1`), unresolved cognitive
-work is treated as a non-resumable failure but keeps exit code 2 so automation
+work is treated as a terminal failure but keeps exit code 2 so automation
 can distinguish it from ordinary command failure.
 
 Common fixes:
 
 ```bash
-runx resume <run-id>
-runx resume <run-id> --answers answers.json
+runx skill <skill-path> --run-id <run-id> --answers answers.json
 runx skill <skill-dir> --answers answers.json
 ```
 

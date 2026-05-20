@@ -79,41 +79,46 @@ class RunxClientTests(unittest.TestCase):
                 ["skill", "skills/example", "--message", "hi", "--non-interactive", "--json"],
             )
 
-    def test_resume_run_posts_answers_and_approvals_json(self) -> None:
+    def test_continue_run_invokes_skill_with_run_id_and_answers_file(self) -> None:
         with TemporaryDirectory() as tmp:
             fake_runx = Path(tmp) / "fake_runx.py"
-            output_path = Path(tmp) / "payload.json"
+            answers_path = Path(tmp) / "answers.json"
+            answers_path.write_text(json.dumps({"req-1": {"ok": True}, "gate-1": True}))
             fake_runx.write_text(
                 textwrap.dedent(
-                    f"""
+                    """
                     import json
-                    import pathlib
                     import sys
 
                     args = sys.argv[1:]
-                    if args[:1] == ["resume"]:
-                        payload = json.loads(sys.stdin.read())
-                        pathlib.Path({str(output_path)!r}).write_text(json.dumps(payload))
-                        print(json.dumps({{"status": "success", "args": args}}))
-                    else:
-                        print(json.dumps({{"status": "success", "args": args}}))
+                    print(json.dumps({"status": "success", "args": args}))
                     """
                 ).strip()
             )
 
             client = RunxClient(command=(sys.executable, str(fake_runx)))
-            client.resume_run("run-123", answers={"req-1": {"ok": True}}, approvals={"gate-1": True})
+            report = client.continue_run("skills/example", run_id="run-123", answers_file=str(answers_path))
 
-            payload = json.loads(output_path.read_text())
-            self.assertEqual(payload["answers"]["req-1"]["ok"], True)
-            self.assertEqual(payload["approvals"]["gate-1"], True)
+            self.assertEqual(
+                report["args"],
+                [
+                    "skill",
+                    "skills/example",
+                    "--run-id",
+                    "run-123",
+                    "--answers",
+                    str(answers_path),
+                    "--non-interactive",
+                    "--json",
+                ],
+            )
 
-    def test_host_bridge_resumes_paused_runs(self) -> None:
-        resume_calls: list[tuple[str, list[dict[str, object]]]] = []
+    def test_host_bridge_continues_needs_agent_runs(self) -> None:
+        continue_calls: list[tuple[str, list[dict[str, object]]]] = []
 
         def run(skill_path: str, inputs=None):
             return {
-                "status": "paused",
+                "status": "needs_agent",
                 "runId": "run-123",
                 "skillName": skill_path,
                 "requests": [
@@ -122,8 +127,8 @@ class RunxClientTests(unittest.TestCase):
                 ],
             }
 
-        def resume(run_id: str, responses=None):
-            resume_calls.append((run_id, list(responses or [])))
+        def continue_run(run_id: str, responses=None):
+            continue_calls.append((run_id, list(responses or [])))
             return {
                 "status": "completed",
                 "skillName": "skills/sourcey",
@@ -131,7 +136,7 @@ class RunxClientTests(unittest.TestCase):
                 "receiptId": "receipt-123",
             }
 
-        bridge = create_host_bridge(run=run, resume=resume)
+        bridge = create_host_bridge(run=run, continue_run=continue_run)
         result = bridge.run(
             "skills/sourcey",
             resolver=lambda context: True if context.request.get("kind") == "approval" else {"draft": "apply docs update"},
@@ -139,7 +144,7 @@ class RunxClientTests(unittest.TestCase):
 
         self.assertEqual(result.status, "completed")
         self.assertEqual(result.receipt_id, "receipt-123")
-        self.assertEqual(resume_calls[0][0], "run-123")
+        self.assertEqual(continue_calls[0][0], "run-123")
 
     def test_openai_host_adapter_formats_framework_result(self) -> None:
         def run(skill_path: str, inputs=None):
@@ -187,7 +192,7 @@ class RunxClientTests(unittest.TestCase):
         state = normalize_host_state(
             {
                 "status": "completed",
-                "kind": "skill_execution",
+                "kind": "harness",
                 "skillName": "skills/sourcey",
                 "runId": "run-123",
                 "receiptId": "receipt-321",

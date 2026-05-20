@@ -39,7 +39,7 @@ export function createCallerAgentStepAdapter(caller: Caller): SkillAdapter {
 
       if (resolution === undefined || resolution.payload === undefined || resolution.payload === null || resolution.payload === "") {
         return {
-          status: "needs_resolution",
+          status: "needs_agent",
           stdout: "",
           stderr: "",
           exitCode: null,
@@ -52,7 +52,7 @@ export function createCallerAgentStepAdapter(caller: Caller): SkillAdapter {
               agent: request.source.agent,
               task: request.source.task,
               route: "yielded",
-              status: "needs_resolution",
+              status: "needs_agent",
             },
           },
         };
@@ -65,7 +65,7 @@ export function createCallerAgentStepAdapter(caller: Caller): SkillAdapter {
       });
 
       return {
-        status: "success",
+        status: "sealed",
         stdout: typeof resolution.payload === "string" ? resolution.payload : JSON.stringify(resolution.payload),
         stderr: "",
         exitCode: 0,
@@ -77,7 +77,7 @@ export function createCallerAgentStepAdapter(caller: Caller): SkillAdapter {
             agent: request.source.agent,
             task: request.source.task,
             route: "provided",
-            status: "success",
+            status: "sealed",
           },
         },
       };
@@ -105,7 +105,7 @@ export function createCallerAgentAdapter(caller: Caller): SkillAdapter {
 
       if (resolution === undefined || resolution.payload === undefined || resolution.payload === null || resolution.payload === "") {
         return {
-          status: "needs_resolution",
+          status: "needs_agent",
           stdout: "",
           stderr: "",
           exitCode: null,
@@ -116,7 +116,7 @@ export function createCallerAgentAdapter(caller: Caller): SkillAdapter {
             agent_runner: {
               skill: mediationRequest.envelope.skill,
               route: "yielded",
-              status: "needs_resolution",
+              status: "needs_agent",
             },
           },
         };
@@ -129,7 +129,7 @@ export function createCallerAgentAdapter(caller: Caller): SkillAdapter {
       });
 
       return {
-        status: "success",
+        status: "sealed",
         stdout: typeof resolution.payload === "string" ? resolution.payload : JSON.stringify(resolution.payload),
         stderr: "",
         exitCode: 0,
@@ -139,7 +139,7 @@ export function createCallerAgentAdapter(caller: Caller): SkillAdapter {
           agent_runner: {
             skill: mediationRequest.envelope.skill,
             route: "provided",
-            status: "success",
+            status: "sealed",
           },
         },
       };
@@ -167,7 +167,7 @@ export function createCallerApprovalAdapter(caller: Caller): SkillAdapter {
 
       if (resolution === undefined) {
         return {
-          status: "needs_resolution",
+          status: "needs_agent",
           stdout: "",
           stderr: "",
           exitCode: null,
@@ -193,7 +193,7 @@ export function createCallerApprovalAdapter(caller: Caller): SkillAdapter {
       });
 
       return {
-        status: "success",
+        status: "sealed",
         stdout: JSON.stringify({
           approved,
           reason: gate.reason,

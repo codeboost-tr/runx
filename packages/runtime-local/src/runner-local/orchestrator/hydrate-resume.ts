@@ -68,7 +68,7 @@ export async function hydrateResumedRun(
         officialSkillResolver: options.officialSkillResolver,
       });
       return {
-        status: "needs_resolution",
+        status: "needs_agent",
         graph: ctx.graph,
         stepIds: pendingFanoutGate.stepIds,
         stepLabels: pendingFanoutGate.stepLabels,

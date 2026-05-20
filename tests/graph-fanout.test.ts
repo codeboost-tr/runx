@@ -39,8 +39,8 @@ describe("local fanout graph runner", () => {
         adapters,
       });
 
-      expect(result.status).toBe("success");
-      if (result.status !== "success") {
+      expect(result.status).toBe("sealed");
+      if (result.status !== "sealed") {
         return;
       }
 
@@ -117,9 +117,9 @@ steps:
       });
       const durationMs = performance.now() - started;
 
-      expect(result.status).toBe("success");
+      expect(result.status).toBe("sealed");
       expect(durationMs).toBeLessThan(2000);
-      if (result.status !== "success") {
+      if (result.status !== "sealed") {
         return;
       }
       expect(result.steps.map((step) => step.stepId)).toEqual(["market", "risk", "finance"]);
@@ -143,8 +143,8 @@ steps:
         adapters,
       });
 
-      expect(result.status).toBe("success");
-      if (result.status !== "success") {
+      expect(result.status).toBe("sealed");
+      if (result.status !== "sealed") {
         return;
       }
 
@@ -196,8 +196,8 @@ steps:
         adapters,
       });
 
-      expect(result.status).toBe("needs_resolution");
-      if (result.status !== "needs_resolution") {
+      expect(result.status).toBe("needs_agent");
+      if (result.status !== "needs_agent") {
         return;
       }
       expect(result.state.status).toBe("paused");
@@ -222,8 +222,8 @@ steps:
         adapters,
         resumeFromRunId: result.runId,
       });
-      expect(resumed.status).toBe("success");
-      if (resumed.status !== "success") {
+      expect(resumed.status).toBe("sealed");
+      if (resumed.status !== "sealed") {
         return;
       }
       expect(resumed.steps.map((step) => step.stepId)).toEqual(["market", "risk", "synthesize"]);
@@ -482,8 +482,8 @@ steps:
         env: process.env,
         adapters,
       });
-      expect(result.status).toBe("success");
-      if (result.status !== "success") {
+      expect(result.status).toBe("sealed");
+      if (result.status !== "sealed") {
         return;
       }
 
@@ -553,7 +553,7 @@ function createCountingAdapter(): SkillAdapter & { callCount: () => number } {
     invoke: async (request) => {
       calls += 1;
       return {
-        status: "success",
+        status: "sealed",
         stdout: String(request.inputs.message ?? "ok"),
         stderr: "",
         exitCode: 0,

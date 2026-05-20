@@ -48,15 +48,14 @@ harness:
         approvals:
           ecosystem-vuln-scan.publish.approval: true
       expect:
-        status: success
+        status: sealed
         receipt:
-          kind: graph_execution
-          status: success
+          schema: runx.harness_receipt.v1
 
     - name: ecosystem-vuln-scan-needs-target
       inputs: {}
       expect:
-        status: needs_resolution
+        status: needs_agent
 
 
 runners:
@@ -84,7 +83,6 @@ runners:
         description: "Known incidents or prior findings."
     graph:
       name: ecosystem-vuln-scan
-      owner: runx
       steps:
         - id: scan-risk
           skill: ../vuln-scan

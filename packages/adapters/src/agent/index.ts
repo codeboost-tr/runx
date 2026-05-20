@@ -134,7 +134,7 @@ async function invokeManagedAgentAdapter(
 
     if ("request" in execution) {
       return {
-        status: "needs_resolution",
+        status: "needs_agent",
         stdout: "",
         stderr: "",
         exitCode: null,
@@ -146,7 +146,7 @@ async function invokeManagedAgentAdapter(
     }
 
     return {
-      status: "success",
+      status: "sealed",
       stdout: typeof execution.response.payload === "string"
         ? execution.response.payload
         : JSON.stringify(execution.response.payload),

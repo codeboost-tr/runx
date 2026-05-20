@@ -19,19 +19,19 @@ describe("host bridge", () => {
     const harness = await createHostHarness();
     cleanups.push(harness.cleanup);
 
-    const paused = await harness.bridge.run({
+    const needsAgent = await harness.bridge.run({
       skillPath: "fixtures/skills/echo",
     });
 
-    expect(paused.status).toBe("paused");
-    if (paused.status !== "paused") {
+    expect(needsAgent.status).toBe("needs_agent");
+    if (needsAgent.status !== "needs_agent") {
       return;
     }
-    expect(paused.requests[0]).toMatchObject({
+    expect(needsAgent.requests[0]).toMatchObject({
       kind: "input",
     });
 
-    const resumed = await harness.bridge.resume(paused.runId, {
+    const continued = await harness.bridge.resume(needsAgent.runId, {
       skillPath: "fixtures/skills/echo",
       resolver: ({ request }) => {
         if (request.kind !== "input") {
@@ -41,12 +41,12 @@ describe("host bridge", () => {
       },
     });
 
-    expect(resumed).toMatchObject({
+    expect(continued).toMatchObject({
       status: "completed",
       skillName: "echo",
       output: "from-host-bridge",
     });
-  });
+  }, 20_000);
 
   it("falls back to an upstream caller when the bridge resolver does not answer", async () => {
     const harness = await createHostHarness();

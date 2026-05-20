@@ -232,7 +232,7 @@ describe("@runxhq/contracts", () => {
     });
 
     expect(validateActReceiptEnvelopeContract({
-      status: "needs_resolution",
+      status: "needs_agent",
       stdout: "",
       stderr: "",
       exitCode: null,
@@ -240,7 +240,7 @@ describe("@runxhq/contracts", () => {
       durationMs: 0,
       request: resolutionRequest,
     })).toMatchObject({
-      status: "needs_resolution",
+      status: "needs_agent",
       request: {
         kind: "approval",
       },

@@ -331,7 +331,7 @@ export async function handleRunFanoutPlan(
 
     const stepResult = result.value;
 
-    if (stepResult.status === "needs_resolution") {
+    if (stepResult.status === "needs_agent") {
       pendingResolutionRequests.push(...stepResult.requests);
       pendingStepIds.push(prep.step.id);
       pendingStepLabels.push(prep.step.label ?? prep.step.id);
@@ -448,7 +448,7 @@ export async function handleRunFanoutPlan(
       createdAt: stepCompletedAt,
     });
 
-    ctx.state = stepResult.status === "success"
+    ctx.state = stepResult.status === "sealed"
       ? transitionSequentialGraph(ctx.state, {
           type: "step_succeeded", stepId: prep.step.id,
           at: stepCompletedAt, receiptId: stepResult.receipt.id,
@@ -474,7 +474,7 @@ export async function handleRunFanoutPlan(
     return {
       kind: "return",
       result: {
-        status: "needs_resolution",
+        status: "needs_agent",
         graph: ctx.graph,
         stepIds: pendingStepIds,
         stepLabels: pendingStepLabels,
@@ -536,7 +536,7 @@ export async function handleRunFanoutPlan(
 
 function runtimeDisposition(disposition: ReturnType<typeof runnerReceiptDisposition>): GraphStepRun["disposition"] {
   if (disposition === "declined") return "policy_denied";
-  if (disposition === "deferred") return "needs_resolution";
+  if (disposition === "deferred") return "needs_agent";
   if (disposition === "blocked") return "escalated";
   return disposition === "closed" ? "completed" : "completed";
 }

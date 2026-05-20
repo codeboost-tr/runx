@@ -78,7 +78,7 @@ describe("scafld issue-to-PR skill contract", () => {
       },
     });
     expect(graph.steps.find((step) => step.id === "author-spec")?.instructions).toContain("scafld 2.4-compatible markdown spec");
-    expect(graph.steps.find((step) => step.id === "author-spec")?.instructions).toContain("Do not use runx skill runner");
+    expect(graph.steps.find((step) => step.id === "author-spec")?.instructions).toContain("Do not use runx runtime internals");
     expect(graph.steps.find((step) => step.id === "author-spec")?.instructions).toContain("Files impacted");
     expect(graph.steps.find((step) => step.id === "author-spec")?.instructions).toContain("repo-change scope empty");
     expect(graph.steps.find((step) => step.id === "author-spec")?.instructions).toContain("reviewer story");

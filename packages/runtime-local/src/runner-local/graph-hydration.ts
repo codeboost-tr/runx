@@ -140,7 +140,7 @@ export function hydrateGraphFromLedger(options: {
         outputs: stepFields,
       });
       options.outputs.set(graphStep.id, {
-        status: "success",
+        status: "sealed",
         stdout: reconstructStdout(stepArtifacts, stepFields),
         stderr: "",
         receiptId: receiptId ?? "",
@@ -154,7 +154,7 @@ export function hydrateGraphFromLedger(options: {
         skillPath: step.skill ? step.skill : `inline:${graphStep.id}`,
         runner: step.runner,
         attempt: 1,
-        status: "success",
+        status: "sealed",
         receiptId,
         stdout: reconstructStdout(stepArtifacts, stepFields),
         stderr: "",

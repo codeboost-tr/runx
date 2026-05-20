@@ -53,22 +53,19 @@ harness:
                 inputs:
                   objective: publish a daily brief
                 expect:
-                  status: success
+                  status: sealed
               - name: content-pipeline-missing-objective
                 kind: skill
                 target: ../content-pipeline
                 expect:
-                  status: needs_resolution
+                  status: needs_agent
             acceptance_checks:
               - happy-path fixture passes
-              - missing-objective fixture fails with needs_resolution
+              - missing-objective fixture fails with needs_agent
       expect:
-        status: success
+        status: sealed
         receipt:
-          kind: skill_execution
-          status: success
-          skill_name: write-harness
-          source_type: agent-step
+          schema: runx.harness_receipt.v1
     - name: write-harness-turns-review-into-regression-fixtures
       inputs:
         objective: Improve design-skill structured context handling
@@ -103,23 +100,20 @@ harness:
                 inputs:
                   objective: build a new skill
                 expect:
-                  status: success
+                  status: sealed
             acceptance_checks:
               - downstream steps receive structured review and research data
       expect:
-        status: success
+        status: sealed
         receipt:
-          kind: skill_execution
-          status: success
-          skill_name: write-harness
-          source_type: agent-step
+          schema: runx.harness_receipt.v1
 
     - name: write-harness-honors-pass-verdict
       inputs:
         objective: Confirm write-harness emits minimal regression output when review verdict is pass
         review:
           verdict: pass
-          failure_summary: No failure. Graph paused as designed; needs_resolution is a healthy agent-mediated suspension.
+          failure_summary: No failure. Graph paused as designed; needs_agent is a healthy agent-mediated suspension.
           improvement_proposals: []
       caller:
         answers:
@@ -137,17 +131,14 @@ harness:
                 inputs:
                   objective: regression fixture locked in by cycle 3
                 expect:
-                  status: success
+                  status: sealed
             acceptance_checks:
               - write-harness returns minimal output on pass-verdict input
               - write-harness does not fabricate skill_spec changes on empty improvement_proposals
       expect:
-        status: success
+        status: sealed
         receipt:
-          kind: skill_execution
-          status: success
-          skill_name: write-harness
-          source_type: agent-step
+          schema: runx.harness_receipt.v1
 
 runners:
   write-harness-agent:

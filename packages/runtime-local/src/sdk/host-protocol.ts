@@ -6,7 +6,7 @@ import { inspectLocalRunState, runnerReceiptDisposition } from "../runner-local/
 import type { AuthResolver, Caller, ExecutionEvent, RunLocalSkillResult } from "../runner-local/index.js";
 
 // Host bridges let external runtimes host the runx kernel. Hosts get
-// normalized run states while runx keeps ownership of execution, pause/resume,
+// normalized run states while runx keeps ownership of execution, continuation,
 // approvals, and receipts.
 export interface HostRunOptions {
   readonly skillPath: string;
@@ -53,8 +53,8 @@ export interface HostBridgeOptions {
   readonly inspect?: HostStateInspector;
 }
 
-export interface HostPausedResult {
-  readonly status: "paused";
+export interface HostNeedsAgentResult {
+  readonly status: "needs_agent";
   readonly skillName: string;
   readonly runId: string;
   readonly requests: readonly ResolutionRequest[];
@@ -96,7 +96,7 @@ export interface HostDeniedResult {
 }
 
 export type HostRunResult =
-  | HostPausedResult
+  | HostNeedsAgentResult
   | HostCompletedResult
   | HostFailedResult
   | HostEscalatedResult
@@ -130,8 +130,8 @@ export type HostStateInspector = (
   options?: HostInspectOptions,
 ) => Promise<HostRunState>;
 
-export interface HostPausedState {
-  readonly status: "paused";
+export interface HostNeedsAgentState {
+  readonly status: "needs_agent";
   readonly skillName: string;
   readonly runId: string;
   readonly requestedPath?: string;
@@ -177,7 +177,7 @@ export interface HostDeniedState extends HostTerminalState {
 }
 
 export type HostRunState =
-  | HostPausedState
+  | HostNeedsAgentState
   | HostCompletedState
   | HostFailedState
   | HostEscalatedState
@@ -280,9 +280,9 @@ function isResolutionResponse(value: unknown): value is ResolutionResponse {
 }
 
 function normalizeRunResult(result: RunLocalSkillResult, events: readonly ExecutionEvent[]): HostRunResult {
-  if (result.status === "needs_resolution") {
+  if (result.status === "needs_agent") {
     return {
-      status: "paused",
+      status: "needs_agent",
       skillName: result.skill.name,
       runId: result.runId,
       requests: result.requests,
@@ -300,7 +300,7 @@ function normalizeRunResult(result: RunLocalSkillResult, events: readonly Execut
       events,
     };
   }
-  if (result.status === "success") {
+  if (result.status === "sealed") {
     return {
       status: "completed",
       skillName: result.skill.name,
@@ -339,9 +339,9 @@ export async function inspectLocalHostState(
     runxHome: options.runxHome,
     env: options.env,
   });
-  if (inspected.status === "paused") {
+  if (inspected.status === "needs_agent") {
     return {
-      status: "paused",
+      status: "needs_agent",
       skillName: inspected.pending.skillName ?? deriveSkillNameFromPending(inspected.pending),
       runId: inspected.runId,
       requestedPath: inspected.pending.skillPath,
@@ -384,7 +384,7 @@ function inspectStatus(summary: {
   if (summary.disposition === "escalated") {
     return "escalated";
   }
-  return summary.status === "success" ? "completed" : "failed";
+  return summary.status === "sealed" ? "completed" : "failed";
 }
 
 function deriveSkillNameFromPending(pending: {
@@ -420,15 +420,15 @@ async function resolveHostResumeSkillPath(
     return options.skillPath;
   }
   if (!inspect) {
-    throw new Error(`Run '${runId}' cannot be resumed because this host bridge cannot resolve pending skill paths.`);
+    throw new Error(`Run '${runId}' cannot be continued because this host bridge cannot resolve pending skill paths.`);
   }
   const state = await inspect(runId, options);
-  if (state.status !== "paused") {
-    throw new Error(`Run '${runId}' is not paused and cannot be resumed.`);
+  if (state.status !== "needs_agent") {
+    throw new Error(`Run '${runId}' is not awaiting agent input and cannot be continued.`);
   }
   const skillPath = state.requestedPath ?? state.resolvedPath;
   if (!skillPath) {
-    throw new Error(`Run '${runId}' cannot be resumed because no pending skill path was recorded.`);
+    throw new Error(`Run '${runId}' cannot be continued because no pending skill path was recorded.`);
   }
   return skillPath;
 }

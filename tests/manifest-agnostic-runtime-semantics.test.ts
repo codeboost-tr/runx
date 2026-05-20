@@ -39,8 +39,8 @@ describe("manifest-agnostic runtime semantics", () => {
         },
       });
 
-      expect(result.status).toBe("success");
-      if (result.status !== "success") {
+      expect(result.status).toBe("sealed");
+      if (result.status !== "sealed") {
         return;
       }
 
@@ -74,8 +74,8 @@ describe("manifest-agnostic runtime semantics", () => {
         env: process.env,
       });
 
-      expect(result.status).toBe("success");
-      if (result.status !== "success") {
+      expect(result.status).toBe("sealed");
+      if (result.status !== "sealed") {
         return;
       }
 
@@ -128,11 +128,11 @@ describe("manifest-agnostic runtime semantics", () => {
         }),
       ]);
 
-      expect(manifestResult.status).toBe("success");
-      expect(directResult.status).toBe("success");
+      expect(manifestResult.status).toBe("sealed");
+      expect(directResult.status).toBe("sealed");
       if (
-        manifestResult.status !== "success" ||
-        directResult.status !== "success" ||
+        manifestResult.status !== "sealed" ||
+        directResult.status !== "sealed" ||
         !("receipt" in manifestResult) ||
         !("receipt" in directResult)
       ) {

@@ -30,8 +30,8 @@ describe("agent context envelope", () => {
         adapters: createDefaultSkillAdapters(),
       });
 
-      expect(result.status).toBe("needs_resolution");
-      if (result.status !== "needs_resolution") {
+      expect(result.status).toBe("needs_agent");
+      if (result.status !== "needs_agent") {
         return;
       }
 
@@ -119,7 +119,7 @@ describe("agent context envelope", () => {
         adapters: createDefaultSkillAdapters(),
       });
 
-      expect(first.status).toBe("success");
+      expect(first.status).toBe("sealed");
 
       const second = await runLocalSkill({
         skillPath: path.resolve("skills/evolve"),
@@ -134,8 +134,8 @@ describe("agent context envelope", () => {
         adapters: createDefaultSkillAdapters(),
       });
 
-      expect(second.status).toBe("needs_resolution");
-      if (second.status !== "needs_resolution") {
+      expect(second.status).toBe("needs_agent");
+      if (second.status !== "needs_agent") {
         return;
       }
 
@@ -187,7 +187,7 @@ describe("agent context envelope", () => {
         runxHome,
         adapters: createDefaultSkillAdapters(),
       });
-      expect(first.status).toBe("success");
+      expect(first.status).toBe("sealed");
 
       const entries = await readdir(receiptDir);
       const receiptNames = entries.filter((entry) => entry.startsWith("rx_") && entry.endsWith(".json"));
@@ -209,8 +209,8 @@ describe("agent context envelope", () => {
         adapters: createDefaultSkillAdapters(),
       });
 
-      expect(second.status).toBe("needs_resolution");
-      if (second.status !== "needs_resolution") {
+      expect(second.status).toBe("needs_agent");
+      if (second.status !== "needs_agent") {
         return;
       }
       const historical = second.requests[0]?.kind === "agent_act"

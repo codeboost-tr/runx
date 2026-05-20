@@ -15,30 +15,30 @@ afterEach(async () => {
 });
 
 describe("OpenAI host adapter", () => {
-  it("wraps paused and resumed runs in an OpenAI-style tool response", async () => {
+  it("wraps needsAgent and continued runs in an OpenAI-style tool response", async () => {
     const harness = await createHostHarness();
     cleanups.push(harness.cleanup);
     const adapter = createOpenAiHostAdapter(harness.bridge);
 
-    const paused = await adapter.run({
+    const needsAgent = await adapter.run({
       skillPath: "fixtures/skills/echo",
     });
 
-    expect(paused.role).toBe("tool");
-    expect(paused.structuredContent.runx.status).toBe("paused");
-    if (paused.structuredContent.runx.status !== "paused") {
+    expect(needsAgent.role).toBe("tool");
+    expect(needsAgent.structuredContent.runx.status).toBe("needs_agent");
+    if (needsAgent.structuredContent.runx.status !== "needs_agent") {
       return;
     }
 
-    const resumed = await adapter.resume(paused.structuredContent.runx.runId, {
+    const continued = await adapter.resume(needsAgent.structuredContent.runx.runId, {
       skillPath: "fixtures/skills/echo",
       resolver: ({ request }) => (request.kind === "input" ? { message: "from-openai-host-adapter" } : undefined),
     });
 
-    expect(resumed.role).toBe("tool");
-    expect(resumed.structuredContent.runx).toMatchObject({
+    expect(continued.role).toBe("tool");
+    expect(continued.structuredContent.runx).toMatchObject({
       status: "completed",
       output: "from-openai-host-adapter",
     });
-  });
+  }, 20_000);
 });

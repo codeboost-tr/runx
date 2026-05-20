@@ -71,7 +71,7 @@ such as spec authoring, fix authoring, review, and human merge gate.
   decision, scoped change, validation, review verdict, PR link, human
   merge gate, and final provider outcome when observed without becoming a raw
   execution log.
-- Stop conditions: return `needs_resolution` when authoring evidence is
+- Stop conditions: return `needs_agent` when authoring evidence is
   missing; return a blocked fix bundle only when no concrete repo-relative
   target is declared, a required existing file cannot be read, or the requested
   behavior cannot be inferred without inventing requirements.
@@ -118,7 +118,7 @@ Validation commands must run against the current workspace state after the fix
 bundle is written. Do not depend on git history ranges such as `HEAD~1` or
 merge-base comparisons. Validation commands, when present, must be direct
 repo-local checks such as test, lint, build, or file-content commands. Never use
-runx skill runner internals or `skills/scafld/run.mjs` as a validation command;
+runx runtime internals or `skills/scafld/run.mjs` as a validation command;
 scafld is already the lifecycle runner around the task.
 
 Preserve source-thread context in the spec's Summary, Origin, and Planning Log

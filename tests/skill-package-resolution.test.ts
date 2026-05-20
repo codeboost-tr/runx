@@ -64,8 +64,8 @@ runners:
         env: process.env,
       });
 
-      expect(result.status).toBe("success");
-      if (result.status !== "success") {
+      expect(result.status).toBe("sealed");
+      if (result.status !== "sealed") {
         return;
       }
       expect(result.execution.stdout).toBe("from folder");
@@ -120,8 +120,8 @@ runners:
         env: process.env,
       });
 
-      expect(result.status).toBe("success");
-      if (result.status !== "success") {
+      expect(result.status).toBe("sealed");
+      if (result.status !== "sealed") {
         return;
       }
       expect(result.execution.stdout).toBe("from skill md");
@@ -203,8 +203,8 @@ Standard folder.
         env: process.env,
       });
 
-      expect(result.status).toBe("success");
-      if (result.status !== "success") {
+      expect(result.status).toBe("sealed");
+      if (result.status !== "sealed") {
         return;
       }
       expect(result.receipt).toMatchObject({ source_type: "agent" });

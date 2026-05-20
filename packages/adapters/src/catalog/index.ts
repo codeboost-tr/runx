@@ -41,11 +41,12 @@ export async function invokeCatalog(request: AdapterActInvocation): Promise<ActR
       runId: request.runId,
       stepId: request.stepId,
     });
+    const status = result.status === "success" ? "sealed" : "failure";
     return {
-      status: result.status,
+      status,
       stdout: result.stdout ?? "",
       stderr: result.stderr ?? "",
-      exitCode: result.status === "success" ? 0 : null,
+      exitCode: status === "sealed" ? 0 : null,
       signal: null,
       durationMs: Math.round(performance.now() - started),
       errorMessage: result.status === "failure" ? result.errorMessage ?? result.stderr : undefined,

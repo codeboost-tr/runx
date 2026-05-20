@@ -71,8 +71,8 @@ process.exit(1);
         },
       });
 
-      expect(result.status).toBe("success");
-      if (result.status !== "success") {
+      expect(result.status).toBe("sealed");
+      if (result.status !== "sealed") {
         return;
       }
       expect(JSON.parse(result.execution.stdout)).toEqual({
@@ -160,8 +160,8 @@ process.exit(1);
         env: process.env,
       });
 
-      expect(reviewResult.status).toBe("success");
-      if (reviewResult.status !== "success") {
+      expect(reviewResult.status).toBe("sealed");
+      if (reviewResult.status !== "sealed") {
         return;
       }
       expect(JSON.parse(reviewResult.execution.stdout)).toEqual({
@@ -195,8 +195,8 @@ process.exit(1);
         env: process.env,
       });
 
-      expect(completeResult.status).toBe("success");
-      if (completeResult.status !== "success") {
+      expect(completeResult.status).toBe("sealed");
+      if (completeResult.status !== "sealed") {
         return;
       }
       expect(JSON.parse(completeResult.execution.stdout)).toEqual({
@@ -290,8 +290,8 @@ process.exit(1);
         env: process.env,
       });
 
-      expect(result.status).toBe("success");
-      if (result.status !== "success") {
+      expect(result.status).toBe("sealed");
+      if (result.status !== "sealed") {
         return;
       }
       expect(JSON.parse(result.execution.stdout)).toMatchObject({
@@ -419,8 +419,8 @@ process.exit(1);
         env: process.env,
       });
 
-      expect(result.status).toBe("success");
-      if (result.status !== "success") {
+      expect(result.status).toBe("sealed");
+      if (result.status !== "sealed") {
         return;
       }
       expect(JSON.parse(result.execution.stdout)).toEqual({
@@ -475,8 +475,8 @@ process.exit(1);
         env: process.env,
       });
 
-      expect(result.status).toBe("success");
-      if (result.status !== "success") {
+      expect(result.status).toBe("sealed");
+      if (result.status !== "sealed") {
         return;
       }
       expect(JSON.parse(result.execution.stdout)).toMatchObject({
@@ -529,8 +529,8 @@ process.exit(1);
         env: process.env,
       });
 
-      expect(result.status).toBe("success");
-      if (result.status !== "success") {
+      expect(result.status).toBe("sealed");
+      if (result.status !== "sealed") {
         return;
       }
       expect(JSON.parse(result.execution.stdout)).toMatchObject({

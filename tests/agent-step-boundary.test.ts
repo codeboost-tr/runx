@@ -22,8 +22,8 @@ describe("agent-step and harness-hook boundary", () => {
       env: process.env,
     });
 
-    expect(result.status).toBe("needs_resolution");
-    if (result.status !== "needs_resolution") {
+    expect(result.status).toBe("needs_agent");
+    if (result.status !== "needs_agent") {
       return;
     }
     expect(result.requests).toMatchObject([
@@ -63,8 +63,8 @@ describe("agent-step and harness-hook boundary", () => {
         runxHome: path.join(tempDir, "home"),
       });
 
-      expect(result.status).toBe("success");
-      if (result.status !== "success") {
+      expect(result.status).toBe("sealed");
+      if (result.status !== "sealed") {
         return;
       }
       expect(JSON.parse(result.execution.stdout)).toEqual({
@@ -78,7 +78,7 @@ describe("agent-step and harness-hook boundary", () => {
           agent: "codex",
           task: "review-boundary",
           route: "provided",
-          status: "success",
+          status: "sealed",
         },
       });
     } finally {
@@ -107,8 +107,8 @@ describe("agent-step and harness-hook boundary", () => {
         allowedSourceTypes: ["cli-tool", "mcp", "harness-hook"],
       });
 
-      expect(result.status).toBe("success");
-      if (result.status !== "success") {
+      expect(result.status).toBe("sealed");
+      if (result.status !== "sealed") {
         return;
       }
       expect(result.receipt.schema).toBe("runx.harness_receipt.v1");
@@ -116,7 +116,7 @@ describe("agent-step and harness-hook boundary", () => {
       expect(result.receipt.metadata).toMatchObject({
         agent_hook: {
           hook: "review-receipt",
-          status: "success",
+          status: "sealed",
         },
       });
     } finally {

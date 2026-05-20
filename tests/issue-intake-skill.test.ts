@@ -1,12 +1,17 @@
 import path from "node:path";
 import { readFile } from "node:fs/promises";
 
-import { describe, expect, it } from "vitest";
+import { beforeAll, describe, expect, it } from "vitest";
 
 import { runHarnessTarget } from "@runxhq/runtime-local/harness";
 import { parseRunnerManifestYaml, validateRunnerManifest } from "@runxhq/core/parser";
+import { ensureRunxBinary, kernelTestEnv } from "./host-protocol-test-utils.js";
 
 describe("issue-intake official skill", () => {
+  beforeAll(() => {
+    ensureRunxBinary();
+  });
+
   it("ships as a managed agent boundary with a generic intake report contract", async () => {
     const manifest = validateRunnerManifest(
       parseRunnerManifestYaml(await readFile(path.resolve("skills/issue-intake/X.yaml"), "utf8")),
@@ -38,7 +43,9 @@ describe("issue-intake official skill", () => {
   });
 
   it("passes the inline harness suite, including supervisor-oriented gate examples", async () => {
-    const result = await runHarnessTarget(path.resolve("skills/issue-intake"));
+    const result = await runHarnessTarget(path.resolve("skills/issue-intake"), {
+      env: kernelTestEnv(),
+    });
 
     expect(result.source).toBe("inline");
     if (!("cases" in result)) {
@@ -46,6 +53,6 @@ describe("issue-intake official skill", () => {
     }
     expect(result.assertionErrors).toEqual([]);
     expect(result.cases.length).toBe(4);
-    expect(result.cases.every((entry) => entry.status === "success")).toBe(true);
+    expect(result.cases.every((entry) => entry.status === "sealed")).toBe(true);
   });
 });

@@ -4,7 +4,7 @@ import type { ExecutionEvent } from "@runxhq/runtime-local";
 import type { CliIo } from "./index.js";
 import { renderKeyValue, statusIcon, theme } from "./ui.js";
 import { humanizeLabel, isRecord } from "./presentation/internal.js";
-import { humanizeExpectedOutput } from "./presentation/needs-resolution.js";
+import { humanizeExpectedOutput } from "./presentation/needs-agent.js";
 
 export { renderListResult } from "./presentation/list.js";
 export { renderConfigResult } from "./presentation/config.js";
@@ -12,7 +12,7 @@ export { renderNewResult, renderInitResult } from "./presentation/init-new.js";
 export { renderSearchResults, renderToolSearchResults, renderToolInspectResult } from "./presentation/search.js";
 export { renderInstallResult, renderPublishResult } from "./presentation/install-publish.js";
 export { renderKnowledgeProjections } from "./presentation/knowledge.js";
-export { renderNeedsResolution, renderPolicyDenied } from "./presentation/needs-resolution.js";
+export { renderNeedsAgent, renderPolicyDenied } from "./presentation/needs-agent.js";
 export { writeLocalSkillResult } from "./presentation/run-result.js";
 
 export function renderExecutionEvent(event: ExecutionEvent, io: CliIo, env: NodeJS.ProcessEnv): string | undefined {

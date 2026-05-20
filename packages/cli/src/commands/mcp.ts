@@ -8,12 +8,11 @@ import {
 import { asRecord, errorMessage } from "@runxhq/core/util";
 import {
   resolveSkillRunner,
-  readPendingSkillPath,
   runLocalSkill,
   type Caller,
   type RegistryStore,
 } from "@runxhq/runtime-local";
-import { createHostBridge, type HostBoundaryResolver, type HostRunResult } from "@runxhq/runtime-local/sdk";
+import { createHostBridge, type HostRunResult } from "@runxhq/runtime-local/sdk";
 import { resolveEnvToolCatalogAdapters } from "@runxhq/runtime-local/tool-catalogs";
 
 import type { CliIo } from "../index.js";
@@ -58,12 +57,6 @@ interface SkillInput {
   readonly required: boolean;
   readonly description?: string;
   readonly default?: unknown;
-}
-
-interface ResumeSubmission {
-  readonly requestId: string;
-  readonly actor?: "human" | "agent";
-  readonly payload: unknown;
 }
 
 const noOpCaller: Caller = {
@@ -127,11 +120,6 @@ export async function handleMcpServeCommand(
         return toMcpToolResult(result);
       },
     })),
-    createResumeToolDefinition({
-      bridge,
-      receiptDir,
-      runxHome,
-    }),
   ];
   assertUniqueToolNames(tools);
 
@@ -234,103 +222,6 @@ async function loadServedMcpTool(
   };
 }
 
-function createResumeToolDefinition(options: {
-  readonly bridge: ReturnType<typeof createHostBridge>;
-  readonly receiptDir: string;
-  readonly runxHome: string;
-}): McpToolDefinition {
-  return {
-    name: "runx_resume",
-    description: "Resume a paused runx run by run id with zero or more structured resolution payloads.",
-    inputSchema: {
-      type: "object",
-      properties: {
-        run_id: {
-          type: "string",
-          description: "Paused run id to continue.",
-        },
-        responses: {
-          type: "array",
-          description: "Structured response payloads keyed by pending request id.",
-          items: {
-            type: "object",
-            properties: {
-              request_id: { type: "string" },
-              actor: { type: "string", enum: ["human", "agent"] },
-              payload: {},
-            },
-            required: ["request_id", "payload"],
-            additionalProperties: false,
-          },
-        },
-      },
-      required: ["run_id"],
-      additionalProperties: false,
-    },
-    call: async (args) => {
-      const runId = requiredString(args.run_id, "runx_resume.run_id");
-      const skillPath = await readPendingSkillPath(options.receiptDir, runId);
-      if (!skillPath) {
-        throw new Error(`Run '${runId}' cannot be resumed because no pending skill path was recorded.`);
-      }
-      const submissions = parseResumeSubmissions(args.responses);
-      const resolver = createResumeResolver(submissions);
-      const result = await options.bridge.resume(runId, {
-        skillPath,
-        caller: noOpCaller,
-        receiptDir: options.receiptDir,
-        runxHome: options.runxHome,
-        resolver,
-      });
-      return toMcpToolResult(result);
-    },
-  };
-}
-
-function createResumeResolver(submissions: readonly ResumeSubmission[]): HostBoundaryResolver | undefined {
-  if (submissions.length === 0) {
-    return undefined;
-  }
-  const byRequestId = new Map(submissions.map((submission) => [submission.requestId, submission] as const));
-  return ({ request }) => {
-    const submission = byRequestId.get(request.id);
-    if (!submission) {
-      return undefined;
-    }
-    return submission.actor
-      ? { actor: submission.actor, payload: submission.payload }
-      : { payload: submission.payload };
-  };
-}
-
-function parseResumeSubmissions(value: unknown): readonly ResumeSubmission[] {
-  if (value === undefined) {
-    return [];
-  }
-  if (!Array.isArray(value)) {
-    throw new Error("runx_resume.responses must be an array when provided.");
-  }
-  return value.map((entry, index) => {
-    const record = asRecord(entry);
-    if (!record) {
-      throw new Error(`runx_resume.responses[${index}] must be an object.`);
-    }
-    const requestId = requiredString(record.request_id, `runx_resume.responses[${index}].request_id`);
-    const actor = record.actor;
-    if (actor !== undefined && actor !== "human" && actor !== "agent") {
-      throw new Error(`runx_resume.responses[${index}].actor must be human or agent when provided.`);
-    }
-    if (!("payload" in record)) {
-      throw new Error(`runx_resume.responses[${index}].payload is required.`);
-    }
-    return {
-      requestId,
-      actor,
-      payload: record.payload,
-    };
-  });
-}
-
 function toMcpToolResult(result: HostRunResult): Readonly<Record<string, unknown>> {
   const base = {
     structuredContent: {
@@ -350,7 +241,7 @@ function toMcpToolResult(result: HostRunResult): Readonly<Record<string, unknown
     };
   }
 
-  if (result.status === "paused") {
+  if (result.status === "needs_agent") {
     return {
       ...base,
       content: [
@@ -378,8 +269,8 @@ function summarizeHostResult(result: HostRunResult): string {
   switch (result.status) {
     case "completed":
       return `${result.skillName} completed. Inspect receipt ${result.receiptId}.`;
-    case "paused":
-      return `${result.skillName} paused at ${result.runId}. Resume with runx_resume after resolving ${result.requests.length} request(s).`;
+    case "needs_agent":
+      return `${result.skillName} needs agent input at ${result.runId}. Continue by rerunning the same skill with --run-id ${result.runId} --answers answers.json after resolving ${result.requests.length} request(s).`;
     case "denied":
       return `${result.skillName} was denied by policy${result.receiptId ? ` (receipt ${result.receiptId})` : ""}.`;
     case "escalated":

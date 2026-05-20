@@ -146,7 +146,7 @@ export interface HarnessCallerFixture {
 export interface HarnessReceiptExpectation {
   readonly [key: string]: unknown;
   readonly schema?: "runx.harness_receipt.v1";
-  readonly status?: "success" | "failure";
+  readonly status?: "sealed" | "failure";
   readonly source_type?: string;
   readonly body_digest?: string;
   readonly receipt_digest?: string;
@@ -160,7 +160,7 @@ export interface HarnessReceiptExpectation {
 }
 
 export interface HarnessExpectation {
-  readonly status?: "success" | "failure" | "needs_resolution" | "policy_denied" | "escalated";
+  readonly status?: "sealed" | "failure" | "needs_agent" | "policy_denied" | "escalated";
   readonly receipt?: HarnessReceiptExpectation;
   readonly steps?: readonly string[];
 }
@@ -911,25 +911,25 @@ function optionalHarnessStatus(value: unknown, field: string): HarnessExpectatio
     return undefined;
   }
   if (
-    value === "success" ||
+    value === "sealed" ||
     value === "failure" ||
-    value === "needs_resolution" ||
+    value === "needs_agent" ||
     value === "policy_denied" ||
     value === "escalated"
   ) {
     return value;
   }
-  throw new SkillValidationError(`${field} must be success, failure, needs_resolution, policy_denied, or escalated.`);
+  throw new SkillValidationError(`${field} must be sealed, failure, needs_agent, policy_denied, or escalated.`);
 }
 
 function optionalHarnessReceiptStatus(value: unknown, field: string): HarnessReceiptExpectation["status"] {
   if (value === undefined || value === null) {
     return undefined;
   }
-  if (value === "success" || value === "failure") {
+  if (value === "sealed" || value === "failure") {
     return value;
   }
-  throw new SkillValidationError(`${field} must be success or failure.`);
+  throw new SkillValidationError(`${field} must be sealed or failure.`);
 }
 
 function optionalHarnessReceiptSchema(value: unknown, field: string): HarnessReceiptExpectation["schema"] {

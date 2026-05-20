@@ -31,7 +31,7 @@ describe("finalizeRun ledger ordering", () => {
         type: "run_event",
         data: {
           kind: "graph_completed",
-          status: "success",
+          status: "sealed",
           detail: {
             receipt_id: graphId,
           },
@@ -59,7 +59,7 @@ describe("finalizeRun ledger ordering", () => {
             topLevelSkillName: "finalize-order",
             receiptId: graphId,
             stepCount: 0,
-            status: "success",
+            status: "sealed",
             createdAt: "2026-04-29T00:00:01.000Z",
           }),
         ],
@@ -70,9 +70,9 @@ describe("finalizeRun ledger ordering", () => {
         minimalGraphOptions({ runxHome }),
       );
 
-      expect(result.status).toBe("success");
-      if (result.status !== "success") {
-        throw new Error(`Expected success result, received ${result.status}`);
+      expect(result.status).toBe("sealed");
+      if (result.status !== "sealed") {
+        throw new Error(`Expected sealed result, received ${result.status}`);
       }
       expect(result.receipt.id).toBe(graphId);
       const terminalEntries = (await readLedgerEntries(receiptDir, graphId)).filter((entry) =>
@@ -109,7 +109,7 @@ describe("finalizeRun ledger ordering", () => {
       await expect(finalizeRun(
         minimalRunContext({ graphId, receiptDir }),
         minimalGraphOptions({ runxHome }),
-      )).rejects.toThrow(`Graph ${graphId} already has terminal ledger status failure; cannot finalize as success.`);
+      )).rejects.toThrow(`Graph ${graphId} already has terminal ledger status failure; cannot finalize as sealed.`);
 
       const terminalEntries = (await readLedgerEntries(receiptDir, graphId)).filter((entry) =>
         entry.type === "run_event" && entry.data.kind === "graph_completed",

@@ -147,16 +147,16 @@ export function renderHistory(
   const nameWidth = Math.min(32, Math.max(...allNames.map((name) => name.length)));
   const lines: string[] = [""];
   const summary = pendingRuns.length > 0
-    ? `${receipts.length} receipt(s), ${pendingRuns.length} paused`
+    ? `${receipts.length} receipt(s), ${pendingRuns.length} needs_agent`
     : `${totalCount} receipt(s)`;
   lines.push(`  ${t.bold}history${t.reset}${query ? `  ${t.dim}· ${query}${t.reset}` : ""}  ${t.dim}${summary}${t.reset}`);
   lines.push("");
-  for (const paused of pendingRuns) {
-    const name = paused.name.padEnd(nameWidth);
-    const id = shortId(paused.id);
-    const stepLabel = paused.stepLabels[0] ?? paused.stepIds[0] ?? "—";
+  for (const pending of pendingRuns) {
+    const name = pending.name.padEnd(nameWidth);
+    const id = shortId(pending.id);
+    const stepLabel = pending.stepLabels[0] ?? pending.stepIds[0] ?? "—";
     lines.push(
-      `  ${t.cyan}◇${t.reset}  ${t.bold}${name}${t.reset}  ${t.dim}${"paused".padEnd(16)}${t.reset}  ${t.dim}${stepLabel.padEnd(10)}${t.reset}  ${t.dim}${"".padEnd(10)}${t.reset}  ${t.dim}${id}${t.reset}`,
+      `  ${t.cyan}◇${t.reset}  ${t.bold}${name}${t.reset}  ${t.dim}${pending.status.padEnd(16)}${t.reset}  ${t.dim}${stepLabel.padEnd(10)}${t.reset}  ${t.dim}${"".padEnd(10)}${t.reset}  ${t.dim}${id}${t.reset}`,
     );
   }
   for (const receipt of receipts) {
@@ -176,7 +176,7 @@ export function renderHistory(
   }
   lines.push("");
   if (pendingRuns.length > 0) {
-    lines.push(`  ${t.dim}next${t.reset}  runx resume <run-id>  ${t.dim}or${t.reset}  runx skill inspect <receipt-id>`);
+    lines.push(`  ${t.dim}next${t.reset}  runx skill <same-skill-ref> --run-id <run-id> --answers answers.json  ${t.dim}or${t.reset}  runx skill inspect <receipt-id>`);
   } else {
     lines.push(`  ${t.dim}next${t.reset}  runx skill inspect <receipt-id>`);
   }
@@ -204,15 +204,15 @@ export function renderPausedRunInspection(
   const rows: Array<[string, string]> = [
     ["id", summary.id],
     ["kind", summary.kind],
-    ["status", "paused"],
+    ["status", summary.status],
   ];
   if (summary.selectedRunner) rows.push(["runner", summary.selectedRunner]);
   if (summary.stepIds.length > 0) rows.push(["step", summary.stepIds.join(", ")]);
   if (summary.stepLabels.length > 0) rows.push(["label", summary.stepLabels.join(", ")]);
   if (summary.ledgerVerification) rows.push(["ledger", `${summary.ledgerVerification.status}${summary.ledgerVerification.reason ? ` (${summary.ledgerVerification.reason})` : ""}`]);
-  rows.push(["resume", `runx resume ${summary.id}`]);
+  rows.push(["continue", `runx skill <same-skill-ref> --run-id ${summary.id} --answers answers.json`]);
   rows.push(["json", `runx skill inspect ${summary.id} --json`]);
-  return renderKeyValue(summary.name, "paused", rows, t);
+  return renderKeyValue(summary.name, summary.status, rows, t);
 }
 
 export function renderRunDiff(diff: RunSummaryDiff, env: NodeJS.ProcessEnv = process.env): string {

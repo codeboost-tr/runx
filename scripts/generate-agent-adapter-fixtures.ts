@@ -71,7 +71,7 @@ interface AgentRequest {
 
 interface OracleCase {
   readonly name: string;
-  readonly expectedStatus: "success" | "failure";
+  readonly expectedStatus: "sealed" | "failure";
   readonly request: AgentRequest;
   readonly providerResponses: readonly ProviderResponse[];
 }
@@ -90,7 +90,7 @@ const config: ManagedAgentConfig = {
 const cases: readonly OracleCase[] = [
   {
     name: "agent-plain-success",
-    expectedStatus: "success",
+    expectedStatus: "sealed",
     request: {
       case: "agent-plain-success",
       mode: "agent-adapter",
@@ -122,7 +122,7 @@ const cases: readonly OracleCase[] = [
   },
   {
     name: "agent-step-structured-success",
-    expectedStatus: "success",
+    expectedStatus: "sealed",
     request: {
       case: "agent-step-structured-success",
       mode: "agent-adapter",
@@ -280,7 +280,7 @@ async function invokeFixtureManagedAgentAdapter(
       invocation,
     });
     return {
-      status: "success",
+      status: "sealed",
       stdout: typeof execution.response.payload === "string"
         ? execution.response.payload
         : JSON.stringify(execution.response.payload),

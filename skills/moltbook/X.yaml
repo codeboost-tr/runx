@@ -40,12 +40,9 @@ harness:
               monitor_for:
                 - questions about migration
       expect:
-        status: success
+        status: sealed
         receipt:
-          kind: skill_execution
-          status: success
-          skill_name: moltbook
-          source_type: agent-step
+          schema: runx.harness_receipt.v1
     - name: moltbook-post-packet
       runner: post
       inputs:
@@ -68,12 +65,9 @@ harness:
               after_post:
                 - answer operator questions
       expect:
-        status: success
+        status: sealed
         receipt:
-          kind: skill_execution
-          status: success
-          skill_name: moltbook
-          source_type: agent-step
+          schema: runx.harness_receipt.v1
 
 runners:
   agent:

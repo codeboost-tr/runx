@@ -71,16 +71,15 @@ harness:
         approvals:
           deep-research-brief.publish.approval: true
       expect:
-        status: success
+        status: sealed
         receipt:
-          kind: graph_execution
-          status: success
+          schema: runx.harness_receipt.v1
 
     - name: deep-research-brief-minimal-inputs
       inputs:
         objective: Minimal smoke-case for deep-research-brief regression
       expect:
-        status: needs_resolution
+        status: needs_agent
 
 runners:
   deep-research-brief:
@@ -117,7 +116,6 @@ runners:
         description: "Structured list of projects, companies, or repos to keep in scope."
     graph:
       name: deep-research-brief
-      owner: runx
       steps:
         - id: research-topic
           skill: ../research

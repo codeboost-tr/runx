@@ -14,13 +14,13 @@ harness:
       inputs:
         project: fixtures/sourcey/basic
       expect:
-        status: needs_resolution
+        status: needs_agent
 
     - name: sourcey-needs-project-input
       runner: sourcey
       inputs: {}
       expect:
-        status: needs_resolution
+        status: needs_agent
 
 runners:
   agent:

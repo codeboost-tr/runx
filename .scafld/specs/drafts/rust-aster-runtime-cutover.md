@@ -100,7 +100,7 @@ Surfaces not present in this checkout:
 - `hosted_http.rs` is the current local hosted boundary. Any future cloud
   binding should either use this boundary or explicitly replace it in a
   separate reviewed change.
-- No legacy/compat outcome, effect, verification-report, or Aster-only terminal
+- No legacy/compat outcome, effect, verification proof alias, or Aster-only terminal
   packet is introduced.
 
 ## Objectives
@@ -165,10 +165,9 @@ Out of scope:
   `crates/runx-runtime/src/hosted_http.rs` or a reviewed replacement.
 - [ ] Cloud binding details are marked deferred until `cloud/**` is available
   locally; no acceptance depends on absent cloud paths.
-- [ ] Aster contract and runtime artifacts do not contain
-  `runx.issue_to_pr_outcome.v1`, `issue_to_pr_outcome`, `outcome`, `effect`,
-  `verification_report`, `verification-report`, `target_outcome`, or
-  `target-effect`.
+- [ ] Aster contract and runtime artifacts use harness receipt closure and
+  `proof.verification`, not retired peer terminal artifacts or legacy
+  outcome/effect packet fields.
 - [ ] Aster final publication and issue-to-PR completion, once implemented, use
   sealed harness receipt closure/proof through the reusable observer/runner
   specs rather than Aster-only terminal packets.

@@ -16,4 +16,4 @@ source:
           wrap_as: approval
 ---
 
-Pause for approval, then complete after `runx_resume`.
+Pause for approval, then continue when the same skill is rerun with `--run-id` and `--answers`.

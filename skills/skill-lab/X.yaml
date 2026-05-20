@@ -147,12 +147,12 @@ harness:
                 kind: skill
                 target: ../release-notes
                 expect:
-                  status: success
+                  status: sealed
               - name: release-notes-missing-objective
                 kind: skill
                 target: ../release-notes
                 expect:
-                  status: needs_resolution
+                  status: needs_agent
             acceptance_checks:
               - release-notes produces a reviewable draft from a bounded release diff
               - release-notes requires approval before packaging
@@ -184,10 +184,9 @@ harness:
         approvals:
           skill-lab.publish.approval: true
       expect:
-        status: success
+        status: sealed
         receipt:
-          kind: graph_execution
-          status: success
+          schema: runx.harness_receipt.v1
         steps:
           - decompose
           - research
@@ -199,7 +198,7 @@ harness:
     - name: skill-lab-needs-objective
       inputs: {}
       expect:
-        status: needs_resolution
+        status: needs_agent
 
 runners:
   skill-lab:
@@ -241,7 +240,6 @@ runners:
         description: "Maintainer posture, constraints, or teaching notes."
     graph:
       name: skill-lab
-      owner: runx
       steps:
         - id: decompose
           skill: ../work-plan

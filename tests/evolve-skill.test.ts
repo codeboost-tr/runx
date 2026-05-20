@@ -48,7 +48,7 @@ describe("evolve skill", () => {
         }>;
       };
       expect(firstReport).toMatchObject({
-        status: "needs_resolution",
+        status: "needs_agent",
         requests: [{ id: "agent_step.evolve-introspect.output", kind: "agent_act" }],
       });
       expect(firstReport.requests[0]?.invocation?.envelope.inputs.repo_profile.root).toBe(process.cwd());
@@ -165,7 +165,7 @@ describe("evolve skill", () => {
         requests: Array<{ id: string; kind: string }>;
       };
       expect(firstReport).toMatchObject({
-        status: "needs_resolution",
+        status: "needs_agent",
         requests: [{ id: "agent_step.evolve-plan.output", kind: "agent_act" }],
       });
       stdout.clear();

@@ -13,7 +13,7 @@ harness:
       inputs:
         receipt_id: rx_failed
         receipt_summary: harness failed because required context was flattened
-        harness_output: needs_resolution
+        harness_output: needs_agent
         skill_path: skills/design-skill
         objective: Preserve structured review data in builder graphs
       caller:
@@ -40,27 +40,26 @@ harness:
                 inputs:
                   receipt_summary: context flattened
                 expect:
-                  status: success
+                  status: sealed
             acceptance_checks:
               - improve-skill passes structured review data
       expect:
-        status: success
+        status: sealed
         receipt:
-          kind: graph_execution
-          status: success
+          schema: runx.harness_receipt.v1
 
     - name: improve-skill-passes-on-paused-graph
       inputs:
         receipt_id: rx_paused
-        receipt_summary: graph paused at step 1 awaiting caller cognitive work; status needs_resolution with one outstanding agent-step request
-        harness_output: needs_resolution
+        receipt_summary: graph paused at step 1 awaiting caller cognitive work; status needs_agent with one outstanding agent-step request
+        harness_output: needs_agent
         skill_path: skills/content-pipeline
         objective: Distinguish paused-but-healthy graphs from broken skills in diagnosis
       caller:
         answers:
           agent_step.review-receipt.output:
             verdict: pass
-            failure_summary: No failure. The graph paused as designed awaiting caller cognitive work; needs_resolution is a healthy agent-mediated suspension, not a defect.
+            failure_summary: No failure. The graph paused as designed awaiting caller cognitive work; needs_agent is a healthy agent-mediated suspension, not a defect.
             improvement_proposals: []
             next_harness_checks:
               - target skill harness still passes on the happy path where the agent task receives valid outputs
@@ -76,14 +75,13 @@ harness:
                 kind: skill
                 target: ../content-pipeline
                 expect:
-                  status: needs_resolution
+                  status: needs_agent
             acceptance_checks:
-              - needs_resolution is treated as a healthy caller hand-off, not a skill failure
+              - needs_agent is treated as a healthy caller hand-off, not a skill failure
       expect:
-        status: success
+        status: sealed
         receipt:
-          kind: graph_execution
-          status: success
+          schema: runx.harness_receipt.v1
 
 runners:
   improve-skill:
@@ -112,7 +110,6 @@ runners:
         description: "Operator intent for the next improvement pass."
     graph:
       name: improve-skill
-      owner: runx
       steps:
         - id: review-receipt
           skill: ../review-receipt

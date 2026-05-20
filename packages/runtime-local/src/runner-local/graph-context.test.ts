@@ -4,7 +4,7 @@ import { materializeStepInputs, resolveOutputPath, type GraphStepOutput } from "
 
 function makeOutput(): GraphStepOutput {
   return {
-    status: "success",
+    status: "sealed",
     stdout: "{\"schema\":\"runx.fs.write_bundle.v1\"}",
     stderr: "",
     receiptId: "rx_test",

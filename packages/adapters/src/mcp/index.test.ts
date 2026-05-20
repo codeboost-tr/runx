@@ -25,7 +25,7 @@ describe("invokeMcp", () => {
       env: process.env,
     });
 
-    expect(result.status).toBe("success");
+    expect(result.status).toBe("sealed");
     expect(result.stdout).toBe("hi");
     expect(result.metadata?.mcp).toBeDefined();
   }, 15000);
@@ -78,7 +78,7 @@ describe("invokeMcp", () => {
       },
     });
 
-    expect(blocked.status).toBe("success");
+    expect(blocked.status).toBe("sealed");
     expect(blocked.stdout).toBe("");
     expect(blocked.metadata?.sandbox).toMatchObject({
       profile: "readonly",
@@ -117,7 +117,7 @@ describe("invokeMcp", () => {
       },
     });
 
-    expect(allowed.status).toBe("success");
+    expect(allowed.status).toBe("sealed");
     expect(allowed.stdout).toBe("allowed");
     expect(JSON.stringify(blocked)).not.toContain("secret");
     expect(JSON.stringify(allowed)).not.toContain("secret");

@@ -571,7 +571,7 @@ harness:
         approvals:
           evolve.plan.approval: true
       expect:
-        status: success
+        status: sealed
         receipt:
           schema: runx.harness_receipt.v1
           harness_id: hrn_evolve_plan-only
@@ -595,7 +595,7 @@ harness:
           },
         },
         expect: {
-          status: "success",
+          status: "sealed",
           receipt: {
             schema: "runx.harness_receipt.v1",
             harness_id: "hrn_evolve_plan-only",
@@ -702,7 +702,7 @@ harness:
         approvals:
           evolve.plan.approval: yes
       expect:
-        status: success
+        status: sealed
 `),
       ),
     ).toThrow("harness.cases[0].caller.approvals.evolve.plan.approval must be a boolean.");
@@ -720,7 +720,7 @@ harness:
     - name: missing-runner
       runner: missing
       expect:
-        status: success
+        status: sealed
 `),
       ),
     ).toThrow("harness.cases runner missing is not declared in runners.");

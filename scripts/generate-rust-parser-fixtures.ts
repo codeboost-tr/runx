@@ -379,10 +379,9 @@ harness:
         approvals:
           mutate: true
       expect:
-        status: success
+        status: sealed
         receipt:
-          kind: skill_execution
-          status: success
+          status: sealed
           source_type: agent-step
 `),
     runnerManifestSuccess("execution-evidence-refs", `
@@ -410,7 +409,7 @@ harness:
     - name: unknown
       runner: missing
       expect:
-        status: success
+        status: sealed
 `),
     runnerManifestRejection("validation-invalid-reflect-policy", "validation", `
 runners:

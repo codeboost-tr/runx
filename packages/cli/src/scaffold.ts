@@ -75,7 +75,7 @@ process.stdout.write(JSON.stringify({ schema: "${packetId}", data: { message: St
     inputs: { message: "hello" },
     agent: { mode: "replay" },
     expect: {
-      status: "success",
+      status: "sealed",
       outputs: {
         echo_packet: {
           matches_packet: packetId,
@@ -216,7 +216,7 @@ target:
 inputs:
   message: hello
 expect:
-  status: success
+  status: sealed
   output:
     subset:
       schema: ${packetId}
@@ -233,7 +233,7 @@ inputs:
 agent:
   mode: replay
 expect:
-  status: success
+  status: sealed
   outputs:
     echo_packet:
       matches_packet: ${packetId}
@@ -244,7 +244,7 @@ expect:
       prompt_fingerprint: sha256Stable(agentFixture),
       recorded_at: "1970-01-01T00:00:00.000Z",
       target: agentFixture.target,
-      status: "success",
+      status: "sealed",
       outputs: {
         echo_packet: {
           schema: packetId,
@@ -371,4 +371,3 @@ function sha256ToolSourceContents(files: Readonly<Record<string, string>>): stri
   }
   return `sha256:${hash.digest("hex")}`;
 }
-

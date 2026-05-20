@@ -43,7 +43,7 @@ interface A2aRequest {
 
 interface OracleCase {
   readonly name: string;
-  readonly expectedStatus: "success" | "failure";
+  readonly expectedStatus: "sealed" | "failure";
   readonly request: A2aRequest;
 }
 
@@ -67,7 +67,7 @@ const baseSource: A2aSource = {
 const cases: readonly OracleCase[] = [
   {
     name: "fixture-success",
-    expectedStatus: "success",
+    expectedStatus: "sealed",
     request: {
       case: "fixture-success",
       mode: "a2a-adapter",
@@ -108,7 +108,7 @@ const cases: readonly OracleCase[] = [
   },
   {
     name: "embedded-template",
-    expectedStatus: "success",
+    expectedStatus: "sealed",
     request: {
       case: "embedded-template",
       mode: "a2a-adapter",
@@ -129,7 +129,7 @@ const cases: readonly OracleCase[] = [
   },
   {
     name: "exact-template",
-    expectedStatus: "success",
+    expectedStatus: "sealed",
     request: {
       case: "exact-template",
       mode: "a2a-adapter",
@@ -149,7 +149,7 @@ const cases: readonly OracleCase[] = [
   },
   {
     name: "resolved-inputs",
-    expectedStatus: "success",
+    expectedStatus: "sealed",
     request: {
       case: "resolved-inputs",
       mode: "a2a-adapter",

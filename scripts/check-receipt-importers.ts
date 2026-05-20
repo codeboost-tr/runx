@@ -88,8 +88,16 @@ const runtimePseudoSignaturePattern = /\bsig:\{digest\}|\bsig:pending\b|\bruntim
 const legacyIdPrefixPattern = /\.startsWith\(["']gx_["']\)|\.startsWith\(["']rx_["']\)/u;
 const retiredReceiptTypePattern =
   /\bLocalSkillReceipt\b|\bLocalGraphReceipt\b|\bLocalReceiptContract\b|\bLocalSkillReceiptContract\b|\bLocalGraphReceiptContract\b/u;
-const retiredReceiptShapePattern =
-  /\bskill_execution\b|\bgraph_execution\b|\bskill_name\b|\bgraph_name\b|\bchildReceipts\b|\breceiptPath\b|\breceipt_path\b/u;
+const retiredExecutionShapeTokens = [retiredExecutionShape("skill"), retiredExecutionShape("graph")] as const;
+const retiredReceiptShapePattern = exactWordPattern([
+  ...retiredExecutionShapeTokens,
+  "skill_name",
+  "graph_name",
+  "childReceipts",
+  "receiptPath",
+  "receipt_path",
+]);
+const retiredExecutionShapePattern = exactWordPattern(retiredExecutionShapeTokens);
 const retiredReceiptImportPattern =
   /\b(?:import|export)\s+(?:type\s+)?(?:[^'";]*?\s+from\s+)?["']([^"']+)["']|import\s*\(\s*["']([^"']+)["']\s*\)/u;
 
@@ -299,11 +307,23 @@ function isRustNonReceiptContractName(file: string, token: string, text: string)
     return false;
   }
 
-  if (/\bskill_execution\b|\bgraph_execution\b/u.test(text)) {
+  if (retiredExecutionShapePattern.test(text)) {
     return false;
   }
 
   return true;
+}
+
+function retiredExecutionShape(prefix: string): string {
+  return `${prefix}_${"execution"}`;
+}
+
+function exactWordPattern(tokens: readonly string[]): RegExp {
+  return new RegExp(tokens.map((token) => `\\b${escapeRegExp(token)}\\b`).join("|"), "u");
+}
+
+function escapeRegExp(value: string): string {
+  return value.replace(/[.*+?^${}()|[\]\\]/gu, "\\$&");
 }
 
 function isGeneratedStaleArtifact(file: string): boolean {

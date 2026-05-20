@@ -20,7 +20,7 @@ describe("invokeCliTool", () => {
       skillDirectory: process.cwd(),
     });
 
-    expect(result.status).toBe("success");
+    expect(result.status).toBe("sealed");
     expect(result.stdout).toBe("hi");
   });
 
@@ -35,7 +35,7 @@ describe("invokeCliTool", () => {
       skillDirectory: process.cwd(),
     });
 
-    expect(result.status).toBe("success");
+    expect(result.status).toBe("sealed");
     expect(result.stdout).toBe("hello");
   });
 
@@ -90,7 +90,7 @@ describe("invokeCliTool", () => {
       skillDirectory: process.cwd(),
     });
 
-    expect(result.status).toBe("success");
+    expect(result.status).toBe("sealed");
     expect(Buffer.byteLength(result.stdout, "utf8")).toBeLessThanOrEqual(outputLimitBytes);
     expect(result.stdout).not.toContain("\uFFFD");
     expect(result.stdout.endsWith("€")).toBe(false);
@@ -124,7 +124,7 @@ describe("invokeCliTool", () => {
         skillDirectory: tempDir,
       });
 
-      expect(result.status).toBe("success");
+      expect(result.status).toBe("sealed");
       expect(result.stdout).toBe("yes::hi");
       expect(result.metadata?.sandbox).toMatchObject({
         profile: "workspace-write",
@@ -171,7 +171,7 @@ describe("invokeCliTool", () => {
         expect(result.status).toBe("failure");
         await expect(readFile(outputPath, "utf8")).rejects.toThrow();
       } else {
-        expect(result.status).toBe("success");
+        expect(result.status).toBe("sealed");
         await expect(readFile(outputPath, "utf8")).resolves.toBe("should-not-write");
         expect(result.metadata?.sandbox).toMatchObject({
           runtime: {
@@ -202,7 +202,7 @@ describe("invokeCliTool", () => {
       skillDirectory: process.cwd(),
     });
 
-    expect(result.status).toBe("success");
+    expect(result.status).toBe("sealed");
     expect(result.stdout).toBe(":true:hi");
     expect(result.metadata?.sandbox).toMatchObject({
       profile: "readonly",
@@ -254,7 +254,7 @@ describe("invokeCliTool", () => {
       skillDirectory: process.cwd(),
     });
 
-    expect(result.status).toBe("success");
+    expect(result.status).toBe("sealed");
     expect(result.metadata?.sandbox).toMatchObject({
       profile: "unrestricted-local-dev",
       approval: {
@@ -286,7 +286,7 @@ describe("invokeCliTool", () => {
       skillDirectory: process.cwd(),
     });
 
-    expect(result.status).toBe("success");
+    expect(result.status).toBe("sealed");
     expect(result.stdout).toBe(`true:${largePayload.length}:`);
   });
 
@@ -328,7 +328,7 @@ describe("invokeCliTool", () => {
         },
       });
 
-      expect(result.status).toBe("success");
+      expect(result.status).toBe("sealed");
       const networkEnforcement = sandboxNetworkEnforcement(result.metadata?.sandbox);
       if (networkEnforcement === "isolated-namespace") {
         expect(result.stdout).not.toBe("connected");
@@ -376,7 +376,7 @@ describe("invokeCliTool", () => {
         expect(readonlyResult.status).toBe("failure");
         expect(readonlyResult.stdout).toBe("");
       } else {
-        expect(readonlyResult.status).toBe("success");
+        expect(readonlyResult.status).toBe("sealed");
         expect(readonlyResult.stdout).toBe("ambient-ok");
         expect(readonlyResult.metadata?.sandbox).toMatchObject({
           runtime: {
@@ -402,7 +402,7 @@ describe("invokeCliTool", () => {
         },
       });
 
-      expect(result.status).toBe("success");
+      expect(result.status).toBe("sealed");
       expect(result.stdout).toBe("ambient-ok");
       expect(result.metadata?.sandbox).toMatchObject({
         profile: "unrestricted-local-dev",

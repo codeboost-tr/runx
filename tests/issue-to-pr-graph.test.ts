@@ -3,12 +3,13 @@ import { mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 
-import { describe, expect, it } from "vitest";
+import { beforeAll, describe, expect, it } from "vitest";
 
 import { createDefaultLocalSkillRuntime } from "../packages/adapters/src/runtime.js";
 import { readLedgerEntries } from "@runxhq/core/artifacts";
 import { parseRunnerManifestYaml, validateRunnerManifest } from "@runxhq/core/parser";
 import { runLocalSkill, type Caller } from "@runxhq/runtime-local";
+import { ensureRunxBinary, kernelTestEnv } from "./host-protocol-test-utils.js";
 
 const scafldBin = process.env.SCAFLD_BIN ?? "scafld";
 const passingReviewCommand = `printf '{"verdict":"pass","mode":"discover","summary":"fixture clean","findings":[],"attack_log":[{"target":"diff","attack":"fixture","result":"clean"}],"budget":{"actual_attack_angles":1}}'`;
@@ -18,6 +19,10 @@ const caller: Caller = {
 };
 
 describe("issue-to-PR composite skill", () => {
+  beforeAll(() => {
+    ensureRunxBinary();
+  });
+
   it("models authored content around native scafld v2 lifecycle and handoff packaging", async () => {
     const manifest = validateRunnerManifest(
       parseRunnerManifestYaml(await readFile(path.resolve("skills/issue-to-pr/X.yaml"), "utf8")),
@@ -226,12 +231,12 @@ describe("issue-to-PR composite skill", () => {
         },
         caller,
         adapters: runtime.adapters,
-        env: { ...runtime.env, RUNX_CWD: tempDir },
+        env: kernelTestEnv({ ...runtime.env, RUNX_CWD: tempDir }),
         receiptDir: runtime.paths.receiptDir,
         runxHome: runtime.paths.runxHome,
       });
 
-      if (result.status !== "success") {
+      if (result.status !== "sealed") {
         throw new Error(JSON.stringify(result, null, 2));
       }
       expect(result.receipt).toMatchObject({ schema: "runx.harness_receipt.v1" });
@@ -298,29 +303,29 @@ describe("issue-to-PR composite skill", () => {
       await expect(readFile(threadPath, "utf8")).resolves.toContain(`message:${taskId}:merge_gate`);
       await expect(readFile(threadPath, "utf8")).resolves.toContain("harness_fixture_issue_to_pr");
       await expect(graphStepStatuses(runtime.paths.receiptDir, result.receipt.id)).resolves.toEqual([
-        ["scafld-plan", "success"],
-        ["author-spec", "success"],
-        ["normalize-spec", "success"],
-        ["write-spec", "success"],
-        ["read-draft-spec", "success"],
-        ["scafld-validate", "success"],
-        ["scafld-approve", "success"],
-        ["read-approved-spec", "success"],
-        ["read-declared-files", "success"],
-        ["author-fix", "success"],
-        ["write-fix", "success"],
-        ["scafld-build", "success"],
-        ["scafld-status", "success"],
-        ["read-current-branch", "success"],
-        ["scafld-review", "success"],
-        ["scafld-complete", "success"],
-        ["scafld-final-status", "success"],
-        ["scafld-handoff", "success"],
-        ["capture-harness-context", "success"],
-        ["package-pull-request", "success"],
-        ["push-pull-request", "success"],
-        ["package-feed-entry", "success"],
-        ["push-feed-entry", "success"],
+        ["scafld-plan", "sealed"],
+        ["author-spec", "sealed"],
+        ["normalize-spec", "sealed"],
+        ["write-spec", "sealed"],
+        ["read-draft-spec", "sealed"],
+        ["scafld-validate", "sealed"],
+        ["scafld-approve", "sealed"],
+        ["read-approved-spec", "sealed"],
+        ["read-declared-files", "sealed"],
+        ["author-fix", "sealed"],
+        ["write-fix", "sealed"],
+        ["scafld-build", "sealed"],
+        ["scafld-status", "sealed"],
+        ["read-current-branch", "sealed"],
+        ["scafld-review", "sealed"],
+        ["scafld-complete", "sealed"],
+        ["scafld-final-status", "sealed"],
+        ["scafld-handoff", "sealed"],
+        ["capture-harness-context", "sealed"],
+        ["package-pull-request", "sealed"],
+        ["push-pull-request", "sealed"],
+        ["package-feed-entry", "sealed"],
+        ["push-feed-entry", "sealed"],
       ]);
       await expect(readFile(path.join(tempDir, "app.txt"), "utf8")).resolves.toBe("fixed\n");
       await expect(readFile(path.join(tempDir, "notes.md"), "utf8")).resolves.toBe("governed\n");
@@ -376,7 +381,7 @@ describe("issue-to-PR composite skill", () => {
         },
         caller: blockedCaller,
         adapters: runtime.adapters,
-        env: { ...runtime.env, RUNX_CWD: tempDir },
+        env: kernelTestEnv({ ...runtime.env, RUNX_CWD: tempDir }),
         receiptDir: runtime.paths.receiptDir,
         runxHome: runtime.paths.runxHome,
       });
@@ -400,7 +405,7 @@ describe("issue-to-PR composite skill", () => {
 
 async function graphStepStatuses(receiptDir: string, runId: string): Promise<Array<[string, string]>> {
   return (await readLedgerEntries(receiptDir, runId))
-    .filter((entry) => entry.type === "run_event" && entry.data.kind === "step_completed")
+    .filter((entry) => entry.type === "run_event" && entry.data.kind === "step_succeeded")
     .map((entry) => [String(entry.data.step_id), String(entry.data.status)]);
 }
 

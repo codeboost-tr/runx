@@ -34,12 +34,9 @@ harness:
               verdict: investigate
               summary: One medium-severity transitive issue is worth a bounded advisory.
       expect:
-        status: success
+        status: sealed
         receipt:
-          kind: skill_execution
-          status: success
-          skill_name: vuln-scan
-          source_type: agent-step
+          schema: runx.harness_receipt.v1
     - name: vuln-scan-advisory-packet
       runner: advisory
       inputs:
@@ -60,12 +57,9 @@ harness:
               - verify affected versions
               - confirm remediation path
       expect:
-        status: success
+        status: sealed
         receipt:
-          kind: skill_execution
-          status: success
-          skill_name: vuln-scan
-          source_type: agent-step
+          schema: runx.harness_receipt.v1
 
 runners:
   agent:

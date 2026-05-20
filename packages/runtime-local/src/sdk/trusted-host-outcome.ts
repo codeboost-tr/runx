@@ -3,7 +3,7 @@ import type { RunLocalSkillResult } from "../runner-local/index.js";
 import type { HostRunResult } from "./host-protocol.js";
 
 type TrustedKernelReceipt = NonNullable<
-  | Extract<RunLocalSkillResult, { readonly status: "success" | "failure" }>["receipt"]
+  | Extract<RunLocalSkillResult, { readonly status: "sealed" | "failure" }>["receipt"]
   | Extract<RunLocalSkillResult, { readonly status: "policy_denied" }>["receipt"]
 >;
 
@@ -31,7 +31,7 @@ export function createTrustedHostOutcome(
   kernel: RunLocalSkillResult,
 ): TrustedHostOutcome {
   assertHostKernelParity(host, kernel);
-  if (kernel.status === "needs_resolution") {
+  if (kernel.status === "needs_agent") {
     return {
       host,
       kernelStatus: kernel.status,
@@ -73,8 +73,8 @@ function assertHostKernelParity(host: HostRunResult, kernel: RunLocalSkillResult
 }
 
 function expectedHostStatuses(kernel: RunLocalSkillResult): readonly HostRunResult["status"][] {
-  if (kernel.status === "needs_resolution") {
-    return ["paused"];
+  if (kernel.status === "needs_agent") {
+    return ["needs_agent"];
   }
   if (kernel.status === "policy_denied") {
     return ["denied"];

@@ -55,15 +55,14 @@ harness:
         approvals:
           content-pipeline.publish.approval: true
       expect:
-        status: success
+        status: sealed
         receipt:
-          kind: graph_execution
-          status: success
+          schema: runx.harness_receipt.v1
 
     - name: content-pipeline-needs-objective
       inputs: {}
       expect:
-        status: needs_resolution
+        status: needs_agent
 
 
 runners:
@@ -99,7 +98,6 @@ runners:
         description: "Structured list of products, projects, or actors to keep in view during research."
     graph:
       name: content-pipeline
-      owner: runx
       steps:
         - id: research-topic
           skill: ../research

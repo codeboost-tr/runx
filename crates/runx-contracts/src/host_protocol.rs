@@ -163,7 +163,7 @@ pub struct ApprovalDecision {
     deny_unknown_fields
 )]
 pub enum HostRunResult {
-    Paused {
+    NeedsAgent {
         skill_name: String,
         run_id: String,
         requests: Vec<ResolutionRequest>,
@@ -204,7 +204,7 @@ pub enum HostRunResult {
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(tag = "status", rename_all = "snake_case", deny_unknown_fields)]
 pub enum HostRunState {
-    Paused(HostPausedState),
+    NeedsAgent(HostNeedsAgentState),
     Completed(HostTerminalState),
     Failed(HostTerminalState),
     Escalated(HostTerminalState),
@@ -213,7 +213,7 @@ pub enum HostRunState {
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-pub struct HostPausedState {
+pub struct HostNeedsAgentState {
     pub skill_name: String,
     pub run_id: String,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -264,8 +264,7 @@ pub struct HostTerminalState {
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
 pub enum HostRunKind {
-    SkillExecution,
-    GraphExecution,
+    Harness,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]

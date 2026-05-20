@@ -78,14 +78,14 @@ caller:
         summary: "No code or planning lane is required to answer this request."
         recommended_lane: "reply-only"
 expect:
-  status: "success"
+  status: "sealed"
   receipt:
     schema: "runx.harness_receipt.v1"
     receipt_id: "hrn_rcpt_reply-only-question_reply-only-question"
     harness_id: "hrn_reply-only-question_reply-only-question"
     state: "sealed"
     disposition: "closed"
-    reason_code: "process_closed"
+    reason_code: "reply-only-question_closed"
     act_ids:
       - "act_reply-only-question"
     decision_ids:

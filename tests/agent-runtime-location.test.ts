@@ -165,8 +165,8 @@ process.stdout.write(JSON.stringify({
         adapters: createDefaultSkillAdapters(),
       });
 
-      expect(result.status).toBe("success");
-      if (result.status !== "success") {
+      expect(result.status).toBe("sealed");
+      if (result.status !== "sealed") {
         return;
       }
       expect(JSON.parse(result.execution.stdout)).toEqual({ verdict: "grounded" });

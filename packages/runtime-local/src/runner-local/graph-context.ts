@@ -3,7 +3,7 @@ import { isRecord } from "@runxhq/core/util";
 import type { ExecutionGraph, GraphStep } from "../parser-types.js";
 
 export interface GraphStepOutput {
-  readonly status: "success" | "failure";
+  readonly status: "sealed" | "failure";
   readonly stdout: string;
   readonly stderr: string;
   readonly receiptId: string;

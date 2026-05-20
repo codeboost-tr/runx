@@ -722,7 +722,7 @@ describe("file local knowledge store", () => {
       const receipt = {
         id: "rx_knowledge_1",
         kind: `skill_${"execution"}` as const,
-        status: "success" as const,
+        status: "sealed" as const,
         [`skill_${"name"}`]: "echo",
         source_type: "cli-tool",
         started_at: "2026-04-10T00:00:00Z",
@@ -828,7 +828,7 @@ describe("file local knowledge store", () => {
                 uri: "runx:receipt:rx_valid",
                 label: "echo",
               },
-              status: "success",
+              status: "sealed",
               execution_name: "echo",
               indexed_at: "2026-04-10T00:00:00Z",
               project,

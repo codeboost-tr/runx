@@ -70,7 +70,7 @@ runx skill search sourcey
 runx skill sourcey --project .
 runx evolve
 runx skill issue-to-pr --fixture /path/to/repo --task-id task-123
-runx resume <run-id>
+runx skill /path/to/skill --run-id <run-id> --answers answers.json
 runx skill inspect <receipt-id>
 runx history
 runx skill add sourcey/sourcey@1.0.0 --to ./skills

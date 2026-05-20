@@ -16,7 +16,7 @@ harness:
         evidence_pack:
           receipts:
             - kind: harness
-              status: success
+              status: sealed
               note: Sourcey inline harness passes in OSS CI.
           docs:
             - path: docs/skill-profile-model.md
@@ -41,17 +41,14 @@ harness:
               recommendation: adopt_with_caveats
               rationale: Strong structure, but docs and public examples need tightening.
       expect:
-        status: success
+        status: sealed
         receipt:
-          kind: skill_execution
-          status: success
-          skill_name: review-skill
-          source_type: agent-step
+          schema: runx.harness_receipt.v1
 
     - name: review-skill-needs-skill-ref
       inputs: {}
       expect:
-        status: needs_resolution
+        status: needs_agent
 
 
 runners:

@@ -56,16 +56,15 @@ harness:
         approvals:
           ecosystem-brief.publish.approval: true
       expect:
-        status: success
+        status: sealed
         receipt:
-          kind: graph_execution
-          status: success
+          schema: runx.harness_receipt.v1
 
     - name: ecosystem-brief-minimal-inputs
       inputs:
         objective: Minimal smoke-case for ecosystem-brief regression
       expect:
-        status: needs_resolution
+        status: needs_agent
 
 
 runners:
@@ -103,7 +102,6 @@ runners:
         description: "Structured list of projects or companies to compare or monitor."
     graph:
       name: ecosystem-brief
-      owner: runx
       steps:
         - id: research-market
           skill: ../research

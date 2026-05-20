@@ -2,12 +2,17 @@ import { mkdir, mkdtemp, rm, writeFile } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 
-import { describe, expect, it } from "vitest";
+import { beforeAll, describe, expect, it } from "vitest";
 
 import { inspectLocalReceipt, readLocalReplaySeed } from "@runxhq/runtime-local";
 import { runCli } from "../packages/cli/src/index.js";
+import { ensureRunxBinary, kernelTestEnv } from "./host-protocol-test-utils.js";
 
 describe("run replay", () => {
+  beforeAll(() => {
+    ensureRunxBinary();
+  });
+
   it("replays a completed run from its local ledger seed and stamps lineage into the new receipt", async () => {
     const tempDir = await mkdtemp(path.join(os.tmpdir(), "runx-replay-run-"));
     const receiptDir = path.join(tempDir, "receipts");
@@ -18,11 +23,9 @@ describe("run replay", () => {
       const firstExit = await runCli(
         ["skill", "fixtures/skills/echo", "--message", "hi", "--receipt-dir", receiptDir, "--json"],
         { stdin: process.stdin, stdout: firstStdout, stderr: createMemoryStream() },
-        {
-          ...process.env,
-          RUNX_CWD: process.cwd(),
+        kernelTestEnv({
           RUNX_HOME: runxHome,
-        },
+        }),
       );
       expect(firstExit).toBe(0);
       const first = JSON.parse(firstStdout.contents()) as { readonly receipt: { readonly id: string } };
@@ -41,11 +44,9 @@ describe("run replay", () => {
       const replayExit = await runCli(
         ["replay", first.receipt.id, "--receipt-dir", receiptDir, "--json"],
         { stdin: process.stdin, stdout: replayStdout, stderr: createMemoryStream() },
-        {
-          ...process.env,
-          RUNX_CWD: process.cwd(),
+        kernelTestEnv({
           RUNX_HOME: runxHome,
-        },
+        }),
       );
       expect(replayExit).toBe(0);
       const replay = JSON.parse(replayStdout.contents()) as {
@@ -81,11 +82,9 @@ describe("run replay", () => {
       const pausedExit = await runCli(
         ["skill", "fixtures/skills/echo", "--receipt-dir", receiptDir, "--non-interactive", "--json"],
         { stdin: process.stdin, stdout: pausedStdout, stderr: createMemoryStream() },
-        {
-          ...process.env,
-          RUNX_CWD: process.cwd(),
+        kernelTestEnv({
           RUNX_HOME: runxHome,
-        },
+        }),
       );
       expect(pausedExit).toBe(2);
       const paused = JSON.parse(pausedStdout.contents()) as { readonly run_id: string };
@@ -94,14 +93,12 @@ describe("run replay", () => {
       const replayExit = await runCli(
         ["replay", paused.run_id, "--receipt-dir", receiptDir, "--json"],
         { stdin: process.stdin, stdout: createMemoryStream(), stderr: replayStderr },
-        {
-          ...process.env,
-          RUNX_CWD: process.cwd(),
+        kernelTestEnv({
           RUNX_HOME: runxHome,
-        },
+        }),
       );
       expect(replayExit).toBe(1);
-      expect(replayStderr.contents()).toContain("Use 'runx resume");
+      expect(replayStderr.contents()).toContain("Continue by rerunning the same skill");
     } finally {
       await rm(tempDir, { recursive: true, force: true });
     }
@@ -209,24 +206,31 @@ runners:
       const pausedExit = await runCli(
         ["skill", wrapperDir, "--task-id", "abc-123", "--receipt-dir", receiptDir, "--non-interactive", "--json"],
         { stdin: process.stdin, stdout: pausedStdout, stderr: createMemoryStream() },
-        {
-          ...process.env,
-          RUNX_CWD: process.cwd(),
+        kernelTestEnv({
           RUNX_HOME: runxHome,
-        },
+        }),
       );
       expect(pausedExit).toBe(2);
       const paused = JSON.parse(pausedStdout.contents()) as { readonly run_id: string };
 
       const resumedStdout = createMemoryStream();
       const resumedExit = await runCli(
-        ["resume", paused.run_id, "--answers", answersPath, "--receipt-dir", receiptDir, "--non-interactive", "--json"],
+        [
+          "skill",
+          wrapperDir,
+          "--run-id",
+          paused.run_id,
+          "--answers",
+          answersPath,
+          "--receipt-dir",
+          receiptDir,
+          "--non-interactive",
+          "--json",
+        ],
         { stdin: process.stdin, stdout: resumedStdout, stderr: createMemoryStream() },
-        {
-          ...process.env,
-          RUNX_CWD: process.cwd(),
+        kernelTestEnv({
           RUNX_HOME: runxHome,
-        },
+        }),
       );
       expect(resumedExit).toBe(0);
       const resumed = JSON.parse(resumedStdout.contents()) as { readonly receipt: { readonly id: string } };
@@ -246,11 +250,9 @@ runners:
       const replayExit = await runCli(
         ["replay", paused.run_id, "--answers", answersPath, "--receipt-dir", receiptDir, "--non-interactive", "--json"],
         { stdin: process.stdin, stdout: replayStdout, stderr: createMemoryStream() },
-        {
-          ...process.env,
-          RUNX_CWD: process.cwd(),
+        kernelTestEnv({
           RUNX_HOME: runxHome,
-        },
+        }),
       );
       expect(replayExit).toBe(0);
       const replay = JSON.parse(replayStdout.contents()) as {

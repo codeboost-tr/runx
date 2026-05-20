@@ -222,7 +222,7 @@ export interface HarnessCallerFixture {
 export interface HarnessReceiptExpectation {
   readonly [key: string]: unknown;
   readonly schema?: "runx.harness_receipt.v1";
-  readonly status?: "success" | "failure";
+  readonly status?: "sealed" | "failure";
   readonly source_type?: string;
   readonly body_digest?: string;
   readonly receipt_digest?: string;
@@ -236,7 +236,7 @@ export interface HarnessReceiptExpectation {
 }
 
 export interface HarnessExpectation {
-  readonly status?: "success" | "failure" | "needs_resolution" | "policy_denied" | "escalated";
+  readonly status?: "sealed" | "failure" | "needs_agent" | "policy_denied" | "escalated";
   readonly receipt?: HarnessReceiptExpectation;
   readonly steps?: readonly string[];
 }

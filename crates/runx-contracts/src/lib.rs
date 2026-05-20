@@ -70,7 +70,7 @@ pub use harness::{
 };
 pub use host_protocol::{
     AgentActInvocation, AgentActSourceType, ApprovalDecision, ApprovalGate, ExecutionEvent,
-    HostPausedState, HostRunApproval, HostRunApprovalDecision, HostRunKind, HostRunLineage,
+    HostNeedsAgentState, HostRunApproval, HostRunApprovalDecision, HostRunKind, HostRunLineage,
     HostRunLineageKind, HostRunResult, HostRunState, HostRunVerification,
     HostRunVerificationStatus, HostTerminalState, Question, ResolutionRequest, ResolutionResponse,
     ResolutionResponseActor,

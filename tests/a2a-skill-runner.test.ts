@@ -37,8 +37,8 @@ describe("A2A skill runner", () => {
         ],
       });
 
-      expect(result.status).toBe("success");
-      if (result.status !== "success") {
+      expect(result.status).toBe("sealed");
+      if (result.status !== "sealed") {
         return;
       }
       expect(result.execution.stdout).toBe("hi");

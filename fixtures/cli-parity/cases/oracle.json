@@ -88,12 +88,12 @@
       "expectJson": true,
       "expect": {
         "pendingRuns": 1,
-        "firstPendingRunId": "gx_paused_oracle",
-        "firstPendingRunStatus": "paused"
+        "firstPendingRunId": "gx_needs_agent_oracle",
+        "firstPendingRunStatus": "needs_agent"
       },
       "stdoutIncludes": [
         "\"pendingRuns\"",
-        "\"gx_paused_oracle\"",
+        "\"gx_needs_agent_oracle\"",
         "\"selectedRunner\": \"agent-step\""
       ],
       "stderrIncludes": [],
@@ -131,6 +131,7 @@
         "graph-runtime",
         "receipts",
         "sandbox",
+        "caller-mediated-resolution",
         "adapter-cli-tool",
         "adapter-a2a",
         "adapter-agent"
@@ -183,22 +184,11 @@
       ]
     },
     {
-      "id": "resume.validate",
-      "commandId": "resume",
-      "mode": "validate",
-      "proves": [
-        "resume-replay",
-        "ledger",
-        "receipts",
-        "caller-mediated-resolution"
-      ]
-    },
-    {
       "id": "replay.validate",
       "commandId": "replay",
       "mode": "validate",
       "proves": [
-        "resume-replay",
+        "continuation-replay",
         "ledger",
         "receipts"
       ]

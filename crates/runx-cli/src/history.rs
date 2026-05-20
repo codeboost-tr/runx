@@ -190,23 +190,23 @@ fn render_history(
         lines.push(format!("  history  {} receipt(s)", history.receipts.len()));
     } else {
         lines.push(format!(
-            "  history  {} receipt(s), {} paused",
+            "  history  {} receipt(s), {} needs_agent",
             history.receipts.len(),
             history.pending_runs.len()
         ));
     }
     lines.push(String::new());
-    for paused in &history.pending_runs {
-        let step = paused
+    for pending in &history.pending_runs {
+        let step = pending
             .step_labels
             .first()
-            .or_else(|| paused.step_ids.first())
+            .or_else(|| pending.step_ids.first())
             .map_or("", String::as_str);
         lines.push(format!(
-            "  *  {}  paused  {}  {}",
-            paused.name,
+            "  *  {}  needs_agent  {}  {}",
+            pending.name,
             step,
-            short_id(&paused.id)
+            short_id(&pending.id)
         ));
     }
     for receipt in &history.receipts {
@@ -223,7 +223,7 @@ fn render_history(
         lines.push("  next  runx skill inspect <receipt-id>".to_owned());
     } else {
         lines.push(
-            "  next  rerun the paused runx skill <path> with --run-id and --answers".to_owned(),
+            "  next  rerun the same runx skill <path> with --run-id and --answers".to_owned(),
         );
     }
     lines.push(String::new());
@@ -283,7 +283,7 @@ mod tests {
             "sourcey".into(),
             "--skill".into(),
             "source".into(),
-            "--status=paused".into(),
+            "--status=needs_agent".into(),
             "--artifact-type".into(),
             "artifact".into(),
             "--json".into(),
@@ -292,7 +292,7 @@ mod tests {
 
         assert_eq!(parsed.query.as_deref(), Some("sourcey"));
         assert_eq!(parsed.filter.skill.as_deref(), Some("source"));
-        assert_eq!(parsed.filter.status.as_deref(), Some("paused"));
+        assert_eq!(parsed.filter.status.as_deref(), Some("needs_agent"));
         assert_eq!(parsed.filter.artifact_type.as_deref(), Some("artifact"));
         assert!(parsed.json);
         Ok(())
@@ -307,11 +307,13 @@ mod tests {
         let receipt_dir = temp.join("receipts");
         fs::create_dir_all(receipt_dir.join("ledgers"))?;
         fs::write(
-            receipt_dir.join("ledgers").join("gx_paused_oracle.jsonl"),
+            receipt_dir
+                .join("ledgers")
+                .join("gx_needs_agent_oracle.jsonl"),
             format!(
                 "{}\n{}\n",
-                r#"{"entry":{"type":"run_event","version":"1","data":{"kind":"run_started","status":"started","step_id":null,"detail":{}},"meta":{"artifact_id":"ax_start","run_id":"gx_paused_oracle","step_id":null,"producer":{"skill":"sourcey","runner":"graph"},"created_at":"2026-04-28T01:00:00.000Z","hash":"sha256:start","size_bytes":2,"parent_artifact_id":null,"receipt_id":null,"redacted":false}}}"#,
-                r#"{"entry":{"type":"run_event","version":"1","data":{"kind":"step_waiting_resolution","status":"waiting","step_id":"discover","detail":{"request_ids":["agent_step.test-step.output"],"resolution_kinds":["agent_act"],"step_ids":["discover"],"step_labels":["inspect repo"],"inputs":{},"selected_runner":"agent-step"}},"meta":{"artifact_id":"ax_wait","run_id":"gx_paused_oracle","step_id":"discover","producer":{"skill":"sourcey","runner":"graph"},"created_at":"2026-04-28T01:00:00.000Z","hash":"sha256:wait","size_bytes":2,"parent_artifact_id":null,"receipt_id":null,"redacted":false}}}"#
+                r#"{"entry":{"type":"run_event","version":"1","data":{"kind":"run_started","status":"started","step_id":null,"detail":{}},"meta":{"artifact_id":"ax_start","run_id":"gx_needs_agent_oracle","step_id":null,"producer":{"skill":"sourcey","runner":"graph"},"created_at":"2026-04-28T01:00:00.000Z","hash":"sha256:start","size_bytes":2,"parent_artifact_id":null,"receipt_id":null,"redacted":false}}}"#,
+                r#"{"entry":{"type":"run_event","version":"1","data":{"kind":"step_waiting_resolution","status":"waiting","step_id":"discover","detail":{"request_ids":["agent_step.test-step.output"],"resolution_kinds":["agent_act"],"step_ids":["discover"],"step_labels":["inspect repo"],"inputs":{},"selected_runner":"agent-step"}},"meta":{"artifact_id":"ax_wait","run_id":"gx_needs_agent_oracle","step_id":"discover","producer":{"skill":"sourcey","runner":"graph"},"created_at":"2026-04-28T01:00:00.000Z","hash":"sha256:wait","size_bytes":2,"parent_artifact_id":null,"receipt_id":null,"redacted":false}}}"#
             ),
         )?;
         let oracle: CliParityOracle = serde_json::from_str(include_str!(

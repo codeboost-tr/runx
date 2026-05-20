@@ -64,8 +64,8 @@ describe("builder skill design-skill", () => {
         runxHome: path.join(tempDir, "home"),
       });
 
-      expect(result.status).toBe("success");
-      if (result.status !== "success") {
+      expect(result.status).toBe("sealed");
+      if (result.status !== "sealed") {
         return;
       }
       expect(result.receipt).toMatchObject({ schema: "runx.harness_receipt.v1" });
@@ -117,7 +117,7 @@ describe("builder skill improve-skill", () => {
         inputs: {
           receipt_id: "rx_failed",
           receipt_summary: "harness failed because required context was missing",
-          harness_output: "needs_resolution",
+          harness_output: "needs_agent",
           skill_path: "oss/skills/sourcey",
           objective: "Improve Sourcey skill input resolution",
         },
@@ -127,8 +127,8 @@ describe("builder skill improve-skill", () => {
         runxHome: path.join(tempDir, "home"),
       });
 
-      expect(result.status).toBe("success");
-      if (result.status !== "success") {
+      expect(result.status).toBe("sealed");
+      if (result.status !== "sealed") {
         return;
       }
       expect(result.receipt).toMatchObject({ schema: "runx.harness_receipt.v1" });
@@ -230,13 +230,13 @@ function answerForAgentStep(questionId: string): unknown {
         {
           kind: "skill",
           expect: {
-            status: "success",
+            status: "sealed",
           },
         },
         {
           kind: "skill",
           expect: {
-            status: "needs_resolution",
+            status: "needs_agent",
           },
         },
       ],

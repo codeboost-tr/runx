@@ -90,7 +90,7 @@ export async function invokeA2a(
     }
 
     return {
-      status: "success",
+      status: "sealed",
       stdout: stringifyA2aOutput(completed.output),
       stderr: "",
       exitCode: 0,

@@ -61,7 +61,7 @@ describe("sourcey preflight", () => {
         };
       }>;
     };
-    expect(report.status).toBe("needs_resolution");
+    expect(report.status).toBe("needs_agent");
     expect(report.requests[0]?.id).toBe("agent_step.sourcey-discover.output");
     expect(report.requests[0]?.kind).toBe("agent_act");
     expect(report.requests[0]?.invocation?.envelope.skill).toBe("sourcey.discover");
@@ -101,8 +101,8 @@ describe("sourcey preflight", () => {
         runxHome: runtime.paths.runxHome,
       });
 
-      expect(result.status).toBe("success");
-      if (result.status !== "success") {
+      expect(result.status).toBe("sealed");
+      if (result.status !== "sealed") {
         return;
       }
 
@@ -148,7 +148,7 @@ describe("sourcey preflight", () => {
         runxHome: runtime.paths.runxHome,
       });
 
-      expect(result.status).toBe("success");
+      expect(result.status).toBe("sealed");
       const leakedEnv = JSON.parse(await readFile(envCapturePath, "utf8")) as string[];
       expect(leakedEnv).toEqual([]);
     } finally {
@@ -192,7 +192,7 @@ describe("sourcey preflight", () => {
         runxHome: runtime.paths.runxHome,
       });
 
-      expect(result.status).toBe("success");
+      expect(result.status).toBe("sealed");
       const invocation = JSON.parse(await readFile(invocationPath, "utf8")) as { cwd: string; argv: string[] };
       // Compare via realpath to normalize macOS /var -> /private/var symlinks.
       expect(await realpath(invocation.cwd)).toBe(await realpath(docsDir));

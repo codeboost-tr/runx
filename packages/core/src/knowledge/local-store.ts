@@ -9,7 +9,7 @@ import {
 } from "./internal-validators.js";
 
 export type LocalKnowledgeEntryKind = "receipt" | "projection" | "answer" | "artifact";
-export type LocalKnowledgeReceiptStatus = "success" | "failure";
+export type LocalKnowledgeReceiptStatus = "sealed" | "failure";
 
 export interface LocalKnowledgeIndexableReceipt {
   readonly id: string;

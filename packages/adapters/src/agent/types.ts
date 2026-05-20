@@ -11,7 +11,7 @@ export interface ManagedToolCallResult {
 
 export interface ManagedToolExecutionTrace {
   readonly tool: string;
-  readonly status: "success" | "failure" | "policy_denied" | "needs_resolution";
+  readonly status: "sealed" | "failure" | "policy_denied" | "needs_agent";
   readonly receiptId?: string;
   readonly resolutionKind?: ResolutionRequest["kind"];
 }

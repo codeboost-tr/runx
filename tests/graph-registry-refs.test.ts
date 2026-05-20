@@ -134,8 +134,8 @@ steps:
         adapters,
       });
 
-      expect(result.status).toBe("success");
-      if (result.status !== "success") {
+      expect(result.status).toBe("sealed");
+      if (result.status !== "sealed") {
         return;
       }
       expect(result.steps[0]).toMatchObject({
@@ -188,8 +188,8 @@ steps:
         adapters,
       });
 
-      expect(result.status).toBe("success");
-      if (result.status !== "success") {
+      expect(result.status).toBe("sealed");
+      if (result.status !== "sealed") {
         return;
       }
       expect(result.steps[0]?.stdout).toBe("pinned version");
@@ -317,7 +317,7 @@ steps:
         }
         return new Response(
           JSON.stringify({
-            status: "success",
+            status: "sealed",
             install_count: 1,
             acquisition: {
               skill_id: "testorg/echo",
@@ -380,8 +380,8 @@ steps:
         adapters,
       });
 
-      expect(result.status).toBe("success");
-      if (result.status !== "success") {
+      expect(result.status).toBe("sealed");
+      if (result.status !== "sealed") {
         return;
       }
       expect(result.steps[0]?.stdout).toBe("hello from http");
@@ -397,7 +397,7 @@ steps:
         skillCacheDir: path.join(tempDir, "skill-cache"),
         adapters,
       });
-      expect(second.status).toBe("success");
+      expect(second.status).toBe("sealed");
       expect(fetches).toBe(1);
     } finally {
       await rm(tempDir, { recursive: true, force: true });
@@ -434,8 +434,8 @@ steps:
         adapters,
       });
 
-      expect(result.status).toBe("success");
-      if (result.status !== "success") {
+      expect(result.status).toBe("sealed");
+      if (result.status !== "sealed") {
         return;
       }
       expect(result.steps[0]?.stdout).toBe("filesystem still works");
@@ -498,7 +498,7 @@ class FixtureRemoteRegistryStore implements GraphRegistryStore {
       throw new Error(`Registry acquire failed for ${skillId}: HTTP ${response.status}`);
     }
     const payload = await response.json() as { readonly status?: string; readonly acquisition?: FixtureAcquiredRegistrySkill };
-    if (payload.status !== "success" || !payload.acquisition) {
+    if (payload.status !== "sealed" || !payload.acquisition) {
       throw new Error(`Registry acquire returned an invalid payload for ${skillId}.`);
     }
     return payload.acquisition;

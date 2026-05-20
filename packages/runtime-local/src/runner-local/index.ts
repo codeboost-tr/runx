@@ -308,7 +308,7 @@ function runxReceiptMetadata(options: {
 
 export type RunLocalSkillResult =
   | {
-      readonly status: "needs_resolution";
+      readonly status: "needs_agent";
       readonly skill: ValidatedSkill;
       readonly skillPath: string;
       readonly inputs: Readonly<Record<string, unknown>>;
@@ -325,7 +325,7 @@ export type RunLocalSkillResult =
       readonly receipt?: RunnerReceipt;
     }
   | {
-      readonly status: "success" | "failure";
+      readonly status: "sealed" | "failure";
       readonly skill: ValidatedSkill;
       readonly inputs: Readonly<Record<string, unknown>>;
       readonly execution: ActReceiptEnvelope;
@@ -374,7 +374,7 @@ export interface GraphStepRun {
   readonly skillPath: string;
   readonly runner?: string;
   readonly attempt: number;
-  readonly status: "success" | "failure";
+  readonly status: "sealed" | "failure";
   readonly receiptId?: string;
   readonly stdout: string;
   readonly stderr: string;
@@ -399,7 +399,7 @@ export interface GraphStepRun {
 
 export type RunLocalGraphResult =
   | {
-      readonly status: "needs_resolution";
+      readonly status: "needs_agent";
       readonly graph: ExecutionGraph;
       readonly skillPath: string;
       readonly stepIds: readonly string[];
@@ -419,7 +419,7 @@ export type RunLocalGraphResult =
       readonly receipt?: RunnerGraphReceipt;
     }
   | {
-      readonly status: "success" | "failure" | "escalated";
+      readonly status: "sealed" | "failure" | "escalated";
       readonly graph: ExecutionGraph;
       readonly state: SequentialGraphState;
       readonly steps: readonly GraphStepRun[];
@@ -452,15 +452,15 @@ export async function runLocalSkill(options: RunLocalSkillOptions): Promise<RunL
   });
 
   const inputResolution = await resolveInputs(skill, options);
-  if (inputResolution.status === "needs_resolution") {
+  if (inputResolution.status === "needs_agent") {
     const pendingResult = {
-      status: "needs_resolution",
+      status: "needs_agent",
       skill,
       skillPath: resolvedSkill.skillPath,
       inputs: options.inputs ?? {},
       runId,
       requests: [inputResolution.request],
-    } satisfies Extract<RunLocalSkillResult, { readonly status: "needs_resolution" }>;
+    } satisfies Extract<RunLocalSkillResult, { readonly status: "needs_agent" }>;
     await appendPendingSkillLedgerEntries({
       receiptDir: options.receiptDir ?? defaultReceiptDir(options.env),
       runId: pendingResult.runId,
@@ -527,11 +527,11 @@ export async function runLocalSkill(options: RunLocalSkillOptions): Promise<RunL
     lineage: options.lineage,
   });
 
-  if (result.status === "needs_resolution") {
+  if (result.status === "needs_agent") {
     const pendingResult = {
       ...result,
       inputs: inputResolution.inputs,
-    } satisfies Extract<RunLocalSkillResult, { readonly status: "needs_resolution" }>;
+    } satisfies Extract<RunLocalSkillResult, { readonly status: "needs_agent" }>;
     await appendPendingSkillLedgerEntries({
       receiptDir: options.receiptDir ?? defaultReceiptDir(options.env),
       runId: pendingResult.runId,
@@ -751,9 +751,9 @@ export async function runValidatedSkill(options: RunValidatedSkillOptions): Prom
       postRunReflectPolicy: resolvePostRunReflectPolicy(skill.runx),
     });
 
-    if (graphResult.status === "needs_resolution") {
+    if (graphResult.status === "needs_agent") {
       return {
-        status: "needs_resolution",
+        status: "needs_agent",
         skill,
         skillPath: options.skillPathForMissingContext ?? options.skillDirectory,
         inputs: options.inputs,
@@ -776,7 +776,7 @@ export async function runValidatedSkill(options: RunValidatedSkillOptions): Prom
     let state = createSingleStepState(skill.name);
     state = transitionSingleStep(state, { type: "admit" });
     state = transitionSingleStep(state, { type: "start", at: runnerReceiptStartedAt(graphResult.receipt) ?? new Date().toISOString() });
-    if (graphResult.status === "success") {
+    if (graphResult.status === "sealed") {
       state = transitionSingleStep(state, {
         type: "succeed",
         at: runnerReceiptCompletedAt(graphResult.receipt) ?? new Date().toISOString(),
@@ -797,7 +797,7 @@ export async function runValidatedSkill(options: RunValidatedSkillOptions): Prom
       },
     });
 
-    const skillExecutionStatus = graphResult.status === "success" ? "success" : "failure";
+    const skillExecutionStatus = graphResult.status === "sealed" ? "sealed" : "failure";
     return {
       status: skillExecutionStatus,
       skill,
@@ -806,7 +806,7 @@ export async function runValidatedSkill(options: RunValidatedSkillOptions): Prom
         status: skillExecutionStatus,
         stdout: graphResult.output,
         stderr: graphResult.errorMessage ?? "",
-        exitCode: skillExecutionStatus === "success" ? 0 : 1,
+        exitCode: skillExecutionStatus === "sealed" ? 0 : 1,
         signal: null,
         durationMs: runnerReceiptDurationMs(graphResult.receipt) ?? 0,
         errorMessage: graphResult.errorMessage,
@@ -915,9 +915,9 @@ export async function runValidatedSkill(options: RunValidatedSkillOptions): Prom
       voiceProfilePath: options.voiceProfilePath,
       workspacePolicy,
     });
-    if (nestedInputResolution.status === "needs_resolution") {
+    if (nestedInputResolution.status === "needs_agent") {
       return {
-        status: "needs_resolution",
+        status: "needs_agent",
         request: nestedInputResolution.request,
       };
     }
@@ -950,13 +950,13 @@ export async function runValidatedSkill(options: RunValidatedSkillOptions): Prom
       workspacePolicy,
     });
 
-    if (nestedResult.status === "needs_resolution") {
+    if (nestedResult.status === "needs_agent") {
       const request = nestedResult.requests[0];
       if (!request) {
         throw new Error(`Nested managed-tool execution for '${nested.requestedSkillPath}' requested resolution without a request payload.`);
       }
       return {
-        status: "needs_resolution",
+        status: "needs_agent",
         request,
       };
     }
@@ -1009,9 +1009,9 @@ export async function runValidatedSkill(options: RunValidatedSkillOptions): Prom
     toolCatalogAdapters: options.toolCatalogAdapters,
   });
 
-  if (execution.status === "needs_resolution") {
+  if (execution.status === "needs_agent") {
     return {
-      status: "needs_resolution",
+      status: "needs_agent",
       skill,
       skillPath: options.skillPathForMissingContext ?? options.skillDirectory,
       inputs: options.inputs,
@@ -1022,7 +1022,7 @@ export async function runValidatedSkill(options: RunValidatedSkillOptions): Prom
 
   state = transitionSingleStep(state, { type: "start", at: startedAt });
   const completedAt = new Date().toISOString();
-  if (execution.status === "success") {
+  if (execution.status === "sealed") {
     state = transitionSingleStep(state, {
       type: "succeed",
       at: completedAt,

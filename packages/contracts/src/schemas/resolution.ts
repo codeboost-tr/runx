@@ -11,7 +11,7 @@ import {
 import { agentActInvocationSchema, approvalGateSchema, questionSchema } from "./agent-act.js";
 
 const resolutionResponseActors = ["human", "agent"] as const;
-const actReceiptTerminalStatuses = ["success", "failure"] as const;
+const actReceiptTerminalStatuses = ["sealed", "failure"] as const;
 const nodeSignalNames = [
   "SIGABRT",
   "SIGALRM",
@@ -127,9 +127,9 @@ export const actReceiptTerminalEnvelopeSchema = Type.Object(
   { additionalProperties: false },
 );
 
-export const actReceiptNeedsResolutionEnvelopeSchema = Type.Object(
+export const actReceiptNeedsAgentEnvelopeSchema = Type.Object(
   {
-    status: Type.Literal("needs_resolution"),
+    status: Type.Literal("needs_agent"),
     stdout: Type.String(),
     stderr: Type.String(),
     exitCode: Type.Null(),
@@ -142,9 +142,9 @@ export const actReceiptNeedsResolutionEnvelopeSchema = Type.Object(
   { additionalProperties: false },
 );
 
-const actReceiptNeedsResolutionUnknownRequestSchema = Type.Object(
+const actReceiptNeedsAgentUnknownRequestSchema = Type.Object(
   {
-    status: Type.Literal("needs_resolution"),
+    status: Type.Literal("needs_agent"),
     stdout: Type.String(),
     stderr: Type.String(),
     exitCode: Type.Null(),
@@ -160,7 +160,7 @@ const actReceiptNeedsResolutionUnknownRequestSchema = Type.Object(
 export const actReceiptEnvelopeSchema = Type.Union(
   [
     actReceiptTerminalEnvelopeSchema,
-    actReceiptNeedsResolutionEnvelopeSchema,
+    actReceiptNeedsAgentEnvelopeSchema,
   ],
   {
     $schema: JSON_SCHEMA_DRAFT_2020_12,
@@ -199,11 +199,11 @@ export function validateActReceiptEnvelopeContract(
   label = "act_receipt",
 ): ActReceiptEnvelopeContract {
   const record = asUnknownRecord(value);
-  if (record?.status === "success" || record?.status === "failure") {
+  if (record?.status === "sealed" || record?.status === "failure") {
     return validateContractSchema(actReceiptTerminalEnvelopeSchema, value, label) as ActReceiptEnvelopeContract;
   }
-  if (record?.status === "needs_resolution") {
-    const result = validateContractSchema(actReceiptNeedsResolutionUnknownRequestSchema, value, label);
+  if (record?.status === "needs_agent") {
+    const result = validateContractSchema(actReceiptNeedsAgentUnknownRequestSchema, value, label);
     return {
       ...result,
       request: validateResolutionRequestContract(result.request, `${label}.request`),

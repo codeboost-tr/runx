@@ -45,7 +45,7 @@ describe("invokeA2a", () => {
       { transport: createA2aFixtureTransport() },
     );
 
-    expect(result.status).toBe("success");
+    expect(result.status).toBe("sealed");
     expect(result.stdout).toBe("hi");
     expect(result.metadata?.a2a).toMatchObject({
       agent_identity: "echo-agent",

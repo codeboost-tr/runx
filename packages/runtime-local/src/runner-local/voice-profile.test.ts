@@ -23,7 +23,7 @@ describe("voice profile injection", () => {
       invoke: async (request) => {
         capturedRequest = request;
         return {
-          status: "success",
+          status: "sealed",
           stdout: JSON.stringify({ verdict: "pass" }),
           stderr: "",
           exitCode: 0,
@@ -55,7 +55,7 @@ describe("voice profile injection", () => {
         voiceProfilePath,
       });
 
-      expect(result.status).toBe("success");
+      expect(result.status).toBe("sealed");
       expect(capturedRequest?.context).toBeUndefined();
       expect(capturedRequest?.voiceProfile).toMatchObject({
         path: voiceProfilePath,
@@ -63,7 +63,7 @@ describe("voice profile injection", () => {
         content: voiceProfileContent,
       });
 
-      if (result.status !== "success" || result.receipt.schema !== "runx.harness_receipt.v1") {
+      if (result.status !== "sealed" || result.receipt.schema !== "runx.harness_receipt.v1") {
         return;
       }
 

@@ -70,8 +70,8 @@ Produce a bounded artifact.
         env: { ...process.env, RUNX_CWD: tempDir, INIT_CWD: tempDir },
       });
 
-      expect(result.status).toBe("success");
-      if (result.status !== "success") {
+      expect(result.status).toBe("sealed");
+      if (result.status !== "sealed") {
         return;
       }
 

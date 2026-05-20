@@ -77,9 +77,9 @@ export async function runSkillFixture(
       toolCatalogAdapters: resolveEnvToolCatalogAdapters(env),
       voiceProfilePath: await resolveBundledCliVoiceProfilePath(),
     });
-    const success = result.status === "success";
-    const output = success ? parseJsonMaybe(result.execution.stdout) : result;
-    const assertions = await assertFixtureExpectation(root, fixture.expect, success ? 0 : 1, output);
+    const sealed = result.status === "sealed";
+    const output = sealed ? parseJsonMaybe(result.execution.stdout) : result;
+    const assertions = await assertFixtureExpectation(root, fixture.expect, sealed ? 0 : 1, output);
     return {
       name,
       lane,

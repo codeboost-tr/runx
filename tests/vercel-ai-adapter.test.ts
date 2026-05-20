@@ -15,28 +15,28 @@ afterEach(async () => {
 });
 
 describe("Vercel AI host adapter", () => {
-  it("wraps paused and resumed runs in a Vercel AI-style response", async () => {
+  it("wraps needsAgent and continued runs in a Vercel AI-style response", async () => {
     const harness = await createHostHarness();
     cleanups.push(harness.cleanup);
     const adapter = createVercelAiHostAdapter(harness.bridge);
 
-    const paused = await adapter.run({
+    const needsAgent = await adapter.run({
       skillPath: "fixtures/skills/echo",
     });
 
-    expect(paused.data.runx.status).toBe("paused");
-    if (paused.data.runx.status !== "paused") {
+    expect(needsAgent.data.runx.status).toBe("needs_agent");
+    if (needsAgent.data.runx.status !== "needs_agent") {
       return;
     }
 
-    const resumed = await adapter.resume(paused.data.runx.runId, {
+    const continued = await adapter.resume(needsAgent.data.runx.runId, {
       skillPath: "fixtures/skills/echo",
       resolver: ({ request }) => (request.kind === "input" ? { message: "from-vercel-ai-host-adapter" } : undefined),
     });
 
-    expect(resumed.data.runx).toMatchObject({
+    expect(continued.data.runx).toMatchObject({
       status: "completed",
       output: "from-vercel-ai-host-adapter",
     });
-  });
+  }, 20_000);
 });

@@ -29,7 +29,7 @@ describe("caller approval boundary", () => {
         adapters: createDefaultSkillAdapters(),
       });
 
-      expect(result.status).toBe("success");
+      expect(result.status).toBe("sealed");
       expect(caller.trace.resolutions).toHaveLength(1);
       expect(caller.trace.resolutions[0]).toMatchObject({
         request: {
@@ -71,7 +71,7 @@ expect:
       );
 
       const result = await runHarness(fixturePath, { adapters: createDefaultSkillAdapters() });
-      expect(result.status).toBe("success");
+      expect(result.status).toBe("sealed");
       expect(result.trace.resolutions).toHaveLength(1);
       expect(result.trace.resolutions[0]).toMatchObject({
         request: {

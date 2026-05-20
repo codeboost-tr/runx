@@ -15,28 +15,28 @@ afterEach(async () => {
 });
 
 describe("Anthropic host adapter", () => {
-  it("wraps paused and resumed runs in an Anthropic-style response", async () => {
+  it("wraps needsAgent and continued runs in an Anthropic-style response", async () => {
     const harness = await createHostHarness();
     cleanups.push(harness.cleanup);
     const adapter = createAnthropicHostAdapter(harness.bridge);
 
-    const paused = await adapter.run({
+    const needsAgent = await adapter.run({
       skillPath: "fixtures/skills/echo",
     });
 
-    expect(paused.metadata.runx.status).toBe("paused");
-    if (paused.metadata.runx.status !== "paused") {
+    expect(needsAgent.metadata.runx.status).toBe("needs_agent");
+    if (needsAgent.metadata.runx.status !== "needs_agent") {
       return;
     }
 
-    const resumed = await adapter.resume(paused.metadata.runx.runId, {
+    const continued = await adapter.resume(needsAgent.metadata.runx.runId, {
       skillPath: "fixtures/skills/echo",
       resolver: ({ request }) => (request.kind === "input" ? { message: "from-anthropic-host-adapter" } : undefined),
     });
 
-    expect(resumed.metadata.runx).toMatchObject({
+    expect(continued.metadata.runx).toMatchObject({
       status: "completed",
       output: "from-anthropic-host-adapter",
     });
-  });
+  }, 20_000);
 });

@@ -60,8 +60,8 @@ steps:
         env: runtime.env,
       });
 
-      expect(result.status).toBe("success");
-      if (result.status !== "success") {
+      expect(result.status).toBe("sealed");
+      if (result.status !== "sealed") {
         return;
       }
       expect(result.steps[0]).toMatchObject({
@@ -119,8 +119,8 @@ steps:
         env: runtime.env,
       });
 
-      expect(result.status).toBe("success");
-      if (result.status !== "success") {
+      expect(result.status).toBe("sealed");
+      if (result.status !== "sealed") {
         return;
       }
       expect(result.steps[0]).toMatchObject({
@@ -331,7 +331,7 @@ function createCountingAdapter(): SkillAdapter & { callCount: () => number } {
     invoke: async () => {
       calls += 1;
       return {
-        status: "success",
+        status: "sealed",
         stdout: "called",
         stderr: "",
         exitCode: 0,

@@ -228,7 +228,7 @@ Exercises admitted grant narrowing.
         },
       });
 
-      expect(result.status).toBe("success");
+      expect(result.status).toBe("sealed");
       expect(seenGrantIds).toEqual([["grant_expected"]]);
     } finally {
       await rm(tempDir, { recursive: true, force: true });
@@ -443,8 +443,8 @@ Graph wrapper used to verify top-level graph authority proof metadata.
         adapters: createDefaultSkillAdapters(),
       });
 
-      expect(result.status).toBe("success");
-      if (result.status !== "success") {
+      expect(result.status).toBe("sealed");
+      if (result.status !== "sealed") {
         return;
       }
       expect(result.receipt).toMatchObject({

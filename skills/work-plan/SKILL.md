@@ -59,7 +59,7 @@ condition, action, and exit artifact.
   cognitive-step decomposition that ignores scope boundaries.
 - Strategic bar: the plan should make the smallest governed path obvious:
   reply, plan, build, fan out, pause, or stop.
-- Stop conditions: return `needs_resolution` when the objective, target
+- Stop conditions: return `needs_agent` when the objective, target
   surfaces, success criteria, or mutation boundaries are unclear.
 
 ## Output

@@ -1,5 +1,5 @@
 {
-  "status": "success",
+  "status": "sealed",
   "stdout": "{\"title\":\"Release\",\"ready\":true}",
   "stderr": "",
   "exitCode": 0,

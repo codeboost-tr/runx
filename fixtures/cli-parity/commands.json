@@ -66,6 +66,7 @@
           "graph-runtime",
           "receipts",
           "sandbox",
+          "caller-mediated-resolution",
           "adapter-cli-tool",
           "adapter-a2a",
           "adapter-agent"
@@ -238,40 +239,6 @@
       ]
     },
     {
-      "id": "resume",
-      "usage": "runx resume <run-id>",
-      "aliases": [],
-      "requiredPositionals": [
-        "<run-id>"
-      ],
-      "flags": [
-        "--non-interactive",
-        "--json",
-        "--answers"
-      ],
-      "exitCodes": [
-        0,
-        1,
-        2,
-        64
-      ],
-      "parity": {
-        "humanOutput": "semantic",
-        "jsonOutput": "schema-exact",
-        "receipt": "schema-exact",
-        "sideEffect": "local-runtime",
-        "surfaces": [
-          "resume-replay",
-          "ledger",
-          "receipts",
-          "caller-mediated-resolution"
-        ]
-      },
-      "cases": [
-        "resume.validate"
-      ]
-    },
-    {
       "id": "replay",
       "usage": "runx replay <run-id|receipt-id>",
       "aliases": [],
@@ -296,7 +263,7 @@
         "receipt": "schema-exact",
         "sideEffect": "local-runtime",
         "surfaces": [
-          "resume-replay",
+          "continuation-replay",
           "ledger",
           "receipts"
         ]

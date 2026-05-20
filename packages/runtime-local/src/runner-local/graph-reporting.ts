@@ -51,7 +51,7 @@ export async function reportGraphStepWaitingResolution(
 ): Promise<void> {
   await caller.report({
     type: "step_waiting_resolution",
-    message: `Step ${step.id} needs resolution.`,
+    message: `Step ${step.id} needs agent.`,
     data: {
       stepId: step.id,
       stepLabel: step.label,
@@ -81,7 +81,7 @@ export async function reportGraphStepCompleted(
   caller: Caller,
   step: GraphStep,
   reference: string,
-  status: "success" | "failure",
+  status: "sealed" | "failure",
   detail?: Readonly<Record<string, unknown>>,
 ): Promise<void> {
   await caller.report({

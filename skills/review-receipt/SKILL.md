@@ -10,7 +10,7 @@ smallest change that fixes it.
 
 Read the receipt or failure summary. Identify what was attempted, what
 succeeded, and where it broke. The receipt contains step statuses
-(`success`, `failure`, `policy_denied`, `needs_resolution`),
+(`sealed`, `failure`, `policy_denied`, `needs_agent`),
 exit codes, stderr, scope admission decisions,
 and timing.
 
@@ -40,11 +40,11 @@ Classify the failure:
 
 ## Agent-mediated suspension is not a failure
 
-A receipt with status `needs_resolution` denotes a healthy
+A receipt with status `needs_agent` denotes a healthy
 agent-mediated suspension, not a defect. The runtime yielded to the
-caller for cognitive work and the graph is waiting to be resumed.
+caller for missing agent or human input.
 This is a normal part of graph execution, not one of the failure
-classes above. When the only evidence is `needs_resolution` without
+classes above. When the only evidence is `needs_agent` without
 any exit code, scope denial, schema mismatch, or other concrete
 failure signal, return `verdict: pass` with an empty
 `improvement_proposals` array and note that the graph is paused as

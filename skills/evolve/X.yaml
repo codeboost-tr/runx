@@ -42,10 +42,9 @@ harness:
                 - model
                 - materialize
       expect:
-        status: success
+        status: sealed
         receipt:
-          kind: graph_execution
-          status: success
+          schema: runx.harness_receipt.v1
     - name: evolve-plan-spec
       runner: evolve
       env:
@@ -80,10 +79,9 @@ harness:
                 - ingest
                 - model
       expect:
-        status: success
+        status: sealed
         receipt:
-          kind: graph_execution
-          status: success
+          schema: runx.harness_receipt.v1
 
 runners:
   introspect:

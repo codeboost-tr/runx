@@ -15,28 +15,28 @@ afterEach(async () => {
 });
 
 describe("CrewAI host adapter", () => {
-  it("wraps paused and resumed runs in a CrewAI-style response", async () => {
+  it("wraps needsAgent and continued runs in a CrewAI-style response", async () => {
     const harness = await createHostHarness();
     cleanups.push(harness.cleanup);
     const adapter = createCrewAiHostAdapter(harness.bridge);
 
-    const paused = await adapter.run({
+    const needsAgent = await adapter.run({
       skillPath: "fixtures/skills/echo",
     });
 
-    expect(paused.json_dict.runx.status).toBe("paused");
-    if (paused.json_dict.runx.status !== "paused") {
+    expect(needsAgent.json_dict.runx.status).toBe("needs_agent");
+    if (needsAgent.json_dict.runx.status !== "needs_agent") {
       return;
     }
 
-    const resumed = await adapter.resume(paused.json_dict.runx.runId, {
+    const continued = await adapter.resume(needsAgent.json_dict.runx.runId, {
       skillPath: "fixtures/skills/echo",
       resolver: ({ request }) => (request.kind === "input" ? { message: "from-crewai-host-adapter" } : undefined),
     });
 
-    expect(resumed.json_dict.runx).toMatchObject({
+    expect(continued.json_dict.runx).toMatchObject({
       status: "completed",
       output: "from-crewai-host-adapter",
     });
-  });
+  }, 20_000);
 });

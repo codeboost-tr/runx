@@ -41,8 +41,8 @@ describe("local governed graph runner", () => {
         env: runtime.env,
       });
 
-      expect(result.status).toBe("success");
-      if (result.status !== "success") {
+      expect(result.status).toBe("sealed");
+      if (result.status !== "sealed") {
         return;
       }
 
@@ -92,8 +92,8 @@ describe("local governed graph runner", () => {
         env: runtime.env,
       });
 
-      expect(result.status).toBe("success");
-      if (result.status !== "success") {
+      expect(result.status).toBe("sealed");
+      if (result.status !== "sealed") {
         return;
       }
       expect(result.steps[0].stdout).toBe("explicit graph input");
@@ -121,8 +121,8 @@ describe("local governed graph runner", () => {
         env: runtime.env,
       });
 
-      expect(result.status).toBe("success");
-      if (result.status !== "success") {
+      expect(result.status).toBe("sealed");
+      if (result.status !== "sealed") {
         return;
       }
 
@@ -135,7 +135,7 @@ describe("local governed graph runner", () => {
       expect(inspection.summary).toMatchObject({
         id: result.receipt.id,
         name: "sequential-echo",
-        status: "success",
+        status: "sealed",
       });
       expect(inspection.summary.steps.map((step) => step.id)).toEqual(["first", "second"]);
     } finally {
@@ -159,8 +159,8 @@ describe("local governed graph runner", () => {
         runxHome: runtime.paths.runxHome,
         env: runtime.env,
       });
-      expect(result.status).toBe("success");
-      if (result.status !== "success") {
+      expect(result.status).toBe("sealed");
+      if (result.status !== "sealed") {
         return;
       }
 
@@ -209,8 +209,8 @@ steps:
         env: runtime.env,
       });
 
-      expect(result.status).toBe("needs_resolution");
-      if (result.status !== "needs_resolution") {
+      expect(result.status).toBe("needs_agent");
+      if (result.status !== "needs_agent") {
         return;
       }
 
@@ -282,8 +282,8 @@ steps:
         receiptDir: runtime.paths.receiptDir,
         runxHome: runtime.paths.runxHome,
       });
-      expect(autoResult.status).toBe("success");
-      if (autoResult.status !== "success") {
+      expect(autoResult.status).toBe("sealed");
+      if (autoResult.status !== "sealed") {
         return;
       }
 
@@ -323,8 +323,8 @@ steps:
         receiptDir: runtime.paths.receiptDir,
         runxHome: runtime.paths.runxHome,
       });
-      expect(alwaysResult.status).toBe("success");
-      if (alwaysResult.status !== "success") {
+      expect(alwaysResult.status).toBe("sealed");
+      if (alwaysResult.status !== "sealed") {
         return;
       }
 
@@ -366,8 +366,8 @@ steps:
         receiptDir: runtime.paths.receiptDir,
         runxHome: runtime.paths.runxHome,
       });
-      expect(neverResult.status).toBe("success");
-      if (neverResult.status !== "success") {
+      expect(neverResult.status).toBe("sealed");
+      if (neverResult.status !== "sealed") {
         return;
       }
 

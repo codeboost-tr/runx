@@ -372,7 +372,7 @@ async function loadPriorAgentContext(options: {
   const candidate = verified.find(({ receipt, verification }) =>
     verification.status === "verified"
     && receipt.id !== options.excludeRunId
-    && runnerReceiptStatus(receipt) === "success"
+    && runnerReceiptStatus(receipt) === "sealed"
     && runnerReceiptDisplayName(receipt) === options.skillName
     && receiptProjectScopeKeyHash(receipt) === options.projectKeyHash
   )?.receipt;

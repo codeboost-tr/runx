@@ -61,8 +61,8 @@ Use the imported tool.
       const result = await sdk.runSkill({
         skillPath: skillDir,
       });
-      expect(result.status).toBe("success");
-      if (result.status !== "success") {
+      expect(result.status).toBe("sealed");
+      if (result.status !== "sealed") {
         return;
       }
       expect(result.execution.stdout).toContain("from-sdk-imported-tool");

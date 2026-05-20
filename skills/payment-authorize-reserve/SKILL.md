@@ -31,7 +31,7 @@ the runtime can enforce.
   declined, blocked, or needs approval.
 - Strategic bar: reserve exactly the quoted amount or a narrower cap; never
   broaden counterparty, rail, realm, operation, period, or currency.
-- Stop conditions: return `needs_resolution` if approval, parent authority,
+- Stop conditions: return `needs_agent` if approval, parent authority,
   idempotency key, or quote evidence is missing.
 
 ## Output

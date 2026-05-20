@@ -115,14 +115,14 @@ caller:
         summary: "The request spans multiple deliverables and should be broken into governed steps first."
         recommended_lane: "work-plan"
 expect:
-  status: "success"
+  status: "sealed"
   receipt:
     schema: "runx.harness_receipt.v1"
     receipt_id: "hrn_rcpt_feature-needs-decomposition_feature-needs-decomposition"
     harness_id: "hrn_feature-needs-decomposition_feature-needs-decomposition"
     state: "sealed"
     disposition: "closed"
-    reason_code: "process_closed"
+    reason_code: "feature-needs-decomposition_closed"
     act_ids:
       - "act_feature-needs-decomposition"
     decision_ids:

@@ -39,8 +39,8 @@ describe("local skill runner", () => {
         env: runtime.env,
       });
 
-      expect(result.status).toBe("success");
-      if (result.status !== "success") {
+      expect(result.status).toBe("sealed");
+      if (result.status !== "sealed") {
         return;
       }
       expect(result.execution.stdout).toBe("super-secret-value");
@@ -87,8 +87,8 @@ describe("local skill runner", () => {
         env: runtime.env,
       });
 
-      expect(result.status).toBe("success");
-      if (result.status !== "success") {
+      expect(result.status).toBe("sealed");
+      if (result.status !== "sealed") {
         return;
       }
       expect(JSON.parse(result.execution.stdout)).toEqual({
@@ -100,7 +100,7 @@ describe("local skill runner", () => {
       expect(result.receipt.metadata).toMatchObject({
         agent_runner: {
           skill: "portable",
-          status: "success",
+          status: "sealed",
         },
         runner: {
           type: "agent",
@@ -128,8 +128,8 @@ describe("local skill runner", () => {
         env: runtime.env,
       });
 
-      expect(result.status).toBe("success");
-      if (result.status !== "success") {
+      expect(result.status).toBe("sealed");
+      if (result.status !== "sealed") {
         return;
       }
       expect(result.receipt.schema).toBe("runx.harness_receipt.v1");
@@ -153,8 +153,8 @@ describe("local skill runner", () => {
       env: process.env,
     });
 
-    expect(result.status).toBe("needs_resolution");
-    if (result.status !== "needs_resolution") {
+    expect(result.status).toBe("needs_agent");
+    if (result.status !== "needs_agent") {
       return;
     }
     expect(result.requests).toMatchObject([
@@ -194,8 +194,8 @@ describe("local skill runner", () => {
         },
       });
 
-      expect(result.status).toBe("success");
-      if (result.status !== "success") {
+      expect(result.status).toBe("sealed");
+      if (result.status !== "sealed") {
         return;
       }
 

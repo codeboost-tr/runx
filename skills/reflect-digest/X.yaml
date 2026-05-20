@@ -18,10 +18,9 @@ harness:
           agent_step.reflect-digest.output:
             proposals: []
       expect:
-        status: success
+        status: sealed
         receipt:
-          kind: graph_execution
-          status: success
+          schema: runx.harness_receipt.v1
     - name: reflect-digest-below-floor
       inputs:
         min_support: 1
@@ -45,10 +44,9 @@ harness:
           agent_step.reflect-digest.output:
             proposals: []
       expect:
-        status: success
+        status: sealed
         receipt:
-          kind: graph_execution
-          status: success
+          schema: runx.harness_receipt.v1
     - name: reflect-digest-single-skill
       inputs:
         min_support: 2
@@ -101,10 +99,9 @@ harness:
                   status: draft
                   thread_locator: registry://skills/sourcey
       expect:
-        status: success
+        status: sealed
         receipt:
-          kind: graph_execution
-          status: success
+          schema: runx.harness_receipt.v1
     - name: reflect-digest-multi-skill
       inputs:
         min_support: 2
@@ -200,10 +197,9 @@ harness:
                   status: draft
                   thread_locator: registry://skills/sourcey
       expect:
-        status: success
+        status: sealed
         receipt:
-          kind: graph_execution
-          status: success
+          schema: runx.harness_receipt.v1
 
 runners:
   reflect-digest:
@@ -237,7 +233,6 @@ runners:
         description: "Minimum per-projection confidence required before grouping."
     graph:
       name: reflect-digest
-      owner: runx
       steps:
         - id: load-reflect-projections
           label: load reflect projections

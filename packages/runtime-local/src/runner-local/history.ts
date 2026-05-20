@@ -110,7 +110,7 @@ export interface InspectLocalReceiptResult {
 
 export type InspectLocalRunStateResult =
   | {
-      readonly status: "paused";
+      readonly status: "needs_agent";
       readonly runId: string;
       readonly pending: PendingRunState;
     }
@@ -187,7 +187,7 @@ export interface LocalReceiptSummary extends ComparableRunSummary {
 
 export interface PausedRunSummary extends ComparableRunSummary {
   readonly kind: string;
-  readonly status: "paused";
+  readonly status: "needs_agent";
   readonly selectedRunner?: string;
   readonly stepIds: readonly string[];
   readonly stepLabels: readonly string[];
@@ -267,12 +267,12 @@ export interface InspectLocalGraphResult {
   readonly summary: {
     readonly id: string;
     readonly name: string;
-    readonly status: "success" | "failure";
+    readonly status: "sealed" | "failure";
     readonly verification: ReceiptVerification;
     readonly steps: readonly {
       readonly id: string;
       readonly attempt: number;
-      readonly status: "success" | "failure";
+      readonly status: "sealed" | "failure";
       readonly receiptId?: string;
       readonly fanoutGroup?: string;
     }[];
@@ -346,7 +346,7 @@ export async function inspectLocalRunState(options: {
   const pending = await tryReadPendingRunState(receiptDir, options.referenceId);
   if (pending) {
     return {
-      status: "paused",
+      status: "needs_agent",
       runId: options.referenceId,
       pending,
     };
@@ -465,7 +465,7 @@ async function listPendingRunSummaries(
         id,
         name: id,
         kind: "run",
-        status: "paused",
+        status: "needs_agent",
         stepIds: [],
         stepLabels: [],
         ledgerVerification,
@@ -499,7 +499,7 @@ function buildPausedRunSummary(
     id: runId,
     name: pending.skillName && pending.skillName.trim().length > 0 ? pending.skillName : runId,
     kind: pausedRunKind(pending),
-    status: "paused",
+    status: "needs_agent",
     selectedRunner: pending.selectedRunner,
     stepIds: pending.stepIds,
     stepLabels: pending.stepLabels,
@@ -538,7 +538,7 @@ export async function inspectLocalRun(options: InspectLocalRunOptions): Promise<
           id: options.referenceId,
           name: options.referenceId,
           kind: "run",
-          status: "paused",
+          status: "needs_agent",
           stepIds: [],
           stepLabels: [],
           ledgerVerification,
@@ -560,7 +560,9 @@ export async function readLocalReplaySeed(options: ReadLocalReplaySeedOptions): 
   const receiptDir = options.receiptDir ?? defaultReceiptDir(options.env);
   const pending = await readPendingRunState(receiptDir, options.referenceId);
   if (pending) {
-    throw new Error(`Run '${options.referenceId}' is paused. Use 'runx resume ${options.referenceId}' instead of replay.`);
+    throw new Error(
+      `Run '${options.referenceId}' needs agent input. Continue by rerunning the same skill with --run-id ${options.referenceId} --answers <file> before replay.`,
+    );
   }
 
   const resolved = await resolveLocalRunReference(options.referenceId, receiptDir, options.runxHome ?? options.env?.RUNX_HOME);

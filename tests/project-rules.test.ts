@@ -41,8 +41,8 @@ describe("project rules", () => {
         runxHome,
       });
 
-      expect(result.status).toBe("needs_resolution");
-      if (result.status !== "needs_resolution") {
+      expect(result.status).toBe("needs_agent");
+      if (result.status !== "needs_agent") {
         return;
       }
 
@@ -161,8 +161,8 @@ steps:
         runxHome,
       });
 
-      expect(result.status).toBe("success");
-      if (result.status !== "success") {
+      expect(result.status).toBe("sealed");
+      if (result.status !== "sealed") {
         return;
       }
 

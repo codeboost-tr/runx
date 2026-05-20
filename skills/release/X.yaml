@@ -71,10 +71,9 @@ harness:
         approvals:
           release.publish.approval: true
       expect:
-        status: success
+        status: sealed
         receipt:
-          kind: graph_execution
-          status: success
+          schema: runx.harness_receipt.v1
         steps:
           - prepare-release
           - approve-publish
@@ -115,21 +114,20 @@ harness:
                 package: "@runxhq/cli"
                 tag_name: v0.4.6
       expect:
-        status: success
+        status: sealed
         receipt:
-          kind: skill_execution
-          status: success
+          schema: runx.harness_receipt.v1
 
     - name: release-prepare-needs-required-inputs
       runner: prepare
       inputs: {}
       expect:
-        status: needs_resolution
+        status: needs_agent
 
     - name: release-graph-needs-project-root
       inputs: {}
       expect:
-        status: needs_resolution
+        status: needs_agent
 
 
 runners:
@@ -182,7 +180,6 @@ runners:
         description: "Constraints or campaign context for this release."
     graph:
       name: release
-      owner: runx
       steps:
         - id: prepare-release
           label: prepare the release brief

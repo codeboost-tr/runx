@@ -18,7 +18,7 @@ harness:
         risk: low
         scafld_bin: ./fixtures/issue-to-pr-harness-scafld.mjs
       expect:
-        status: needs_resolution
+        status: needs_agent
 
     - name: issue-to-pr-reaches-fix-boundary
       inputs:
@@ -202,7 +202,7 @@ harness:
 
               - none
       expect:
-        status: needs_resolution
+        status: needs_agent
 
 runners:
   issue-to-pr:
@@ -320,7 +320,6 @@ runners:
         description: "Optional model forwarded to scafld review."
     graph:
       name: issue-to-pr
-      owner: runx
       notes:
         status: governed
         rationale: >
@@ -371,7 +370,7 @@ runners:
             executable in the current workspace after the fix bundle is written.
             Do not depend on git history ranges such as HEAD~1. When validation
             commands are included, use direct repo-local checks such as tests,
-            lint, build, or file-content commands. Do not use runx skill runner
+            lint, build, or file-content commands. Do not use runx runtime
             internals or skills/scafld/run.mjs as validation commands; scafld
             is already the lifecycle runner around this graph. If a required file
             path cannot be grounded from the thread or repository evidence, keep

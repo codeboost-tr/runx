@@ -18,7 +18,7 @@ describe("reflect-digest skill", () => {
     if (!("cases" in result)) {
       throw new Error("expected inline harness suite");
     }
-    expect(result.status).toBe("success");
+    expect(result.status).toBe("sealed");
     expect(result.assertionErrors).toEqual([]);
     expect(result.cases.map((entry) => entry.fixture.name)).toEqual([
       "reflect-digest-empty-knowledge",
@@ -150,8 +150,8 @@ describe("reflect-digest skill", () => {
         },
       });
 
-      expect(result.status).toBe("success");
-      if (result.status !== "success") {
+      expect(result.status).toBe("sealed");
+      if (result.status !== "sealed") {
         return;
       }
 

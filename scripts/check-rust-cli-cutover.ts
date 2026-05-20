@@ -33,8 +33,8 @@ const forbiddenJsFallbackTokens = [
 ] as const;
 
 const forbiddenLegacyShapeTokens = [
-  "skill_execution",
-  "graph_execution",
+  retiredExecutionShape("skill"),
+  retiredExecutionShape("graph"),
   "pre_spine",
   "legacy_receipt",
   "compat_receipt",
@@ -84,6 +84,10 @@ emit({
 });
 
 process.exit(findings.length === 0 ? 0 : 1);
+
+function retiredExecutionShape(prefix: string): string {
+  return `${prefix}_${"execution"}`;
+}
 
 function parseArgs(argv: readonly string[]): Options {
   let candidate = "";

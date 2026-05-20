@@ -17,7 +17,7 @@ harness:
         title: Proving ground scafld
         scafld_bin: ./fixtures/scafld-v2-harness.mjs
       expect:
-        status: success
+        status: sealed
 
 runners:
   scafld-cli:

@@ -37,10 +37,6 @@ import type {
 } from "../parser-types.js";
 
 const harnessReceiptSchema = "runx.harness_receipt.v1";
-const legacySkillReceiptKind = ["skill", "execution"].join("_");
-const legacyGraphReceiptKind = ["graph", "execution"].join("_");
-const legacySkillNameField = ["skill", "name"].join("_");
-const legacyGraphNameField = ["graph", "name"].join("_");
 
 type HarnessKind = "skill" | "graph";
 
@@ -433,55 +429,13 @@ function assertHarnessResult(
     } else if (fixture.expect.receipt.schema === harnessReceiptSchema) {
       errors.push(...assertHarnessReceiptShape(fixture.expect.receipt, receipt));
     } else {
-      const actualKind = receiptKind(receipt);
-      const expectedSkillName = receiptExpectationString(fixture.expect.receipt, legacySkillNameField);
-      const expectedGraphName = receiptExpectationString(fixture.expect.receipt, legacyGraphNameField);
-      if (fixture.expect.receipt.kind && actualKind !== fixture.expect.receipt.kind) {
-        errors.push(`Expected receipt kind ${fixture.expect.receipt.kind}, got ${actualKind}.`);
-      }
-      if (fixture.expect.receipt.status && runnerReceiptStatus(receipt) !== fixture.expect.receipt.status) {
-        errors.push(`Expected receipt status ${fixture.expect.receipt.status}, got ${runnerReceiptStatus(receipt)}.`);
-      }
-      if (expectedSkillName && actualKind !== legacySkillReceiptKind) {
-        errors.push(`Expected compatible skill receipt for ${legacySkillNameField} ${expectedSkillName}.`);
-      } else if (
-        expectedSkillName
-        && actualKind === legacySkillReceiptKind
-        && receiptString(receipt, legacySkillNameField) !== expectedSkillName
-      ) {
-        errors.push(`Expected receipt ${legacySkillNameField} to equal ${expectedSkillName}.`);
-      }
-      if (fixture.expect.receipt.source_type && actualKind !== legacySkillReceiptKind) {
-        errors.push(`Expected compatible skill receipt for source_type ${fixture.expect.receipt.source_type}.`);
-      } else if (
-        fixture.expect.receipt.source_type
-        && actualKind === legacySkillReceiptKind
-        && receiptString(receipt, "source_type") !== fixture.expect.receipt.source_type
-      ) {
-        errors.push(`Expected receipt source_type to equal ${fixture.expect.receipt.source_type}.`);
-      }
-      if (expectedGraphName && actualKind !== legacyGraphReceiptKind) {
-        errors.push(`Expected compatible graph receipt for ${legacyGraphNameField} ${expectedGraphName}.`);
-      } else if (
-        expectedGraphName
-        && actualKind === legacyGraphReceiptKind
-        && receiptString(receipt, legacyGraphNameField) !== expectedGraphName
-      ) {
-        errors.push(`Expected receipt ${legacyGraphNameField} to equal ${expectedGraphName}.`);
-      }
-      if (
-        fixture.expect.receipt.owner
-        && actualKind === legacyGraphReceiptKind
-        && receiptString(receipt, "owner") !== fixture.expect.receipt.owner
-      ) {
-        errors.push(`Expected receipt owner to equal ${fixture.expect.receipt.owner}.`);
-      }
+      errors.push(`Expected receipt schema ${harnessReceiptSchema}.`);
     }
   }
 
   if (fixture.expect.steps) {
     const actualSteps =
-      receiptKind(receipt) === legacyGraphReceiptKind && hasHistoricalReceiptSteps(receipt)
+      hasHistoricalReceiptSteps(receipt)
         ? receipt.steps.map((step) => step.step_id)
         : "steps" in result
           ? result.steps.map((step) => step.stepId)
@@ -492,23 +446,6 @@ function assertHarnessResult(
   }
 
   return errors;
-}
-
-function receiptKind(receipt: unknown): string | undefined {
-  return receiptString(receipt, "kind");
-}
-
-function receiptString(receipt: unknown, field: string): string | undefined {
-  if (!isRecord(receipt)) {
-    return undefined;
-  }
-  const value = receipt[field];
-  return typeof value === "string" ? value : undefined;
-}
-
-function receiptExpectationString(receipt: HarnessReceiptShapeExpectation, field: string): string | undefined {
-  const value = (receipt as Readonly<Record<string, unknown>>)[field];
-  return typeof value === "string" ? value : undefined;
 }
 
 function hasHistoricalReceiptSteps(receipt: unknown): receipt is { readonly steps: readonly { readonly step_id: string }[] } {
@@ -624,7 +561,7 @@ function resolveHarnessRequest(
   return payload === undefined ? undefined : { actor: "agent", payload };
 }
 
-type SkillReceipt = Extract<RunLocalSkillResult, { readonly status: "success" | "failure" }>["receipt"];
+type SkillReceipt = Extract<RunLocalSkillResult, { readonly status: "sealed" | "failure" }>["receipt"];
 
 function skillReceipt(result: RunLocalSkillResult | RunLocalGraphResult): SkillReceipt | undefined {
   if ("receipt" in result && "skill" in result && !("graph" in result)) {
@@ -685,8 +622,6 @@ function validateReceiptExpectation(value: Record<string, unknown> | undefined):
     act_ids: optionalStringArray(value.act_ids, "expect.receipt.act_ids"),
     child_receipt_refs: optionalStringArray(value.child_receipt_refs, "expect.receipt.child_receipt_refs"),
   };
-  expectation[legacySkillNameField] = optionalString(value[legacySkillNameField], `expect.receipt.${legacySkillNameField}`);
-  expectation[legacyGraphNameField] = optionalString(value[legacyGraphNameField], `expect.receipt.${legacyGraphNameField}`);
   return expectation as HarnessReceiptShapeExpectation;
 }
 
@@ -743,35 +678,35 @@ function optionalStatus(value: unknown, field: string): HarnessExpectation["stat
     return undefined;
   }
   if (
-    value === "success" ||
+    value === "sealed" ||
     value === "failure" ||
-    value === "needs_resolution" ||
+    value === "needs_agent" ||
     value === "policy_denied" ||
     value === "escalated"
   ) {
     return value;
   }
-  throw new Error(`${field} must be success, failure, needs_resolution, policy_denied, or escalated.`);
+  throw new Error(`${field} must be sealed, failure, needs_agent, policy_denied, or escalated.`);
 }
 
-function optionalSuccessFailure(value: unknown, field: string): "success" | "failure" | undefined {
+function optionalSuccessFailure(value: unknown, field: string): "sealed" | "failure" | undefined {
   if (value === undefined || value === null) {
     return undefined;
   }
-  if (value === "success" || value === "failure") {
+  if (value === "sealed" || value === "failure") {
     return value;
   }
-  throw new Error(`${field} must be success or failure.`);
+  throw new Error(`${field} must be sealed or failure.`);
 }
 
 function optionalReceiptKind(value: unknown, field: string): HarnessReceiptExpectation["kind"] {
   if (value === undefined || value === null) {
     return undefined;
   }
-  if (value === legacySkillReceiptKind || value === legacyGraphReceiptKind) {
+  if (value === "harness_receipt") {
     return value as HarnessReceiptExpectation["kind"];
   }
-  throw new Error(`${field} must be a compatible legacy receipt kind.`);
+  throw new Error(`${field} must be harness_receipt.`);
 }
 
 function optionalHarnessReceiptSchema(value: unknown, field: string): typeof harnessReceiptSchema | undefined {

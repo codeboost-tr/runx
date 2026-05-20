@@ -136,8 +136,8 @@ steps:
         runxHome,
       });
 
-      expect(result.status).toBe("success");
-      if (result.status !== "success") {
+      expect(result.status).toBe("sealed");
+      if (result.status !== "sealed") {
         return;
       }
       expect(result.steps[0]?.stdout).toContain("strict-mode-ok");

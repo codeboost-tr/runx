@@ -1,7 +1,7 @@
 import type { AdapterActInvocation, ActReceiptEnvelope, SkillAdapter } from "../runner-local/adapter-types.js";
 
 export interface HarnessHookHandlerResult {
-  readonly status?: "success" | "failure";
+  readonly status?: "sealed" | "failure";
   readonly output?: unknown;
   readonly errorMessage?: string;
   readonly metadata?: Readonly<Record<string, unknown>>;
@@ -25,15 +25,15 @@ export function createHarnessHookAdapter(options: HarnessHookAdapterOptions = {}
       const handler = options.handlers?.[hook] ?? defaultHandler;
       const started = performance.now();
       const result = await handler(request);
-      const status = result.status ?? "success";
+      const status = result.status ?? "sealed";
       const output = result.output ?? {};
       const stdout = typeof output === "string" ? output : JSON.stringify(output);
 
       return {
         status,
-        stdout: status === "success" ? stdout : "",
+        stdout: status === "sealed" ? stdout : "",
         stderr: status === "failure" ? result.errorMessage ?? "harness hook failed" : "",
-        exitCode: status === "success" ? 0 : 1,
+        exitCode: status === "sealed" ? 0 : 1,
         signal: null,
         durationMs: Math.round(performance.now() - started),
         errorMessage: result.errorMessage,

@@ -51,8 +51,8 @@ describe("graph retry and idempotency", () => {
         adapters: [adapter],
       });
 
-      expect(result.status).toBe("success");
-      if (result.status !== "success") {
+      expect(result.status).toBe("sealed");
+      if (result.status !== "sealed") {
         return;
       }
       expect(result.steps.map((step) => [step.stepId, step.attempt, step.status])).toEqual([
@@ -155,8 +155,8 @@ describe("graph retry and idempotency", () => {
         adapters: [adapter],
       });
 
-      expect(result.status).toBe("success");
-      if (result.status !== "success") {
+      expect(result.status).toBe("sealed");
+      if (result.status !== "sealed") {
         return;
       }
       expect(result.steps.map((step) => [step.stepId, step.attempt, step.status])).toEqual([
@@ -218,8 +218,8 @@ describe("graph retry and idempotency", () => {
         adapters: [adapter],
       });
 
-      expect(result.status).toBe("success");
-      if (result.status !== "success") {
+      expect(result.status).toBe("sealed");
+      if (result.status !== "sealed") {
         return;
       }
       expect(result.steps).toHaveLength(2);
@@ -264,7 +264,7 @@ function createFlakyAdapter(): SkillAdapter & { callCount: () => number } {
         };
       }
       return {
-        status: "success",
+        status: "sealed",
         stdout: String(request.inputs.message ?? "ok"),
         stderr: "",
         exitCode: 0,

@@ -12,6 +12,7 @@ import { createCliToolAdapter } from "../cli-tool/index.js";
 import { createMcpAdapter } from "../mcp/index.js";
 
 import type { ManagedRuntimeTool, ManagedToolCallResult } from "./types.js";
+import type { ResolutionRequestContract as ResolutionRequest } from "@runxhq/contracts";
 import {
   asRecord,
   packetSchemaFromOutput,
@@ -129,7 +130,7 @@ async function invokeManagedRuntimeTool(
         })
   );
 
-  if (result.status === "needs_resolution") {
+  if (isNeedsAgentToolResult(result)) {
     return {
       value: {
         error: `Tool '${toolName}' requested ${result.request.kind} resolution and cannot be used inside managed agent execution.`,
@@ -137,7 +138,7 @@ async function invokeManagedRuntimeTool(
       request: result.request,
       trace: {
         tool: toolName,
-        status: "needs_resolution",
+        status: "needs_agent",
         resolutionKind: result.request.kind,
         receiptId: result.receiptId,
       },
@@ -161,13 +162,13 @@ async function invokeManagedRuntimeTool(
   const stdoutValue = parseJsonMaybe(result.stdout);
   const packetSchema = packetSchemaFromOutput(stdoutValue);
   const unwrapped = unwrapPacketData(stdoutValue);
-  if (result.status === "success") {
+  if (result.status === "sealed") {
     return packetSchema
       ? {
           value: { schema: packetSchema, data: unwrapped },
           trace: {
             tool: toolName,
-            status: "success",
+            status: "sealed",
             receiptId: result.receiptId,
           },
         }
@@ -175,7 +176,7 @@ async function invokeManagedRuntimeTool(
           value: unwrapped,
           trace: {
             tool: toolName,
-            status: "success",
+            status: "sealed",
             receiptId: result.receiptId,
           },
         };
@@ -239,7 +240,7 @@ async function invokeManagedRuntimeToolDirect(options: {
     toolCatalogAdapters: options.toolCatalogAdapters,
   });
 
-  if (result.status === "needs_resolution") {
+  if (isNeedsAgentRunResult(result)) {
     const request = result.requests[0];
     if (!request) {
       throw new Error(
@@ -247,7 +248,7 @@ async function invokeManagedRuntimeToolDirect(options: {
       );
     }
     return {
-      status: "needs_resolution" as const,
+      status: "needs_agent" as const,
       request,
     };
   }
@@ -271,4 +272,19 @@ async function invokeManagedRuntimeToolDirect(options: {
     errorMessage: result.execution.errorMessage,
     receiptId: result.receipt.id,
   };
+}
+
+function isNeedsAgentToolResult(result: unknown): result is {
+  readonly status: "needs_agent";
+  readonly request: ResolutionRequest;
+  readonly receiptId?: string;
+} {
+  return (result as { readonly status?: string }).status === "needs_agent";
+}
+
+function isNeedsAgentRunResult(result: unknown): result is {
+  readonly status: "needs_agent";
+  readonly requests: readonly ResolutionRequest[];
+} {
+  return (result as { readonly status?: string }).status === "needs_agent";
 }

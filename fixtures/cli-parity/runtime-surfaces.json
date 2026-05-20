@@ -29,7 +29,7 @@
         "skill.run",
         "evolve"
       ],
-      "notes": "Covers graph execution, branching, caller pauses, and receipts."
+      "notes": "Covers graph execution, branching, caller handoffs, and receipts."
     },
     {
       "id": "receipts",
@@ -48,10 +48,9 @@
       "owner": "packages/runtime-local",
       "parityClass": "schema-exact",
       "coveredBy": [
-        "resume",
         "history"
       ],
-      "notes": "Append-only run state and resume history must survive cutover."
+      "notes": "Append-only run state and continuation history must survive cutover."
     },
     {
       "id": "artifacts",
@@ -93,15 +92,14 @@
       "notes": "Search/filter behavior is command-level parity with normalized output."
     },
     {
-      "id": "resume-replay",
+      "id": "continuation-replay",
       "owner": "packages/runtime-local",
       "parityClass": "fixture-backed",
       "coveredBy": [
-        "resume",
         "replay",
         "diff"
       ],
-      "notes": "Paused runs and replay/diff inputs must resolve to the same receipt graph semantics."
+      "notes": "Continuation runs and replay/diff inputs must resolve to the same receipt graph semantics."
     },
     {
       "id": "registry",
@@ -256,10 +254,9 @@
       "owner": "packages/runtime-local",
       "parityClass": "fixture-backed",
       "coveredBy": [
-        "resume",
         "skill.run"
       ],
-      "notes": "Required input, approvals, and agent work keep the same pause/resume contract."
+      "notes": "Required input, approvals, and agent work keep the same continuation contract."
     },
     {
       "id": "scaffold",

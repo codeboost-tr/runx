@@ -22,10 +22,10 @@ target: ../path/to/SKILL.md   # relative path to skill or graph YAML
 inputs:
   input_name: value
 expect:
-  status: success              # or failure, needs_resolution, etc.
+  status: sealed               # or failure, needs_agent, etc.
   receipt:
-    kind: skill_execution      # or graph_execution
-    status: success
+    schema: runx.harness_receipt.v1
+    status: sealed
     skill_name: expected-name
     source_type: cli-tool    # or agent, managed-agent, graph, etc.
 ```
@@ -37,10 +37,10 @@ name: graph-completes
 kind: graph
 target: ../graphs/my-graph.yaml
 expect:
-  status: success
+  status: sealed
   receipt:
-    kind: graph_execution
-    status: success
+    schema: runx.harness_receipt.v1
+    status: sealed
     graph_name: my-graph
   steps:
     - step-one
@@ -55,7 +55,7 @@ Start from the skill contract (SKILL.md + execution profile). Design fixtures fo
   flow. Assert the receipt kind, status, and the
   `skill_name`/`source_type` or `graph_name`/`owner` fields.
 - **Missing required input**: one fixture omitting a required input.
-  Expect `needs_resolution` status.
+  Expect `needs_agent` status.
 - **Tool not found**: if the skill wraps a CLI tool, one fixture with an
   invalid tool path. Expect failure with meaningful error.
 - **Governance gates** (composite skills only): one fixture per approval
@@ -108,7 +108,7 @@ that in `maintainer_decisions` rather than leaking it into the fixture target.
   bundle.
 - Strategic bar: every fixture should protect a user-visible promise, trust
   boundary, or failure mode that matters for the skill's purpose.
-- Stop conditions: return `needs_resolution` when the contract is too vague to
+- Stop conditions: return `needs_agent` when the contract is too vague to
   harness, and return `not_first_party` when the proposed skill should be reuse,
   Sourcey/content work, or a graph amendment instead.
 

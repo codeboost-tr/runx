@@ -54,7 +54,7 @@ interface RuntimeMcpAdapterRequest {
 interface OracleCase {
   readonly name: string;
   readonly request: RuntimeMcpAdapterRequest;
-  readonly expectedStatus: "success" | "failure";
+  readonly expectedStatus: "sealed" | "failure";
 }
 
 const fixtureServer = {
@@ -66,7 +66,7 @@ const fixtureServer = {
 const cases: readonly OracleCase[] = [
   {
     name: "fixture-success",
-    expectedStatus: "success",
+    expectedStatus: "sealed",
     request: {
       case: "fixture-success",
       mode: "mcp-adapter",
@@ -116,7 +116,7 @@ const cases: readonly OracleCase[] = [
   },
   {
     name: "sandbox-env-allowed",
-    expectedStatus: "success",
+    expectedStatus: "sealed",
     request: {
       case: "sandbox-env-allowed",
       mode: "mcp-adapter",
@@ -140,7 +140,7 @@ const cases: readonly OracleCase[] = [
   },
   {
     name: "sandbox-env-blocked",
-    expectedStatus: "success",
+    expectedStatus: "sealed",
     request: {
       case: "sandbox-env-blocked",
       mode: "mcp-adapter",

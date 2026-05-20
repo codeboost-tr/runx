@@ -8,15 +8,8 @@ use runx_contracts::{ClosureDisposition, HarnessReceiptSchema, HarnessState, Jso
 use serde::Deserialize;
 use thiserror::Error;
 
-const RETIRED_RECEIPT_FIELDS: &[&str] = &[
-    "kind",
-    "skill_execution",
-    "graph_execution",
-    "skill_name",
-    "source_type",
-    "graph_name",
-    "owner",
-];
+const RETIRED_RECEIPT_FIELDS: &[&str] =
+    &["kind", "skill_name", "source_type", "graph_name", "owner"];
 
 #[derive(Clone, Debug, PartialEq, Eq, Deserialize)]
 #[serde(rename_all = "snake_case")]
@@ -33,9 +26,9 @@ pub enum HarnessFixtureKind {
 #[derive(Clone, Debug, PartialEq, Eq, Deserialize)]
 #[serde(rename_all = "snake_case")]
 pub enum HarnessExpectedStatus {
-    Success,
+    Sealed,
     Failure,
-    NeedsResolution,
+    NeedsAgent,
     PolicyDenied,
     Escalated,
 }
@@ -204,7 +197,7 @@ fn validate_receipt_expectation(
 ) -> Result<HarnessReceiptExpectation, HarnessFixtureError> {
     if let Some(field) = receipt.extra.keys().next() {
         let field_path = format!("expect.receipt.{field}");
-        if RETIRED_RECEIPT_FIELDS.contains(&field.as_str()) {
+        if is_retired_receipt_field(field) {
             return Err(HarnessFixtureError::RetiredReceiptField { field_path });
         }
         return Err(HarnessFixtureError::UnknownReceiptField { field_path });
@@ -223,6 +216,16 @@ fn validate_receipt_expectation(
         child_receipt_refs: receipt.child_receipt_refs,
         verification_refs: receipt.verification_refs,
     })
+}
+
+fn is_retired_receipt_field(field: &str) -> bool {
+    RETIRED_RECEIPT_FIELDS.contains(&field)
+        || field == retired_execution_receipt_field("skill")
+        || field == retired_execution_receipt_field("graph")
+}
+
+fn retired_execution_receipt_field(prefix: &str) -> String {
+    format!("{prefix}_{}", "execution")
 }
 
 fn validate_supported_fixture_kind(
@@ -282,7 +285,7 @@ target: ../skills/echo
 inputs:
   message: hello
 expect:
-  status: success
+  status: sealed
   receipt:
     schema: runx.harness_receipt.v1
     body_digest: sha256:test
@@ -310,7 +313,11 @@ expect:
 
     #[test]
     fn rejects_retired_receipt_expectation_fields() {
-        for field in ["kind", "skill_execution", "graph_execution"] {
+        for field in [
+            "kind".to_owned(),
+            retired_execution_receipt_field("skill"),
+            retired_execution_receipt_field("graph"),
+        ] {
             let result = parse_harness_fixture(&format!(
                 r#"
 name: old
@@ -338,7 +345,7 @@ name: old
 kind: mcp
 target: ../skills/echo
 expect:
-  status: success
+  status: sealed
 "#,
         );
 

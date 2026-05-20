@@ -56,7 +56,7 @@ describe("paused runs surface in history and inspect", () => {
       expect(result.pendingRuns[0]).toMatchObject({
         id: runId,
         name: "sourcey",
-        status: "paused",
+        status: "needs_agent",
         kind: "runx.harness.v1",
         selectedRunner: "agent-step",
         stepIds: ["discover"],
@@ -80,7 +80,7 @@ describe("paused runs surface in history and inspect", () => {
       if (result.kind !== "paused") return;
       expect(result.runId).toBe(runId);
       expect(result.summary.name).toBe("issue-to-pr");
-      expect(result.summary.status).toBe("paused");
+      expect(result.summary.status).toBe("needs_agent");
     } finally {
       await rm(tempDir, { recursive: true, force: true });
     }

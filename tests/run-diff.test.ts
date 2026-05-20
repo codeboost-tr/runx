@@ -84,7 +84,7 @@ describe("run diff", () => {
       );
       expect(exit).toBe(0);
       expect(JSON.parse(stdout.contents())).toMatchObject({
-        status: "success",
+        status: "sealed",
         diff: {
           changed: true,
         },
@@ -127,7 +127,7 @@ Emit a diff projection artifact.
   const adapter: SkillAdapter = {
     type: "agent-step",
     invoke: async () => ({
-      status: "success",
+      status: "sealed",
       stdout: JSON.stringify({ ok: true }),
       stderr: "",
       exitCode: 0,
@@ -166,8 +166,8 @@ Emit a diff projection artifact.
       RUNX_CWD: options.tempDir,
     },
   });
-  expect(result.status).toBe("success");
-  if (result.status !== "success") {
+  expect(result.status).toBe("sealed");
+  if (result.status !== "sealed") {
     throw new Error("diff seed run failed");
   }
   return result.receipt.id;

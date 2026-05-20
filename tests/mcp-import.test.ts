@@ -43,8 +43,8 @@ steps:
         toolCatalogAdapters: [createFixtureMcpToolCatalogAdapter()],
       });
 
-      expect(result.status).toBe("success");
-      if (result.status !== "success") {
+      expect(result.status).toBe("sealed");
+      if (result.status !== "sealed") {
         return;
       }
 
@@ -52,7 +52,7 @@ steps:
         expect.objectContaining({
           skill: "fixture.echo",
           runner: "tool",
-          status: "success",
+          status: "sealed",
           stdout: "hello from imported tool",
         }),
       ]);

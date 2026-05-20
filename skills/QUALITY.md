@@ -27,7 +27,7 @@ Each serious skill should make these parts explicit in its own terms:
   `metadata.voice_profile`.
 - `strategic_bar`: why the artifact matters for the graph's purpose.
 - `stop_conditions`: when the skill should return `needs_more_evidence`,
-  `needs_review`, `needs_resolution`, or a comparable stop state instead of
+  `needs_review`, `needs_agent`, or a comparable stop state instead of
   polishing weak work.
 
 ## Universal Quality Bar
@@ -88,7 +88,7 @@ strategic fit. Prefer a precise stop state over polished filler:
 
 - `needs_more_evidence`: the artifact would require claims not supported by the
   source surfaces.
-- `needs_resolution`: required inputs, policy, or trust boundaries are missing.
+- `needs_agent`: required inputs, policy, or trust boundaries are missing.
 - `needs_review`: the artifact exists but does not meet the declared quality
   profile.
 - `not_worth_publishing`: the work is true but not useful enough for the

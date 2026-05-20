@@ -440,37 +440,6 @@ fn rust_harness_zero_and_empty_signals_still_delegate_to_js() {
 }
 
 #[test]
-fn rust_cli_signal_rejects_legacy_skill_run_alias() {
-    let action = plan_with_rust_cli_and_js(vec![
-        "skill".into(),
-        "run".into(),
-        "sourcey".into(),
-        "--json".into(),
-    ]);
-
-    assert_eq!(
-        action,
-        LauncherAction::Error(
-            "runx skill runs a skill package path directly; runx skill run is not supported"
-                .to_owned()
-        )
-    );
-}
-
-#[test]
-fn rust_cli_signal_rejects_bare_legacy_skill_run_alias() {
-    let action = plan_with_rust_cli_and_js(vec!["skill".into(), "run".into(), "--json".into()]);
-
-    assert_eq!(
-        action,
-        LauncherAction::Error(
-            "runx skill runs a skill package path directly; runx skill run is not supported"
-                .to_owned()
-        )
-    );
-}
-
-#[test]
 fn rust_cli_signal_routes_canonical_skill_run_to_native_plan() {
     let action = plan_with_rust_cli(vec![
         "skill".into(),
@@ -502,39 +471,6 @@ fn rust_cli_signal_routes_canonical_skill_run_to_native_plan() {
             .into_iter()
             .collect(),
         })
-    );
-}
-
-#[test]
-fn rust_cli_signal_rejects_legacy_skill_receipt_resume_flag() {
-    let action = plan_with_rust_cli_and_js(vec![
-        "skill".into(),
-        "skills/issue-intake".into(),
-        "--receipt".into(),
-        "run_123".into(),
-        "--answers".into(),
-        "/tmp/answers.json".into(),
-    ]);
-
-    assert_eq!(
-        action,
-        LauncherAction::Error("runx skill uses --run-id; --receipt is not supported".to_owned())
-    );
-}
-
-#[test]
-fn rust_cli_signal_rejects_legacy_skill_camelcase_receipt_dir_flag() {
-    let action = plan_with_rust_cli_and_js(vec![
-        "skill".into(),
-        "skills/issue-intake".into(),
-        "--receiptDir=.runx/receipts".into(),
-    ]);
-
-    assert_eq!(
-        action,
-        LauncherAction::Error(
-            "runx skill uses --receipt-dir; --receiptDir is not supported".to_owned()
-        )
     );
 }
 

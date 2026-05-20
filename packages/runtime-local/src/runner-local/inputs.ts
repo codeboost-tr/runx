@@ -19,7 +19,7 @@ export async function resolveInputs(
   options: RunLocalSkillOptions,
 ): Promise<
   | { readonly status: "resolved"; readonly inputs: Readonly<Record<string, unknown>> }
-  | { readonly status: "needs_resolution"; readonly request: ResolutionRequest }
+  | { readonly status: "needs_agent"; readonly request: ResolutionRequest }
 > {
   const answers = options.answersPath ? await readAnswersFile(options.answersPath) : {};
   const resolved = materializeDeclaredInputs(skill.inputs);
@@ -61,7 +61,7 @@ export async function resolveInputs(
   const stillMissing = missingRequiredInputs(skill.inputs, resolved);
   if (stillMissing.length > 0) {
     return {
-      status: "needs_resolution",
+      status: "needs_agent",
       request: buildInputResolutionRequest(skill, stillMissing),
     };
   }

@@ -19,7 +19,7 @@ export interface IdeActionCoreOptions extends RunxSdkOptions {
 
 export interface IdeActionResult<T = unknown> {
   readonly action: string;
-  readonly status: "success" | "needs_resolution" | "policy_denied" | "failure" | "error";
+  readonly status: "success" | "needs_agent" | "policy_denied" | "failure" | "error";
   readonly data?: T;
   readonly resolutions: readonly unknown[];
   readonly events: readonly unknown[];
@@ -105,7 +105,7 @@ async function wrapAction<T>(
 }
 
 function normalizeStatus(status: string | undefined): IdeActionResult["status"] {
-  if (status === "success" || status === "needs_resolution" || status === "policy_denied" || status === "failure") {
+  if (status === "success" || status === "needs_agent" || status === "policy_denied" || status === "failure") {
     return status;
   }
   return "success";

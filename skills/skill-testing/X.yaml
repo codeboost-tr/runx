@@ -16,7 +16,7 @@ harness:
         evidence_pack:
           receipts:
             - kind: harness
-              status: success
+              status: sealed
               note: Sourcey inline harness currently passes.
           docs:
             - path: docs/skill-profile-model.md
@@ -57,15 +57,14 @@ harness:
         approvals:
           skill-testing.publish.approval: true
       expect:
-        status: success
+        status: sealed
         receipt:
-          kind: graph_execution
-          status: success
+          schema: runx.harness_receipt.v1
 
     - name: skill-testing-needs-required-inputs
       inputs: {}
       expect:
-        status: needs_resolution
+        status: needs_agent
 
 runners:
   skill-testing:
@@ -96,7 +95,6 @@ runners:
         description: "Safety, environment, or time constraints on evaluation."
     graph:
       name: skill-testing
-      owner: runx
       steps:
         - id: review-skill
           skill: ../review-skill

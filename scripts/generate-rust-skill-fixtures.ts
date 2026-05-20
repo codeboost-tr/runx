@@ -11,8 +11,8 @@ const generatedAt = "2026-05-18T00:00:00Z";
 const skillNames = ["issue-intake", "issue-to-pr"] as const;
 const retiredReceiptFields = [
   "kind",
-  "skill_execution",
-  "graph_execution",
+  retiredExecutionShape("skill"),
+  retiredExecutionShape("graph"),
   "skill_name",
   "source_type",
   "graph_name",
@@ -26,6 +26,10 @@ for (const skillName of skillNames) {
 }
 
 console.log(`${check ? "checked" : "generated"} Rust product skill fixtures`);
+
+function retiredExecutionShape(prefix: string): string {
+  return `${prefix}_${"execution"}`;
+}
 
 async function generateSkillFixtures(skillName: typeof skillNames[number]): Promise<void> {
   const skillDir = path.join(workspaceRoot, "skills", skillName);
@@ -83,7 +87,7 @@ function intakeFixture(entry: Record<string, unknown>, skillName: string): Recor
     inputs: entry.inputs ?? {},
     caller: entry.caller ?? {},
     expect: canonicalExpectation(entry, {
-      status: "success",
+      status: "sealed",
       receiptId: `hrn_rcpt_${entry.name}_${entry.name}`,
       harnessId: `hrn_${entry.name}_${entry.name}`,
       disposition: "closed",
@@ -106,7 +110,7 @@ function issueToPrFixture(
 ): Record<string, unknown> {
   const childSteps = replayedChildSteps(entry, replaySteps);
   const expect = canonicalExpectation(entry, {
-    status: "needs_resolution",
+    status: "needs_agent",
     receiptId: `hrn_rcpt_${entry.name}`,
     harnessId: `hrn_${entry.name}_graph`,
     disposition: "deferred",

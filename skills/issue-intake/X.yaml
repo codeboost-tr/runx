@@ -145,12 +145,11 @@ harness:
               created_at: "2026-05-15T00:00:00Z"
               updated_at: "2026-05-15T00:00:00Z"
       expect:
-        status: success
+        status: sealed
         receipt:
-          kind: skill_execution
-          status: success
-          skill_name: issue-intake
-          source_type: agent-step
+          schema: runx.harness_receipt.v1
+          state: sealed
+          disposition: closed
     - name: feature-needs-decomposition
       inputs:
         thread_title: Add abandoned cart recovery across email and SMS
@@ -253,12 +252,11 @@ harness:
               created_at: "2026-05-15T00:00:00Z"
               updated_at: "2026-05-15T00:00:00Z"
       expect:
-        status: success
+        status: sealed
         receipt:
-          kind: skill_execution
-          status: success
-          skill_name: issue-intake
-          source_type: agent-step
+          schema: runx.harness_receipt.v1
+          state: sealed
+          disposition: closed
     - name: reply-only-question
       inputs:
         thread_title: How do I rotate my API key?
@@ -328,12 +326,11 @@ harness:
               created_at: "2026-05-15T00:00:00Z"
               updated_at: "2026-05-15T00:00:00Z"
       expect:
-        status: success
+        status: sealed
         receipt:
-          kind: skill_execution
-          status: success
-          skill_name: issue-intake
-          source_type: agent-step
+          schema: runx.harness_receipt.v1
+          state: sealed
+          disposition: closed
     - name: request-review-before-mutation
       inputs:
         thread_title: Clarify the affected repo before we start
@@ -415,12 +412,11 @@ harness:
               created_at: "2026-05-15T00:00:00Z"
               updated_at: "2026-05-15T00:00:00Z"
       expect:
-        status: success
+        status: sealed
         receipt:
-          kind: skill_execution
-          status: success
-          skill_name: issue-intake
-          source_type: agent-step
+          schema: runx.harness_receipt.v1
+          state: sealed
+          disposition: closed
 
 runners:
   intake:

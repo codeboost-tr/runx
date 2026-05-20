@@ -96,7 +96,7 @@ describe("@runxhq/langchain", () => {
 
   it("fails fast when a wrapped runx workflow pauses for resolution", async () => {
     const runSkill = vi.fn(async (): Promise<RunLocalSkillResult> => ({
-      status: "needs_resolution",
+      status: "needs_agent",
       skill: {} as never,
       skillPath: "/tmp/skills/review",
       inputs: { repo: "acme/docs" },
@@ -115,18 +115,18 @@ describe("@runxhq/langchain", () => {
     });
 
     await expect(wrapped.invoke({ repo: "acme/docs" })).rejects.toThrow(
-      "paused for resolution",
+      "needs agent input",
     );
   });
 });
 
 function successResult(stdout: string): RunLocalSkillResult {
   return {
-    status: "success",
+    status: "sealed",
     skill: {} as never,
     inputs: {},
     execution: {
-      status: "success",
+      status: "sealed",
       stdout,
       stderr: "",
       exitCode: 0,

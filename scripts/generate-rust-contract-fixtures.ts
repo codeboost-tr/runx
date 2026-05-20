@@ -410,7 +410,7 @@ function reference(type: string, uri: string): Readonly<Record<string, string>> 
 
 function buildExecutionFixtures(): readonly ContractFixture[] {
   const fixtures: ContractFixture[] = [
-    executionFixture("governed-disposition", "GovernedDisposition", "governed_disposition", "needs_resolution"),
+    executionFixture("governed-disposition", "GovernedDisposition", "governed_disposition", "needs_agent"),
     executionFixture("outcome-state", "OutcomeState", "outcome_state", "expired"),
     executionFixture("receipt-surface-ref", "ReceiptSurfaceRef", "receipt_surface_ref", {
       type: "github_issue",
@@ -436,7 +436,7 @@ function buildExecutionFixtures(): readonly ContractFixture[] {
       summary: "Action still requires review.",
     }),
     executionFixture("execution-full", "ExecutionSemantics", "execution_semantics", {
-      disposition: "needs_resolution",
+      disposition: "needs_agent",
       evidence_refs: [
         {
           type: "log",
@@ -503,10 +503,10 @@ function buildHostProtocolFixtures(): readonly ContractFixture[] {
 
 function hostResultFixtures(): readonly ContractFixture[] {
   return [
-    hostFixture("result-host-run-paused", "run_result", {
-      status: "paused",
+    hostFixture("result-host-run-needs-agent", "run_result", {
+      status: "needs_agent",
       skillName: "review-receipt",
-      runId: "run_paused",
+      runId: "run_needs_agent",
       requests: [inputResolutionRequest()],
       stepIds: ["collect"],
       stepLabels: ["Collect context"],
@@ -545,10 +545,10 @@ function hostResultFixtures(): readonly ContractFixture[] {
 
 function hostStateFixtures(): readonly ContractFixture[] {
   return [
-    hostFixture("inspect-host-state-paused", "run_state", {
-      status: "paused",
+    hostFixture("inspect-host-state-needs-agent", "run_state", {
+      status: "needs_agent",
       skillName: "review-receipt",
-      runId: "run_paused",
+      runId: "run_needs_agent",
       requestedPath: "skills/review.md",
       resolvedPath: "/workspace/skills/review.md",
       selectedRunner: "runx",
@@ -650,7 +650,7 @@ function agentActResolutionRequest(): Readonly<Record<string, unknown>> {
 function terminalState(status: string, verificationStatus: string): Readonly<Record<string, unknown>> {
   return {
     status,
-    kind: status === "completed" ? "skill_execution" : "graph_execution",
+    kind: "harness",
     skillName: "review-receipt",
     runId: `run_${status}`,
     receiptId: `rx_${status}`,

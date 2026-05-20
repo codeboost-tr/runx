@@ -30,7 +30,7 @@ payment.
   generically.
 - Strategic bar: preserve the smallest authority shape that could work; do not
   widen rails, realms, or caps for convenience.
-- Stop conditions: return `needs_resolution` when currency, amount,
+- Stop conditions: return `needs_agent` when currency, amount,
   counterparty, operation, rail, or idempotency material is missing.
 
 ## Output

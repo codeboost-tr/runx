@@ -1259,13 +1259,13 @@ fn optional_disposition(
     match optional_string(value, field)?.as_deref() {
         None => Ok(None),
         Some("completed") => Ok(Some(GovernedDisposition::Completed)),
-        Some("needs_resolution") => Ok(Some(GovernedDisposition::NeedsResolution)),
+        Some("needs_agent") => Ok(Some(GovernedDisposition::NeedsAgent)),
         Some("policy_denied") => Ok(Some(GovernedDisposition::PolicyDenied)),
         Some("approval_required") => Ok(Some(GovernedDisposition::ApprovalRequired)),
         Some("observing") => Ok(Some(GovernedDisposition::Observing)),
         Some("escalated") => Ok(Some(GovernedDisposition::Escalated)),
         Some(_) => Err(validation_error(format!(
-            "{field} must be one of completed, needs_resolution, policy_denied, approval_required, observing, escalated."
+            "{field} must be one of completed, needs_agent, policy_denied, approval_required, observing, escalated."
         ))),
     }
 }
@@ -1409,9 +1409,9 @@ fn optional_harness_status(
         value,
         field,
         &[
-            "success",
+            "sealed",
             "failure",
-            "needs_resolution",
+            "needs_agent",
             "policy_denied",
             "escalated",
         ],
@@ -1422,14 +1422,14 @@ fn optional_harness_receipt_status(
     value: Option<&JsonValue>,
     field: &str,
 ) -> Result<Option<String>, ValidationError> {
-    validate_enum(value, field, &["success", "failure"])
+    validate_enum(value, field, &["sealed", "failure"])
 }
 
 fn optional_harness_receipt_kind(
     value: Option<&JsonValue>,
     field: &str,
 ) -> Result<Option<String>, ValidationError> {
-    validate_enum(value, field, &["skill_execution", "graph_execution"])
+    validate_enum(value, field, &["harness_receipt"])
 }
 
 fn validate_enum(

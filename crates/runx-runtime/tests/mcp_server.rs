@@ -34,10 +34,7 @@ fn mcp_server_initializes_lists_and_calls_tools() -> Result<(), Box<dyn std::err
         path(&responses[1], &["result", "tools", "0", "name"]),
         Some(&JsonValue::String("echo".to_owned()))
     );
-    assert_eq!(
-        path(&responses[1], &["result", "tools", "1", "name"]),
-        Some(&JsonValue::String("runx_resume".to_owned()))
-    );
+    assert_eq!(path(&responses[1], &["result", "tools", "1", "name"]), None);
     assert_eq!(
         path(&responses[2], &["result", "content", "0", "text"]),
         Some(&JsonValue::String("hello from server".to_owned()))
@@ -155,7 +152,7 @@ fn mcp_server_missing_required_skill_input_pauses_with_request()
             &responses[0],
             &["result", "structuredContent", "runx", "status"]
         ),
-        Some(&JsonValue::String("paused".to_owned()))
+        Some(&JsonValue::String("needs_agent".to_owned()))
     );
     assert_eq!(
         path(
@@ -192,154 +189,20 @@ fn mcp_server_missing_required_skill_input_pauses_with_request()
 }
 
 #[test]
-fn mcp_server_resume_with_response_completes_paused_skill_run()
--> Result<(), Box<dyn std::error::Error>> {
+fn mcp_server_graph_approval_pauses_with_request() -> Result<(), Box<dyn std::error::Error>> {
     let responses = run_server_with_options(
-        vec![
-            request(
-                1,
-                "tools/call",
-                [
-                    ("name".to_owned(), JsonValue::String("mcp-echo".to_owned())),
-                    ("arguments".to_owned(), JsonValue::Object(JsonObject::new())),
-                ]
-                .into(),
-            ),
-            request(
-                2,
-                "tools/call",
-                [
-                    (
-                        "name".to_owned(),
-                        JsonValue::String("runx_resume".to_owned()),
-                    ),
-                    (
-                        "arguments".to_owned(),
-                        JsonValue::Object(
-                            [
-                                (
-                                    "run_id".to_owned(),
-                                    JsonValue::String("rx_mcp_mcp_echo_1".to_owned()),
-                                ),
-                                (
-                                    "responses".to_owned(),
-                                    JsonValue::Array(vec![JsonValue::Object(
-                                        [
-                                            (
-                                                "request_id".to_owned(),
-                                                JsonValue::String(
-                                                    "input.mcp_echo.message".to_owned(),
-                                                ),
-                                            ),
-                                            (
-                                                "actor".to_owned(),
-                                                JsonValue::String("human".to_owned()),
-                                            ),
-                                            (
-                                                "payload".to_owned(),
-                                                JsonValue::Object(
-                                                    [(
-                                                        "message".to_owned(),
-                                                        JsonValue::String(
-                                                            "hello after resume".to_owned(),
-                                                        ),
-                                                    )]
-                                                    .into(),
-                                                ),
-                                            ),
-                                        ]
-                                        .into(),
-                                    )]),
-                                ),
-                            ]
-                            .into(),
-                        ),
-                    ),
-                ]
-                .into(),
-            ),
-        ],
-        skill_server_options()?,
-    )?;
-
-    assert_no_json_rpc_error(&responses[0]);
-    assert_eq!(
-        path(
-            &responses[0],
-            &["result", "structuredContent", "runx", "status"]
-        ),
-        Some(&JsonValue::String("paused".to_owned()))
-    );
-    assert_no_json_rpc_error(&responses[1]);
-    assert_eq!(
-        path(
-            &responses[1],
-            &["result", "structuredContent", "runx", "status"]
-        ),
-        Some(&JsonValue::String("completed".to_owned()))
-    );
-    assert_eq!(path(&responses[1], &["result", "isError"]), None);
-    Ok(())
-}
-
-#[test]
-fn mcp_server_graph_approval_round_trip_pauses_then_resumes()
--> Result<(), Box<dyn std::error::Error>> {
-    let responses = run_server_with_options(
-        vec![
-            request(
-                1,
-                "tools/call",
-                [
-                    (
-                        "name".to_owned(),
-                        JsonValue::String("mcp-approval-graph".to_owned()),
-                    ),
-                    ("arguments".to_owned(), JsonValue::Object(JsonObject::new())),
-                ]
-                .into(),
-            ),
-            request(
-                2,
-                "tools/call",
-                [
-                    (
-                        "name".to_owned(),
-                        JsonValue::String("runx_resume".to_owned()),
-                    ),
-                    (
-                        "arguments".to_owned(),
-                        JsonValue::Object(
-                            [
-                                (
-                                    "run_id".to_owned(),
-                                    JsonValue::String("rx_mcp_mcp_approval_graph_1".to_owned()),
-                                ),
-                                (
-                                    "responses".to_owned(),
-                                    JsonValue::Array(vec![JsonValue::Object(
-                                        [
-                                            (
-                                                "request_id".to_owned(),
-                                                JsonValue::String("approve_approval".to_owned()),
-                                            ),
-                                            (
-                                                "actor".to_owned(),
-                                                JsonValue::String("human".to_owned()),
-                                            ),
-                                            ("payload".to_owned(), JsonValue::Bool(true)),
-                                        ]
-                                        .into(),
-                                    )]),
-                                ),
-                            ]
-                            .into(),
-                        ),
-                    ),
-                ]
-                .into(),
-            ),
-        ],
+        vec![request(
+            1,
+            "tools/call",
+            [
+                (
+                    "name".to_owned(),
+                    JsonValue::String("mcp-approval-graph".to_owned()),
+                ),
+                ("arguments".to_owned(), JsonValue::Object(JsonObject::new())),
+            ]
+            .into(),
+        )],
         approval_graph_server_options()?,
     )?;
 
@@ -349,7 +212,7 @@ fn mcp_server_graph_approval_round_trip_pauses_then_resumes()
             &responses[0],
             &["result", "structuredContent", "runx", "status"]
         ),
-        Some(&JsonValue::String("paused".to_owned()))
+        Some(&JsonValue::String("needs_agent".to_owned()))
     );
     assert_eq!(
         path(
@@ -380,15 +243,6 @@ fn mcp_server_graph_approval_round_trip_pauses_then_resumes()
         ),
         Some(&JsonValue::String("mcp-approval".to_owned()))
     );
-    assert_no_json_rpc_error(&responses[1]);
-    assert_eq!(
-        path(
-            &responses[1],
-            &["result", "structuredContent", "runx", "status"]
-        ),
-        Some(&JsonValue::String("completed".to_owned()))
-    );
-    assert_eq!(path(&responses[1], &["result", "isError"]), None);
     Ok(())
 }
 
@@ -485,17 +339,17 @@ fn mcp_server_host_result_conversion_covers_terminal_statuses() {
     );
     assert!(!completed.is_error);
 
-    let paused = mcp_tool_result_from_host_result(McpHostRunResult::Paused {
+    let needs_agent = mcp_tool_result_from_host_result(McpHostRunResult::NeedsAgent {
         skill_name: "echo".to_owned(),
         run_id: "run-1".to_owned(),
         request_count: 2,
-        runx: runx_status("paused"),
+        runx: runx_status("needs_agent"),
     });
     assert_eq!(
-        paused.content[0].text,
-        "echo paused at run-1. Resume with runx_resume after resolving 2 request(s)."
+        needs_agent.content[0].text,
+        "echo needs agent input at run-1. Continue by rerunning the same skill with --run-id run-1 --answers answers.json after resolving 2 request(s)."
     );
-    assert!(!paused.is_error);
+    assert!(!needs_agent.is_error);
 
     for result in [
         McpHostRunResult::Denied {
@@ -587,19 +441,10 @@ fn repo_root() -> Result<PathBuf, Box<dyn std::error::Error>> {
 }
 
 fn server_options() -> McpServerOptions {
-    let mut tools = vec![fixed_tool("echo")];
-    tools.push(McpServerTool {
-        name: "runx_resume".to_owned(),
-        description:
-            "Resume a paused runx run by run id with zero or more structured resolution payloads."
-                .to_owned(),
-        input_schema: JsonObject::new(),
-        result: McpServerToolBehavior::ResumeNotImplemented,
-    });
     McpServerOptions {
         package_name: "runx-cli".to_owned(),
         package_version: "0.0.0".to_owned(),
-        tools,
+        tools: vec![fixed_tool("echo")],
     }
 }
 

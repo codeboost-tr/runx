@@ -39,17 +39,14 @@ harness:
                 impact: medium
                 mitigation: carry explicit dates and source notes into the brief.
       expect:
-        status: success
+        status: sealed
         receipt:
-          kind: skill_execution
-          status: success
-          skill_name: research
-          source_type: agent-step
+          schema: runx.harness_receipt.v1
 
     - name: research-needs-objective
       inputs: {}
       expect:
-        status: needs_resolution
+        status: needs_agent
 
 
 runners:

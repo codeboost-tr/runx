@@ -265,7 +265,7 @@ export async function handleRunStepPlan(
     authorityScopeAdmission: graphStepScopeAdmission(governance),
   });
 
-  if (stepResult.status === "needs_resolution") {
+  if (stepResult.status === "needs_agent") {
     await reportGraphStepWaitingResolution(
       options.caller,
       step,
@@ -290,7 +290,7 @@ export async function handleRunStepPlan(
     return {
       kind: "return",
       result: {
-        status: "needs_resolution",
+        status: "needs_agent",
         graph: ctx.graph,
         stepIds: [step.id],
         stepLabels: [step.label ?? step.id],
@@ -399,7 +399,7 @@ export async function handleRunStepPlan(
   });
 
   ctx.state =
-    stepResult.status === "success"
+    stepResult.status === "sealed"
       ? transitionSequentialGraph(ctx.state, {
           type: "step_succeeded",
           stepId: step.id,
@@ -422,7 +422,7 @@ export async function handleRunStepPlan(
 
 function runtimeDisposition(disposition: ReturnType<typeof runnerReceiptDisposition>): GraphStepRun["disposition"] {
   if (disposition === "declined") return "policy_denied";
-  if (disposition === "deferred") return "needs_resolution";
+  if (disposition === "deferred") return "needs_agent";
   if (disposition === "blocked") return "escalated";
   return disposition === "closed" ? "completed" : "completed";
 }

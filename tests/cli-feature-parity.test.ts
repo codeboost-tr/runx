@@ -2,10 +2,11 @@ import { mkdtemp, readdir, readFile, rm } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 
-import { describe, expect, it } from "vitest";
+import { beforeAll, describe, expect, it } from "vitest";
 
 import { appendLedgerEntries, createRunEventEntry } from "../packages/core/src/artifacts/index.js";
 import { runCli, type CliIo } from "../packages/cli/src/index.js";
+import { ensureRunxBinary, kernelTestEnv } from "./host-protocol-test-utils.js";
 
 interface CommandMatrix {
   readonly exitCodes: readonly number[];
@@ -52,6 +53,10 @@ interface OracleCase {
 }
 
 describe("CLI feature parity matrix", () => {
+  beforeAll(() => {
+    ensureRunxBinary();
+  });
+
   it("covers every command with at least one oracle case", async () => {
     const matrix = await readJson<CommandMatrix>("fixtures/cli-parity/commands.json");
     const oracle = await readOracleCases();
@@ -103,7 +108,7 @@ describe("CLI feature parity matrix", () => {
           arg === "$FIXTURE_RECEIPTS" ? receiptDir : arg,
         );
         const exitCode = await runCli(argv, io, {
-          ...process.env,
+          ...kernelTestEnv(process.env),
           RUNX_CWD: process.cwd(),
           RUNX_HOME: path.join(tempDir, "home"),
           RUNX_RECEIPT_DIR: receiptDir,
@@ -134,17 +139,17 @@ async function prepareOracleFixtures(testCase: OracleCase, receiptDir: string): 
   if (testCase.id === "history.execute") {
     await appendLedgerEntries({
       receiptDir,
-      runId: "gx_paused_oracle",
+      runId: "gx_needs_agent_oracle",
       entries: [
         createRunEventEntry({
-          runId: "gx_paused_oracle",
+          runId: "gx_needs_agent_oracle",
           producer: { skill: "sourcey", runner: "graph" },
           kind: "run_started",
           status: "started",
           createdAt: "2026-04-28T01:00:00.000Z",
         }),
         createRunEventEntry({
-          runId: "gx_paused_oracle",
+          runId: "gx_needs_agent_oracle",
           stepId: "discover",
           producer: { skill: "sourcey", runner: "graph" },
           kind: "step_waiting_resolution",

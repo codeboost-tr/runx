@@ -81,8 +81,8 @@ runners:
         adapters: createDefaultSkillAdapters(),
       });
 
-      expect(run.status).toBe("success");
-      if (run.status !== "success") {
+      expect(run.status).toBe("sealed");
+      if (run.status !== "sealed") {
         return;
       }
       expect(run.execution.stdout).toBe("installed x ok");
@@ -148,8 +148,8 @@ runners:
         env: process.env,
       });
 
-      expect(run.status).toBe("success");
-      if (run.status !== "success") {
+      expect(run.status).toBe("sealed");
+      if (run.status !== "sealed") {
         return;
       }
       expect(run.receipt).toMatchObject({

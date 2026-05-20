@@ -157,8 +157,8 @@ Invariants:
 - No compatibility package, shim, alias, or v2 surface remains for
   `@runxhq/runtime-local` or `@runxhq/adapters` inside this workspace.
 - No active runtime-local replacement code, fixture, receipt assertion, schema
-  projection, or docs page introduced by this spec uses legacy execution-object
-  keys named `work_item`, `engagement`, `matter`, or `operation`.
+  projection, or docs page introduced by this spec uses retired peer
+  execution-object keys.
 - Skill names remain canonical. Do not introduce aliases such as
   `issue-control`, `runtime-local-v2`, or any v2 package name to mask the
   sunset. `issue-to-pr` and `issue-intake` are legitimate product skill names
@@ -208,8 +208,8 @@ Out of scope:
 - Cloud-side TS package deletions (their own specs).
 - Creating a new `@runxhq/runtime-local` compatibility package, v2 package,
   import alias, adapter facade, or work-item/object bridge.
-- Preserving legacy pre-cutover `skill_execution`, `graph_execution`,
-  `work_item`, `engagement`, `matter`, or `operation` execution objects.
+- Preserving legacy pre-cutover execution objects for skill runs, graph runs,
+  or retired peer terminal artifacts.
 - Adding new skills or changing product skill `SKILL.md`/`X.yaml` content to
   make the sunset pass.
 
@@ -334,8 +334,8 @@ Phase 5: validation and review.
   contained acts, child harness receipt refs where graph execution is involved,
   proof status, and verification checks.
 - No active replacement code, fixture, docs page, package manifest, or spec
-  added by this sunset uses `work_item`, `engagement`, `matter`, or
-  `operation` as an execution object.
+  added by this sunset uses retired peer terminal artifact keys as execution
+  objects.
 - No active replacement fixture or receipt expectation accepts retired
   `skill_execution` or `graph_execution` receipt objects.
 - `issue-intake` and `issue-to-pr` run through Rust runtime skill execution and
@@ -354,7 +354,7 @@ Phase 5: validation and review.
 test ! -d packages/runtime-local
 test ! -d packages/adapters
 ! rg -n "@runxhq/(runtime-local|adapters)|packages/(runtime-local|adapters)" . --glob '!.scafld/specs/**' --glob '!**/archive/**'
-! rg -n '"(work_item|engagement|matter|operation)"\\s*:' crates/runx-runtime crates/runx-contracts fixtures/runtime fixtures/harness tests --glob '!**/archive/**'
+! rg -n '"(work[_]item|engagement|matter|operation)"\\s*:' crates/runx-runtime crates/runx-contracts fixtures/runtime fixtures/harness tests --glob '!**/archive/**'
 ! rg -n '"(skill_execution|graph_execution)"\\s*:' fixtures/runtime fixtures/harness crates/runx-runtime tests --glob '!**/archive/**'
 ! rg -n "\\b(issue-control|runtime-local-v2|adapters-v2)\\b" packages crates fixtures tests docs --glob '!**/archive/**'
 ! rg -n "(^|[^A-Za-z0-9_])issue_to_pr([^A-Za-z0-9_]|$)" crates/runx-runtime fixtures/runtime tests --glob '!**/archive/**' --glob '!fixtures/runtime/skills/issue-to-pr/**'
@@ -384,9 +384,8 @@ node scripts/check-rust-core-style.mjs
   `@runxhq/adapters`.
 - Any adapter source type reachable from surviving local execution still lacks
   a Rust adapter or explicit fail-closed receipt evidence.
-- Any active replacement object model still centered on `work_item`,
-  `engagement`, `matter`, `operation`, `skill_execution`, or
-  `graph_execution`.
+- Any active replacement object model still centered on retired peer terminal
+  artifacts, `skill_execution`, or `graph_execution`.
 - Any proposal to keep a workspace shim, v2 package, path alias, or bridge
   package for runtime-local/adapters.
 - Cloud-side hosted cutover ambiguity that would make local deletion break a

@@ -1,6 +1,6 @@
 pub use runx_contracts::{
     AgentActInvocation, AgentActSourceType, ApprovalDecision, ApprovalGate, ExecutionEvent,
-    HostPausedState, HostRunApproval, HostRunApprovalDecision, HostRunKind, HostRunLineage,
+    HostNeedsAgentState, HostRunApproval, HostRunApprovalDecision, HostRunKind, HostRunLineage,
     HostRunLineageKind, HostRunResult, HostRunState, HostRunVerification,
     HostRunVerificationStatus, HostTerminalState, Question, ResolutionRequest, ResolutionResponse,
     ResolutionResponseActor,
@@ -11,7 +11,7 @@ use crate::error::RunxResult;
 #[must_use]
 pub fn host_result_status(result: &HostRunResult) -> &'static str {
     match result {
-        HostRunResult::Paused { .. } => "paused",
+        HostRunResult::NeedsAgent { .. } => "needs_agent",
         HostRunResult::Completed { .. } => "completed",
         HostRunResult::Failed { .. } => "failed",
         HostRunResult::Escalated { .. } => "escalated",

@@ -1,5 +1,9 @@
+// rust-style-allow: large-file - the public SDK client keeps command assembly
+// and response decoding in one file so wrapper parity stays reviewable.
 use std::collections::BTreeMap;
+use std::fs;
 use std::path::PathBuf;
+use std::time::{SystemTime, UNIX_EPOCH};
 
 use runx_contracts::{JsonObject, JsonValue};
 
@@ -36,7 +40,7 @@ pub struct RunSkillOptions {
 }
 
 #[derive(Clone, Debug, Default, PartialEq)]
-pub struct ResumePayload {
+pub struct ContinuePayload {
     pub answers: JsonObject,
     pub approvals: JsonObject,
 }
@@ -126,12 +130,26 @@ impl RunxClient {
         Ok(RunxJsonReport::new(self.run_json(args, None)?))
     }
 
-    pub fn resume_run(&self, run_id: &str, payload: ResumePayload) -> RunxResult<RunxJsonReport> {
-        let stdin = serde_json::to_string(&resume_payload_to_json(payload))?;
-        Ok(RunxJsonReport::new(self.run_json(
-            vec!["resume".to_owned(), run_id.to_owned()],
-            Some(stdin),
-        )?))
+    pub fn continue_run(
+        &self,
+        skill_ref: &str,
+        run_id: &str,
+        payload: ContinuePayload,
+    ) -> RunxResult<RunxJsonReport> {
+        let answers_path = write_continue_payload(payload)?;
+        let result = self.run_json(
+            vec![
+                "skill".to_owned(),
+                skill_ref.to_owned(),
+                "--run-id".to_owned(),
+                run_id.to_owned(),
+                "--answers".to_owned(),
+                answers_path.to_string_lossy().into_owned(),
+            ],
+            None,
+        );
+        let _ignored = fs::remove_file(&answers_path);
+        Ok(RunxJsonReport::new(result?))
     }
 
     pub fn connect_list(&self) -> RunxResult<Vec<ConnectionSummary>> {
@@ -164,7 +182,7 @@ impl RunSkillOptions {
     }
 }
 
-impl ResumePayload {
+impl ContinuePayload {
     pub fn with_answer(mut self, id: impl Into<String>, value: JsonValue) -> Self {
         self.answers.insert(id.into(), value);
         self
@@ -208,11 +226,25 @@ fn decode_json_object(stdout: &str) -> RunxResult<JsonObject> {
     }
 }
 
-fn resume_payload_to_json(payload: ResumePayload) -> JsonValue {
+fn continue_payload_to_json(payload: ContinuePayload) -> JsonValue {
     let mut object = JsonObject::new();
     object.insert("answers".to_owned(), JsonValue::Object(payload.answers));
     object.insert("approvals".to_owned(), JsonValue::Object(payload.approvals));
     JsonValue::Object(object)
+}
+
+fn write_continue_payload(payload: ContinuePayload) -> RunxResult<PathBuf> {
+    let nanos = SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .unwrap_or_default()
+        .as_nanos();
+    let path =
+        std::env::temp_dir().join(format!("runx-continue-{}-{nanos}.json", std::process::id()));
+    fs::write(
+        &path,
+        serde_json::to_vec(&continue_payload_to_json(payload))?,
+    )?;
+    Ok(path)
 }
 
 fn search_result_from_json(value: &JsonValue) -> RunxResult<SkillSearchResult> {

@@ -18,7 +18,7 @@ fn issue_intake_generated_fixtures_replay_to_harness_receipts()
         "request-review-before-mutation",
     ] {
         let output = run_case(case_name)?;
-        assert_eq!(output.status, HarnessExpectedStatus::Success, "{case_name}");
+        assert_eq!(output.status, HarnessExpectedStatus::Sealed, "{case_name}");
         assert_eq!(output.receipt.seal.disposition, ClosureDisposition::Closed);
         validate_harness_receipt(&output.receipt)
             .map_err(|verification| format!("{case_name}: {:?}", verification.findings))?;

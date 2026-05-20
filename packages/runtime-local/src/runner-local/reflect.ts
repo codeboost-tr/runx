@@ -22,8 +22,8 @@ import {
 import type { PostRunReflectPolicy } from "../parser-types.js";
 
 type ReflectReceipt = NonNullable<
-  | Extract<RunLocalSkillResult, { readonly status: "success" | "failure" }>["receipt"]
-  | Extract<RunLocalGraphResult, { readonly status: "success" | "failure" | "escalated" }>["receipt"]
+  | Extract<RunLocalSkillResult, { readonly status: "sealed" | "failure" }>["receipt"]
+  | Extract<RunLocalGraphResult, { readonly status: "sealed" | "failure" | "escalated" }>["receipt"]
   | Extract<RunLocalSkillResult, { readonly status: "policy_denied" }>["receipt"]
   | Extract<RunLocalGraphResult, { readonly status: "policy_denied" }>["receipt"]
 >;
@@ -47,7 +47,7 @@ interface LocalReflectProjection {
   readonly receipt_id: string;
   readonly run_id: string;
   readonly receipt_category: string;
-  readonly status: "success" | "failure";
+  readonly status: "sealed" | "failure";
   readonly selected_runner?: string;
   readonly policy: PostRunReflectPolicy;
   readonly mediation: "agentic" | "deterministic";
@@ -171,7 +171,7 @@ function buildReflectProjection(options: {
     runnerReceiptCategory(options.receipt) === "graph"
       ? {
           total_steps: steps.length,
-          successful_steps: steps.filter((step) => step.status === "success").length,
+          successful_steps: steps.filter((step) => step.status === "sealed").length,
           failed_steps: steps.filter((step) => step.status === "failure").length,
           runner_types: uniqueStrings(steps.map((step) => step.runner ?? "default")),
         }

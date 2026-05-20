@@ -9,7 +9,7 @@ use runx_runtime::{
 };
 
 #[test]
-fn issue_to_pr_generated_fixtures_replay_to_needs_resolution_receipts()
+fn issue_to_pr_generated_fixtures_replay_to_needs_agent_receipts()
 -> Result<(), Box<dyn std::error::Error>> {
     for case_name in [
         "issue-to-pr-dispatches-first-step",
@@ -18,7 +18,7 @@ fn issue_to_pr_generated_fixtures_replay_to_needs_resolution_receipts()
         let output = run_case(case_name)?;
         assert_eq!(
             output.status,
-            HarnessExpectedStatus::NeedsResolution,
+            HarnessExpectedStatus::NeedsAgent,
             "{case_name}"
         );
         assert_eq!(

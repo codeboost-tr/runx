@@ -17,7 +17,7 @@ describe("merge-metadata", () => {
     const adapter: SkillAdapter = {
       type: "agent",
       invoke: async () => ({
-        status: "success",
+        status: "sealed",
         stdout: "ok",
         stderr: "",
         exitCode: 0,
@@ -42,8 +42,8 @@ describe("merge-metadata", () => {
         runxHome: path.join(tempDir, "home"),
       });
 
-      expect(result.status).toBe("success");
-      if (result.status !== "success") {
+      expect(result.status).toBe("sealed");
+      if (result.status !== "sealed") {
         return;
       }
       expect(result.receipt.metadata).toMatchObject({
@@ -66,7 +66,7 @@ describe("merge-metadata", () => {
     const adapter: SkillAdapter = {
       type: "agent",
       invoke: async () => ({
-        status: "success",
+        status: "sealed",
         stdout: "ok",
         stderr: "",
         exitCode: 0,
@@ -94,8 +94,8 @@ describe("merge-metadata", () => {
         runxHome: path.join(tempDir, "home"),
       });
 
-      expect(result.status).toBe("success");
-      if (result.status !== "success") {
+      expect(result.status).toBe("sealed");
+      if (result.status !== "sealed") {
         return;
       }
       expect(result.receipt.metadata).toMatchObject({

@@ -319,7 +319,7 @@ target:
 inputs:
   message: hello
 expect:
-  status: success
+  status: sealed
   output:
     subset:
       schema: {packet_id}
@@ -341,7 +341,7 @@ inputs:
 agent:
   mode: replay
 expect:
-  status: success
+  status: sealed
   outputs:
     echo_packet:
       matches_packet: {packet_id}
@@ -360,7 +360,7 @@ fn agent_replay_json(packet_id: &str, prompt_fingerprint: &str) -> String {
     "kind": "skill",
     "ref": "."
   }},
-  "status": "success",
+  "status": "sealed",
   "outputs": {{
     "echo_packet": {{
       "schema": "{packet_id}",
@@ -449,7 +449,7 @@ fn schema_hash(packet_id: &str) -> String {
 
 fn prompt_fingerprint(packet_id: &str) -> String {
     let stable = format!(
-        r#"{{"agent":{{"mode":"replay"}},"expect":{{"outputs":{{"echo_packet":{{"matches_packet":"{packet_id}"}}}},"status":"success"}},"inputs":{{"message":"hello"}},"target":{{"kind":"skill","ref":"."}}}}"#
+        r#"{{"agent":{{"mode":"replay"}},"expect":{{"outputs":{{"echo_packet":{{"matches_packet":"{packet_id}"}}}},"status":"sealed"}},"inputs":{{"message":"hello"}},"target":{{"kind":"skill","ref":"."}}}}"#
     );
     format!("sha256:{}", hash_string(&stable))
 }

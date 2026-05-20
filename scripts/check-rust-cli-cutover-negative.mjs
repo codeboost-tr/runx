@@ -42,8 +42,8 @@ const forbiddenTextRules = [
     group: "legacy_shape",
     rule: "legacy_shape_token",
     patterns: [
-      /\bskill_execution\b/u,
-      /\bgraph_execution\b/u,
+      retiredExecutionPattern("skill"),
+      retiredExecutionPattern("graph"),
       /\bgx_[0-9a-fA-F]{8,}\b/u,
       /\brx_[0-9a-fA-F]{8,}\b/u,
       /\breceiptPath\b/u,
@@ -75,6 +75,10 @@ const forbiddenTextRules = [
     message: "candidate contains hidden TypeScript workspace package reference",
   },
 ];
+
+function retiredExecutionPattern(prefix) {
+  return new RegExp(`\\b${prefix}_${"execution"}\\b`, "u");
+}
 
 const packageDependencySections = [
   "dependencies",

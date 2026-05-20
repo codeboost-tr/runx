@@ -120,7 +120,7 @@ harness:
         approvals:
           payment-execute.spend.approval: true
       expect:
-        status: success
+        status: sealed
         receipt:
           schema: runx.harness_receipt.v1
           state: sealed
@@ -167,7 +167,6 @@ runners:
         description: "Stable idempotency material."
     graph:
       name: payment-execute
-      owner: runx
       steps:
         - id: quote
           skill: ../payment-quote-preflight

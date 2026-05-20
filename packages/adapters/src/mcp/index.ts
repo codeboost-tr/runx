@@ -45,7 +45,7 @@ export async function invokeMcp(request: AdapterActInvocation): Promise<ActRecei
     });
 
     return {
-      status: "success",
+      status: "sealed",
       stdout: stringifyMcpToolResult(result.result),
       stderr: "",
       exitCode: 0,

@@ -114,8 +114,8 @@ describe("sourcey skill", () => {
         runxHome: runtime.paths.runxHome,
       });
 
-      expect(result.status).toBe("success");
-      if (result.status !== "success") {
+      expect(result.status).toBe("sealed");
+      if (result.status !== "sealed") {
         throw new Error(result.status === "failure" ? result.execution.stderr || result.execution.errorMessage : result.status);
       }
 
@@ -374,8 +374,8 @@ describe("sourcey skill", () => {
         runxHome: runtime.paths.runxHome,
       });
 
-      expect(result.status).toBe("success");
-      if (result.status !== "success") {
+      expect(result.status).toBe("sealed");
+      if (result.status !== "sealed") {
         throw new Error(result.status === "failure" ? result.execution.stderr || result.execution.errorMessage : result.status);
       }
 

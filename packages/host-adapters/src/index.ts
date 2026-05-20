@@ -67,8 +67,8 @@ export type HostBoundaryResolver = (
   context: HostBoundaryContext,
 ) => Promise<HostBoundaryReply> | HostBoundaryReply;
 
-export interface HostPausedResult {
-  readonly status: "paused";
+export interface HostNeedsAgentResult {
+  readonly status: "needs_agent";
   readonly skillName: string;
   readonly runId: string;
   readonly requests: readonly ResolutionRequest[];
@@ -110,7 +110,7 @@ export interface HostDeniedResult {
 }
 
 export type HostRunResult =
-  | HostPausedResult
+  | HostNeedsAgentResult
   | HostCompletedResult
   | HostFailedResult
   | HostEscalatedResult
@@ -139,8 +139,8 @@ export interface HostInspectOptions {
   readonly runxHome?: string;
 }
 
-export interface HostPausedState {
-  readonly status: "paused";
+export interface HostNeedsAgentState {
+  readonly status: "needs_agent";
   readonly skillName: string;
   readonly runId: string;
   readonly requestedPath?: string;
@@ -186,7 +186,7 @@ export interface HostDeniedState extends HostTerminalState {
 }
 
 export type HostRunState =
-  | HostPausedState
+  | HostNeedsAgentState
   | HostCompletedState
   | HostFailedState
   | HostEscalatedState
@@ -337,8 +337,8 @@ function summarizeHostResult(result: HostRunResult): string {
   switch (result.status) {
     case "completed":
       return `${result.skillName} completed. Inspect receipt ${result.receiptId}.`;
-    case "paused":
-      return `${result.skillName} paused at ${result.runId}. Resume after resolving ${result.requests.length} request(s).`;
+    case "needs_agent":
+      return `${result.skillName} needs agent input at ${result.runId}. Continue after resolving ${result.requests.length} request(s).`;
     case "denied":
       return `${result.skillName} was denied by policy.`;
     case "escalated":

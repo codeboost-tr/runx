@@ -14,7 +14,7 @@ export async function appendSkillLedgerEntries(options: {
   readonly skill: ValidatedSkill;
   readonly startedAt: string;
   readonly completedAt: string;
-  readonly status: "success" | "failure";
+  readonly status: "sealed" | "failure";
   readonly artifactEnvelopes: readonly ArtifactEnvelope[];
   readonly receiptId: string;
   readonly includeRunStarted?: boolean;
@@ -32,7 +32,7 @@ export function buildSkillLedgerEntries(options: {
   readonly skill: ValidatedSkill;
   readonly startedAt: string;
   readonly completedAt: string;
-  readonly status: "success" | "failure";
+  readonly status: "sealed" | "failure";
   readonly artifactEnvelopes: readonly ArtifactEnvelope[];
   readonly receiptId: string;
   readonly includeRunStarted?: boolean;
@@ -126,7 +126,7 @@ export async function appendGraphLedgerEntries(options: {
   readonly skill: ValidatedSkill;
   readonly artifactEnvelopes: readonly ArtifactEnvelope[];
   readonly receiptId: string;
-  readonly status: "success" | "failure";
+  readonly status: "sealed" | "failure";
   readonly detail?: Readonly<Record<string, unknown>>;
   readonly createdAt: string;
 }): Promise<void> {
@@ -153,7 +153,7 @@ export async function appendGraphLedgerEntries(options: {
         runId: options.runId,
         stepId: options.stepId,
         producer,
-        kind: options.status === "success" ? "step_succeeded" : "step_failed",
+        kind: options.status === "sealed" ? "step_succeeded" : "step_failed",
         status: options.status,
         detail: {
           skill: options.skill.name,
@@ -261,7 +261,7 @@ export function buildGraphCompletedLedgerEntry(options: {
   readonly topLevelSkillName: string;
   readonly receiptId: string;
   readonly stepCount: number;
-  readonly status: "success" | "failure";
+  readonly status: "sealed" | "failure";
   readonly createdAt: string;
 }): ArtifactEnvelope {
   return createRunEventEntry({

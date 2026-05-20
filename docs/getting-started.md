@@ -38,7 +38,7 @@ Use the id from the previous command:
 pnpm exec runx skill inspect <receipt-id>
 ```
 
-The inspection should show a verified `skill_execution` receipt. That receipt
+The inspection should show a verified `runx.harness_receipt.v1` receipt. That receipt
 is the durable evidence that runx executed the skill, recorded the input shape,
 and captured the output without relying on prose claims.
 

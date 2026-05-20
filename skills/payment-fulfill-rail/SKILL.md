@@ -28,7 +28,7 @@ does not decide policy, approval, retry, or success.
   recovered, or ambiguous.
 - Strategic bar: keep provider churn inside the rail runner; keep governance in
   core.
-- Stop conditions: return `needs_resolution` or `ambiguous` when the rail
+- Stop conditions: return `needs_agent` or `ambiguous` when the rail
   response cannot be tied to the idempotency key and reserved authority.
 
 ## Output

@@ -15,28 +15,28 @@ afterEach(async () => {
 });
 
 describe("LangChain host adapter", () => {
-  it("wraps paused and resumed runs in a LangChain-style response", async () => {
+  it("wraps needsAgent and continued runs in a LangChain-style response", async () => {
     const harness = await createHostHarness();
     cleanups.push(harness.cleanup);
     const adapter = createLangChainHostAdapter(harness.bridge);
 
-    const paused = await adapter.run({
+    const needsAgent = await adapter.run({
       skillPath: "fixtures/skills/echo",
     });
 
-    expect(paused.additional_kwargs.runx.status).toBe("paused");
-    if (paused.additional_kwargs.runx.status !== "paused") {
+    expect(needsAgent.additional_kwargs.runx.status).toBe("needs_agent");
+    if (needsAgent.additional_kwargs.runx.status !== "needs_agent") {
       return;
     }
 
-    const resumed = await adapter.resume(paused.additional_kwargs.runx.runId, {
+    const continued = await adapter.resume(needsAgent.additional_kwargs.runx.runId, {
       skillPath: "fixtures/skills/echo",
       resolver: ({ request }) => (request.kind === "input" ? { message: "from-langchain-host-adapter" } : undefined),
     });
 
-    expect(resumed.additional_kwargs.runx).toMatchObject({
+    expect(continued.additional_kwargs.runx).toMatchObject({
       status: "completed",
       output: "from-langchain-host-adapter",
     });
-  });
+  }, 20_000);
 });

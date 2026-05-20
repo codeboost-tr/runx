@@ -2,7 +2,7 @@ name: sequential-graph
 kind: graph
 target: ../graphs/sequential/graph.yaml
 expect:
-  status: success
+  status: sealed
   receipt:
     schema: runx.harness_receipt.v1
     body_digest: sha256:246e711974c990929e664ef8e43ffde45bfd802362417dc302df099a9524ab8a

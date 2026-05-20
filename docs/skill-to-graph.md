@@ -35,7 +35,7 @@ cd oss
 pnpm exec runx harness examples/hello-graph/harness.yaml --json
 ```
 
-The harness expects a successful `graph_execution` receipt and the ordered
+The harness expects a sealed `runx.harness_receipt.v1` receipt and the ordered
 steps `first`, then `second`.
 
 ## When To Use A Graph

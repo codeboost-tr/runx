@@ -43,7 +43,7 @@ export type FinalizeRunContext = Pick<
 export async function finalizeRun(ctx: FinalizeRunContext, options: RunLocalGraphOptions): Promise<RunLocalGraphResult> {
   const completedAt = new Date().toISOString();
   const graphEscalated = ctx.state.status === "escalated";
-  const terminalStatus = ctx.state.status === "succeeded" ? "success" : "failure";
+  const terminalStatus = ctx.state.status === "succeeded" ? "sealed" : "failure";
   const topLevelSkillName = graphProducerSkillName(options.skillEnvironment?.name, ctx.graph.name);
   const completedLedgerEntry = buildGraphCompletedLedgerEntry({
     runId: ctx.graphId,
@@ -56,7 +56,7 @@ export async function finalizeRun(ctx: FinalizeRunContext, options: RunLocalGrap
   const existingLedger = await inspectLedger(ctx.receiptDir, ctx.graphId);
   const existingTerminalStatus = existingLedger.entries
     .map((entry) => graphCompletedLedgerStatus(entry, ctx.graphId))
-    .find((status): status is "success" | "failure" => status !== undefined);
+    .find((status): status is "sealed" | "failure" => status !== undefined);
   if (existingTerminalStatus && existingTerminalStatus !== terminalStatus) {
     throw new Error(
       `Graph ${ctx.graphId} already has terminal ledger status ${existingTerminalStatus}; cannot finalize as ${terminalStatus}.`,
@@ -135,7 +135,7 @@ export async function finalizeRun(ctx: FinalizeRunContext, options: RunLocalGrap
 function graphCompletedLedgerStatus(
   entry: ArtifactEnvelope,
   graphId: string,
-): "success" | "failure" | undefined {
+): "sealed" | "failure" | undefined {
   if (entry.type !== "run_event" || entry.meta.run_id !== graphId || entry.meta.step_id !== null) {
     return undefined;
   }
@@ -143,7 +143,7 @@ function graphCompletedLedgerStatus(
   if (entry.data.kind !== "graph_completed" || detail?.receipt_id !== graphId) {
     return undefined;
   }
-  return entry.data.status === "success" || entry.data.status === "failure"
+  return entry.data.status === "sealed" || entry.data.status === "failure"
     ? entry.data.status
     : undefined;
 }

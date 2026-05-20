@@ -1,5 +1,5 @@
 {
-  "status": "success",
+  "status": "sealed",
   "stdout": "plain final answer",
   "stderr": "",
   "exitCode": 0,

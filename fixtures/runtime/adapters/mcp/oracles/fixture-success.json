@@ -1,5 +1,5 @@
 {
-  "status": "success",
+  "status": "sealed",
   "stdout": "hi",
   "stderr": "",
   "exitCode": 0,

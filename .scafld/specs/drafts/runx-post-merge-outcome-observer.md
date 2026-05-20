@@ -2,9 +2,9 @@
 spec_version: '2.0'
 task_id: runx-post-merge-outcome-observer
 created: '2026-05-19T02:08:02Z'
-updated: '2026-05-19T12:11:22Z'
+updated: '2026-05-20T10:27:24Z'
 status: draft
-harden_status: not_run
+harden_status: in_progress
 size: large
 risk_level: high
 ---
@@ -14,15 +14,18 @@ risk_level: high
 ## Current State
 
 Status: draft
-Current phase: none
-Next: harden
-Reason: issue-to-PR currently tells a good story through PR creation, but the
-post-merge closure/proof path is still too dependent on repo-local glue. runx
-core needs an observer for merge, close, deploy verification, final
-source-thread update, and issue closure.
-Blockers: `runx-operational-policy-config`; target/source context from
-`runx-target-repo-runners` for cross-repo flows.
-Allowed follow-up command: `scafld harden runx-post-merge-outcome-observer`
+Current phase: harden round 1
+Next: provider adapter and target-runner integration slice after dependencies
+Reason: issue-to-PR currently has a pure contract/runtime observer slice for
+closure planning, dedupe, sealed harness receipt projection, and local
+publication command projection. The remaining execution-ready gap is live
+provider observation plus target-runner-supplied source/target context.
+Blockers: live GitHub PR observer/webhook/scheduler adapter; target/source
+context from `runx-target-repo-runners` including source issue ref,
+source-thread ref, target PR ref, merge SHA, runner verification hook/deploy
+context, and cross-repo dedupe identity; policy source configuration from
+`runx-operational-policy-config` for source-thread publication and close mode.
+Allowed follow-up command: `scafld harden runx-post-merge-outcome-observer --mark-passed`
 Latest runner update: 2026-05-20 added Rust contract-level repeated observer
 signal idempotency proof for duplicate local provider observations, tightened
 missing source-thread routing to fail before provider-state classification in
@@ -72,11 +75,11 @@ Invariants:
   failed-verification, and superseded closures are distinct.
 - Verification output is reviewer-safe and redacted.
 - No hidden auto-merge path is introduced.
-- The observer never emits a peer outcome/effect/report packet. It seals a
-  follow-on harness receipt whose contained acts use `form: "observation"`,
+- The observer never emits a legacy peer terminal artifact. It seals a follow-on
+  harness receipt whose contained acts use `form: "observation"`,
   `form: "verification"`, `form: "reply"`, or `form: "revision"` as needed.
 - Source issue closure and final source-thread publication require a sealed
-  harness receipt with proof-bound closure and verification criteria.
+  harness receipt with closure and `proof.verification` criteria.
 
 ## Objectives
 
@@ -169,13 +172,13 @@ Required behavior:
   link, PR link, merge sha when available, verification summary, closure reason,
   and next human action.
 - [x] Final publication validates by reading the sealed harness receipt and
-  proof-bound verification criteria before it is published or used to close the
+  `proof.verification` criteria before it is published or used to close the
   source issue.
 - [x] Final publication excludes absolute local paths, raw env vars, secrets,
   and excessive logs at the local runtime command-projection boundary.
-- [ ] No fixture, emitted artifact, schema id, or persisted receipt uses
-  `runx.issue_to_pr_outcome.v1`, `issue_to_pr_outcome`, `effect`,
-  `verification_report`, `verification-report`, or `target_outcome`.
+- [ ] No fixture, emitted artifact, schema id, or persisted receipt uses a
+  retired peer terminal artifact shape; terminal state is represented only as
+  sealed harness receipt closure plus `proof.verification` criteria.
 
 ## Phase 1: Closure/Proof Model
 
@@ -195,8 +198,8 @@ Changes:
 - Add policy validation for closure and publication actions.
 
 Acceptance:
-- [ ] Fixtures cover every closure state and contain no retired terminal/effect
-  peer artifacts.
+- [ ] Fixtures cover every closure state and contain no retired peer terminal
+  artifacts.
 
 ## Phase 2: Observer
 
@@ -270,7 +273,18 @@ Source: plan
 
 ## Harden Rounds
 
+### round-1
+
+Status: in_progress
+Started: 2026-05-20T10:27:24Z
+Ended: none
+
+Checks:
 - none
+
+Issues:
+- none
+
 
 ## Planning Log
 
@@ -297,3 +311,7 @@ Source: plan
   public command text for local paths and env-secret assignments. The spec stays
   draft because live provider adapters and end-to-end publication fixtures are
   still pending.
+- 2026-05-20: Reworded the draft away from retired peer terminal vocabulary.
+  The remaining contract language is sealed harness receipt closure plus
+  `proof.verification` criteria, with no compatibility shim or legacy peer
+  artifact contract.

@@ -34,13 +34,13 @@ Review a receipt.
       env: process.env,
     });
 
-    expect(result.status).toBe("success");
+    expect(result.status).toBe("sealed");
     expect(JSON.parse(result.stdout)).toEqual({ verdict: "pass" });
     expect(result.metadata).toMatchObject({
       agent_hook: {
         source_type: "harness-hook",
         hook: "review-receipt",
-        status: "success",
+        status: "sealed",
       },
     });
   });

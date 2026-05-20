@@ -48,12 +48,9 @@ harness:
                 impact: high
                 mitigation: Require an approval gate and moderation notes.
       expect:
-        status: success
+        status: sealed
         receipt:
-          kind: skill_execution
-          status: success
-          skill_name: prior-art
-          source_type: agent-step
+          schema: runx.harness_receipt.v1
 
     - name: prior-art-recommends-reuse
       inputs:
@@ -84,12 +81,9 @@ harness:
                 kind: repo-document
             risks: []
       expect:
-        status: success
+        status: sealed
         receipt:
-          kind: skill_execution
-          status: success
-          skill_name: prior-art
-          source_type: agent-step
+          schema: runx.harness_receipt.v1
 
 runners:
   prior-art-agent:

@@ -6,7 +6,7 @@ target:
 inputs:
   message: hello
 expect:
-  status: success
+  status: sealed
   output:
     subset:
       schema: docs.demo.echo.v1

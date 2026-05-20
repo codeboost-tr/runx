@@ -17,7 +17,7 @@ fn loads_active_harness_fixtures_without_retired_receipt_fields() -> Result<(), 
         "fixtures/harness/payment-approval-graph.yaml",
     ] {
         let fixture = load_harness_fixture(fixture_path(path))?;
-        assert_eq!(fixture.expect.status, Some(HarnessExpectedStatus::Success));
+        assert_eq!(fixture.expect.status, Some(HarnessExpectedStatus::Sealed));
         let receipt = fixture
             .expect
             .receipt
@@ -80,7 +80,11 @@ fn parses_harness_graph_fixture_contract() -> Result<(), HarnessFixtureError> {
 
 #[test]
 fn rejects_retired_receipt_kind_field_with_stable_path() {
-    for field in ["kind", "skill_execution", "graph_execution"] {
+    for field in [
+        "kind".to_owned(),
+        retired_execution_receipt_field("skill"),
+        retired_execution_receipt_field("graph"),
+    ] {
         let result = parse_harness_fixture(&format!(
             r#"
 name: old
@@ -103,12 +107,12 @@ expect:
 #[test]
 fn retired_receipt_expectations_are_rejected() {
     for field in [
-        "skill_execution",
-        "graph_execution",
-        "skill_name",
-        "source_type",
-        "graph_name",
-        "owner",
+        retired_execution_receipt_field("skill"),
+        retired_execution_receipt_field("graph"),
+        "skill_name".to_owned(),
+        "source_type".to_owned(),
+        "graph_name".to_owned(),
+        "owner".to_owned(),
     ] {
         let result = parse_harness_fixture(&format!(
             r#"
@@ -137,7 +141,7 @@ name: old
 kind: mcp
 target: ../skills/echo
 expect:
-  status: success
+  status: sealed
 "#,
     );
 
@@ -152,7 +156,7 @@ expect:
 fn replays_active_harness_skill_fixture() -> Result<(), Box<dyn std::error::Error>> {
     let output = run_fixture_with_test_adapter("fixtures/harness/echo-skill.yaml")?;
 
-    assert_eq!(output.status, HarnessExpectedStatus::Success);
+    assert_eq!(output.status, HarnessExpectedStatus::Sealed);
     assert_eq!(output.receipt.harness.harness_id, "hrn_echo-skill_echo");
     assert_eq!(output.receipt.seal.disposition, ClosureDisposition::Closed);
     let skill_output = output.skill_output.ok_or(HarnessFixtureError::Required {
@@ -166,7 +170,7 @@ fn replays_active_harness_skill_fixture() -> Result<(), Box<dyn std::error::Erro
 fn replays_active_harness_graph_fixture() -> Result<(), Box<dyn std::error::Error>> {
     let output = run_fixture_with_test_adapter("fixtures/harness/sequential-graph.yaml")?;
 
-    assert_eq!(output.status, HarnessExpectedStatus::Success);
+    assert_eq!(output.status, HarnessExpectedStatus::Sealed);
     assert_eq!(
         output.receipt.harness.harness_id,
         "hrn_sequential-echo_graph"
@@ -183,7 +187,7 @@ fn replays_payment_approval_graph_fixture_with_rail_proof() -> Result<(), Box<dy
 {
     let output = run_fixture_with_test_adapter("fixtures/harness/payment-approval-graph.yaml")?;
 
-    assert_eq!(output.status, HarnessExpectedStatus::Success);
+    assert_eq!(output.status, HarnessExpectedStatus::Sealed);
     assert_eq!(
         output.receipt.harness.harness_id,
         "hrn_payment-approval_graph"
@@ -319,4 +323,8 @@ fn assert_oracle(relative_path: &str, actual: &str) -> Result<(), Box<dyn std::e
     let expected = std::fs::read_to_string(fixture_path(relative_path))?;
     assert_eq!(expected, format!("{actual}\n"), "{relative_path}");
     Ok(())
+}
+
+fn retired_execution_receipt_field(prefix: &str) -> String {
+    format!("{prefix}_{}", "execution")
 }

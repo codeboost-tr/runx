@@ -1,5 +1,5 @@
 {
-  "status": "success",
+  "status": "sealed",
   "stdout": "local:catalog fixture collision",
   "stderr": "",
   "exitCode": 0,

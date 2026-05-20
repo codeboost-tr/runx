@@ -387,9 +387,9 @@ fn json_object(value: &JsonValue) -> Option<&runx_contracts::JsonObject> {
 
 fn disposition_from_expected_status(status: &HarnessExpectedStatus) -> ClosureDisposition {
     match status {
-        HarnessExpectedStatus::Success => ClosureDisposition::Closed,
+        HarnessExpectedStatus::Sealed => ClosureDisposition::Closed,
         HarnessExpectedStatus::Failure => ClosureDisposition::Failed,
-        HarnessExpectedStatus::NeedsResolution => ClosureDisposition::Deferred,
+        HarnessExpectedStatus::NeedsAgent => ClosureDisposition::Deferred,
         HarnessExpectedStatus::PolicyDenied => ClosureDisposition::Blocked,
         HarnessExpectedStatus::Escalated => ClosureDisposition::Deferred,
     }

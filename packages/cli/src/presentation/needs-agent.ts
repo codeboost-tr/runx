@@ -8,6 +8,7 @@ import { humanizeLabel } from "./internal.js";
 
 interface RunStateSummary {
   readonly skill: { readonly name: string };
+  readonly skillPath: string;
   readonly runId: string;
   readonly stepIds?: readonly string[];
   readonly stepLabels?: readonly string[];
@@ -18,12 +19,12 @@ interface LocalAgentInstall {
   readonly label: string;
 }
 
-export function renderNeedsResolution(
+export function renderNeedsAgent(
   result: RunStateSummary & { readonly requests: readonly ResolutionRequest[] },
   env: NodeJS.ProcessEnv = process.env,
 ): string {
   const t = theme(undefined, env);
-  const icon = statusIcon("needs_resolution", t);
+  const icon = statusIcon("needs_agent", t);
   const steps = (result.stepLabels ?? result.stepIds ?? []).map((value) => humanizeLabel(value)).join(", ");
   const kinds = Array.from(new Set(result.requests.map((request) => request.kind)));
   const cognitivePhrase = cognitiveNeedPhrase(result.requests, result.skill.name);
@@ -37,6 +38,7 @@ export function renderNeedsResolution(
           ? sourceyCopy.headline
           : `waiting for ${cognitivePhrase}`;
   const localAgents = detectLocalAgents(env);
+  const continueCommand = formatContinueCommand(result.skillPath, result.runId);
   const lines = [""];
   lines.push(`  ${icon}  ${t.bold}${result.skill.name}${t.reset}  ${t.dim}${headline}${t.reset}`);
   lines.push(`  ${t.dim}run${t.reset}   ${shortId(result.runId)}`);
@@ -92,19 +94,27 @@ export function renderNeedsResolution(
   }
   if (kinds.includes("agent_act") && localAgents.length > 0) {
     lines.push(`  ${t.dim}Detected here:${t.reset} ${localAgents.map((agent) => agent.label).join(", ")}`);
-    lines.push(`  ${t.dim}Best path:${t.reset} open this repo in ${localAgents.map((agent) => agent.label).join(" or ")} and run ${t.cyan}runx resume ${result.runId}${t.reset}${t.dim} there.${t.reset}`);
+    lines.push(`  ${t.dim}Best path:${t.reset} open this repo in ${localAgents.map((agent) => agent.label).join(" or ")} and run ${t.cyan}${continueCommand}${t.reset}${t.dim} there.${t.reset}`);
   } else if (kinds.includes("agent_act")) {
-    lines.push(`  ${t.dim}Best path:${t.reset} run ${t.cyan}runx resume ${result.runId}${t.reset}${t.dim} from Codex or Claude Code, or script the step with ${t.cyan}--answers${t.reset}${t.dim}.${t.reset}`);
+    lines.push(`  ${t.dim}Best path:${t.reset} run ${t.cyan}${continueCommand}${t.reset}${t.dim} from Codex or Claude Code.${t.reset}`);
   } else if (kinds.includes("approval")) {
-    lines.push(`  ${t.dim}Best path:${t.reset} run ${t.cyan}runx resume ${result.runId}${t.reset}${t.dim} to approve, or pass ${t.cyan}--answers${t.reset}${t.dim} with approval decisions.${t.reset}`);
+    lines.push(`  ${t.dim}Best path:${t.reset} add approval decisions to an answers file, then run ${t.cyan}${continueCommand}${t.reset}${t.dim}.${t.reset}`);
   } else if (kinds.includes("input")) {
-    lines.push(`  ${t.dim}Best path:${t.reset} run ${t.cyan}runx resume ${result.runId}${t.reset}${t.dim} to continue, or pass ${t.cyan}--input${t.reset}${t.dim} values.${t.reset}`);
+    lines.push(`  ${t.dim}Best path:${t.reset} add required values to an answers file, then run ${t.cyan}${continueCommand}${t.reset}${t.dim}.${t.reset}`);
   }
   lines.push("");
   lines.push(`  ${t.dim}Machine mode:${t.reset} ${t.dim}${t.cyan}--json${t.reset}${t.dim} prints the exact request envelope.${t.reset}`);
-  lines.push(`  ${t.dim}Exit code:${t.reset} ${t.dim}2, documented in ${t.cyan}docs/cli-exit-codes.md#exit-code-2-needs-resolution${t.reset}${t.dim}.${t.reset}`);
+  lines.push(`  ${t.dim}Exit code:${t.reset} ${t.dim}2, documented in ${t.cyan}docs/cli-exit-codes.md#exit-code-2-needs-agent${t.reset}${t.dim}.${t.reset}`);
   lines.push("");
   return lines.join("\n");
+}
+
+function formatContinueCommand(skillPath: string, runId: string): string {
+  return `runx skill ${shellQuote(skillPath)} --run-id ${shellQuote(runId)} --answers answers.json`;
+}
+
+function shellQuote(value: string): string {
+  return /^[A-Za-z0-9_./:@=-]+$/.test(value) ? value : `'${value.replace(/'/g, "'\\''")}'`;
 }
 
 export function renderPolicyDenied(

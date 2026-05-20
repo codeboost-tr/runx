@@ -55,7 +55,7 @@ harness:
               action: seal_recovered_proof
             open_questions: []
       expect:
-        status: success
+        status: sealed
         receipt:
           schema: runx.harness_receipt.v1
           state: sealed

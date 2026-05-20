@@ -13,6 +13,8 @@ use runx_contracts::{
 
 const NITROSEND_LIKE: &str =
     include_str!("../../../fixtures/operational-policy/nitrosend-like.json");
+const MINIMAL_SINGLE_REPO: &str =
+    include_str!("../../../fixtures/operational-policy/minimal-single-repo.json");
 const INVALID_UNKNOWN_RUNNER: &str =
     include_str!("../../../fixtures/operational-policy/invalid-unknown-runner.json");
 const INVALID_NOT_SCAFLD_TARGET: &str =
@@ -95,6 +97,51 @@ fn dedupe_key_is_scoped_by_target_repo() -> Result<(), Box<dyn std::error::Error
         component_value(&app_plan, "target_repo"),
         Some("nitrosend/app")
     );
+    Ok(())
+}
+
+#[test]
+fn same_repo_issue_to_pr_plans_through_target_runner_contract()
+-> Result<(), Box<dyn std::error::Error>> {
+    let policy: OperationalPolicy = serde_json::from_str(MINIMAL_SINGLE_REPO)?;
+    let plan = plan_target_repo_runner(
+        &policy,
+        &fixture_request("github-issues", "example/project"),
+    )?;
+
+    assert_eq!(plan.policy_id, "single-repo-review-flow");
+    assert_eq!(plan.action, OperationalPolicyAction::IssueToPr);
+    assert_eq!(plan.source.source_id, "github-issues");
+    assert_eq!(plan.target.repo, "example/project");
+    assert_eq!(plan.runner.runner_id, "local-review");
+    assert_eq!(plan.owner.route_id, "maintainers");
+    assert!(plan.source_thread.required);
+    assert!(plan.target.scafld_required);
+    assert!(plan.runner.scafld_required);
+    assert!(plan.mutate_target_repo);
+    assert!(plan.require_human_merge_gate);
+
+    let execution = plan_target_repo_runner_execution(
+        &plan,
+        &TargetRepoRunnerReadinessObservation {
+            target_repo: "example/project".to_owned(),
+            runner_id: "local-review".to_owned(),
+            scafld_ready: true,
+        },
+    )?;
+    assert_eq!(
+        execution.target_repo_ref.uri,
+        "https://github.com/example/project"
+    );
+    assert_eq!(
+        execution.source_thread_ref.uri,
+        "github://example/project/issues/42"
+    );
+    assert!(execution.checkout.local_path_hidden);
+
+    let json = serde_json::to_string(&execution)?;
+    assert!(!json.contains("/Users/"));
+    assert!(!json.contains("/tmp/"));
     Ok(())
 }
 

@@ -114,12 +114,11 @@ harness:
                 exists: true
             open_questions: []
       expect:
-        status: success
+        status: sealed
         receipt:
-          kind: skill_execution
-          status: success
-          skill_name: work-plan
-          source_type: agent-step
+          schema: runx.harness_receipt.v1
+          state: sealed
+          disposition: closed
     - name: work-plan-phased-workspace-plan
       inputs:
         objective: Roll out abandoned cart recovery across api, app, and mcp
@@ -282,12 +281,11 @@ harness:
             open_questions:
               - Should rollout remain behind an explicit feature flag for the first release?
       expect:
-        status: success
+        status: sealed
         receipt:
-          kind: skill_execution
-          status: success
-          skill_name: work-plan
-          source_type: agent-step
+          schema: runx.harness_receipt.v1
+          state: sealed
+          disposition: closed
 
 runners:
   work-plan-agent:

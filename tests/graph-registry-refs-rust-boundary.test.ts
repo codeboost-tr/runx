@@ -61,7 +61,7 @@ describe("graph registry refs through the Rust registry boundary", () => {
       run_command: "runx run testorg/echo",
     };
     const envelope = {
-      status: "success",
+      status: "sealed",
       registry: {
         action: "resolve",
         source: "local",
@@ -135,8 +135,8 @@ steps:
         adapters,
       });
 
-      expect(result.status).toBe("success");
-      if (result.status !== "success") {
+      expect(result.status).toBe("sealed");
+      if (result.status !== "sealed") {
         return;
       }
       expect(result.steps[0]).toMatchObject({

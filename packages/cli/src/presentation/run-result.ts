@@ -5,12 +5,23 @@ import {
   runnerReceiptOutcomeState,
   type RunLocalSkillResult,
 } from "@runxhq/runtime-local";
+import type { ResolutionRequestContract as ResolutionRequest } from "@runxhq/contracts";
 
 import type { ParsedArgs } from "../args.js";
 import type { CliIo } from "../index.js";
 import { shortId, statusIcon, theme } from "../ui.js";
 import { isRecord } from "./internal.js";
-import { renderNeedsResolution, renderPolicyDenied } from "./needs-resolution.js";
+import { renderNeedsAgent, renderPolicyDenied } from "./needs-agent.js";
+
+interface NeedsAgentSkillResult {
+  readonly status: "needs_agent";
+  readonly skill: { readonly name: string };
+  readonly skillPath: string;
+  readonly runId: string;
+  readonly stepIds?: readonly string[];
+  readonly stepLabels?: readonly string[];
+  readonly requests: readonly ResolutionRequest[];
+}
 
 export function writeLocalSkillResult(
   io: CliIo,
@@ -18,47 +29,52 @@ export function writeLocalSkillResult(
   parsed: ParsedArgs,
   result: RunLocalSkillResult,
 ): number {
-  if (result.status === "needs_resolution") {
-    return writeNeedsResolutionResult(io, env, parsed, result);
+  if (isNeedsAgentResult(result)) {
+    return writeNeedsAgentResult(io, env, parsed, result);
   }
   if (result.status === "policy_denied") {
     return writePolicyDeniedResult(io, parsed, result);
   }
+  const terminalResult = result as Extract<RunLocalSkillResult, { readonly status: "sealed" | "failure" }>;
   if (parsed.json) {
-    const disposition = runnerReceiptDisposition(result.receipt);
-    const status = disposition === "blocked" ? "escalated" : result.status;
+    const disposition = runnerReceiptDisposition(terminalResult.receipt);
+    const status = disposition === "blocked" ? "escalated" : terminalResult.status;
     io.stdout.write(
       `${JSON.stringify(
         {
-          ...result,
+          ...terminalResult,
           status,
-          execution_status: result.status,
+          execution_status: terminalResult.status,
           disposition,
-          outcome_state: runnerReceiptOutcomeState(result.receipt) ?? "complete",
+          outcome_state: runnerReceiptOutcomeState(terminalResult.receipt) ?? "complete",
         },
         null,
         2,
       )}\n`,
     );
   } else {
-    writeRunResult(io, env, result);
+    writeRunResult(io, env, terminalResult);
   }
-  return result.status === "success" ? 0 : 1;
+  return terminalResult.status === "sealed" ? 0 : 1;
 }
 
-function writeNeedsResolutionResult(
+function isNeedsAgentResult(result: RunLocalSkillResult | NeedsAgentSkillResult): result is NeedsAgentSkillResult {
+  return (result as { readonly status?: string }).status === "needs_agent";
+}
+
+function writeNeedsAgentResult(
   io: CliIo,
   env: NodeJS.ProcessEnv,
   parsed: ParsedArgs,
-  result: Extract<RunLocalSkillResult, { readonly status: "needs_resolution" }>,
+  result: NeedsAgentSkillResult,
 ): number {
   const productionMode = env.RUNX_PRODUCTION === "1";
   if (parsed.json) {
     io.stdout.write(
       `${JSON.stringify(
         {
-          status: productionMode ? "failure" : "needs_resolution",
-          disposition: productionMode ? "failure_no_resolver" : "needs_resolution",
+          status: productionMode ? "failure" : "needs_agent",
+          disposition: productionMode ? "failure_no_resolver" : "needs_agent",
           execution_status: productionMode ? "failure" : null,
           outcome_state: "pending",
           skill: result.skill.name,
@@ -76,7 +92,7 @@ function writeNeedsResolutionResult(
       )}\n`,
     );
   } else {
-    io.stdout.write(renderNeedsResolution(result, env));
+    io.stdout.write(renderNeedsAgent(result, env));
   }
   if (productionMode) {
     const requestIds = result.requests.map((request) => request.id).join(", ");
@@ -137,13 +153,13 @@ function writeRunResult(
   io: CliIo,
   env: NodeJS.ProcessEnv,
   result: {
-    readonly status: "success" | "failure";
+    readonly status: "sealed" | "failure";
     readonly skill: { readonly name: string };
     readonly execution: { readonly stdout: string; readonly stderr: string; readonly errorMessage?: string };
-    readonly receipt: NonNullable<Extract<RunLocalSkillResult, { readonly status: "success" | "failure" }>["receipt"]>;
+    readonly receipt: NonNullable<Extract<RunLocalSkillResult, { readonly status: "sealed" | "failure" }>["receipt"]>;
   },
 ): void {
-  if (result.status === "success") {
+  if (result.status === "sealed") {
     io.stdout.write(renderRunSuccess(result, io, env));
     return;
   }
@@ -154,7 +170,7 @@ function renderRunSuccess(
   result: {
     readonly skill: { readonly name: string };
     readonly execution: { readonly stdout: string };
-    readonly receipt: NonNullable<Extract<RunLocalSkillResult, { readonly status: "success" | "failure" }>["receipt"]>;
+    readonly receipt: NonNullable<Extract<RunLocalSkillResult, { readonly status: "sealed" | "failure" }>["receipt"]>;
   },
   io: CliIo,
   env: NodeJS.ProcessEnv,
@@ -176,7 +192,7 @@ function renderRunSuccess(
     const verified = typeof parsedOutput.verified === "boolean" ? (parsedOutput.verified ? "passed" : "failed") : undefined;
     const lines = [
       "",
-      `  ${statusIcon("success", t)}  ${t.bold}sourcey${t.reset}  ${t.dim}site built${t.reset}`,
+      `  ${statusIcon("sealed", t)}  ${t.bold}sourcey${t.reset}  ${t.dim}site built${t.reset}`,
       `  ${t.dim}receipt${t.reset}   ${shortId(result.receipt.id)}`,
       `  ${t.dim}schema${t.reset}    ${result.receipt.schema}`,
     ];
@@ -191,7 +207,7 @@ function renderRunSuccess(
   }
   const lines = [
     "",
-    `  ${statusIcon("success", t)}  ${t.bold}${result.skill.name}${t.reset}  ${t.dim}success${t.reset}`,
+    `  ${statusIcon("sealed", t)}  ${t.bold}${result.skill.name}${t.reset}  ${t.dim}sealed${t.reset}`,
     `  ${t.dim}receipt${t.reset}   ${shortId(result.receipt.id)}`,
     `  ${t.dim}schema${t.reset}    ${result.receipt.schema}`,
   ];
@@ -218,7 +234,7 @@ function renderRunFailure(
   result: {
     readonly skill: { readonly name: string };
     readonly execution: { readonly stdout: string; readonly stderr: string; readonly errorMessage?: string };
-    readonly receipt: NonNullable<Extract<RunLocalSkillResult, { readonly status: "success" | "failure" }>["receipt"]>;
+    readonly receipt: NonNullable<Extract<RunLocalSkillResult, { readonly status: "sealed" | "failure" }>["receipt"]>;
   },
   io: CliIo,
   env: NodeJS.ProcessEnv,

@@ -4,7 +4,7 @@ target: ../skills/echo
 inputs:
   message: hello from harness
 expect:
-  status: success
+  status: sealed
   receipt:
     schema: runx.harness_receipt.v1
     body_digest: sha256:bc8430f4927fb5b79378fb557f92dfd8865fcc9af08f68636dbb02686036e1af

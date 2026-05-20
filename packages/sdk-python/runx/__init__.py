@@ -106,14 +106,21 @@ class RunxClient:
             args.append("--non-interactive")
         return self.run_json(args)
 
-    def resume_run(
+    def continue_run(
         self,
+        skill_path: str,
         run_id: str,
-        answers: Mapping[str, Any] | None = None,
-        approvals: Mapping[str, bool] | None = None,
+        answers_file: str,
+        inputs: Mapping[str, Any] | None = None,
+        non_interactive: bool = True,
     ) -> dict[str, Any]:
-        payload = {"answers": dict(answers or {}), "approvals": dict(approvals or {})}
-        return self.run_json(["resume", run_id], input=json.dumps(payload))
+        args = ["skill", skill_path]
+        for key, value in (inputs or {}).items():
+            args.extend([f"--{key}", str(value)])
+        args.extend(["--run-id", run_id, "--answers", answers_file])
+        if non_interactive:
+            args.append("--non-interactive")
+        return self.run_json(args)
 
     def connect_list(self) -> dict[str, Any]:
         return self.run_json(["connect", "list"])
@@ -132,7 +139,7 @@ from .host_protocol import (  # noqa: E402
     HostDeniedResult,
     HostEscalatedResult,
     HostFailedResult,
-    HostPausedResult,
+    HostNeedsAgentResult,
     HostRunResult,
     HostRunState,
     create_anthropic_host_adapter,
@@ -158,7 +165,7 @@ __all__ = [
     "HostDeniedResult",
     "HostEscalatedResult",
     "HostFailedResult",
-    "HostPausedResult",
+    "HostNeedsAgentResult",
     "HostRunResult",
     "HostRunState",
     "create_anthropic_host_adapter",

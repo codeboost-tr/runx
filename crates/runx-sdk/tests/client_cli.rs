@@ -5,7 +5,7 @@ use std::sync::atomic::{AtomicU64, Ordering};
 use std::time::{SystemTime, UNIX_EPOCH};
 
 use runx_contracts::{JsonObject, JsonValue};
-use runx_sdk::{ResumePayload, RunSkillOptions, RunxClient, RunxClientOptions};
+use runx_sdk::{ContinuePayload, RunSkillOptions, RunxClient, RunxClientOptions};
 
 #[test]
 fn search_and_run_use_runx_cli_json() -> Result<(), Box<dyn std::error::Error>> {
@@ -32,24 +32,25 @@ fn search_and_run_use_runx_cli_json() -> Result<(), Box<dyn std::error::Error>> 
 }
 
 #[test]
-fn resume_posts_answers_and_approvals_json() -> Result<(), Box<dyn std::error::Error>> {
+fn continue_run_writes_answers_file_for_canonical_skill_rerun()
+-> Result<(), Box<dyn std::error::Error>> {
     let fixture = CliFixture::create()?;
     let client = fixture.client();
     let mut answer = JsonObject::new();
     answer.insert("ok".to_owned(), JsonValue::Bool(true));
 
-    let report = client.resume_run(
+    let report = client.continue_run(
+        "skills/example",
         "run-123",
-        ResumePayload::default()
+        ContinuePayload::default()
             .with_answer("req-1", JsonValue::Object(answer))
             .with_approval("gate-1", true),
     )?;
 
-    assert_eq!(report.status(), Some("success"));
-    assert_eq!(
-        fs::read_to_string(fixture.args_path())?,
-        "resume\nrun-123\n--json\n"
-    );
+    assert_eq!(report.status(), Some("sealed"));
+    let args = fs::read_to_string(fixture.args_path())?;
+    assert!(args.starts_with("skill\nskills/example\n--run-id\nrun-123\n--answers\n"));
+    assert!(args.ends_with("\n--json\n"));
     assert_eq!(
         fs::read_to_string(fixture.stdin_path())?,
         r#"{"answers":{"req-1":{"ok":true}},"approvals":{"gate-1":true}}"#
@@ -147,9 +148,9 @@ fn fake_runx_script() -> &'static str {
 printf '%s\n' "$@" > "$RUNX_SDK_ARGS"
 if [ "$1" = "skill" ] && [ "$2" = "search" ]; then
   printf '%s\n' '{"status":"success","results":[{"skill_id":"acme/sourcey","name":"sourcey","owner":"acme","source":"runx-registry","source_label":"runx registry","source_type":"cli-tool","trust_tier":"community","required_scopes":["repo:read"],"tags":["docs"],"version":"1.0.0"}]}'
-elif [ "$1" = "resume" ]; then
-  cat > "$RUNX_SDK_STDIN"
-  printf '%s\n' '{"status":"success","args":["resume"]}'
+elif [ "$1" = "skill" ] && [ "$3" = "--run-id" ]; then
+  cat "$6" > "$RUNX_SDK_STDIN"
+  printf '%s\n' '{"status":"sealed","args":["skill"]}'
 elif [ "$1" = "connect" ] && [ "$2" = "list" ]; then
   printf '%s\n' '{"status":"success","connect":{"grants":[{"grant_id":"grant_123","principal_id":"principal_123","provider":"github","scopes":["repo:read"],"connection_id":"conn_123","status":"active"}]}}'
 else

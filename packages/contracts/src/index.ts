@@ -79,7 +79,7 @@ export {
   resolutionRequestSchema,
   resolutionResponseSchema,
   actReceiptTerminalEnvelopeSchema,
-  actReceiptNeedsResolutionEnvelopeSchema,
+  actReceiptNeedsAgentEnvelopeSchema,
   actReceiptEnvelopeSchema,
   validateResolutionRequestContract,
   validateResolutionResponseContract,

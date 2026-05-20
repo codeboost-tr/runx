@@ -30,12 +30,9 @@ harness:
               caveats:
                 - Confirm the current output directory contract before replying.
       expect:
-        status: success
+        status: sealed
         receipt:
-          kind: skill_execution
-          status: success
-          skill_name: issue-triage
-          source_type: agent-step
+          schema: runx.harness_receipt.v1
     - name: issue-triage-draft-response
       runner: respond
       inputs:
@@ -59,12 +56,9 @@ harness:
               - update docs
               - add a regression test for the path contract
       expect:
-        status: success
+        status: sealed
         receipt:
-          kind: skill_execution
-          status: success
-          skill_name: issue-triage
-          source_type: agent-step
+          schema: runx.harness_receipt.v1
 
 runners:
   agent:

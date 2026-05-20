@@ -21,7 +21,7 @@ const FIXTURES: &[&str] = &[
     include_str!("../../../fixtures/contracts/host-protocol/inspect-host-state-denied.json"),
     include_str!("../../../fixtures/contracts/host-protocol/inspect-host-state-escalated.json"),
     include_str!("../../../fixtures/contracts/host-protocol/inspect-host-state-failed.json"),
-    include_str!("../../../fixtures/contracts/host-protocol/inspect-host-state-paused.json"),
+    include_str!("../../../fixtures/contracts/host-protocol/inspect-host-state-needs-agent.json"),
     include_str!("../../../fixtures/contracts/host-protocol/resolution-approval-request.json"),
     include_str!("../../../fixtures/contracts/host-protocol/resolution-agent-act-request.json"),
     include_str!("../../../fixtures/contracts/host-protocol/resolution-input-request.json"),
@@ -30,7 +30,7 @@ const FIXTURES: &[&str] = &[
     include_str!("../../../fixtures/contracts/host-protocol/result-host-run-denied.json"),
     include_str!("../../../fixtures/contracts/host-protocol/result-host-run-escalated.json"),
     include_str!("../../../fixtures/contracts/host-protocol/result-host-run-failed.json"),
-    include_str!("../../../fixtures/contracts/host-protocol/result-host-run-paused.json"),
+    include_str!("../../../fixtures/contracts/host-protocol/result-host-run-needs-agent.json"),
 ];
 
 #[derive(Debug, Deserialize)]

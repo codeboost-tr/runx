@@ -28,33 +28,27 @@ harness:
               - design-skill passes structured decomposition to prior-art
               - improve-skill passes structured review data to write-harness
       expect:
-        status: success
+        status: sealed
         receipt:
-          kind: skill_execution
-          status: success
-          skill_name: review-receipt
-          source_type: agent-step
+          schema: runx.harness_receipt.v1
 
     - name: review-receipt-passes-on-paused-graph
       inputs:
-        receipt_summary: Graph paused at step 1 awaiting caller cognitive work; status needs_resolution with one outstanding agent-step request.
-        harness_output: needs_resolution
+        receipt_summary: Graph paused at step 1 awaiting caller cognitive work; status needs_agent with one outstanding agent-step request.
+        harness_output: needs_agent
         skill_path: skills/research
       caller:
         answers:
           agent_step.review-receipt.output:
             verdict: pass
-            failure_summary: No failure. The graph paused at step 1 as designed, awaiting caller cognitive work; needs_resolution is a healthy agent-mediated suspension in runx, not a failure class.
+            failure_summary: No failure. The graph paused at step 1 as designed, awaiting caller cognitive work; needs_agent is a healthy agent-mediated suspension in runx, not a failure class.
             improvement_proposals: []
             next_harness_checks:
               - target skill completes successfully on the happy path when valid agent outputs are supplied
       expect:
-        status: success
+        status: sealed
         receipt:
-          kind: skill_execution
-          status: success
-          skill_name: review-receipt
-          source_type: agent-step
+          schema: runx.harness_receipt.v1
 
 runners:
   review-receipt-agent:

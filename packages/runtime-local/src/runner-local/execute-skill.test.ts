@@ -138,7 +138,7 @@ function canonicalCredential(): CredentialEnvelope {
 
 function successReceipt(stdout: string): ActReceiptEnvelope {
   return {
-    status: "success",
+    status: "sealed",
     stdout,
     stderr: "",
     exitCode: 0,

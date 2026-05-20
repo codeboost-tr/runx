@@ -5,7 +5,7 @@ caller:
   approvals:
     spend-approval: true
 expect:
-  status: success
+  status: sealed
   receipt:
     schema: runx.harness_receipt.v1
     body_digest: sha256:24bbae13d42282b1db1a09aba9beda297fc255bd6e2bd5e71c302c1bea5c8d2b

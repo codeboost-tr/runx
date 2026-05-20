@@ -49,8 +49,8 @@ pub(super) fn assert_expectations(output: &HarnessReplayOutput) -> Result<(), Ha
 
 pub(super) fn status_from_disposition(disposition: &ClosureDisposition) -> HarnessExpectedStatus {
     match disposition {
-        ClosureDisposition::Closed => HarnessExpectedStatus::Success,
-        ClosureDisposition::Deferred => HarnessExpectedStatus::NeedsResolution,
+        ClosureDisposition::Closed => HarnessExpectedStatus::Sealed,
+        ClosureDisposition::Deferred => HarnessExpectedStatus::NeedsAgent,
         ClosureDisposition::Blocked => HarnessExpectedStatus::PolicyDenied,
         ClosureDisposition::TimedOut
         | ClosureDisposition::Declined
@@ -296,9 +296,9 @@ fn disposition_name(disposition: &ClosureDisposition) -> &'static str {
 
 fn status_name(status: &HarnessExpectedStatus) -> &'static str {
     match status {
-        HarnessExpectedStatus::Success => "success",
+        HarnessExpectedStatus::Sealed => "sealed",
         HarnessExpectedStatus::Failure => "failure",
-        HarnessExpectedStatus::NeedsResolution => "needs_resolution",
+        HarnessExpectedStatus::NeedsAgent => "needs_agent",
         HarnessExpectedStatus::PolicyDenied => "policy_denied",
         HarnessExpectedStatus::Escalated => "escalated",
     }

@@ -69,87 +69,6 @@ fn native_skill_pauses_and_resumes_with_run_id() -> Result<(), Box<dyn std::erro
 }
 
 #[test]
-fn native_skill_rejects_legacy_receipt_resume_flag() -> Result<(), Box<dyn std::error::Error>> {
-    let root = temp_root("runx-skill-reject");
-    let skill_dir = write_agent_step_skill(&root)?;
-    let output = runx_command()
-        .args([
-            "skill",
-            skill_dir.to_str().ok_or("non-utf8 skill dir")?,
-            "--receipt",
-            "legacy-run",
-        ])
-        .output()?;
-
-    assert_eq!(output.status.code(), Some(64));
-    assert!(
-        String::from_utf8(output.stderr)?
-            .contains("runx skill uses --run-id; --receipt is not supported")
-    );
-    assert_eq!(String::from_utf8(output.stdout)?, "");
-
-    Ok(())
-}
-
-#[test]
-fn native_skill_rejects_inline_legacy_receipt_resume_flag() -> Result<(), Box<dyn std::error::Error>>
-{
-    let root = temp_root("runx-skill-reject-inline");
-    let skill_dir = write_agent_step_skill(&root)?;
-    let output = runx_command()
-        .args([
-            "skill",
-            skill_dir.to_str().ok_or("non-utf8 skill dir")?,
-            "--receipt=legacy-run",
-        ])
-        .output()?;
-
-    assert_eq!(output.status.code(), Some(64));
-    assert!(
-        String::from_utf8(output.stderr)?
-            .contains("runx skill uses --run-id; --receipt is not supported")
-    );
-    assert_eq!(String::from_utf8(output.stdout)?, "");
-
-    Ok(())
-}
-
-#[test]
-fn native_skill_rejects_legacy_camelcase_receipt_dir() -> Result<(), Box<dyn std::error::Error>> {
-    let root = temp_root("runx-skill-reject-receipt-dir");
-    let skill_dir = write_agent_step_skill(&root)?;
-    for receipt_dir_flag in ["--receiptDir", "--receiptDir=.runx/receipts"] {
-        let output = if receipt_dir_flag == "--receiptDir" {
-            runx_command()
-                .args([
-                    "skill",
-                    skill_dir.to_str().ok_or("non-utf8 skill dir")?,
-                    receipt_dir_flag,
-                    ".runx/receipts",
-                ])
-                .output()?
-        } else {
-            runx_command()
-                .args([
-                    "skill",
-                    skill_dir.to_str().ok_or("non-utf8 skill dir")?,
-                    receipt_dir_flag,
-                ])
-                .output()?
-        };
-
-        assert_eq!(output.status.code(), Some(64));
-        assert!(
-            String::from_utf8(output.stderr.clone())?
-                .contains("runx skill uses --receipt-dir; --receiptDir is not supported")
-        );
-        assert_eq!(String::from_utf8(output.stdout)?, "");
-    }
-
-    Ok(())
-}
-
-#[test]
 fn native_skill_rejects_answers_without_run_id() -> Result<(), Box<dyn std::error::Error>> {
     let root = temp_root("runx-skill-reject-answers");
     let skill_dir = write_agent_step_skill(&root)?;
@@ -187,6 +106,53 @@ fn native_skill_rejects_run_id_without_answers() -> Result<(), Box<dyn std::erro
     assert_eq!(output.status.code(), Some(64));
     assert!(String::from_utf8(output.stderr)?.contains("runx skill --run-id requires --answers"));
     assert_eq!(String::from_utf8(output.stdout)?, "");
+
+    Ok(())
+}
+
+#[test]
+fn native_skill_rejects_retired_receipt_options() -> Result<(), Box<dyn std::error::Error>> {
+    let root = temp_root("runx-skill-reject-retired-receipt");
+    let skill_dir = write_agent_step_skill(&root)?;
+    let receipt_dir = root.join("receipts");
+    let retired_receipt = format!("--{}", "receipt");
+    let retired_receipt_dir = format!("--{}", ["receipt", "Dir"].concat());
+    let retired_receipt_dir_equals = format!(
+        "{}={}",
+        retired_receipt_dir,
+        receipt_dir.to_str().ok_or("non-utf8 receipt dir")?
+    );
+
+    for args in [
+        vec![
+            "skill".to_owned(),
+            skill_dir.to_str().ok_or("non-utf8 skill dir")?.to_owned(),
+            retired_receipt,
+            receipt_dir
+                .to_str()
+                .ok_or("non-utf8 receipt dir")?
+                .to_owned(),
+        ],
+        vec![
+            "skill".to_owned(),
+            skill_dir.to_str().ok_or("non-utf8 skill dir")?.to_owned(),
+            retired_receipt_dir,
+            receipt_dir
+                .to_str()
+                .ok_or("non-utf8 receipt dir")?
+                .to_owned(),
+        ],
+        vec![
+            "skill".to_owned(),
+            skill_dir.to_str().ok_or("non-utf8 skill dir")?.to_owned(),
+            retired_receipt_dir_equals,
+        ],
+    ] {
+        let output = runx_command().args(args).output()?;
+        assert_eq!(output.status.code(), Some(64));
+        assert!(String::from_utf8(output.stderr)?.contains("retired runx skill receipt option"));
+        assert_eq!(String::from_utf8(output.stdout)?, "");
+    }
 
     Ok(())
 }

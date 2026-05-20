@@ -12,12 +12,12 @@ class HostBoundaryContext:
 
 HostBoundaryResolver = Callable[[HostBoundaryContext], Any | None]
 HostRunCallable = Callable[[str, Mapping[str, Any] | None], Mapping[str, Any]]
-HostResumeCallable = Callable[[str, Sequence[Mapping[str, Any]] | None], Mapping[str, Any]]
+HostContinueCallable = Callable[[str, Sequence[Mapping[str, Any]] | None], Mapping[str, Any]]
 HostInspectCallable = Callable[[str], Mapping[str, Any]]
 
 
 @dataclass(frozen=True)
-class HostPausedResult:
+class HostNeedsAgentResult:
     status: str
     skill_name: str
     run_id: str
@@ -64,7 +64,7 @@ class HostDeniedResult:
 
 
 HostRunResult = (
-    HostPausedResult
+    HostNeedsAgentResult
     | HostCompletedResult
     | HostFailedResult
     | HostEscalatedResult
@@ -73,7 +73,7 @@ HostRunResult = (
 
 
 @dataclass(frozen=True)
-class HostPausedState:
+class HostNeedsAgentState:
     status: str
     skill_name: str
     run_id: str
@@ -106,18 +106,18 @@ class HostTerminalState:
     lineage: Mapping[str, Any] | None = None
 
 
-HostRunState = HostPausedState | HostTerminalState
+HostRunState = HostNeedsAgentState | HostTerminalState
 
 
 class HostBridge:
     def __init__(
         self,
         run: HostRunCallable,
-        resume: HostResumeCallable | None = None,
+        continue_run: HostContinueCallable | None = None,
         inspect: HostInspectCallable | None = None,
     ) -> None:
         self._run = run
-        self._resume = resume
+        self._continue_run = continue_run
         self._inspect = inspect
 
     def run(
@@ -129,12 +129,12 @@ class HostBridge:
         initial = self._run(skill_path, inputs)
         return self._drive(initial, resolver=resolver)
 
-    def resume(
+    def continue_run(
         self,
         run_id: str,
         resolver: HostBoundaryResolver | None = None,
     ) -> HostRunResult:
-        initial = self._resume_payload(run_id, None)
+        initial = self._continue_payload(run_id, None)
         return self._drive(initial, resolver=resolver)
 
     def inspect(self, reference_id: str) -> HostRunState:
@@ -150,7 +150,7 @@ class HostBridge:
         current = dict(payload)
         while True:
             result = normalize_host_result(current)
-            if not isinstance(result, HostPausedResult):
+            if not isinstance(result, HostNeedsAgentResult):
                 return result
             if resolver is None:
                 return result
@@ -172,16 +172,16 @@ class HostBridge:
             if not responses:
                 return result
 
-            current = self._resume_payload(result.run_id, responses)
+            current = self._continue_payload(result.run_id, responses)
 
-    def _resume_payload(
+    def _continue_payload(
         self,
         run_id: str,
         responses: Sequence[Mapping[str, Any]] | None,
     ) -> Mapping[str, Any]:
-        if self._resume is None:
-            raise RuntimeError("This host bridge does not support resume().")
-        return self._resume(run_id, responses)
+        if self._continue_run is None:
+            raise RuntimeError("This host bridge does not support continue_run().")
+        return self._continue_run(run_id, responses)
 
 
 class ProviderHostAdapter:
@@ -197,20 +197,20 @@ class ProviderHostAdapter:
     ) -> Mapping[str, Any]:
         return self.formatter(self.bridge.run(skill_path, inputs=inputs, resolver=resolver))
 
-    def resume(
+    def continue_run(
         self,
         run_id: str,
         resolver: HostBoundaryResolver | None = None,
     ) -> Mapping[str, Any]:
-        return self.formatter(self.bridge.resume(run_id, resolver=resolver))
+        return self.formatter(self.bridge.continue_run(run_id, resolver=resolver))
 
 
 def create_host_bridge(
     run: HostRunCallable,
-    resume: HostResumeCallable | None = None,
+    continue_run: HostContinueCallable | None = None,
     inspect: HostInspectCallable | None = None,
 ) -> HostBridge:
-    return HostBridge(run=run, resume=resume, inspect=inspect)
+    return HostBridge(run=run, continue_run=continue_run, inspect=inspect)
 
 
 def create_openai_host_adapter(bridge: HostBridge) -> ProviderHostAdapter:
@@ -240,9 +240,9 @@ def normalize_host_result(payload: Mapping[str, Any]) -> HostRunResult:
     status = str(payload.get("status") or "")
     skill = payload.get("skill")
     skill_name = str(skill.get("name")) if isinstance(skill, Mapping) else str(skill or "")
-    if status == "needs_resolution":
-        return HostPausedResult(
-            status="paused",
+    if status == "needs_agent":
+        return HostNeedsAgentResult(
+            status="needs_agent",
             skill_name=skill_name,
             run_id=str(payload.get("run_id") or ""),
             requests=tuple(payload.get("requests") or ()),
@@ -290,9 +290,9 @@ def normalize_host_result(payload: Mapping[str, Any]) -> HostRunResult:
 
 def normalize_host_state(payload: Mapping[str, Any]) -> HostRunState:
     status = str(payload.get("status") or "")
-    if status == "paused":
-        return HostPausedState(
-            status="paused",
+    if status == "needs_agent":
+        return HostNeedsAgentState(
+            status="needs_agent",
             skill_name=str(payload.get("skillName") or ""),
             run_id=str(payload.get("runId") or ""),
             requested_path=_optional_str(payload.get("requestedPath")),
@@ -354,8 +354,8 @@ def _default_actor_for_request(request: Mapping[str, Any]) -> str:
 def _summary(result: HostRunResult) -> str:
     if isinstance(result, HostCompletedResult):
         return f"{result.skill_name} completed. Inspect receipt {result.receipt_id}."
-    if isinstance(result, HostPausedResult):
-        return f"{result.skill_name} paused at {result.run_id}. Resume after resolving {len(result.requests)} request(s)."
+    if isinstance(result, HostNeedsAgentResult):
+        return f"{result.skill_name} needs agent input at {result.run_id}. Continue after resolving {len(result.requests)} request(s)."
     if isinstance(result, HostDeniedResult):
         return f"{result.skill_name} was denied by policy."
     if isinstance(result, HostEscalatedResult):
@@ -365,7 +365,7 @@ def _summary(result: HostRunResult) -> str:
 
 def _is_canonical_host_result(payload: Mapping[str, Any]) -> bool:
     return isinstance(payload.get("skillName"), str) and str(payload.get("status") or "") in {
-        "paused",
+        "needs_agent",
         "completed",
         "failed",
         "escalated",
@@ -375,9 +375,9 @@ def _is_canonical_host_result(payload: Mapping[str, Any]) -> bool:
 
 def _normalize_canonical_host_result(payload: Mapping[str, Any]) -> HostRunResult:
     status = str(payload.get("status") or "")
-    if status == "paused":
-        return HostPausedResult(
-            status="paused",
+    if status == "needs_agent":
+        return HostNeedsAgentResult(
+            status="needs_agent",
             skill_name=str(payload.get("skillName") or ""),
             run_id=str(payload.get("runId") or ""),
             requests=tuple(payload.get("requests") or ()),
@@ -455,7 +455,7 @@ def _to_crewai_response(result: HostRunResult) -> Mapping[str, Any]:
 
 
 def _result_to_dict(result: HostRunResult) -> Mapping[str, Any]:
-    if isinstance(result, HostPausedResult):
+    if isinstance(result, HostNeedsAgentResult):
         return {
             "status": result.status,
             "skillName": result.skill_name,

@@ -81,8 +81,8 @@ steps:
         runxHome: path.join(tempDir, "home"),
       });
 
-      expect(result.status).toBe("success");
-      if (result.status !== "success") {
+      expect(result.status).toBe("sealed");
+      if (result.status !== "sealed") {
         return;
       }
 
@@ -154,8 +154,8 @@ steps:
         runxHome: path.join(tempDir, "home"),
       });
 
-      expect(result.status).toBe("success");
-      if (result.status !== "success") {
+      expect(result.status).toBe("sealed");
+      if (result.status !== "sealed") {
         return;
       }
 
@@ -205,7 +205,7 @@ steps:
         runxHome: path.join(tempDir, "home"),
       });
 
-      expect(result.status).toBe("success");
+      expect(result.status).toBe("sealed");
       expect(JSON.parse(await readFile(path.join(tempDir, "config", "output.json"), "utf8"))).toEqual({
         feature: "docs",
         enabled: true,
@@ -248,8 +248,8 @@ steps:
         runxHome: path.join(tempDir, "home"),
       });
 
-      expect(result.status).toBe("success");
-      if (result.status !== "success") {
+      expect(result.status).toBe("sealed");
+      if (result.status !== "sealed") {
         return;
       }
 
@@ -318,8 +318,8 @@ steps:
         runxHome: path.join(tempDir, "home"),
       });
 
-      expect(result.status).toBe("success");
-      if (result.status !== "success") {
+      expect(result.status).toBe("sealed");
+      if (result.status !== "sealed") {
         return;
       }
       expect(result.steps[0]?.stdout).toContain("\"branch\":\"main\"");
@@ -359,8 +359,8 @@ steps:
         runxHome: path.join(tempDir, "home"),
       });
 
-      expect(result.status).toBe("success");
-      if (result.status !== "success") {
+      expect(result.status).toBe("sealed");
+      if (result.status !== "sealed") {
         return;
       }
       expect(result.steps[0]?.stdout).toContain("Usage:");
@@ -439,8 +439,8 @@ steps:
         runxHome: path.join(tempDir, "home"),
       });
 
-      expect(result.status).toBe("success");
-      if (result.status !== "success") {
+      expect(result.status).toBe("sealed");
+      if (result.status !== "sealed") {
         return;
       }
 

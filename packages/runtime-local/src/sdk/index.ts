@@ -70,6 +70,7 @@ import {
   createHostBridge,
   inspectLocalHostState,
   type HostBridge,
+  type HostBoundaryResolver,
   type HostInspectOptions,
   type HostRunOptions,
   type HostRunResult,
@@ -381,7 +382,7 @@ export class RunxSdk {
     runId: string,
     options: Omit<HostRunOptions, "resumeFromRunId" | "skillPath"> & {
       readonly skillPath?: string;
-      readonly resolver?: Parameters<HostBridge["resume"]>[1]["resolver"];
+      readonly resolver?: HostBoundaryResolver;
     } = {},
   ): Promise<HostRunResult> {
     return await buildRunxHostBridge(this).resume(runId, options);
@@ -641,7 +642,7 @@ export async function hostResume(
   runId: string,
   options: Omit<HostRunOptions, "resumeFromRunId" | "skillPath"> & RunxSdkOptions & {
     readonly skillPath?: string;
-    readonly resolver?: Parameters<HostBridge["resume"]>[1]["resolver"];
+    readonly resolver?: HostBoundaryResolver;
   } = {},
 ): Promise<HostRunResult> {
   return await createRunxSdk(options).hostResume(runId, options);

@@ -88,15 +88,15 @@ Return the provided task id.
     expect(exitCode).toBe(0);
     expect(stderr.contents()).toBe("");
     expect(JSON.parse(stdout.contents())).toMatchObject({
-      status: "success",
+      status: "sealed",
       inputs: {
         task_id: "abc-123",
       },
     });
   }, 15000);
 
-  it("preserves canonical delegated inputs across resume for wrapper skills", async () => {
-    const tempDir = await mkdtemp(path.join(os.tmpdir(), "runx-cli-delegated-resume-"));
+  it("preserves canonical delegated inputs across same-skill continuation for wrapper skills", async () => {
+    const tempDir = await mkdtemp(path.join(os.tmpdir(), "runx-cli-delegated-continuation-"));
     tempDirs.push(tempDir);
     const childDir = path.join(tempDir, "child-task");
     const wrapperDir = path.join(tempDir, "wrapper-task");
@@ -206,7 +206,7 @@ runners:
     expect(firstStderr.contents()).toBe("");
     const firstJson = JSON.parse(firstStdout.contents());
     expect(firstJson).toMatchObject({
-      status: "needs_resolution",
+      status: "needs_agent",
       requests: [
         {
           id: "agent_step.child-task.output",
@@ -217,7 +217,7 @@ runners:
     const secondStdout = createMemoryStream();
     const secondStderr = createMemoryStream();
     const secondExitCode = await runCli(
-      ["resume", firstJson.run_id, "--answers", answersPath, "--receipt-dir", receiptDir, "--non-interactive", "--json"],
+      ["skill", wrapperDir, "--run-id", firstJson.run_id, "--answers", answersPath, "--receipt-dir", receiptDir, "--non-interactive", "--json"],
       { stdin: process.stdin, stdout: secondStdout, stderr: secondStderr },
       { ...process.env, RUNX_CWD: process.cwd() },
     );
@@ -225,7 +225,7 @@ runners:
     expect(secondExitCode).toBe(0);
     expect(secondStderr.contents()).toBe("");
     expect(JSON.parse(secondStdout.contents())).toMatchObject({
-      status: "success",
+      status: "sealed",
       inputs: {
         task_id: "abc-123",
       },
@@ -253,10 +253,13 @@ runners:
       "--non-interactive",
       "--receipt-dir",
       "/tmp/receipts",
+      "--run-id",
+      "rx_123",
     ]);
 
     expect(parsed.nonInteractive).toBe(true);
     expect(parsed.receiptDir).toBe("/tmp/receipts");
+    expect(parsed.runId).toBe("rx_123");
     expect(parsed.inputs).toEqual({});
   });
 
@@ -380,7 +383,7 @@ runners:
     expect(stdout.contents()).not.toContain("needs caller result");
   });
 
-  it("renders a success summary for simple skill runs", async () => {
+  it("renders a sealed summary for simple skill runs", async () => {
     const stdout = createMemoryStream();
     const stderr = createMemoryStream();
 
@@ -392,7 +395,7 @@ runners:
 
     expect(exitCode).toBe(0);
     expect(stderr.contents()).toBe("");
-    expect(stdout.contents()).toContain("success");
+    expect(stdout.contents()).toContain("sealed");
     expect(stdout.contents()).toContain("receipt");
     expect(stdout.contents()).toContain("inspect");
     expect(stdout.contents()).toContain("output");
@@ -523,7 +526,7 @@ runners:
       execution: { stdout: string };
       receipt: { metadata?: { agent_hook?: { route?: string } } };
     };
-    expect(result.status).toBe("success");
+    expect(result.status).toBe("sealed");
     expect(JSON.parse(result.execution.stdout)).toEqual({ verdict: "pass" });
     expect(result.receipt.metadata?.agent_hook?.route).toBe("native");
     expect(requestCount).toBe(1);
@@ -574,7 +577,7 @@ runners:
       execution: { stdout: string };
       receipt: { metadata?: { agent_hook?: { route?: string } } };
     };
-    expect(result.status).toBe("success");
+    expect(result.status).toBe("sealed");
     expect(JSON.parse(result.execution.stdout)).toEqual({ verdict: "pass" });
     expect(result.receipt.metadata?.agent_hook?.route).toBe("native");
     expect(requestCount).toBe(1);
@@ -682,14 +685,14 @@ Read note.txt and produce a grounded summary.
     expect(toolExecutions).toHaveLength(1);
     expect(toolExecutions[0]).toMatchObject({
       tool: "fs.read",
-      status: "success",
+      status: "sealed",
     });
     const storedRuns = await readStoredRunObjects(receiptDir);
     expect(storedRuns.some((entry) => entry.metadata?.runx?.parent_run_id === result.receipt.id)).toBe(true);
     expect(requestCount).toBe(2);
   });
 
-  it("pauses managed agent runs when a nested tool needs resolution, then resumes cleanly", async () => {
+  it("pauses managed agent runs when a nested tool needs agent input, then continues cleanly", async () => {
     const tempDir = await mkdtemp(path.join(os.tmpdir(), "runx-cli-managed-tool-pause-"));
     tempDirs.push(tempDir);
     const receiptDir = path.join(tempDir, "receipts");
@@ -711,7 +714,7 @@ Read note.txt and produce a grounded summary.
       path.join(skillDir, "SKILL.md"),
       `---
 name: file-summary
-description: Resolve a required nested tool input through managed pause and resume.
+description: Resolve a required nested tool input through managed pause and same-skill continuation.
 source:
   type: agent-step
   agent: codex
@@ -799,7 +802,7 @@ process.stdout.write(JSON.stringify({
             type: "function_call",
             call_id: "call_submit",
             name: "submit_result",
-            arguments: JSON.stringify({ summary: "grounded from resumed nested input" }),
+            arguments: JSON.stringify({ summary: "grounded from continued nested input" }),
           },
         ],
       }), { status: 200 });
@@ -820,7 +823,7 @@ process.stdout.write(JSON.stringify({
       run_id: string;
       requests: Array<{ id: string; kind: string }>;
     };
-    expect(first.status).toBe("needs_resolution");
+    expect(first.status).toBe("needs_agent");
     expect(first.requests[0]?.kind).toBe("input");
 
     await writeFile(
@@ -836,18 +839,18 @@ process.stdout.write(JSON.stringify({
       )}\n`,
     );
 
-    const resumedStdout = createMemoryStream();
-    const resumedStderr = createMemoryStream();
-    const resumedExit = await runCli(
-      ["resume", first.run_id, "--answers", answersPath, "--receipt-dir", receiptDir, "--non-interactive", "--json"],
-      { stdin: process.stdin, stdout: resumedStdout, stderr: resumedStderr },
+    const continuedStdout = createMemoryStream();
+    const continuedStderr = createMemoryStream();
+    const continuedExit = await runCli(
+      ["skill", skillDir, "--run-id", first.run_id, "--answers", answersPath, "--receipt-dir", receiptDir, "--non-interactive", "--json"],
+      { stdin: process.stdin, stdout: continuedStdout, stderr: continuedStderr },
       env,
     );
 
-    expect(resumedExit).toBe(0);
-    expect(resumedStderr.contents()).toBe("");
-    const resumed = JSON.parse(resumedStdout.contents()) as { execution: { stdout: string } };
-    expect(JSON.parse(resumed.execution.stdout)).toEqual({ summary: "grounded from resumed nested input" });
+    expect(continuedExit).toBe(0);
+    expect(continuedStderr.contents()).toBe("");
+    const continued = JSON.parse(continuedStdout.contents()) as { execution: { stdout: string } };
+    expect(JSON.parse(continued.execution.stdout)).toEqual({ summary: "grounded from continued nested input" });
     expect(requestCount).toBe(3);
   });
 
@@ -1233,8 +1236,8 @@ Answer the prompt directly.
     expect(stderr.contents()).toContain("Flat markdown files are not supported");
   });
 
-  it("supports resuming a paused run by run id", async () => {
-    const tempDir = await mkdtemp(path.join(os.tmpdir(), "runx-cli-resume-"));
+  it("continues a paused run with the same skill and run id", async () => {
+    const tempDir = await mkdtemp(path.join(os.tmpdir(), "runx-cli-continuation-"));
     tempDirs.push(tempDir);
     const stdout = createMemoryStream();
     const stderr = createMemoryStream();
@@ -1247,23 +1250,23 @@ Answer the prompt directly.
 
     expect(firstExit).toBe(2);
     const first = JSON.parse(stdout.contents()) as { status: string; run_id: string; skill: string };
-    expect(first.status).toBe("needs_resolution");
+    expect(first.status).toBe("needs_agent");
     expect(first.skill).toBe("sourcey");
 
     stdout.clear();
     stderr.clear();
 
-    const resumeExit = await runCli(
-      ["resume", first.run_id, "--json"],
+    const continueExit = await runCli(
+      ["skill", "sourcey", "--run-id", first.run_id, "--json"],
       { stdin: process.stdin, stdout, stderr },
       { ...process.env, RUNX_CWD: process.cwd(), RUNX_RECEIPT_DIR: tempDir },
     );
 
-    expect(resumeExit).toBe(2);
-    const resumed = JSON.parse(stdout.contents()) as { status: string; run_id: string; skill: string };
-    expect(resumed.status).toBe("needs_resolution");
-    expect(resumed.run_id).toBe(first.run_id);
-    expect(resumed.skill).toBe("sourcey");
+    expect(continueExit).toBe(2);
+    const continued = JSON.parse(stdout.contents()) as { status: string; run_id: string; skill: string };
+    expect(continued.status).toBe("needs_agent");
+    expect(continued.run_id).toBe(first.run_id);
+    expect(continued.skill).toBe("sourcey");
   });
 
 });
@@ -1316,7 +1319,7 @@ harness:
     - name: demo-smoke
       inputs: {}
       expect:
-        status: success
+        status: sealed
 `,
     );
 
@@ -1547,7 +1550,7 @@ harness:
           agent_step.consume.output:
             ok: yes
       expect:
-        status: success
+        status: sealed
 `,
     );
 
@@ -1692,7 +1695,7 @@ harness:
     - name: demo-smoke
       inputs: {}
       expect:
-        status: success
+        status: sealed
 `,
     );
     await writeFile(lockPath, "[]\n");

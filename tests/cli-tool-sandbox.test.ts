@@ -57,8 +57,8 @@ describe("cli-tool sandbox profiles", () => {
         adapters: createDefaultSkillAdapters(),
       });
 
-      expect(result.status).toBe("success");
-      if (result.status !== "success") {
+      expect(result.status).toBe("sealed");
+      if (result.status !== "sealed") {
         return;
       }
       await expect(readFile(outputPath, "utf8")).resolves.toBe("sandbox-ok");
@@ -170,8 +170,8 @@ Unrestricted fixture.
         env: process.env,
         adapters: createDefaultSkillAdapters(),
       });
-      expect(approved.status).toBe("success");
-      if (approved.status !== "success") {
+      expect(approved.status).toBe("sealed");
+      if (approved.status !== "sealed") {
         return;
       }
       expect(approved.execution.stdout).toBe("approved");
