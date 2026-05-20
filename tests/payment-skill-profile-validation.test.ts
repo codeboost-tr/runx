@@ -15,6 +15,23 @@ import { buildRegistryFixtureVersion } from "./registry-fixtures.js";
 
 const paymentSecretKeyPattern = /(?:^|_)(?:pan|cvv|cvc|card_number|cardnumber|account_number|routing_number|private_key|seed_phrase|mnemonic|secret_key)(?:$|_)/i;
 const retiredReceiptFields = new Set(["schema_version", "source_type"]);
+const explicitGovernedPaymentSkillNames = new Set([
+  "charge-challenge",
+  "charge-price",
+  "charge-verify",
+  "dispute-respond",
+  "mock-charge",
+  "mock-refund",
+  "mpp-charge",
+  "mpp-refund",
+  "refund-quote",
+  "refund-recover",
+  "refund-reserve",
+  "stripe-charge",
+  "stripe-refund",
+  "x402-charge",
+  "x402-refund",
+]);
 
 describe("payment skill execution profiles", () => {
   it("parse payment profiles and ingest packaged skills without raw payment credential fields", async () => {
@@ -99,7 +116,7 @@ async function discoverPaymentSkillDirs(): Promise<readonly string[]> {
         if (!profileDocument) {
           return undefined;
         }
-        if (entry.name.includes("payment")) {
+        if (entry.name.includes("payment") || explicitGovernedPaymentSkillNames.has(entry.name)) {
           return skillDir;
         }
         return /\bresource_family:\s*payment\b|\bpayment[.:_-]/.test(profileDocument) ? skillDir : undefined;

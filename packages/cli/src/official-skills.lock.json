@@ -1,5 +1,20 @@
 [
   {
+    "skill_id": "runx/charge-challenge",
+    "version": "sha-cd295911b258",
+    "digest": "48b629bb6c8d9476aa5e114fa5ba2f0cfe00a2cad403c1c357f12257c2c6ea51"
+  },
+  {
+    "skill_id": "runx/charge-price",
+    "version": "sha-cc1f5ffbdbfb",
+    "digest": "f25c2f1137c9926368841114c18b301ff272e9c8f29e18b7f4a663b37761bdf1"
+  },
+  {
+    "skill_id": "runx/charge-verify",
+    "version": "sha-f7d5a150f2f2",
+    "digest": "adb937f0e12abc84a478c00c8a83697b919edf80367d1dda7bdefc1e4c79c804"
+  },
+  {
     "skill_id": "runx/content-pipeline",
     "version": "sha-7eb2c09e330f",
     "digest": "4bd95843285faaf179c350e13fd16e7ed7acf9e0dba14d1f6081137f9f6aa58e"
@@ -55,9 +70,19 @@
     "digest": "2916792c37a8fd72198a9f08e90981783c378f0727dbb61919ffdc80c03ffc2d"
   },
   {
+    "skill_id": "runx/mock-charge",
+    "version": "sha-456f031276ef",
+    "digest": "99f37ca4f3be7fe1fac516295b6c292b0315255e6e209a3a0c405be27cf6502b"
+  },
+  {
     "skill_id": "runx/moltbook",
     "version": "sha-e7dcc2ebfe1c",
     "digest": "ce3d6628ec0f7337b4acd358a7a005725f61b979a44a1be98070bc05e2d83438"
+  },
+  {
+    "skill_id": "runx/mpp-charge",
+    "version": "sha-e595daeaf95e",
+    "digest": "a627a081624299638d211ffc63b897620faf83ed5c65e4ff615f1ff5f38cf641"
   },
   {
     "skill_id": "runx/payment-authorize-reserve",
@@ -155,6 +180,11 @@
     "digest": "1473f655631a56f6cd86183ca07e61afb4dd91937ffd67ff5113dc28bbbb9aee"
   },
   {
+    "skill_id": "runx/stripe-charge",
+    "version": "sha-9fc6e0d91c18",
+    "digest": "9709a6ae24797ab1d5870e810cc5579cbf6d9175d46055d44aaa5833a979fb16"
+  },
+  {
     "skill_id": "runx/vuln-scan",
     "version": "sha-6387b8d7b0e5",
     "digest": "71af63e20015f3eb6996e72a255d276432b2fff70b98ba01c2b5e490a4a866fd"
@@ -168,5 +198,10 @@
     "skill_id": "runx/write-harness",
     "version": "sha-675e2d84582f",
     "digest": "5963027feeafc8fa733d90d51d9c85cab7299b42977dd92e00d321e6768db21f"
+  },
+  {
+    "skill_id": "runx/x402-charge",
+    "version": "sha-bbc555b49244",
+    "digest": "d2e20bf5d4843993724af73839945e098da6c308994e09e5de1163194eb15f29"
   }
 ]
