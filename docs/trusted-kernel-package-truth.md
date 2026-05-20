@@ -27,7 +27,8 @@ regenerate the fixture JSON, and review the semantic diff before accepting a
 Rust behavior change.
 
 `crates/runx-core` currently provides Rust state-machine parity and Rust
-policy parity against the checked-in fixture set. Rust policy parity status: fixture-evidence-only.
+policy parity against the checked-in fixture set. Rust policy parity status:
+fixture-evidence-only.
 It is not an authoritative replacement for `@runxhq/core/state-machine` or
 `@runxhq/core/policy`, and no runtime-local, adapter, MCP, receipt, or CLI
 execution path should call Rust policy until an explicit binding/cutover spec
@@ -44,9 +45,12 @@ The initial pure-kernel Rust parity surface is:
 - `@runxhq/core/state-machine`
 - `@runxhq/core/policy`
 - `@runxhq/core/policy/sandbox`
+- authority-proof and scope-admission policy helpers
+- public-work policy helpers
+- graph-scope, retry, connected-auth, local-admission, and sandbox policy
+  helpers
 
 Parser, receipts, runtime, adapters, and CLI cutover are separate specs.
-The authority-proof and public-work re-exports are deferred to a follow-up spec.
 Full CLI/runtime cutover still requires the `fixtures/cli-parity` feature
 matrix and one-to-one TypeScript oracle parity; kernel parity alone is not a
 CLI or runtime cutover gate.

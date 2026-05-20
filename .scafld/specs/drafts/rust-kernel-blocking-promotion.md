@@ -14,18 +14,18 @@ risk_level: high
 ## Current State
 
 Status: draft
-Current phase: refresh only
-Next: implement evidence collection only after advisory-start evidence and
-kernel orchestration completion are available
-Reason: CI still marks Rust kernel parity advisory; no clean-PR counting script
-or five-PR evidence is present; current kernel orchestration draft has empty
-Phase Receipts
+Current phase: evidence script landed; soak evidence pending
+Next: record advisory-start evidence, then run the clean-kernel counter against
+live GitHub metadata or an audited operator fixture
+Reason: CI still marks Rust kernel parity advisory. The clean-PR counting script
+and fixture tests now exist, but advisory-start evidence, five qualifying
+post-advisory PRs, and kernel orchestration receipts are still missing.
 Blockers: `rust-kernel-port-orchestration` must complete or be superseded with
 audited receipts; advisory start timestamp must be recorded; 5 clean
 kernel-touching PRs must land while Rust kernel parity checks are advisory
-Allowed follow-up command: none during this refresh; do not run
-`scafld harden rust-kernel-blocking-promotion`.
-Latest runner update: none
+Allowed follow-up command: run the evidence script against audited evidence; do
+not run `scafld harden rust-kernel-blocking-promotion`.
+Latest runner update: 2026-05-20 clean-kernel counter fixture slice landed
 Review gate: not_started
 
 ## Summary
@@ -44,8 +44,9 @@ fixture refresh that makes both TypeScript and Rust pass.
 
 Refresh note, 2026-05-20: current CI still contains
 `continue-on-error: true` on the `Advisory Rust kernel parity` step, so Phase A
-is still advisory. `scripts/count-clean-kernel-prs.ts` is not present, and the
-Evidence section below is still intentionally unfilled. This draft must not be
+is still advisory. `scripts/count-clean-kernel-prs.ts`, fixture data, and tests
+are present and pass against local fixtures, but the Evidence section below is
+still intentionally unfilled for live post-advisory PRs. This draft must not be
 treated as ready for CI promotion.
 
 ## Context
@@ -157,7 +158,8 @@ Observed current state:
 - `docs/trusted-kernel-package-truth.md` still says CI is advisory during
   Phase A and becomes blocking only through this spec after five clean
   kernel-touching PRs.
-- No `scripts/count-clean-kernel-prs.ts` file was found during this refresh.
+- `scripts/count-clean-kernel-prs.ts` exists with fixture-mode tests and
+  fails closed without advisory-start evidence.
 - Clean PR evidence remains `<to be filled at exec time>`.
 
 ## Gate Classification
@@ -166,8 +168,8 @@ Blocking before this spec may promote CI:
 - `rust-kernel-port-orchestration` must have valid completion evidence, or a
   replacement audit must explicitly supersede it.
 - The advisory start point must be recorded as explicit evidence.
-- `scripts/count-clean-kernel-prs.ts` must exist, have fixture tests, and
-  verify at least five qualifying PRs.
+- `scripts/count-clean-kernel-prs.ts` must verify at least five qualifying
+  post-advisory PRs from live metadata or audited evidence.
 - `node scripts/check-rust-kernel-parity.mjs` must pass locally before the CI
   `continue-on-error` line is removed.
 
@@ -202,9 +204,6 @@ The counting script must fail closed:
 ## Next Executable Slices
 
 Execute these in order:
-- Evidence script slice: add `scripts/count-clean-kernel-prs.ts`, fixture
-  mode, and tests that cover clean PRs, missing checks, failed checks,
-  fixture-refresh PRs, Rust-only PRs, parser-only PRs, and renamed CI checks.
 - Advisory-start evidence slice: record the exact advisory start point from an
   audited source before live PR counting is allowed.
 - Soak verification slice: run the script against live GitHub metadata or an
@@ -223,7 +222,7 @@ complete.
 Harden required before approve: yes
 
 Definition of done:
-- [ ] `dod1` `scripts/count-clean-kernel-prs.ts` exists and has fixture tests.
+- [x] `dod1` `scripts/count-clean-kernel-prs.ts` exists and has fixture tests.
 - [ ] `dod2` The script verifies at least 5 clean kernel-touching PRs.
 - [ ] `dod3` Rust kernel parity checks are blocking in CI.
 - [ ] `dod4` Docs state Phase B is active and TS remains authoritative until
@@ -255,7 +254,7 @@ Validation:
 Goal: Add a script that identifies clean kernel-touching PRs and can be tested
 without live GitHub access.
 
-Status: pending
+Status: completed
 Dependencies: none
 
 Changes:
@@ -267,14 +266,14 @@ Changes:
   refresh PRs.
 
 Acceptance:
-- [ ] `ac1_1` command - script tests pass.
+- [x] `ac1_1` command - script tests pass.
   - Command: `pnpm exec vitest run --config vitest.config.ts tests/count-clean-kernel-prs.test.ts`
   - Expected kind: `exit_code_zero`
-  - Status: pending
-- [ ] `ac1_2` command - script exposes fixture mode.
+  - Status: passed 2026-05-20
+- [x] `ac1_2` command - script exposes fixture mode.
   - Command: `pnpm exec tsx scripts/count-clean-kernel-prs.ts --fixture tests/fixtures/clean-kernel-prs.json --min 1`
   - Expected kind: `exit_code_zero`
-  - Status: pending
+  - Status: passed 2026-05-20 by stricter local fixture run with `--min 3`
 
 ## Phase 2: Soak verification
 

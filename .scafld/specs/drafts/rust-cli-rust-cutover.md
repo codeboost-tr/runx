@@ -40,7 +40,8 @@ Today `crates/runx-cli/src/launcher.rs` still delegates to TypeScript through
 `npm exec` or invokes a local `node` against a `RUNX_JS_BIN` path unless
 explicit candidate signals are set. `RUNX_RUST_CLI` currently routes native
 candidate implementations for `connect`, `config`, supported `doctor`, supported
-`list`, `new`, `init`, `history`, and `tool build|search|inspect`;
+`list`, `new`, `init`, `history`, `policy inspect|lint`, and
+`tool build|search|inspect`;
 `RUNX_RUST_HARNESS` separately routes `runx harness <fixture>` to the Rust
 runtime harness runner. This spec removes release-path delegation and makes the
 Rust binary the authoritative `runx` invocation.
@@ -202,13 +203,13 @@ Out of scope:
   knowledge show or retirement, policy inspect/lint, mcp serve, and evolve
   disposition.
 - Current native command coverage is partial. `connect`, `config`, `new`,
-  `init`, `history`, `list`, supported `doctor`, supported `tool`, and harness
-  replay have Rust candidate paths and focused tests. The canonical matrix still
-  includes `skill.run`, `skill.search`, `skill.add`, `skill.publish`,
-  `skill.inspect`, `evolve`, `resume`, `replay`, `diff`,
-  `export-receipts.trainable`, `knowledge.show`, `policy.inspect`,
-  `policy.lint`, `dev`, and `mcp.serve`; those require Rust implementation,
-  explicit removal, or migration notes before cutover.
+  `init`, `history`, `list`, `policy inspect|lint`, supported `doctor`,
+  supported `tool`, and harness replay have Rust candidate paths and focused
+  tests. The canonical matrix still includes `skill.run`, `skill.search`,
+  `skill.add`, `skill.publish`, `skill.inspect`, `evolve`, `resume`, `replay`,
+  `diff`, `export-receipts.trainable`, `knowledge.show`, `dev`, and
+  `mcp.serve`; those require Rust implementation, explicit removal, or
+  migration notes before cutover.
 - Binary distribution infrastructure: signing, CDN, version pinning.
 - Release engineering can publish a previous known-good npm package as a
   rollback, and can revoke or quarantine a bad native binary artifact.
@@ -457,3 +458,6 @@ Cutover validation script status from the 2026-05-20 inspection:
   `connect`/`list`/`harness`/`history` have focused Rust coverage, npm package
   pointers still target the TypeScript CLI, and cutover packaging/verifier
   scripts are still missing.
+- 2026-05-20: Added native candidate coverage note for `policy inspect|lint`;
+  release authority still remains with the TypeScript CLI until the hard
+  cutover packaging and no-JS-fallback gates land.
