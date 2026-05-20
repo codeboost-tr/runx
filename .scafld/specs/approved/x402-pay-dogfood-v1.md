@@ -2,9 +2,9 @@
 spec_version: '2.0'
 task_id: x402-pay-dogfood-v1
 created: '2026-05-21T00:00:00Z'
-updated: '2026-05-21T00:00:00Z'
-status: draft
-harden_status: not_run
+updated: '2026-05-20T16:58:42Z'
+status: approved
+harden_status: passed
 size: large
 risk_level: high
 ---
@@ -13,41 +13,65 @@ risk_level: high
 
 ## Current State
 
-Status: draft
+Status: approved
 Current phase: planning
-Next: design review
-Reason: First-draft dogfooding plan for the future `x402-pay` graph and the
-current payment execution skills. Awaiting operator review before scafld
-runner processing.
+Next: build
+Reason: hardening passed
+Blockers: none
+Allowed follow-up command: `scafld build x402-pay-dogfood-v1`
+Latest runner update: none
+Review gate: not_started
 
 ## Summary
 
-Drive the current payment execution skills and the future `x402-pay` graph
-through every governance and recovery invariant by using the current
-`runx skill`, `runx harness`, and `runx history` surfaces against controlled
-fixtures and a controlled paid surface. Iterate fixes against an append-only
-hardening punch list until each phase passes without manual workarounds. This
-spec defines the eventualities, the rails in scope, the loop, and what "done"
-looks like before the previous `payment-execution-skills-v1` spec is allowed
-to harden.
+Drive the current payment execution skills through a Phase 1 mock-rail
+dogfood gate using only surfaces that exist today: `runx harness`,
+`runx skill`, `runx history`, fixture/oracle files, and the existing dogfood
+script. v1 does not create a native `runx x402-pay` command, does not add new
+`x402-pay`/rail marquee skill directories, and does not make Stripe test-mode
+behavior part of approval. It defines the local eventualities, touchpoints,
+rollback, and acceptance needed before later Stripe, composer, or paid-surface
+work can claim dogfood coverage.
 
 ## Current Codebase Alignment
 
 - There is no native `runx x402-pay ...` command today. Current native CLI
   entrypoints are `runx skill`, `runx harness`, and `runx history`.
-- There are no current `runx receipts` or `runx ledger` CLI surfaces. Receipt
-  state is observed through `runx history`, `runx skill inspect`, and explicit
-  receipt or ledger projection files written by the harness under test.
+- There are no current `runx receipts`, `runx ledger`, or
+  `runx skill inspect` CLI surfaces. Receipt state is observed through
+  `runx history`, explicit receipt files, and ledger projection files written
+  by the harness under test.
 - Current implemented payment skill directories are `payment-execute`,
   `payment-quote`, `payment-reserve`, `payment-rail-mock`,
   `payment-fulfill-rail`, and `payment-recover`.
 - There is no concrete `x402-pay`, `mock-pay`, `stripe-pay`, or `mpp-pay`
-  skill directory yet. Those names remain product intent and are deliverables
-  if this dogfood spec decides to introduce them.
+  skill directory yet. Those names remain product intent and are explicitly
+  deferred from this v1 dogfood gate.
 - `payment-fulfill-rail` uses rail ids `mock`, `x402`, `mpp`, and
   `stripe-spt`. It does not use `mock-pay` or `stripe-pay` rail ids.
 - `paid-echo` and composer interception are future dogfood deliverables, not
   current product behavior.
+
+## Scope And Touchpoints
+
+This v1 is a mock-only dogfood hardening contract. Build agents may touch:
+
+- `.scafld/specs/drafts/x402-pay-dogfood-v1.md`
+- `scripts/dogfood-core-skills.mjs`
+- `tests/payment-skill-profile-validation.test.ts`
+- `tests/external-skill-proving-ground.test.ts`
+- `tests/harness-cli.test.ts`
+- `tests/runtime-local-harness.test.ts`
+- `fixtures/harness/payment-approval-graph.yaml`
+- `fixtures/harness/oracle/payment-approval-graph.*.json`
+- `fixtures/graphs/payment/approval-spend.yaml`
+- A new Phase 1 mock dogfood test only if needed, e.g.
+  `tests/x402-pay-dogfood-mock.test.ts`
+
+Build agents must not touch Rust contracts/runtime code, add live-money rail
+behavior, create native payment CLI commands, create new `x402-pay`/`mock-pay`/
+`stripe-pay`/`mpp-pay` skill directories, or introduce a `paid-echo` server in
+this v1 unless a follow-up spec opens that scope.
 
 ## Why Dogfood Before Harden
 
@@ -61,7 +85,7 @@ and the CLI before any of it claims production behavior.
 Dogfooding here means exercising the payment flow through the current CLI:
 `runx harness <fixture|skill-dir|SKILL.md>` for fixture-backed cases and
 `runx skill <skill-dir|SKILL.md>` for skill execution cases, then observing
-closure through `runx history`, `runx skill inspect`, and receipt files.
+closure through `runx history`, receipt files, and ledger projection files.
 Constructing the flow by hand or stubbing past the CLI does not count.
 
 A native `runx x402-pay ...` command, `runx receipts`, or `runx ledger` would
@@ -71,16 +95,21 @@ depend on them.
 
 ## Phases
 
+Phase 0: existing proof pass.
+: Re-run the current dogfood baseline and record whether it passes without
+manual intervention: `node scripts/dogfood-core-skills.mjs`.
+
 Phase 1: current mock rail through `payment-execute` and `payment-fulfill-rail`.
 : Deterministic local settlement. Fastest iteration. Proves every Core-Owned
 Rule and Skill-Owned Rule from `payment-execution-skills-v1` without external
-rail variability. Phase 1 must be green before Phase 2 starts.
+rail variability. Phase 1 must be green before any Stripe or composer work is
+allowed to depend on this spec.
 
-Phase 2: add `payment-fulfill-rail` with `stripe-spt` in Stripe test mode.
+Phase 2: deferred `stripe-spt` test-mode dogfood.
 : Real rail behavior through the current rail id: timing, webhook ordering,
 declines, rate limits, restarts mid-settlement. A `stripe-pay` graph marquee
-may be introduced as a deliverable, but it is not a current skill directory.
-Stripe live mode is explicitly out of scope.
+may be introduced by a later spec, but it is not a v1 deliverable and not part
+of v1 acceptance. Stripe live mode is explicitly out of scope.
 
 Phase 3: deferred.
 : Any `crypto-pay` or live-money graph stays hidden. Live-money rails,
@@ -89,21 +118,19 @@ paid surface are not in scope for v1.
 
 ## Paid Surface
 
-Phase 1 starts with the existing payment harness fixtures and may add a
-minimal local `paid-echo` MCP server as a dogfood deliverable. `paid-echo`
-issues a `payment_required` signal on a known tool name, accepts a fulfilled
-credential, and echoes its input. Setup, invocation, and teardown live in the
-dogfood loop, not in product code. No coupling to internal paid surfaces in
-v1; internal surfaces only enter once a real paid tool exists and the loop is
-already green.
+Phase 1 starts and ends with the existing payment harness fixtures and current
+payment skills. A minimal local `paid-echo` MCP server, composer paid-tool
+interception, or any internal paid surface is deferred. Those surfaces need a
+separate spec because they add runtime/tooling behavior beyond the current
+harness and skill execution contract.
 
 ## Eventualities
 
 Each entry below is one runnable scenario. Each scenario is exercised by an
 explicit current CLI invocation. Fixture cases use `runx harness`; skill
 execution cases use `runx skill`. Expected state is visible through
-`runx history`, `runx skill inspect`, explicit receipt files, and any ledger
-projection files the scenario creates. Pass means: the expected closure was
+`runx history`, explicit receipt files, and any ledger projection files the
+scenario creates. Pass means: the expected closure was
 produced without manual workarounds, escapes, or stack-trace leakage to the
 operator.
 
@@ -172,21 +199,22 @@ intervention beyond the approval gate when configured. No stack traces.
 
 P1.16 CLI: receipt observation
 : `runx history` lists the sealed receipt after P1.1 within one operator
-action, and `runx skill inspect <receipt-id>` or the receipt file shows
-settlement family, proof ref, idempotency key, and sealed timestamp.
+action, and the receipt file shows settlement family, proof ref, idempotency
+key, and sealed timestamp.
 
 P1.17 Ledger projection observation
 : The explicit ledger projection file, if present for the scenario, shows the
 accrual for P1.1 and the refused entries from P1.3 and P1.4 distinctly. A
 future `runx ledger` command is a separate CLI deliverable, not assumed here.
 
-P1.18 Composer flow deliverable
-: If this spec adds composer paid-tool interception, an outer skill that
-invokes a paid tool transparently triggers the payment graph. The composer
-sees a governed result or a governed error; never a raw rail artifact. This is
-future work created by this dogfood spec, not current behavior.
+P1.18 Composer flow
+: Deferred. An outer skill that invokes a paid tool and transparently triggers
+the payment graph is not current behavior and is not a v1 acceptance blocker.
 
-### Phase 2 (`stripe-spt` in test mode)
+### Deferred Phase 2 (`stripe-spt` in test mode)
+
+The following scenarios are retained as follow-up design intent only. They do
+not block v1 hardening, approval, or completion.
 
 P2.1 Happy path with test card
 : Stripe test card settles through the `stripe-spt` rail id, webhook arrives,
@@ -225,20 +253,18 @@ P2.8 Refund and reversal
 Each iteration:
 
 1. Pick the next unmet eventuality.
-2. Set the precondition state on the local fixture or dogfood `paid-echo`
-   server, policy file, and (Phase 2) Stripe test account.
+2. Set the precondition state on the local fixture and policy file.
 3. Run the current CLI entrypoint with the scenario inputs:
    `runx harness <fixture|skill-dir|SKILL.md>` for harness cases or
    `runx skill <skill-dir|SKILL.md>` for skill cases.
-4. Observe closure through `runx history`, `runx skill inspect`, explicit
-   receipt or ledger files, structured logs, and the CLI exit. Classify pass,
-   fail, or ambiguous.
+4. Observe closure through `runx history`, explicit receipt or ledger files,
+   structured logs, and the CLI exit. Classify pass, fail, or ambiguous.
 5. If fail or ambiguous, append a punch list entry. Land a fix as its own
    commit. Re-run the scenario from step 3 until pass.
 6. Move to the next eventuality.
 
-Phase 1 advances to Phase 2 only when every Phase 1 scenario is pass and the
-punch list is empty.
+Phase 1 closes only when every v1 scenario is pass and the punch list is empty.
+Phase 2 requires a separate spec.
 
 ## Hardening Punch List
 
@@ -261,24 +287,90 @@ deleted; only superseded by a follow-up entry that references the prior id.
 - `crypto-pay` activation or exercise.
 - Provider-side skills (`x402-charge` family). Deferred per the prior spec.
 - Refund and reversal flows (P2.8).
+- Stripe test-mode dogfood as an approval or completion blocker for v1.
+- `paid-echo`, composer paid-tool interception, or internal paid surfaces.
 - Multi-tenant policy and approval routing.
 - UI affordances beyond what the CLI already exposes.
-- Treating `runx x402-pay`, `runx receipts`, or `runx ledger` as current CLI
-  surfaces without separately implementing and accepting them.
+- Treating `runx x402-pay`, `runx receipts`, `runx ledger`, or
+  `runx skill inspect` as current CLI surfaces without separately implementing
+  and accepting them.
 
 ## Acceptance Criteria
 
-- Every Phase 1 eventuality is pass with no manual workaround.
-- Every Phase 2 eventuality (excluding P2.8) is pass with no manual workaround.
-- Punch list is at zero open entries at the end of each phase before
-  promotion.
+- `scafld validate x402-pay-dogfood-v1 --json` passes.
+- `node scripts/dogfood-core-skills.mjs` passes.
+- `pnpm exec vitest run tests/payment-skill-profile-validation.test.ts`
+  passes.
+- Phase 1 mock eventualities are covered by fixtures/tests or by a documented
+  punch-list blocker before this spec can complete.
+- Punch list is at zero open entries before promotion.
 - Each fix commit references the scenario id it closes.
 - No scenario surfaces a raw stack trace, raw rail payload, or undocumented
   exit code to the operator.
-- `runx history`, `runx skill inspect`, and explicit receipt or ledger files
-  are the source of truth for every scenario closure; structured logs are
-  diagnostic, not authoritative.
+- `runx history` and explicit receipt or ledger files are the source of truth
+  for every scenario closure; structured logs are diagnostic, not authoritative.
 - The dogfood loop runs entirely through current `runx harness` and
   `runx skill` invocations unless this spec explicitly delivers and accepts a
   new native CLI command. No hand-orchestrated payment composition counts
   toward acceptance.
+
+## Rollback And Repair
+
+Rollback is spec/test/fixture-only for v1. Revert any changes made under the
+declared touchpoints, regenerate any touched oracle files from the accepted
+fixture command, and re-run `node scripts/dogfood-core-skills.mjs` plus the
+payment profile validation test.
+
+Scenario repair is limited to local mock recovery: if a mock settlement reaches
+an ambiguous state, retry through `payment-recover` with the same idempotency
+key and classify the outcome as sealed, refused, or escalated. A second spend
+with a new key is not a repair path. Runtime auto-repair, Stripe reconciliation,
+refund, reversal, and dispute handling are follow-up specs.
+
+## Harden Rounds
+
+### round-1
+
+Status: passed
+Started: 2026-05-20T16:52:46Z
+Ended: 2026-05-20T16:53:16Z
+Verdict: pass
+Provider: manual
+Summary: Manual hardening narrowed the draft to an executable v1 mock-rail dogfood gate and deferred future surfaces.
+
+Checks:
+- scope/migration audit
+  - Grounded in: code:.scafld/specs/drafts/x402-pay-dogfood-v1.md:55
+  - Result: passed
+  - Evidence: Scope And Touchpoints declares a mock-only v1 surface, allowed paths, and explicit non-goals.
+- path audit
+  - Grounded in: code:.scafld/specs/drafts/x402-pay-dogfood-v1.md:59
+  - Result: passed
+  - Evidence: Build-time touchpoints are explicit paths or one named optional Phase 1 test path.
+- command audit
+  - Grounded in: code:.scafld/specs/drafts/x402-pay-dogfood-v1.md:300
+  - Result: passed
+  - Evidence: Acceptance is pinned to current local commands that exist in this checkout.
+- acceptance timing audit
+  - Grounded in: code:.scafld/specs/drafts/x402-pay-dogfood-v1.md:108
+  - Result: passed
+  - Evidence: Stripe test-mode scenarios are explicitly deferred and do not block v1 approval or completion.
+- rollback/repair audit
+  - Grounded in: code:.scafld/specs/drafts/x402-pay-dogfood-v1.md:317
+  - Result: passed
+  - Evidence: Rollback is limited to declared spec/test/fixture touchpoints and same-key mock recovery classification.
+- design challenge
+  - Grounded in: code:.scafld/specs/drafts/x402-pay-dogfood-v1.md:27
+  - Result: passed
+  - Evidence: The design proves current payment skills through current CLI surfaces and avoids bundling future product work.
+
+Issues:
+- none
+
+
+## Planning Log
+
+- 2026-05-21T00:50:18Z: Manual hardening narrowed v1 from an all-rails
+  dogfood plan to a current-surface mock-only gate, removed future CLI/surface
+  assumptions from acceptance, and added scope, touchpoints, acceptance, and
+  rollback/repair sections.
