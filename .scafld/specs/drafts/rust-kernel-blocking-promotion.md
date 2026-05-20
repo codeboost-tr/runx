@@ -2,7 +2,7 @@
 spec_version: '2.0'
 task_id: rust-kernel-blocking-promotion
 created: '2026-05-17T00:30:00Z'
-updated: '2026-05-20T08:08:00Z'
+updated: '2026-05-21T00:31:00+10:00'
 status: draft
 harden_status: not_run
 size: medium
@@ -32,10 +32,10 @@ requires live GitHub records to include post-advisory merge times, and requires
 the Rust kernel parity check itself to pass. A read-only live probe from
 `2026-05-20T00:00:00Z` found zero qualifying kernel PRs; the checked-in fixture
 still has four qualifying records, so the CI promotion remains blocked.
-Local evidence update: 2026-05-20 reran the clean-kernel counter fixture tests,
-reran fixture mode, refreshed the stale `runx-core` public API snapshot, and
-verified `node scripts/check-rust-kernel-parity.mjs --api-only` passes. This
-does not satisfy the live five-PR soak gate and does not authorize the CI flip.
+Local evidence update: 2026-05-21 reran the full Rust kernel parity gate after
+refreshing the stale `runx-core` public API snapshot; `node
+scripts/check-rust-kernel-parity.mjs` now passes locally. This does not satisfy
+the live five-PR soak gate and does not authorize the CI flip.
 Review gate: not_started
 
 ## Summary
@@ -182,6 +182,10 @@ Observed current state:
   stale after the kernel JSON bridge and payment authority subset API were
   exported. The snapshot was regenerated with the command printed by the gate,
   and the API-only parity check now passes.
+- 2026-05-21 local full-gate evidence: `node
+  scripts/check-rust-kernel-parity.mjs` passes after regenerating the
+  `runx-core` public API snapshot. The run covered cargo fmt, clippy, workspace
+  tests, crate-graph/style guards, cargo-deny, and the API snapshot gate.
 
 ## Gate Classification
 
