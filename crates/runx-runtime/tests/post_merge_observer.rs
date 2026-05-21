@@ -7,10 +7,12 @@ use runx_contracts::{
 };
 use runx_runtime::post_merge_observer::{
     PostMergeObserverAdapter, PostMergeObserverAdapterError,
-    PostMergeObserverLivePublicationRequest, PostMergeObserverPublicationCommand,
-    PostMergeObserverPublicationLedger, PostMergeObserverPublicationRuntimeDecision,
-    PostMergeObserverPullRequestObservationRequest, PostMergeObserverRuntimeError,
-    PostMergeObserverVerificationObservationRequest, execute_post_merge_observer_with_adapter,
+    PostMergeObserverLivePublicationRequest, PostMergeObserverPublicationAdapter,
+    PostMergeObserverPublicationCommand, PostMergeObserverPublicationLedger,
+    PostMergeObserverPublicationRuntimeDecision, PostMergeObserverPullRequestObservationRequest,
+    PostMergeObserverRuntimeError, PostMergeObserverSourcePublicationObservation,
+    PostMergeObserverSourcePublicationRequest, PostMergeObserverVerificationObservationRequest,
+    execute_post_merge_observer_with_adapter, execute_post_merge_observer_with_publication_adapter,
     project_post_merge_observer_publication_commands,
 };
 
@@ -313,6 +315,99 @@ fn live_adapter_projects_observed_closure_into_publication_commands_without_netw
 }
 
 #[test]
+fn live_publication_adapter_requires_provider_readback_before_publication_dedupe()
+-> Result<(), Box<dyn std::error::Error>> {
+    let policy: runx_contracts::OperationalPolicy = serde_json::from_str(NITROSEND_LIKE)?;
+    let receipt = post_merge_observer_receipt()?;
+    let mut adapter = FakePostMergeObserverAdapter { events: Vec::new() };
+    let mut publisher = FakePostMergeObserverPublisher::default();
+    let mut ledger = PostMergeObserverPublicationLedger::new();
+
+    let live = execute_post_merge_observer_with_publication_adapter(
+        &policy,
+        &live_publication_request(),
+        &receipt,
+        &mut adapter,
+        &mut publisher,
+        &mut ledger,
+    )?;
+
+    assert_eq!(adapter.events, vec!["pull_request", "verification"]);
+    assert_eq!(publisher.events, vec!["source_publication"]);
+    assert_eq!(
+        live.publication.decision,
+        PostMergeObserverPublicationRuntimeDecision::Publish
+    );
+    assert_eq!(live.publication.commands.len(), 3);
+    let readback = live
+        .source_publication
+        .as_ref()
+        .ok_or("expected source publication readback")?;
+    assert_eq!(
+        readback.request.receipt_ref.uri,
+        format!("runx:harness_receipt:{}", receipt.id)
+    );
+    assert!(readback.request.close_source_issue);
+    assert_eq!(readback.observation.published_refs.len(), 2);
+    assert!(readback.observation.closed_ref.is_some());
+    assert!(readback.proof_refs.iter().any(|reference| {
+        reference.provider.as_deref() == Some("github")
+            && reference.uri.contains("issuecomment-9001")
+    }));
+    assert!(readback.proof_refs.iter().any(|reference| {
+        reference.reference_type == ReferenceType::SlackThread
+            && reference.uri.contains("/reply/1716180950.000200")
+    }));
+    assert!(readback.proof_refs.iter().any(|reference| {
+        reference.reference_type == ReferenceType::GithubIssue
+            && reference.uri == "github://runxhq/nitrosend/issues/77"
+    }));
+    assert!(readback.proof_refs.iter().any(|reference| {
+        reference.reference_type == ReferenceType::HarnessReceipt
+            && reference.uri == format!("runx:harness_receipt:{}", receipt.id)
+    }));
+    assert!(ledger.contains(&live.dedupe.publication_key));
+    Ok(())
+}
+
+#[test]
+fn live_publication_readback_mismatch_fails_without_marking_publication_dedupe()
+-> Result<(), Box<dyn std::error::Error>> {
+    let policy: runx_contracts::OperationalPolicy = serde_json::from_str(NITROSEND_LIKE)?;
+    let receipt = post_merge_observer_receipt()?;
+    let expected_publication_key = dedupe_plan(&receipt, PostMergeObserverSignalSource::Webhook)
+        .publication_key
+        .clone();
+    let mut adapter = FakePostMergeObserverAdapter { events: Vec::new() };
+    let mut publisher = FakePostMergeObserverPublisher {
+        omit_close_readback: true,
+        ..FakePostMergeObserverPublisher::default()
+    };
+    let mut ledger = PostMergeObserverPublicationLedger::new();
+
+    let error = execute_post_merge_observer_with_publication_adapter(
+        &policy,
+        &live_publication_request(),
+        &receipt,
+        &mut adapter,
+        &mut publisher,
+        &mut ledger,
+    )
+    .err()
+    .ok_or("expected source publication readback error")?;
+
+    assert!(matches!(
+        error,
+        PostMergeObserverRuntimeError::SourcePublicationMismatch(message)
+            if message == "publication readback did not return a proof ref for every source command"
+    ));
+    assert_eq!(adapter.events, vec!["pull_request", "verification"]);
+    assert_eq!(publisher.events, vec!["source_publication"]);
+    assert!(!ledger.contains(&expected_publication_key));
+    Ok(())
+}
+
+#[test]
 fn live_adapter_command_validation_fails_before_provider_observation()
 -> Result<(), Box<dyn std::error::Error>> {
     let policy: runx_contracts::OperationalPolicy = serde_json::from_str(NITROSEND_LIKE)?;
@@ -349,6 +444,17 @@ fn live_adapter_command_validation_fails_before_provider_observation()
     ));
     assert!(adapter.events.is_empty());
     Ok(())
+}
+
+fn live_publication_request() -> PostMergeObserverLivePublicationRequest {
+    PostMergeObserverLivePublicationRequest {
+        source_id: Some("bugs-fixes".to_owned()),
+        source_issue_ref: fixture_source_issue_ref(),
+        source_thread_ref: Some(fixture_source_thread_ref()),
+        pull_request_ref: fixture_pull_request_ref(),
+        signal_source: PostMergeObserverSignalSource::Webhook,
+        signal_ref: Some(webhook_delivery_ref()),
+    }
 }
 
 fn post_merge_observer_receipt() -> Result<HarnessReceipt, serde_json::Error> {
@@ -538,6 +644,103 @@ impl PostMergeObserverAdapter for FakePostMergeObserverAdapter {
             verified_at: Some(VERIFIED_AT.to_owned()),
         })
     }
+}
+
+#[derive(Default)]
+struct FakePostMergeObserverPublisher {
+    events: Vec<&'static str>,
+    omit_issue_comment_readback: bool,
+    omit_thread_reply_readback: bool,
+    omit_close_readback: bool,
+}
+
+impl PostMergeObserverPublicationAdapter for FakePostMergeObserverPublisher {
+    fn publish_source_update(
+        &mut self,
+        request: &PostMergeObserverSourcePublicationRequest,
+    ) -> Result<PostMergeObserverSourcePublicationObservation, PostMergeObserverAdapterError> {
+        self.events.push("source_publication");
+        assert_post_merge_source_publication_request(request);
+        let mut published_refs = Vec::new();
+        if !self.omit_issue_comment_readback {
+            published_refs.push(Reference {
+                reference_type: ReferenceType::ExternalUrl,
+                uri: "https://github.com/runxhq/nitrosend/issues/77#issuecomment-9001".to_owned(),
+                provider: Some("github".to_owned()),
+                locator: Some("runxhq/nitrosend#77-comment-9001".to_owned()),
+                label: Some("post-merge source issue final comment".to_owned()),
+                observed_at: Some(VERIFIED_AT.to_owned()),
+                proof_kind: None,
+            });
+        }
+        if !self.omit_thread_reply_readback {
+            published_refs.push(Reference {
+                reference_type: ReferenceType::SlackThread,
+                uri: "slack://T01NITRO/C02DOGFOOD/p1716180900.000100/reply/1716180950.000200"
+                    .to_owned(),
+                provider: Some("slack".to_owned()),
+                locator: Some("T01NITRO/C02DOGFOOD/1716180950.000200".to_owned()),
+                label: Some("post-merge source thread final reply".to_owned()),
+                observed_at: Some(VERIFIED_AT.to_owned()),
+                proof_kind: None,
+            });
+        }
+
+        Ok(PostMergeObserverSourcePublicationObservation {
+            source_issue_ref: request.source_issue_ref.clone(),
+            source_thread_ref: request.source_thread_ref.clone(),
+            pull_request_ref: request.pull_request_ref.clone(),
+            receipt_ref: request.receipt_ref.clone(),
+            published_refs,
+            closed_ref: (!self.omit_close_readback).then(|| request.source_issue_ref.clone()),
+        })
+    }
+}
+
+fn assert_post_merge_source_publication_request(
+    request: &PostMergeObserverSourcePublicationRequest,
+) {
+    assert_eq!(
+        request.source_issue_ref.reference_type,
+        ReferenceType::GithubIssue
+    );
+    assert_eq!(
+        request.source_thread_ref.reference_type,
+        ReferenceType::SlackThread
+    );
+    assert_eq!(
+        request.pull_request_ref.reference_type,
+        ReferenceType::GithubPullRequest
+    );
+    assert_eq!(
+        request.receipt_ref.reference_type,
+        ReferenceType::HarnessReceipt
+    );
+    assert_eq!(request.reason_code, "merged_verified");
+    assert!(request.close_source_issue);
+    assert_eq!(request.commands.len(), 3);
+    assert!(matches!(
+        &request.commands[0],
+        PostMergeObserverPublicationCommand::SourceIssueComment { target, body, .. }
+            if target.uri == request.source_issue_ref.uri
+                && body.contains(&request.pull_request_ref.uri)
+                && body.contains(&request.receipt_ref.uri)
+    ));
+    assert!(matches!(
+        &request.commands[1],
+        PostMergeObserverPublicationCommand::SourceThreadReply { target, body, .. }
+            if target.uri == request.source_thread_ref.uri
+                && body.contains(&request.pull_request_ref.uri)
+                && body.contains(&request.receipt_ref.uri)
+    ));
+    assert!(matches!(
+        &request.commands[2],
+        PostMergeObserverPublicationCommand::SourceIssueClose {
+            target,
+            reason_code,
+            ..
+        } if target.uri == request.source_issue_ref.uri && reason_code == "merged_verified"
+    ));
 }
 
 fn fixture_source_issue_ref() -> Reference {

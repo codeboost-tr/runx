@@ -380,3 +380,10 @@ Issues:
   PR, and webhook refs normalize before adapter readback. Focused
   `runx-contracts` post-merge observer and target-runner tests passed, as did
   the matching `runx-runtime` post-merge observer and target-runner tests.
+- 2026-05-21: Added live source-publication adapter/readback planning in
+  `runx-runtime` without network side effects. The runtime now builds a typed
+  source-publication request from the sealed receipt projection, requires
+  provider readback proof for the GitHub issue comment, Slack thread reply,
+  source issue close, and receipt ref before marking publication dedupe, and
+  fails closed without marking dedupe when readback is incomplete. Real
+  GitHub/Slack transport remains pending.
