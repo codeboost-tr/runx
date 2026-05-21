@@ -449,9 +449,13 @@ pub fn build_skill_id(owner: &str, name: &str) -> Result<String, LocalRegistryEr
 
 pub fn split_skill_id(skill_id: &str) -> Result<(&str, &str), LocalRegistryError> {
     let mut parts = skill_id.split('/');
-    let owner = parts.next().unwrap_or_default();
-    let name = parts.next().unwrap_or_default();
-    if owner.is_empty() || name.is_empty() || parts.next().is_some() {
+    let Some(owner) = parts.next().filter(|part| !part.is_empty()) else {
+        return Err(LocalRegistryError::InvalidSkillId(skill_id.to_owned()));
+    };
+    let Some(name) = parts.next().filter(|part| !part.is_empty()) else {
+        return Err(LocalRegistryError::InvalidSkillId(skill_id.to_owned()));
+    };
+    if parts.next().is_some() {
         return Err(LocalRegistryError::InvalidSkillId(skill_id.to_owned()));
     }
     reject_unsafe_path_component(owner)?;

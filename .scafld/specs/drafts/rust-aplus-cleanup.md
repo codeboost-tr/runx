@@ -2,7 +2,7 @@
 spec_version: '2.0'
 task_id: rust-aplus-cleanup
 created: '2026-05-21T03:50:00Z'
-updated: '2026-05-21T03:50:00Z'
+updated: '2026-05-21T04:18:10Z'
 status: draft
 harden_status: not_run
 size: medium
@@ -38,6 +38,11 @@ Items touching files under active parallel work are marked **[blocked-until:
   matches these strings for control flow; typing them would duplicate
   vocabularies owned in other crates and make the bridge brittle to CLI
   additions. No change.
+- **Local registry `split_skill_id` invariant** —
+  `runx-runtime/src/registry/local.rs` no longer uses `unwrap_or_default()` to
+  mask missing owner/name segments before validation. It now matches the two
+  required non-empty segments explicitly and rejects extra segments before path
+  safety checks.
 
 ## Tier 1 — correctness / drift risk
 
@@ -94,9 +99,8 @@ Items touching files under active parallel work are marked **[blocked-until:
 
 ### H. `unwrap_or` masking invariants (not benign defaults)
 
-- `registry/local.rs:452` — `split_skill_id` uses `.unwrap_or_default()` then
-  `is_empty()`; the fallback hides the invariant. → explicit match.
-  *registry/local.rs has had active parallel work; confirm clean first.*
+- **[done]** `registry/local.rs:452` — `split_skill_id` uses explicit segment
+  matching instead of `.unwrap_or_default()` plus `is_empty()`.
 - **[blocked-until: RunxRef]** `journal.rs:988,995` —
   `value.as_str().unwrap_or("unknown")` hides a serialization failure behind
   the string `"unknown"`. → propagate the error.
