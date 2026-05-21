@@ -9,13 +9,13 @@ use serde::Serialize;
 use sha2::{Digest, Sha256};
 
 use runx_contracts::{
-    Act, ActForm, Authority, AuthorityAttenuation, ChangePlan, ChangeRequest, Closure,
-    ClosureDisposition, CriterionBinding, CriterionStatus, Decision, DecisionChoice,
-    DecisionInputs, DecisionJustification, Harness, HarnessEnforcement, HarnessIdempotency,
-    HarnessReceipt, HarnessReceiptSchema, HarnessRevision, HarnessSandbox, HarnessSeal,
-    HarnessState, Intent, JsonObject, JsonValue, ReceiptIssuer, ReceiptIssuerType,
-    ReceiptVerificationSummary, Reference, ReferenceType, RevisionDetails, SealCriterion,
-    SignatureAlgorithm, SuccessCriterion, TargetRepoRunnerDedupeLookupExecution,
+    Act, ActForm, Authority, AuthorityAttenuation, AuthoritySubsetProof, AuthoritySubsetResult,
+    ChangePlan, ChangeRequest, Closure, ClosureDisposition, CriterionBinding, CriterionStatus,
+    Decision, DecisionChoice, DecisionInputs, DecisionJustification, Harness, HarnessEnforcement,
+    HarnessIdempotency, HarnessReceipt, HarnessReceiptSchema, HarnessRevision, HarnessSandbox,
+    HarnessSeal, HarnessState, Intent, JsonNumber, JsonObject, JsonValue, ReceiptIssuer,
+    ReceiptIssuerType, ReceiptVerificationSummary, Reference, ReferenceType, RevisionDetails,
+    SealCriterion, SignatureAlgorithm, SuccessCriterion, TargetRepoRunnerDedupeLookupExecution,
     TargetRepoRunnerDedupeLookupObservation, TargetRepoRunnerDedupeLookupPlan,
     TargetRepoRunnerDedupeResult, TargetRepoRunnerExecutionPlan,
     TargetRepoRunnerExistingPullRequest, TargetRepoRunnerPlan, TargetRepoRunnerPlanError,
@@ -55,6 +55,10 @@ pub struct TargetRepoRunnerLiveExecution {
     pub execution: TargetRepoRunnerFixtureExecution,
     pub revision_receipt: HarnessReceipt,
     pub revision_projection: TargetRepoRunnerRevisionReceiptProjection,
+    pub source_publication_request: TargetRepoRunnerSourcePublicationRequest,
+    pub source_publication_observation: TargetRepoRunnerSourcePublicationObservation,
+    pub source_publication_receipt: HarnessReceipt,
+    pub source_publication_projection: TargetRepoRunnerSourcePublicationProjection,
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize)]
@@ -86,6 +90,32 @@ pub struct TargetRepoRunnerPullRequestObservationRequest {
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize)]
+pub struct TargetRepoRunnerSourcePublicationRequest {
+    pub publication: TargetRepoRunnerSourcePublicationReceiptPlan,
+    pub revision_receipt_ref: Reference,
+    pub revision_projection: TargetRepoRunnerRevisionReceiptProjection,
+    pub commands: Vec<TargetRepoRunnerSourcePublicationCommand>,
+}
+
+#[derive(Clone, Debug, Eq, PartialEq, Serialize)]
+#[serde(tag = "kind", rename_all = "snake_case")]
+pub enum TargetRepoRunnerSourcePublicationCommand {
+    SourceIssueComment { target: Reference, body: String },
+    SourceThreadReply { target: Reference, body: String },
+}
+
+#[derive(Clone, Debug, PartialEq, Serialize)]
+pub struct TargetRepoRunnerSourcePublicationObservation {
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub source_issue_ref: Option<Reference>,
+    pub source_thread_ref: Reference,
+    pub pull_request_ref: Reference,
+    pub revision_receipt_ref: Reference,
+    pub published_refs: Vec<Reference>,
+    pub metadata: JsonObject,
+}
+
+#[derive(Clone, Debug, PartialEq, Serialize)]
 pub struct TargetRepoRunnerRevisionReceiptProjection {
     pub receipt_ref: Reference,
     pub act_id: String,
@@ -95,6 +125,18 @@ pub struct TargetRepoRunnerRevisionReceiptProjection {
     pub source_issue_ref: Option<Reference>,
     pub source_thread_ref: Reference,
     pub pull_request_ref: Reference,
+    pub summary: String,
+    pub metadata: JsonObject,
+}
+
+#[derive(Clone, Debug, PartialEq, Serialize)]
+pub struct TargetRepoRunnerSourcePublicationProjection {
+    pub receipt_ref: Reference,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub source_issue_ref: Option<Reference>,
+    pub source_thread_ref: Reference,
+    pub pull_request_ref: Reference,
+    pub published_refs: Vec<Reference>,
     pub summary: String,
     pub metadata: JsonObject,
 }
@@ -142,6 +184,16 @@ pub trait TargetRepoRunnerAdapter {
         &mut self,
         request: &TargetRepoRunnerPullRequestObservationRequest,
     ) -> Result<TargetRepoRunnerExistingPullRequest, TargetRepoRunnerAdapterError>;
+
+    fn publish_source_update(
+        &mut self,
+        _request: &TargetRepoRunnerSourcePublicationRequest,
+    ) -> Result<TargetRepoRunnerSourcePublicationObservation, TargetRepoRunnerAdapterError> {
+        Err(TargetRepoRunnerAdapterError::new(
+            "source_publication",
+            "adapter does not implement source publication readback",
+        ))
+    }
 }
 
 #[derive(Clone, Debug, PartialEq)]
@@ -150,6 +202,7 @@ pub enum TargetRepoRunnerRuntimeError {
     Adapter(TargetRepoRunnerAdapterError),
     Receipt(String),
     ReceiptProjection(String),
+    SourcePublicationMismatch(String),
     ReadinessMismatch(String),
     CheckoutNotScafldReady { target_repo: String },
     CreatedPullRequestRequired { target_repo: String },
@@ -167,6 +220,12 @@ impl fmt::Display for TargetRepoRunnerRuntimeError {
                 write!(
                     formatter,
                     "target repo runner receipt projection failed: {message}"
+                )
+            }
+            Self::SourcePublicationMismatch(message) => {
+                write!(
+                    formatter,
+                    "target repo runner source publication failed: {message}"
                 )
             }
             Self::ReadinessMismatch(message) => formatter.write_str(message),
@@ -189,6 +248,7 @@ impl std::error::Error for TargetRepoRunnerRuntimeError {
             Self::Adapter(error) => Some(error),
             Self::Receipt(_)
             | Self::ReceiptProjection(_)
+            | Self::SourcePublicationMismatch(_)
             | Self::ReadinessMismatch(_)
             | Self::CheckoutNotScafldReady { .. }
             | Self::CreatedPullRequestRequired { .. } => None,
@@ -208,6 +268,9 @@ impl From<TargetRepoRunnerAdapterError> for TargetRepoRunnerRuntimeError {
     }
 }
 
+// rust-style-allow: long-function because this is the live target-runner
+// orchestration boundary: readiness, dedupe, mutation observation, revision
+// seal, and source publication must stay visibly ordered.
 pub fn execute_target_repo_runner_with_adapter<A: TargetRepoRunnerAdapter>(
     plan: &TargetRepoRunnerPlan,
     adapter: &mut A,
@@ -256,6 +319,20 @@ pub fn execute_target_repo_runner_with_adapter<A: TargetRepoRunnerAdapter>(
     let revision_receipt =
         target_repo_runner_revision_receipt(&execution, runner_observation.as_ref(), created_at)?;
     let revision_projection = project_target_repo_runner_revision_receipt(&revision_receipt)?;
+    let source_publication_request = target_repo_runner_source_publication_request(
+        &execution,
+        &revision_receipt,
+        &revision_projection,
+    );
+    let source_publication_observation =
+        adapter.publish_source_update(&source_publication_request)?;
+    let source_publication_receipt = target_repo_runner_source_publication_harness_receipt(
+        &source_publication_request,
+        &source_publication_observation,
+        created_at,
+    )?;
+    let source_publication_projection =
+        project_target_repo_runner_source_publication_receipt(&source_publication_receipt)?;
 
     Ok(TargetRepoRunnerLiveExecution {
         readiness,
@@ -264,6 +341,10 @@ pub fn execute_target_repo_runner_with_adapter<A: TargetRepoRunnerAdapter>(
         execution,
         revision_receipt,
         revision_projection,
+        source_publication_request,
+        source_publication_observation,
+        source_publication_receipt,
+        source_publication_projection,
     })
 }
 
@@ -399,6 +480,7 @@ fn target_repo_runner_revision_receipt(
         "Target runner {disposition_name} pull request {} for {}.",
         pull_request_ref.uri, execution.execution_plan.checkout.target_repo
     );
+    let reason_code = format!("target_runner_pr_{}", disposition_name);
     let act = revision_act(RevisionActInput {
         act_id,
         criterion_id,
@@ -414,7 +496,7 @@ fn target_repo_runner_revision_receipt(
         runner_observation,
     });
     let seal = receipt_seal(ReceiptSealInputs {
-        disposition: execution.disposition,
+        reason_code: &reason_code,
         summary: &summary,
         created_at,
         act_id,
@@ -450,6 +532,181 @@ fn target_repo_runner_revision_receipt(
         seal,
         sync_points: Vec::new(),
         metadata: Some(revision_receipt_metadata(execution)),
+    };
+    seal_revision_receipt(&mut receipt)?;
+    Ok(receipt)
+}
+
+fn target_repo_runner_source_publication_request(
+    execution: &TargetRepoRunnerFixtureExecution,
+    revision_receipt: &HarnessReceipt,
+    revision_projection: &TargetRepoRunnerRevisionReceiptProjection,
+) -> TargetRepoRunnerSourcePublicationRequest {
+    let publication = execution.source_publication_receipt.clone();
+    let revision_receipt_ref = reference(ReferenceType::HarnessReceipt, &revision_receipt.id);
+    let commands = source_publication_commands(&publication, &revision_receipt_ref);
+    TargetRepoRunnerSourcePublicationRequest {
+        publication,
+        revision_receipt_ref,
+        revision_projection: revision_projection.clone(),
+        commands,
+    }
+}
+
+fn source_publication_commands(
+    publication: &TargetRepoRunnerSourcePublicationReceiptPlan,
+    revision_receipt_ref: &Reference,
+) -> Vec<TargetRepoRunnerSourcePublicationCommand> {
+    let body = source_publication_body(publication, revision_receipt_ref);
+    let mut commands = Vec::new();
+    if let Some(source_issue_ref) = &publication.source_issue_ref {
+        commands.push(
+            TargetRepoRunnerSourcePublicationCommand::SourceIssueComment {
+                target: source_issue_ref.clone(),
+                body: body.clone(),
+            },
+        );
+    }
+    commands.push(
+        TargetRepoRunnerSourcePublicationCommand::SourceThreadReply {
+            target: publication.source_thread_ref.clone(),
+            body,
+        },
+    );
+    commands
+}
+
+fn source_publication_body(
+    publication: &TargetRepoRunnerSourcePublicationReceiptPlan,
+    revision_receipt_ref: &Reference,
+) -> String {
+    let target_repo = metadata_path_string(&publication.metadata, &["target_repo"])
+        .or(publication.pull_request_ref.locator.as_deref())
+        .unwrap_or("target repo");
+    let dedupe_result =
+        metadata_path_string(&publication.metadata, &["dedupe", "result"]).unwrap_or("unknown");
+    let dedupe_key =
+        metadata_path_string(&publication.metadata, &["dedupe", "key"]).unwrap_or("unknown");
+    format!(
+        "Target pull request ready: {}\nTarget repo: {target_repo}\nDedupe: {dedupe_result} ({dedupe_key})\nHuman review remains the merge gate.\nReceipt: {}",
+        publication.pull_request_ref.uri, revision_receipt_ref.uri
+    )
+}
+
+// rust-style-allow: long-function because source publication receipt assembly
+// keeps the reply act, criteria, seal, metadata, and signature hash together.
+fn target_repo_runner_source_publication_harness_receipt(
+    request: &TargetRepoRunnerSourcePublicationRequest,
+    observation: &TargetRepoRunnerSourcePublicationObservation,
+    created_at: &str,
+) -> Result<HarnessReceipt, TargetRepoRunnerRuntimeError> {
+    validate_source_publication_observation(request, observation)?;
+
+    let act_id = "act_target_runner_source_publication";
+    let criterion_id = "target_runner.source_publication_published";
+    let target_refs = source_publication_target_refs(observation);
+    let mut evidence_refs = vec![
+        observation.pull_request_ref.clone(),
+        observation.revision_receipt_ref.clone(),
+    ];
+    evidence_refs.extend(target_refs.clone());
+    evidence_refs.extend(observation.published_refs.clone());
+    let summary = format!(
+        "Published target pull request {} to the source issue/thread.",
+        observation.pull_request_ref.uri
+    );
+    let success_criterion = SuccessCriterion {
+        criterion_id: criterion_id.to_owned(),
+        statement: "Target pull request link is published back to the source issue/thread."
+            .to_owned(),
+        required: true,
+    };
+    let act = Act {
+        schema: None,
+        act_id: act_id.to_owned(),
+        form: ActForm::Reply,
+        intent: Intent {
+            purpose: "Publish the target pull request link back to the original source context."
+                .to_owned(),
+            legitimacy: "Operational policy admitted source-thread publication for this runner."
+                .to_owned(),
+            success_criteria: vec![success_criterion.clone()],
+            constraints: vec![
+                "Public publication must use repo names and URLs, not local checkout paths."
+                    .to_owned(),
+                "Source issue/thread references must match the target-runner plan.".to_owned(),
+            ],
+            derived_from: vec![
+                observation.pull_request_ref.clone(),
+                observation.revision_receipt_ref.clone(),
+            ],
+        },
+        summary: summary.clone(),
+        closure: Closure {
+            disposition: ClosureDisposition::Closed,
+            reason_code: "target_runner_source_published".to_owned(),
+            summary: summary.clone(),
+            closed_at: created_at.to_owned(),
+        },
+        criterion_bindings: vec![CriterionBinding {
+            criterion_id: criterion_id.to_owned(),
+            status: CriterionStatus::Verified,
+            evidence_refs: evidence_refs.clone(),
+            verification_refs: Vec::new(),
+            summary: Some(summary.clone()),
+        }],
+        source_refs: vec![
+            observation.pull_request_ref.clone(),
+            observation.revision_receipt_ref.clone(),
+        ],
+        target_refs: target_refs.clone(),
+        surface_refs: target_refs.clone(),
+        artifact_refs: observation.published_refs.clone(),
+        verification_refs: Vec::new(),
+        harness_refs: vec![observation.revision_receipt_ref.clone()],
+        revision: None,
+        verification: None,
+        performed_at: created_at.to_owned(),
+    };
+    let seal = receipt_seal(ReceiptSealInputs {
+        reason_code: "target_runner_source_published",
+        summary: &summary,
+        created_at,
+        act_id,
+        criterion_id,
+        evidence_refs: &evidence_refs,
+        verification_refs: &[],
+        artifact_refs: &observation.published_refs,
+    });
+    let target_repo =
+        metadata_path_string(&request.publication.metadata, &["target_repo"]).unwrap_or("target");
+    let receipt_id = format!(
+        "hrn_rcpt_target_runner_source_publication_{}_{}",
+        safe_id(target_repo),
+        reference_id_fragment(&observation.pull_request_ref)
+    );
+    let harness = source_publication_receipt_harness(
+        request,
+        observation,
+        &receipt_id,
+        act,
+        seal.clone(),
+        created_at,
+        &evidence_refs,
+    );
+    let mut receipt = HarnessReceipt {
+        schema: HarnessReceiptSchema::V1,
+        id: receipt_id,
+        created_at: created_at.to_owned(),
+        issuer: local_issuer(),
+        signature: runx_contracts::ReceiptSignature {
+            alg: SignatureAlgorithm::Ed25519,
+            value: "sig:pending".to_owned(),
+        },
+        harness,
+        seal,
+        sync_points: Vec::new(),
+        metadata: Some(source_publication_receipt_metadata(request, observation)),
     };
     seal_revision_receipt(&mut receipt)?;
     Ok(receipt)
@@ -727,8 +984,221 @@ fn receipt_harness(
     }
 }
 
+// rust-style-allow: long-function because this sealed child harness records
+// authority attenuation, enforcement, decision, and reply act in one boundary.
+fn source_publication_receipt_harness(
+    request: &TargetRepoRunnerSourcePublicationRequest,
+    observation: &TargetRepoRunnerSourcePublicationObservation,
+    receipt_id: &str,
+    act: Act,
+    seal: HarnessSeal,
+    created_at: &str,
+    evidence_refs: &[Reference],
+) -> Harness {
+    let decision_id = "dec_target_runner_source_publication";
+    let target_repo =
+        metadata_path_string(&request.publication.metadata, &["target_repo"]).unwrap_or("target");
+    Harness {
+        schema: None,
+        harness_id: format!(
+            "hrn_target_runner_source_publication_{}",
+            safe_id(target_repo)
+        ),
+        parent_harness_ref: Some(request.revision_receipt_ref.clone()),
+        state: HarnessState::Sealed,
+        host_ref: reference(
+            ReferenceType::Host,
+            "target_runner_source_publication_adapter",
+        ),
+        harness_ref: reference(ReferenceType::Harness, "target-runner-source-publication"),
+        authority: Authority {
+            schema: None,
+            actor_ref: reference(ReferenceType::Principal, "target_runner_source_publication"),
+            authority_proof_refs: Vec::new(),
+            grant_refs: Vec::new(),
+            scope_refs: Vec::new(),
+            policy_refs: Vec::new(),
+            terms: Vec::new(),
+            attenuation: AuthorityAttenuation {
+                parent_authority_ref: Some(request.revision_receipt_ref.clone()),
+                subset_proof: Some(AuthoritySubsetProof {
+                    parent_authority_ref: request.revision_receipt_ref.clone(),
+                    comparison_algorithm: "runx.target-runner.publication-subset.v1".to_owned(),
+                    result: AuthoritySubsetResult::Subset,
+                    compared_terms: Vec::new(),
+                    proof_ref: None,
+                    checked_at: created_at.to_owned(),
+                }),
+            },
+            mandate_ref: None,
+        },
+        enforcement: HarnessEnforcement {
+            harness_ref: None,
+            version: "target-runner-source-publication-adapter.v1".to_owned(),
+            enforcement_profile_hash: stable_hash(&format!(
+                "target-runner-source-publication:{}",
+                target_repo
+            )),
+            enforcer_ref: None,
+            sandbox: HarnessSandbox {
+                profile: "source-publication-adapter".to_owned(),
+                cwd_policy: "no-local-checkout".to_owned(),
+                network: "adapter-declared".to_owned(),
+                filesystem: "no-local-filesystem".to_owned(),
+            },
+            redaction_refs: Vec::new(),
+            stdout_hash: None,
+            stderr_hash: None,
+            setup_receipt_refs: Vec::new(),
+            teardown_receipt_refs: Vec::new(),
+        },
+        idempotency: HarnessIdempotency {
+            intent_key: stable_hash(&format!(
+                "target-runner-source-publication:{}:{}",
+                observation.source_thread_ref.uri, observation.pull_request_ref.uri
+            )),
+            trigger_fingerprint: stable_hash(&observation.pull_request_ref.uri),
+            content_hash: stable_hash(receipt_id),
+        },
+        revision: HarnessRevision {
+            sequence: 1,
+            previous_ref: Some(request.revision_receipt_ref.clone()),
+        },
+        signal_refs: vec![observation.source_thread_ref.clone()],
+        decisions: vec![Decision {
+            decision_id: decision_id.to_owned(),
+            choice: DecisionChoice::Close,
+            inputs: DecisionInputs {
+                signal_refs: vec![observation.source_thread_ref.clone()],
+                target_ref: Some(observation.pull_request_ref.clone()),
+                opportunity_refs: Vec::new(),
+                selection_ref: None,
+            },
+            proposed_intent: act.intent.clone(),
+            selected_act_id: Some(act.act_id.clone()),
+            selected_harness_ref: None,
+            justification: DecisionJustification {
+                summary: "Selected the source-publication path for the target pull request."
+                    .to_owned(),
+                evidence_refs: evidence_refs.to_vec(),
+            },
+            closure: Some(Closure {
+                disposition: ClosureDisposition::Closed,
+                reason_code: "target_runner_source_publication_closed".to_owned(),
+                summary: "Target pull request link was published to the source context.".to_owned(),
+                closed_at: created_at.to_owned(),
+            }),
+            artifact_refs: observation.published_refs.clone(),
+        }],
+        acts: vec![act],
+        child_harness_receipt_refs: Vec::new(),
+        artifact_refs: observation.published_refs.clone(),
+        seal: Some(seal),
+    }
+}
+
+fn validate_source_publication_observation(
+    request: &TargetRepoRunnerSourcePublicationRequest,
+    observation: &TargetRepoRunnerSourcePublicationObservation,
+) -> Result<(), TargetRepoRunnerRuntimeError> {
+    if !same_reference(
+        &observation.source_thread_ref,
+        &request.publication.source_thread_ref,
+    ) {
+        return Err(TargetRepoRunnerRuntimeError::SourcePublicationMismatch(
+            "source thread readback does not match publication plan".to_owned(),
+        ));
+    }
+    if !same_reference(
+        &observation.pull_request_ref,
+        &request.publication.pull_request_ref,
+    ) {
+        return Err(TargetRepoRunnerRuntimeError::SourcePublicationMismatch(
+            "target pull request readback does not match publication plan".to_owned(),
+        ));
+    }
+    if !same_reference(
+        &observation.revision_receipt_ref,
+        &request.revision_receipt_ref,
+    ) {
+        return Err(TargetRepoRunnerRuntimeError::SourcePublicationMismatch(
+            "revision receipt readback does not match publication request".to_owned(),
+        ));
+    }
+    match (
+        &request.publication.source_issue_ref,
+        &observation.source_issue_ref,
+    ) {
+        (Some(expected), Some(actual)) if same_reference(actual, expected) => {}
+        (Some(_), Some(_)) => {
+            return Err(TargetRepoRunnerRuntimeError::SourcePublicationMismatch(
+                "source issue readback does not match publication plan".to_owned(),
+            ));
+        }
+        (Some(_), None) => {
+            return Err(TargetRepoRunnerRuntimeError::SourcePublicationMismatch(
+                "source issue publication readback is required".to_owned(),
+            ));
+        }
+        (None, Some(_)) => {
+            return Err(TargetRepoRunnerRuntimeError::SourcePublicationMismatch(
+                "source issue readback was returned for a plan without a source issue".to_owned(),
+            ));
+        }
+        (None, None) => {}
+    }
+    if observation.published_refs.len() < request.commands.len() {
+        return Err(TargetRepoRunnerRuntimeError::SourcePublicationMismatch(
+            "publication readback did not return a ref for every source command".to_owned(),
+        ));
+    }
+    Ok(())
+}
+
+fn source_publication_target_refs(
+    observation: &TargetRepoRunnerSourcePublicationObservation,
+) -> Vec<Reference> {
+    let mut target_refs = vec![observation.source_thread_ref.clone()];
+    if let Some(source_issue_ref) = &observation.source_issue_ref {
+        target_refs.push(source_issue_ref.clone());
+    }
+    target_refs
+}
+
+fn source_publication_receipt_metadata(
+    request: &TargetRepoRunnerSourcePublicationRequest,
+    observation: &TargetRepoRunnerSourcePublicationObservation,
+) -> JsonObject {
+    let mut metadata = request.publication.metadata.clone();
+    let mut target_runner = JsonObject::new();
+    target_runner.insert(
+        "contract".to_owned(),
+        JsonValue::String("runx.target_repo_runner.source_publication.v1".to_owned()),
+    );
+    target_runner.insert(
+        "revision_receipt".to_owned(),
+        JsonValue::String(request.revision_receipt_ref.uri.clone()),
+    );
+    target_runner.insert(
+        "command_count".to_owned(),
+        JsonValue::Number(JsonNumber::U64(request.commands.len() as u64)),
+    );
+    metadata.insert("target_runner".to_owned(), JsonValue::Object(target_runner));
+    metadata.insert(
+        "published_refs".to_owned(),
+        JsonValue::Array(
+            observation
+                .published_refs
+                .iter()
+                .map(|reference| JsonValue::String(reference.uri.clone()))
+                .collect(),
+        ),
+    );
+    metadata
+}
+
 struct ReceiptSealInputs<'a> {
-    disposition: TargetRepoRunnerPullRequestDisposition,
+    reason_code: &'a str,
     summary: &'a str,
     created_at: &'a str,
     act_id: &'a str,
@@ -741,7 +1211,7 @@ struct ReceiptSealInputs<'a> {
 fn receipt_seal(inputs: ReceiptSealInputs<'_>) -> HarnessSeal {
     HarnessSeal {
         disposition: ClosureDisposition::Closed,
-        reason_code: format!("target_runner_pr_{}", disposition_name(inputs.disposition)),
+        reason_code: inputs.reason_code.to_owned(),
         summary: inputs.summary.to_owned(),
         closed_at: inputs.created_at.to_owned(),
         last_observed_at: inputs.created_at.to_owned(),
@@ -840,6 +1310,61 @@ pub fn project_target_repo_runner_revision_receipt(
         source_issue_ref,
         source_thread_ref,
         pull_request_ref,
+        summary: receipt.seal.summary.clone(),
+        metadata,
+    })
+}
+
+pub fn project_target_repo_runner_source_publication_receipt(
+    receipt: &HarnessReceipt,
+) -> Result<TargetRepoRunnerSourcePublicationProjection, TargetRepoRunnerRuntimeError> {
+    if receipt.harness.state != HarnessState::Sealed {
+        return Err(TargetRepoRunnerRuntimeError::ReceiptProjection(
+            "source publication receipt harness is not sealed".to_owned(),
+        ));
+    }
+    let act = receipt
+        .harness
+        .acts
+        .iter()
+        .find(|act| act.form == ActForm::Reply)
+        .ok_or_else(|| {
+            TargetRepoRunnerRuntimeError::ReceiptProjection(
+                "source publication reply act is required".to_owned(),
+            )
+        })?;
+    let metadata = receipt.metadata.clone().ok_or_else(|| {
+        TargetRepoRunnerRuntimeError::ReceiptProjection(
+            "source publication metadata is required".to_owned(),
+        )
+    })?;
+    let pull_request_ref = act
+        .source_refs
+        .iter()
+        .find(|reference| reference.reference_type == ReferenceType::GithubPullRequest)
+        .cloned()
+        .ok_or_else(|| {
+            TargetRepoRunnerRuntimeError::ReceiptProjection(
+                "source publication pull request ref is required".to_owned(),
+            )
+        })?;
+    let source_thread_ref = act.target_refs.first().cloned().ok_or_else(|| {
+        TargetRepoRunnerRuntimeError::ReceiptProjection(
+            "source publication thread ref is required".to_owned(),
+        )
+    })?;
+    let source_issue_ref = act
+        .target_refs
+        .iter()
+        .skip(1)
+        .find(|reference| reference.reference_type == ReferenceType::GithubIssue)
+        .cloned();
+    Ok(TargetRepoRunnerSourcePublicationProjection {
+        receipt_ref: reference(ReferenceType::HarnessReceipt, &receipt.id),
+        source_issue_ref,
+        source_thread_ref,
+        pull_request_ref,
+        published_refs: act.artifact_refs.clone(),
         summary: receipt.seal.summary.clone(),
         metadata,
     })
@@ -974,6 +1499,29 @@ fn pull_request_id_fragment(pull_request: &TargetRepoRunnerExistingPullRequest) 
         .number
         .map(|number| number.to_string())
         .unwrap_or_else(|| safe_id(&pull_request.url))
+}
+
+fn reference_id_fragment(reference: &Reference) -> String {
+    reference
+        .locator
+        .as_deref()
+        .map(safe_id)
+        .unwrap_or_else(|| safe_id(&reference.uri))
+}
+
+fn same_reference(left: &Reference, right: &Reference) -> bool {
+    left.reference_type == right.reference_type && left.uri == right.uri
+}
+
+fn metadata_path_string<'a>(object: &'a JsonObject, path: &[&str]) -> Option<&'a str> {
+    let mut value = object.get(*path.first()?)?;
+    for segment in &path[1..] {
+        let JsonValue::Object(object) = value else {
+            return None;
+        };
+        value = object.get(*segment)?;
+    }
+    json_string(value)
 }
 
 fn json_string(value: &JsonValue) -> Option<&str> {
