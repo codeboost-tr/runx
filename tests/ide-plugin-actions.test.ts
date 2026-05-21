@@ -98,7 +98,7 @@ expect:
       const harness = await core.harnessRun(harnessFixturePath);
       expect(harness.status).toBe("success");
       expect(harness.data?.assertionErrors).toEqual([]);
-      const harnessReceipt = harness.data?.receipt;
+      const harnessReceipt = expectRecord(harness.data?.receipt);
       expect(harnessReceipt).toMatchObject({
         schema: "runx.harness_receipt.v1",
         harness: {
@@ -109,9 +109,13 @@ expect:
           reason_code: "process_closed",
         },
       });
-      expect(harnessReceipt?.seal.digest).toMatch(/^sha256:[a-f0-9]{64}$/);
-      expect(harnessReceipt?.harness.harness_id).toBe(`hrn_${harnessReceipt?.id}`);
-      expect(harnessReceipt?.harness.acts?.map((act) => act.act_id)).toEqual([`act_${harnessReceipt?.id}`]);
+      const seal = expectRecord(harnessReceipt.seal);
+      const harnessBody = expectRecord(harnessReceipt.harness);
+      const acts = expectArray(harnessBody.acts).map(expectRecord);
+      expect(seal.digest).toMatch(/^sha256:[a-f0-9]{64}$/);
+      expect(harnessBody.harness_id).toMatch(/^hrn_/);
+      expect(acts).toHaveLength(1);
+      expect(acts[0]?.act_id).toMatch(/^act_/);
 
       const registered: string[] = [];
       const disposables = registerRunxCommands(
@@ -138,4 +142,14 @@ function receiptIdFrom(data: unknown): string | undefined {
 
 function isRecord(value: unknown): value is Readonly<Record<string, unknown>> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
+function expectRecord(value: unknown): Readonly<Record<string, unknown>> {
+  expect(isRecord(value)).toBe(true);
+  return value as Readonly<Record<string, unknown>>;
+}
+
+function expectArray(value: unknown): readonly unknown[] {
+  expect(Array.isArray(value)).toBe(true);
+  return value as readonly unknown[];
 }

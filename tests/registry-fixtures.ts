@@ -1,13 +1,13 @@
 import {
+  createLocalRegistryClient,
   createFileRegistryStore,
   publishSkillMarkdown,
-  type PutVersionOptions,
   type PublishSkillMarkdownOptions,
   type PublishSkillMarkdownResult,
   type RegistrySkill,
   type RegistrySkillVersion,
   type RegistryStore,
-} from "@runxhq/runtime-local/sdk";
+} from "@runxhq/core/registry";
 
 export { createFileRegistryStore };
 export type { RegistrySkillVersion, RegistryStore };
@@ -25,7 +25,7 @@ export async function publishRegistryFixtureSkill(
   markdown: string,
   options: PublishSkillMarkdownOptions = {},
 ): Promise<PublishSkillMarkdownResult> {
-  return await publishSkillMarkdown(store, markdown, options);
+  return await publishSkillMarkdown(createLocalRegistryClient(store), markdown, options);
 }
 
 export async function buildRegistryFixtureVersion(
@@ -39,7 +39,10 @@ export function createMemoryRegistryStore(): RegistryStore {
   const versions = new Map<string, RegistrySkillVersion>();
 
   return {
-    putVersion: async (version: RegistrySkillVersion, options?: PutVersionOptions): Promise<RegistrySkillVersion> => {
+    putVersion: async (
+      version: RegistrySkillVersion,
+      options?: { readonly upsert?: boolean },
+    ): Promise<RegistrySkillVersion> => {
       const key = versionKey(version.skill_id, version.version);
       const existing = versions.get(key);
       if (existing && (existing.digest !== version.digest || existing.profile_digest !== version.profile_digest) && !options?.upsert) {

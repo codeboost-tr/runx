@@ -236,13 +236,11 @@ fn mcp_metadata(tool_name: &str) -> JsonObject {
     mcp.insert("tool".to_owned(), JsonValue::String(tool_name.to_owned()));
     mcp.insert(
         "server_command_hash".to_owned(),
-        JsonValue::String(sha256_hex(b"node")),
+        JsonValue::String(sha256_hex(b"runx-runtime-fixture-catalog")),
     );
     mcp.insert(
         "server_args_hash".to_owned(),
-        JsonValue::String(sha256_hex(
-            br#"["--import","tsx","packages/runtime-local/src/harness/mcp-fixture.ts"]"#,
-        )),
+        JsonValue::String(sha256_hex(b"[]")),
     );
 
     let mut metadata = JsonObject::new();

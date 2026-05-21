@@ -23,10 +23,6 @@ const FILE_BUDGETS: &[DoctorFileBudget] = &[
         path: "packages/cli/src/commands/doctor.ts",
         max_lines: 950,
     },
-    DoctorFileBudget {
-        path: "packages/runtime-local/src/runner-local/index.ts",
-        max_lines: 2000,
-    },
 ];
 
 #[derive(Clone, Debug, Default, PartialEq, Eq)]

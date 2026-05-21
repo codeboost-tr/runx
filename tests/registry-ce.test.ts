@@ -5,7 +5,7 @@ import path from "node:path";
 import { describe, expect, it } from "vitest";
 
 import { buildSkillPageModel } from "../apps/registry/src/skill-page.js";
-import { searchRegistry } from "@runxhq/runtime-local/sdk";
+import { searchRegistry } from "@runxhq/core/registry";
 import { createFileRegistryStore, publishRegistryFixtureSkill } from "./registry-fixtures.js";
 
 describe("registry CE", () => {

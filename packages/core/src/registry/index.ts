@@ -54,6 +54,7 @@ export {
   type RegistrySkillVersion,
   type RegistryStore,
   type RegistryTrustTier,
+  type PutVersionOptions,
 } from "./store.js";
 export {
   HttpCachedRegistryStore,

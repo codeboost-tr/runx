@@ -1,12 +1,9 @@
 #!/usr/bin/env node
 
 import { spawnSync } from "node:child_process";
-import os from "node:os";
 import path from "node:path";
-import { mkdtemp, readFile, stat } from "node:fs/promises";
+import { stat } from "node:fs/promises";
 
-import { createDefaultLocalSkillRuntime } from "@runxhq/adapters";
-import { runLocalSkill } from "@runxhq/runtime-local";
 import {
   fetchGitHubIssueThread,
   firstNonEmptyString,
@@ -73,111 +70,14 @@ try {
   } else if (preflight.status === "blocked") {
     throw new DogfoodPreflightError(preflight);
   } else {
-    prepareDogfoodBranch({
+    process.stdout.write(`${JSON.stringify(buildDogfoodCreateBlocked({
+      issueRef,
       workspace,
+      taskId,
       branchName,
-      prepareBranch: args.prepare_branch === true,
-    });
-    const runtimeRoot = await mkdtemp(path.join(os.tmpdir(), `runx-github-issue-to-pr-${taskId}-`));
-    const runtime = await createDefaultLocalSkillRuntime({
-      root: runtimeRoot,
-      receiptDir: args.receipt_dir ? path.resolve(args.receipt_dir) : undefined,
-      runxHome: args.runx_home ? path.resolve(args.runx_home) : undefined,
-      env: {
-        ...process.env,
-        RUNX_CWD: workspace,
-        INIT_CWD: workspace,
-      },
-    });
-
-    const before = fetchGitHubIssueThread({
-      adapterRef: issueRef.adapter_ref,
-      env: runtime.env,
-      cwd: workspace,
-    });
-    const caller = await createAnswersCaller(args.answers);
-    const result = await runLocalSkill({
-      skillPath: path.resolve("skills/issue-to-pr"),
-      inputs: {
-        fixture: workspace,
-        task_id: taskId,
-        thread_title: firstNonEmptyString(before.title, `Issue #${issueRef.issue_number}`),
-        thread_body: firstIssueBody(before),
-        thread_locator: issueRef.thread_locator,
-        thread: before,
-        target_repo: issueRef.repo_slug,
-        branch: branchName,
-        scafld_bin: scafldBin,
-      },
-      caller,
-      adapters: runtime.adapters,
-      env: runtime.env,
-      receiptDir: runtime.paths.receiptDir,
-      runxHome: runtime.paths.runxHome,
-    });
-    const after = fetchGitHubIssueThread({
-      adapterRef: issueRef.adapter_ref,
-      env: runtime.env,
-      cwd: workspace,
-    });
-
-    const executionPayload = result.status === "success"
-      ? safeJsonParse(result.execution.stdout)
-      : undefined;
-    const preferredBeforePull = selectPreferredGitHubPullRequest(
-      threadOutbox(before).map((entry) => ({
-        number: optionalNumber(entry.metadata?.number),
-        url: entry.locator,
-        headRefName: entry.metadata?.branch,
-        updatedAt: entry.metadata?.updated_at,
-        isDraft: entry.status === "draft",
-        state: entry.status === "closed" ? "CLOSED" : "OPEN",
-      })),
-      branchName,
-    );
-    const preferredAfterPull = selectPreferredGitHubPullRequest(
-      threadOutbox(after).map((entry) => ({
-        number: optionalNumber(entry.metadata?.number),
-        url: entry.locator,
-        headRefName: entry.metadata?.branch,
-        updatedAt: entry.metadata?.updated_at,
-        isDraft: entry.status === "draft",
-        state: entry.status === "closed" ? "CLOSED" : "OPEN",
-      })),
-      branchName,
-    );
-
-    const output = {
-      status: result.status,
-      task_id: taskId,
-      mode,
-      repo: issueRef.repo_slug,
-      issue: {
-        number: issueRef.issue_number,
-        url: issueRef.issue_url,
-      },
-      workspace: summarizeLocalPath(workspace),
-      receipt_dir: summarizeLocalPath(runtime.paths.receiptDir),
-      runx_home: summarizeLocalPath(runtime.paths.runxHome),
-      before: summarizeThread(before, preferredBeforePull),
-      after: summarizeThread(after, preferredAfterPull),
-      dossier: buildDogfoodDossier({
-        issueRef,
-        taskId,
-        branchName,
-        result,
-        before,
-        after,
-        preferredPull: preferredAfterPull,
-        executionPayload,
-      }),
-      execution: executionPayload,
-    };
-
-    process.stdout.write(`${JSON.stringify(output, null, 2)}\n`);
-    if (result.status !== "success") {
-      process.exitCode = 1;
-    }
+      preflight,
+    }), null, 2)}\n`);
+    process.exitCode = 1;
   }
 } catch (error) {
   if (error instanceof DogfoodPreflightError) {
@@ -454,7 +354,7 @@ async function buildDogfoodPreflight({ args: argsRecord, issueRef, workspace, sc
       name: "RUNX_BIN",
       status: "skipped",
       source: "env:RUNX_BIN",
-      reason: "RUNX_BIN is not set; this script uses the local package runtime directly.",
+      reason: "RUNX_BIN is not set; create mode is blocked until issue-to-pr graph execution is routed through the Rust CLI.",
     };
   const githubPublishAuthCheck = inspectGitHubPublishAuth(process.env);
   const checks = {
@@ -524,6 +424,39 @@ async function buildDogfoodPreflight({ args: argsRecord, issueRef, workspace, sc
     next_action: blocking.length > 0
       ? "Fix the blocked preflight checks, then rerun the dogfood command."
       : "Run the dogfood command to hydrate the GitHub issue and execute the governed lane.",
+  };
+}
+
+function buildDogfoodCreateBlocked({ issueRef, workspace, taskId, branchName, preflight }) {
+  return {
+    status: "blocked",
+    reason: "dogfood_create_rust_route_unavailable",
+    mode: "create",
+    mutation: "none",
+    repo: issueRef.repo_slug,
+    issue: {
+      number: issueRef.issue_number,
+      url: issueRef.issue_url,
+    },
+    task_id: taskId,
+    branch: branchName,
+    workspace: summarizeLocalPath(workspace),
+    preflight: {
+      status: preflight.status,
+      reason: preflight.reason,
+    },
+    blocker: {
+      name: "issue_to_pr_graph_rust_cli_route",
+      status: "blocked",
+      owner: "rust-ts-sunset-runtime-local oracle-scripts slice",
+      reason: "The live issue-to-pr dogfood lane is a graph runner. Current native `runx skill` execution only accepts direct agent and agent-step runners, while completed Rust evidence covers checked-in harness fixtures, not this live GitHub graph lane.",
+      completed_evidence: [
+        ".scafld/specs/archive/2026-05/rust-runtime-skill-execution.md",
+        "fixtures/runtime/skills/issue-to-pr/**",
+      ],
+      required_route: "Route this live lane through a Rust CLI graph/harness entrypoint that accepts dynamic thread inputs and caller answers before create mode can mutate a branch, issue, or PR.",
+    },
+    next: "Keep using --preflight and --mode observe; leave create mode blocked until the issue-to-pr graph runner has a Rust CLI route.",
   };
 }
 
@@ -836,34 +769,6 @@ function shellQuote(value) {
   return `'${text.replace(/'/g, "'\\''")}'`;
 }
 
-async function createAnswersCaller(answersPath) {
-  const answersDocument = answersPath
-    ? safeJsonParse(await readFile(path.resolve(answersPath), "utf8"))
-    : { answers: {} };
-  const answers = isRecord(answersDocument?.answers) ? answersDocument.answers : {};
-  return {
-    resolve: async (request) => {
-      if (request.kind !== "agent_act") {
-        return undefined;
-      }
-      const payload = answers[request.id];
-      if (!payload) {
-        return undefined;
-      }
-      return {
-        actor: "agent",
-        payload,
-      };
-    },
-    report: () => undefined,
-  };
-}
-
-function firstIssueBody(state) {
-  const issueEntry = threadEntries(state).find((entry) => String(entry.entry_id).startsWith("issue-"));
-  return firstNonEmptyString(issueEntry?.body);
-}
-
 function summarizeThread(state, preferredPull) {
   return {
     entries: threadEntries(state).length,
@@ -878,40 +783,6 @@ function summarizeThread(state, preferredPull) {
           state: firstNonEmptyString(preferredPull.state),
         }
       : undefined,
-  };
-}
-
-function buildDogfoodDossier({
-  issueRef,
-  taskId,
-  branchName,
-  result,
-  before,
-  after,
-  preferredPull,
-  executionPayload,
-}) {
-  return {
-    schema: "runx.dogfood.issue_to_pr.v1",
-    status: result.status,
-    task_id: taskId,
-    branch: branchName,
-    source_issue_url: issueRef.issue_url,
-    pull_request_url: firstNonEmptyString(preferredPull?.url),
-    receipt_id: firstNonEmptyString(result.receipt?.id),
-    human_gate: {
-      required: true,
-      state: preferredPull ? "pr_ready" : "not_reached",
-      summary: preferredPull
-        ? "PR is created or refreshed; a human must merge or close it."
-        : "PR was not observed after the run.",
-    },
-    milestones: {
-      before_outbox_count: threadOutbox(before).length,
-      after_outbox_count: threadOutbox(after).length,
-      execution_status: result.status,
-      review_verdict: firstNonEmptyString(executionPayload?.draft_pull_request?.governance?.review_verdict),
-    },
   };
 }
 
@@ -1081,14 +952,6 @@ function hashString(value) {
     hash = ((hash << 5) + hash + char.charCodeAt(0)) >>> 0;
   }
   return hash.toString(16).padStart(8, "0");
-}
-
-function safeJsonParse(value) {
-  return JSON.parse(value);
-}
-
-function isRecord(value) {
-  return typeof value === "object" && value !== null && !Array.isArray(value);
 }
 
 function optionalNumber(value) {

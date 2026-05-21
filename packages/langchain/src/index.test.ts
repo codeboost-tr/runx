@@ -1,76 +1,93 @@
+import { chmod, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
+import os from "node:os";
+import path from "node:path";
+
 import { describe, expect, it, vi } from "vitest";
 import { z } from "zod";
-import { tool } from "@langchain/core/tools";
 
-import type { RunLocalSkillResult } from "@runxhq/runtime-local";
-
-import { createLangChainToolCatalogAdapter, createRunxLangChainTool } from "./index.js";
+import {
+  createLangChainToolCatalogAdapter,
+  createRunxCliSkillRunner,
+  createRunxLangChainTool,
+  type RunxSkillCliResult,
+} from "./index.js";
 
 describe("@runxhq/langchain", () => {
-  it("normalizes LangChain tools into runx tool catalog entries and invokes them", async () => {
-    const echoTool = tool(
-      async ({ message }: { message: string }) => `echo:${message}`,
-      {
-        name: "echo",
-        description: "Echo a message from LangChain.",
-        schema: z.object({
-          message: z.string().describe("Message to echo."),
-        }),
-      },
-    );
-
-    const adapter = createLangChainToolCatalogAdapter({
+  it("sunsets in-process LangChain tool-catalog adapters explicitly", () => {
+    expect(() => createLangChainToolCatalogAdapter({
       source: "langchain-demo",
       label: "LangChain Demo",
       namespace: "langchain",
       baseDirectory: process.cwd(),
-      tools: [echoTool],
-    });
+      tools: [],
+    })).toThrow("was sunset with the Rust runtime takeover");
+  });
 
-    const results = await adapter.search("echo");
-    expect(results).toEqual([
-      expect.objectContaining({
-        name: "langchain.echo",
-        source: "langchain-demo",
-        source_type: "langchain",
-        catalog_ref: "langchain-demo:langchain.echo",
-      }),
-    ]);
+  it("invokes governed runx skills through the CLI JSON boundary", async () => {
+    const tempDir = await mkdtemp(path.join(os.tmpdir(), "runx-langchain-"));
+    const commandPath = path.join(tempDir, "fake-runx.mjs");
+    const capturePath = path.join(tempDir, "argv.json");
+    try {
+      await writeFile(commandPath, [
+        "#!/usr/bin/env node",
+        "import { writeFileSync } from 'node:fs';",
+        "writeFileSync(process.env.RUNX_LANGCHAIN_CAPTURE_PATH, JSON.stringify(process.argv.slice(2)));",
+        "process.stdout.write(JSON.stringify({ status: 'sealed', execution: { stdout: 'from-cli', stderr: '', exit_code: 0 } }));",
+        "",
+      ].join("\n"));
+      await chmod(commandPath, 0o755);
 
-    const resolved = await adapter.resolve?.("langchain-demo:langchain.echo", {
-      searchFromDirectory: process.cwd(),
-      env: process.env,
-    });
-    expect(resolved).toMatchObject({
-      referencePath: "catalog:langchain-demo:langchain.echo",
-      tool: {
-        name: "langchain.echo",
-        source: {
-          type: "catalog",
-          catalogRef: "langchain-demo:langchain.echo",
+      const runner = createRunxCliSkillRunner({
+        command: commandPath,
+        env: {
+          ...process.env,
+          RUNX_LANGCHAIN_CAPTURE_PATH: capturePath,
         },
+      });
+      const result = await runner.runSkill({
+        skillPath: "/tmp/skills/docs-pr",
+        receiptDir: "/tmp/receipts",
+        runId: "run_123",
+        answersPath: "/tmp/answers.json",
         inputs: {
-          message: {
-            type: "string",
-            required: true,
-            description: "Message to echo.",
-          },
+          repo_url: "acme/docs",
+          count: 3,
+          nested: { ok: true },
         },
-      },
-    });
+      });
 
-    const invocation = await resolved?.invoke({
-      inputs: { message: "hello" },
-      skillDirectory: process.cwd(),
-    });
-    expect(invocation).toMatchObject({
-      status: "success",
-      stdout: "echo:hello",
-    });
+      expect(result).toEqual({
+        status: "sealed",
+        execution: {
+          stdout: "from-cli",
+          stderr: "",
+          exit_code: 0,
+        },
+      });
+      await expect(readFile(capturePath, "utf8").then(JSON.parse)).resolves.toEqual([
+        "skill",
+        "/tmp/skills/docs-pr",
+        "--json",
+        "--receipt-dir",
+        "/tmp/receipts",
+        "--run-id",
+        "run_123",
+        "--answers",
+        "/tmp/answers.json",
+        "--repo-url",
+        "acme/docs",
+        "--count",
+        "3",
+        "--nested",
+        "{\"ok\":true}",
+      ]);
+    } finally {
+      await rm(tempDir, { recursive: true, force: true });
+    }
   });
 
   it("wraps a governed runx workflow as a LangChain tool", async () => {
-    const runSkill = vi.fn(async () => successResult("wrapped-output"));
+    const runSkill = vi.fn(async (): Promise<RunxSkillCliResult> => successResult("wrapped-output"));
 
     const wrapped = createRunxLangChainTool({
       name: "docs_pr",
@@ -79,7 +96,7 @@ describe("@runxhq/langchain", () => {
         repo: z.string(),
       }),
       skillPath: "/tmp/skills/docs-pr",
-      sdk: { runSkill },
+      cli: { runSkill },
       mapInput: (input) => {
         const record = input as { repo: string };
         return { repo_url: record.repo };
@@ -95,12 +112,10 @@ describe("@runxhq/langchain", () => {
   });
 
   it("fails fast when a wrapped runx workflow pauses for resolution", async () => {
-    const runSkill = vi.fn(async (): Promise<RunLocalSkillResult> => ({
+    const runSkill = vi.fn(async (): Promise<RunxSkillCliResult> => ({
       status: "needs_agent",
-      skill: {} as never,
-      skillPath: "/tmp/skills/review",
-      inputs: { repo: "acme/docs" },
-      runId: "run_123",
+      schema: "runx.skill_run.v1",
+      run_id: "run_123",
       requests: [],
     }));
 
@@ -111,7 +126,7 @@ describe("@runxhq/langchain", () => {
         repo: z.string(),
       }),
       skillPath: "/tmp/skills/review",
-      sdk: { runSkill },
+      cli: { runSkill },
     });
 
     await expect(wrapped.invoke({ repo: "acme/docs" })).rejects.toThrow(
@@ -120,20 +135,14 @@ describe("@runxhq/langchain", () => {
   });
 });
 
-function successResult(stdout: string): RunLocalSkillResult {
+function successResult(stdout: string): RunxSkillCliResult {
   return {
     status: "sealed",
-    skill: {} as never,
-    inputs: {},
+    schema: "runx.skill_run.v1",
     execution: {
-      status: "sealed",
       stdout,
       stderr: "",
-      exitCode: 0,
-      signal: null,
-      durationMs: 1,
+      exit_code: 0,
     },
-    state: {} as never,
-    receipt: {} as never,
   };
 }

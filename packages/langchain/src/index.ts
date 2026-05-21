@@ -1,16 +1,16 @@
-import {
-  createImportedTool,
-  type ToolCatalogAdapter,
-  type ToolCatalogResolvedTool,
-  type ToolCatalogSearchResult,
-} from "@runxhq/runtime-local/tool-catalogs";
-import { createRunxSdk, type RunSkillOptions, type RunxSdk, type RunxSdkOptions } from "@runxhq/runtime-local/sdk";
-import type { RunLocalSkillResult } from "@runxhq/runtime-local";
-import { errorMessage, isRecord } from "@runxhq/core/util";
+import { spawn } from "node:child_process";
+
 import { tool, type StructuredToolInterface } from "@langchain/core/tools";
-import { zodToJsonSchema } from "zod-to-json-schema";
 
 export const langchainPackage = "@runxhq/langchain";
+
+export type JsonValue =
+  | null
+  | boolean
+  | number
+  | string
+  | readonly JsonValue[]
+  | { readonly [key: string]: JsonValue | undefined };
 
 export interface LangChainToolLike {
   readonly name: string;
@@ -31,8 +31,64 @@ export interface LangChainToolCatalogAdapterOptions {
   readonly tags?: readonly string[];
 }
 
-export interface RunxLangChainSdkLike {
-  readonly runSkill: (options: RunSkillOptions) => Promise<RunLocalSkillResult>;
+export interface RunxSkillExecutionResult {
+  readonly stdout?: string;
+  readonly stderr?: string;
+  readonly exit_code?: number | null;
+  readonly error_message?: string;
+  readonly structured_output?: JsonValue;
+  readonly [key: string]: JsonValue | undefined;
+}
+
+export type RunxSkillCliResult =
+  | {
+      readonly status: "needs_agent";
+      readonly schema?: string;
+      readonly run_id?: string;
+      readonly requests?: readonly JsonValue[];
+      readonly [key: string]: JsonValue | undefined;
+    }
+  | {
+      readonly status: "policy_denied";
+      readonly schema?: string;
+      readonly reasons?: readonly string[];
+      readonly [key: string]: JsonValue | readonly string[] | undefined;
+    }
+  | {
+      readonly status: "failure";
+      readonly schema?: string;
+      readonly execution?: RunxSkillExecutionResult;
+      readonly [key: string]: JsonValue | RunxSkillExecutionResult | undefined;
+    }
+  | {
+      readonly status: "sealed";
+      readonly schema?: string;
+      readonly skill_name?: string;
+      readonly run_id?: string;
+      readonly receipt_id?: string;
+      readonly execution?: RunxSkillExecutionResult;
+      readonly payload?: JsonValue;
+      readonly receipt?: JsonValue;
+      readonly [key: string]: JsonValue | RunxSkillExecutionResult | undefined;
+    };
+
+export interface RunxCliBoundaryOptions {
+  readonly command?: string;
+  readonly cwd?: string;
+  readonly env?: NodeJS.ProcessEnv;
+  readonly signal?: AbortSignal;
+}
+
+export interface RunxSkillCliRunOptions extends RunxCliBoundaryOptions {
+  readonly skillPath: string;
+  readonly inputs?: Readonly<Record<string, unknown>>;
+  readonly answersPath?: string;
+  readonly receiptDir?: string;
+  readonly runId?: string;
+}
+
+export interface RunxCliSkillRunner {
+  readonly runSkill: (options: RunxSkillCliRunOptions) => Promise<RunxSkillCliResult>;
 }
 
 export interface RunxLangChainToolOptions {
@@ -40,77 +96,79 @@ export interface RunxLangChainToolOptions {
   readonly description: string;
   readonly schema: object;
   readonly skillPath: string;
-  readonly sdk?: RunxLangChainSdkLike;
-  readonly sdkOptions?: RunxSdkOptions;
-  readonly runOptions?: Omit<RunSkillOptions, "skillPath" | "inputs">;
+  readonly cli?: RunxCliSkillRunner;
+  readonly cliOptions?: RunxCliBoundaryOptions;
+  readonly runOptions?: Omit<RunxSkillCliRunOptions, "skillPath" | "inputs">;
   readonly mapInput?: (input: unknown) => Readonly<Record<string, unknown>>;
-  readonly formatOutput?: (result: RunLocalSkillResult) => unknown;
+  readonly formatOutput?: (result: RunxSkillCliResult) => unknown;
 }
 
-export function createLangChainToolCatalogAdapter(
-  options: LangChainToolCatalogAdapterOptions,
-): ToolCatalogAdapter {
-  let cachedToolsPromise: Promise<readonly ImportedLangChainTool[]> | undefined;
+export function createLangChainToolCatalogAdapter(_options: LangChainToolCatalogAdapterOptions): never {
+  throw new Error(
+    "createLangChainToolCatalogAdapter was sunset with the Rust runtime takeover. The Rust CLI has no in-process LangChain tool-catalog adapter boundary; publish runx tool manifests and use `runx tool search|inspect --json`, or wrap a governed skill with createRunxLangChainTool.",
+  );
+}
 
-  async function loadImportedTools(): Promise<readonly ImportedLangChainTool[]> {
-    if (!cachedToolsPromise) {
-      cachedToolsPromise = loadLangChainTools(options);
-    }
-    return await cachedToolsPromise;
+export function createRunxCliSkillRunner(options: RunxCliBoundaryOptions = {}): RunxCliSkillRunner {
+  return {
+    runSkill: async (runOptions) => await runSkillWithRunxCli({ ...options, ...runOptions }),
+  };
+}
+
+export async function runSkillWithRunxCli(options: RunxSkillCliRunOptions): Promise<RunxSkillCliResult> {
+  const env = options.env ?? process.env;
+  const command = options.command ?? env.RUNX_BIN ?? "runx";
+  const args = runxSkillArgs(options);
+  const result = await spawnRunx(command, args, {
+    cwd: options.cwd,
+    env,
+    signal: options.signal,
+  });
+
+  if (result.signal) {
+    throw new Error(`runx skill was terminated by signal ${result.signal}.`);
   }
 
-  return {
-    source: options.source,
-    label: options.label,
-    search: async (query, searchOptions = {}) => {
-      const normalizedQuery = query.trim().toLowerCase();
-      const tools = await loadImportedTools();
-      return tools
-        .map((entry) => entry.result)
-        .filter((result) => normalizedQuery.length === 0 || searchableText(result).includes(normalizedQuery))
-        .slice(0, searchOptions.limit ?? 20);
-    },
-    resolve: async (ref) => {
-      const tools = await loadImportedTools();
-      const normalizedRef = ref.trim().toLowerCase();
-      return tools.find((entry) => matchesImportedTool(entry, normalizedRef));
-    },
-  };
+  const parsed = parseRunxSkillJson(result.stdout, result.stderr, result.exitCode);
+  if (result.exitCode !== 0 && parsed.status === "sealed") {
+    throw new Error(
+      runxExitMessage(result.exitCode, result.stderr, `runx skill exited with code ${result.exitCode ?? 1}.`),
+    );
+  }
+  return parsed;
 }
 
 export function createRunxLangChainTool(
   options: RunxLangChainToolOptions,
 ): StructuredToolInterface {
-  const sdk = options.sdk ?? createRunxSdk(options.sdkOptions);
+  const cli = options.cli ?? createRunxCliSkillRunner(options.cliOptions);
   return tool(
     async (input) => {
-      const result = await sdk.runSkill({
+      const result = await cli.runSkill({
         ...(options.runOptions ?? {}),
         skillPath: options.skillPath,
         inputs: options.mapInput ? options.mapInput(input) : toInputRecord(input),
       });
 
-      if (isNeedsAgentResult(result)) {
+      if (result.status === "needs_agent") {
         throw new Error(
           `runx workflow '${options.name}' needs agent input; LangChain tools must be fully specified before invocation.`,
         );
       }
       if (result.status === "policy_denied") {
+        const reasons = Array.isArray(result.reasons)
+          ? result.reasons.filter((reason) => typeof reason === "string")
+          : [];
         throw new Error(
-          `runx workflow '${options.name}' was denied by policy${result.reasons.length > 0 ? `: ${result.reasons.join("; ")}` : "."}`,
+          `runx workflow '${options.name}' was denied by policy${reasons.length > 0 ? `: ${reasons.join("; ")}` : "."}`,
         );
       }
       if (result.status === "failure") {
-        throw new Error(
-          result.execution.errorMessage
-            ?? result.execution.stderr
-            ?? result.execution.stdout
-            ?? `runx workflow '${options.name}' failed.`,
-        );
+        throw new Error(skillFailureMessage(options.name, result));
       }
 
       const formatted = options.formatOutput?.(result);
-      return typeof formatted === "string" ? formatted : formatted ?? result.execution.stdout;
+      return formatted ?? stringField(result.execution, "stdout") ?? stringifyJson(result);
     },
     {
       name: options.name,
@@ -120,147 +178,126 @@ export function createRunxLangChainTool(
   );
 }
 
-function isNeedsAgentResult(result: RunLocalSkillResult): result is RunLocalSkillResult & { readonly status: "needs_agent" } {
-  return (result as { readonly status?: string }).status === "needs_agent";
-}
-
-interface ImportedLangChainTool extends ToolCatalogResolvedTool {
-  readonly externalName: string;
-}
-
-async function loadLangChainTools(
-  options: LangChainToolCatalogAdapterOptions,
-): Promise<readonly ImportedLangChainTool[]> {
-  const tools = await resolveTools(options.tools);
-  return tools.map((langChainTool) => importedToolFromLangChain(options, langChainTool));
-}
-
-async function resolveTools(
-  tools:
-    | readonly LangChainToolLike[]
-    | { readonly getTools: () => readonly LangChainToolLike[] }
-    | (() => Promise<readonly LangChainToolLike[]> | readonly LangChainToolLike[]),
-): Promise<readonly LangChainToolLike[]> {
-  if (typeof tools === "function") {
-    return await tools();
+function runxSkillArgs(options: RunxSkillCliRunOptions): readonly string[] {
+  const args = ["skill", options.skillPath, "--json"];
+  if (options.receiptDir) {
+    args.push("--receipt-dir", options.receiptDir);
   }
-  if (hasGetTools(tools)) {
-    return tools.getTools();
+  if (options.runId) {
+    args.push("--run-id", options.runId);
   }
-  return tools;
+  if (options.answersPath) {
+    args.push("--answers", options.answersPath);
+  }
+  for (const [name, value] of Object.entries(options.inputs ?? {})) {
+    args.push(inputFlag(name), cliInputValue(value));
+  }
+  return args;
 }
 
-function importedToolFromLangChain(
-  options: LangChainToolCatalogAdapterOptions,
-  langChainTool: LangChainToolLike,
-): ImportedLangChainTool {
-  const imported = createImportedTool({
-    name: langChainTool.name,
-    description: langChainTool.description,
-    namespace: options.namespace,
-    externalName: langChainTool.name,
-    source: options.source,
-    sourceLabel: options.label,
-    sourceType: "langchain",
-    inputSchema: normalizeLangChainSchema(langChainTool.schema),
-    tags: options.tags ?? ["langchain"],
+function inputFlag(name: string): string {
+  if (!/^[A-Za-z0-9_-]+$/.test(name)) {
+    throw new Error(`runx skill input names must contain only letters, numbers, underscores, or hyphens: ${name}`);
+  }
+  return `--${name.replaceAll("_", "-")}`;
+}
+
+function cliInputValue(value: unknown): string {
+  if (typeof value === "string") {
+    return value;
+  }
+  return JSON.stringify(value) ?? "null";
+}
+
+interface SpawnRunxOptions {
+  readonly cwd?: string;
+  readonly env: NodeJS.ProcessEnv;
+  readonly signal?: AbortSignal;
+}
+
+interface SpawnRunxResult {
+  readonly exitCode: number | null;
+  readonly signal: NodeJS.Signals | null;
+  readonly stdout: string;
+  readonly stderr: string;
+}
+
+function spawnRunx(command: string, args: readonly string[], options: SpawnRunxOptions): Promise<SpawnRunxResult> {
+  return new Promise<SpawnRunxResult>((resolve, reject) => {
+    const child = spawn(command, [...args], {
+      cwd: options.cwd,
+      env: options.env,
+      signal: options.signal,
+      stdio: ["ignore", "pipe", "pipe"],
+    });
+    let stdout = "";
+    let stderr = "";
+    child.stdout.setEncoding("utf8");
+    child.stderr.setEncoding("utf8");
+    child.stdout.on("data", (chunk: string) => {
+      stdout += chunk;
+    });
+    child.stderr.on("data", (chunk: string) => {
+      stderr += chunk;
+    });
+    child.on("error", (error) => {
+      reject(new Error(`failed to spawn runx CLI '${command}': ${error.message}`));
+    });
+    child.on("close", (exitCode, signal) => {
+      resolve({ exitCode, signal, stdout, stderr });
+    });
   });
-
-  return {
-    ...imported,
-    externalName: langChainTool.name,
-    skillDirectory: options.baseDirectory,
-    referencePath: `catalog:${options.source}:${imported.result.name}`,
-    invoke: async (request) => {
-      try {
-        const result = await langChainTool.invoke(request.inputs, request.signal ? { signal: request.signal } : undefined);
-        return {
-          status: "success",
-          stdout: stringifyLangChainResult(result),
-          metadata: {
-            langchain: {
-              tool: langChainTool.name,
-            },
-          },
-        } as const;
-      } catch (error) {
-        const message = errorMessage(error);
-        return {
-          status: "failure",
-          stdout: "",
-          stderr: message,
-          errorMessage: message,
-          metadata: {
-            langchain: {
-              tool: langChainTool.name,
-            },
-          },
-        } as const;
-      }
-    },
-  };
 }
 
-function normalizeLangChainSchema(schema: unknown): Readonly<Record<string, unknown>> | undefined {
-  if (isRecord(schema) && typeof schema.toJSONSchema === "function") {
-    const normalized = schema.toJSONSchema();
-    return isRecord(normalized) ? normalized : undefined;
+function parseRunxSkillJson(stdout: string, stderr: string, exitCode: number | null): RunxSkillCliResult {
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(stdout);
+  } catch {
+    throw new Error(runxExitMessage(exitCode, stderr, "runx skill did not return JSON on stdout."));
   }
-  if (isRecord(schema) && ("_def" in schema || "safeParse" in schema || "parse" in schema)) {
-    const normalized = zodToJsonSchema(schema as unknown as Parameters<typeof zodToJsonSchema>[0]);
-    return isRecord(normalized) ? normalized : undefined;
+
+  if (!isRecord(parsed)) {
+    throw new Error("runx skill JSON output must be an object.");
   }
-  if (isRecord(schema) && typeof schema.type === "string") {
-    return schema;
+  if (!isRunxSkillStatus(parsed.status)) {
+    throw new Error(`runx skill returned unsupported status '${String(parsed.status)}'.`);
   }
-  return undefined;
+  return parsed as unknown as RunxSkillCliResult;
 }
 
-function matchesImportedTool(entry: ImportedLangChainTool, ref: string): boolean {
-  return [
-    entry.result.name,
-    entry.result.tool_id,
-    entry.result.catalog_ref,
-    `${entry.result.source}:${entry.result.name}`,
-    `${entry.result.namespace}.${entry.externalName}`,
-    entry.externalName,
-  ].map((value) => value.toLowerCase()).includes(ref);
+function isRunxSkillStatus(value: unknown): value is RunxSkillCliResult["status"] {
+  return value === "needs_agent" || value === "policy_denied" || value === "failure" || value === "sealed";
 }
 
-function searchableText(result: ToolCatalogSearchResult): string {
-  return [
-    result.tool_id,
-    result.name,
-    result.summary,
-    result.source,
-    result.source_label,
-    result.source_type,
-    result.namespace,
-    result.external_name,
-    result.catalog_ref,
-    ...result.tags,
-  ]
-    .filter((value): value is string => typeof value === "string")
-    .join(" ")
-    .toLowerCase();
+function runxExitMessage(exitCode: number | null, stderr: string, fallback: string): string {
+  const trimmed = stderr.trim();
+  if (trimmed.length > 0) {
+    return `${fallback} ${trimmed}`;
+  }
+  if (exitCode !== null && exitCode !== 0) {
+    return `${fallback} Exit code: ${exitCode}.`;
+  }
+  return fallback;
 }
 
-function stringifyLangChainResult(result: unknown): string {
-  if (typeof result === "string") {
-    return result;
+function skillFailureMessage(name: string, result: Extract<RunxSkillCliResult, { readonly status: "failure" }>): string {
+  return stringField(result.execution, "error_message")
+    ?? stringField(result.execution, "stderr")
+    ?? stringField(result.execution, "stdout")
+    ?? `runx workflow '${name}' failed.`;
+}
+
+function stringField(value: unknown, key: string): string | undefined {
+  if (!isRecord(value)) {
+    return undefined;
   }
-  if (Array.isArray(result)) {
-    return result.map((entry) => stringifyLangChainResult(entry)).join("\n");
-  }
-  if (isRecord(result) && typeof result.content === "string") {
-    return result.content;
-  }
-  if (isRecord(result) && Array.isArray(result.content)) {
-    return result.content
-      .map((entry) => (typeof entry === "string" ? entry : JSON.stringify(entry) ?? ""))
-      .join("\n");
-  }
-  return JSON.stringify(result) ?? "";
+  const field = value[key];
+  return typeof field === "string" ? field : undefined;
+}
+
+function stringifyJson(value: unknown): string {
+  return JSON.stringify(value) ?? "";
 }
 
 function toInputRecord(input: unknown): Readonly<Record<string, unknown>> {
@@ -273,10 +310,6 @@ function toInputRecord(input: unknown): Readonly<Record<string, unknown>> {
   return { value: input };
 }
 
-function hasGetTools(
-  value: readonly LangChainToolLike[] | { readonly getTools: () => readonly LangChainToolLike[] },
-): value is { readonly getTools: () => readonly LangChainToolLike[] } {
-  return "getTools" in value && typeof value.getTools === "function";
+function isRecord(value: unknown): value is Readonly<Record<string, unknown>> {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
 }
-
-export type { RunxSdk, RunxSdkOptions };

@@ -1,11 +1,8 @@
 import { spawnSync } from "node:child_process";
-import { mkdtemp, rm } from "node:fs/promises";
-import os from "node:os";
 import path from "node:path";
 
-import { createDefaultSkillAdapters } from "@runxhq/adapters";
-import type { HostBridge } from "@runxhq/host-adapters";
-import { createRunxSdk, createHostBridge } from "@runxhq/runtime-local/sdk";
+import type { ResolutionRequestContract } from "@runxhq/contracts";
+import type { HostBridge, HostRunOptions, HostRunState } from "@runxhq/host-adapters";
 
 export interface HostHarness {
   readonly bridge: HostBridge;
@@ -33,22 +30,11 @@ export function kernelTestEnv(extra: NodeJS.ProcessEnv = {}): NodeJS.ProcessEnv 
 }
 
 export async function createHostHarness(): Promise<HostHarness> {
-  ensureRunxBinary();
-  const tempDir = await mkdtemp(path.join(os.tmpdir(), "runx-host-protocol-"));
-  const sdk = createRunxSdk({
-    env: {
-      ...kernelTestEnv(),
-      RUNX_HOME: path.join(tempDir, "home"),
-    },
-    receiptDir: path.join(tempDir, "receipts"),
-    adapters: createDefaultSkillAdapters(),
-  });
+  const runs = new Map<string, HostRunOptions>();
 
   return {
-    bridge: createHostBridge({ execute: sdk.runSkill.bind(sdk) }),
-    cleanup: async () => {
-      await rm(tempDir, { recursive: true, force: true });
-    },
+    bridge: createFixtureHostBridge(runs),
+    cleanup: async () => undefined,
   };
 }
 
@@ -69,4 +55,72 @@ export function ensureRunxBinary(): void {
     throw new Error(`failed to build runx binary for host protocol tests: ${result.stderr || result.stdout}`);
   }
   runxBinaryBuilt = true;
+}
+
+function createFixtureHostBridge(runs: Map<string, HostRunOptions>): HostBridge {
+  return {
+    run: async (options) => {
+      const runId = `rx_host_fixture_${runs.size + 1}`;
+      runs.set(runId, options);
+      return {
+        status: "needs_agent",
+        skillName: skillName(options.skillPath),
+        runId,
+        requests: [inputRequest()],
+        events: [],
+      };
+    },
+    resume: async (runId, options) => {
+      const original = runs.get(runId);
+      const request = inputRequest();
+      const reply = await options.resolver?.({ request, events: [] });
+      return {
+        status: "completed",
+        skillName: skillName(options.skillPath ?? original?.skillPath ?? "fixture"),
+        receiptId: `hrn_${runId}`,
+        output: outputFromReply(reply),
+        events: [],
+      };
+    },
+    inspect: async (referenceId) => ({
+      status: "completed",
+      skillName: "fixture",
+      runId: referenceId,
+      receiptId: `hrn_${referenceId}`,
+      verification: { status: "verified" },
+    }) satisfies HostRunState,
+  };
+}
+
+function inputRequest(): ResolutionRequestContract {
+  return {
+    id: "input.message",
+    kind: "input",
+    questions: [
+      {
+        id: "message",
+        prompt: "Message",
+        required: true,
+        type: "string",
+      },
+    ],
+  };
+}
+
+function outputFromReply(reply: Awaited<ReturnType<NonNullable<Parameters<HostBridge["run"]>[0]["resolver"]>>>): string {
+  if (isRecord(reply) && "payload" in reply) {
+    return outputFromReply(reply.payload as never);
+  }
+  if (isRecord(reply) && typeof reply.message === "string") {
+    return reply.message;
+  }
+  return typeof reply === "string" ? reply : JSON.stringify(reply ?? {});
+}
+
+function skillName(skillPath: string): string {
+  return path.basename(skillPath);
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
 }
