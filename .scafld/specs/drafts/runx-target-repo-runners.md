@@ -2,7 +2,7 @@
 spec_version: '2.0'
 task_id: runx-target-repo-runners
 created: '2026-05-19T02:08:02Z'
-updated: '2026-05-21T03:43:32Z'
+updated: '2026-05-21T03:57:54Z'
 status: draft
 harden_status: in_progress
 size: large
@@ -26,12 +26,14 @@ create/update, outbox pushers for source issue/thread publication, and Aster
 scheduling/readback are not implemented in this target-runner path.
 Allowed follow-up command: `scafld harden runx-target-repo-runners --mark-passed`
 only after the live execution blockers are resolved or explicitly descoped.
-Latest runner update: 2026-05-21 added runtime source-publication commands,
-adapter readback validation, and a sealed reply receipt for the source
-issue/thread update after the target pull-request receipt is sealed.
-Remaining target-runner work is concrete provider lookup, checkout/git
-mutation, PR create/update, source-publication pushers, and Aster
-scheduling/readback rather than contract drift.
+Latest runner update: 2026-05-21 added typed runtime checkout commands and
+concrete GitHub open-PR dedupe search commands with fail-closed command/readback
+validation. The adapter boundary now receives executable provider intent rather
+than a broad fixture plan, while tests still use deterministic no-network
+readback projection.
+Remaining target-runner work is provider API transport, checkout/git mutation,
+PR create/update, source-publication pushers, and Aster scheduling/readback
+rather than contract drift.
 Review gate: not_started
 
 ## Summary
@@ -173,6 +175,8 @@ Required behavior:
 - [x] Runtime source-publication adapter requests include source issue and
   source-thread commands with the target PR link, and readback is sealed as a
   reply receipt carrying dedupe metadata.
+- [x] Runtime live adapter receives fail-closed typed checkout and GitHub PR
+  dedupe search commands before provider readback, with no local path leakage.
 - [x] Public output excludes local checkout paths and env-secret values.
 
 ## Phase 1: Contract
@@ -217,6 +221,9 @@ Acceptance:
   reply receipt.
 - [x] Live-adapter fixture publishes source issue/thread commands after the
   sealed PR receipt and fails closed when source issue readback is missing.
+- [x] Live-adapter checkout receives a typed command that carries only public
+  repo identity, runner identity, base branch, scafld requirements, and mutation
+  admission, and rejects malformed target repo ids before adapter calls.
 
 ## Phase 3: Dedupe
 
@@ -240,6 +247,9 @@ Acceptance:
 - [x] Runtime fixture execution chooses create when provider lookup has no
   matching open PR and reuse when provider lookup returns a matching PR.
 - [x] Duplicate fixture reuses the existing PR and produces no new branch.
+- [x] Runtime provider lookup emits a concrete GitHub open-PR search command
+  containing repo qualifiers, dedupe markers, source issue/thread refs, and a
+  bounded result limit before projecting deterministic readback.
 
 ## Rollback
 
@@ -318,3 +328,7 @@ Issues:
   readback validation, sealed reply receipt projection, and negative readback
   coverage for missing source issue publication. Remaining work is the concrete
   provider/git/outbox/Aster adapters.
+- 2026-05-21: Added typed runtime checkout commands plus concrete GitHub
+  provider dedupe search commands and readback projection. Remaining work is
+  executing those commands through provider API transport and real target git/PR
+  mutation, plus source-publication pushers and Aster scheduling/readback.
