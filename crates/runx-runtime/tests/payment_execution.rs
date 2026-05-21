@@ -666,9 +666,13 @@ impl SkillAdapter for PaidEchoAdapter {
 }
 
 fn skill_success(value: Value) -> SkillOutput {
+    let stdout = match serde_json::to_string(&value) {
+        Ok(stdout) => stdout,
+        Err(error) => return skill_failure(&format!("test JSON serialization failed: {error}")),
+    };
     SkillOutput {
         status: InvocationStatus::Success,
-        stdout: serde_json::to_string(&value).expect("test JSON should serialize"),
+        stdout,
         stderr: String::new(),
         exit_code: Some(0),
         duration_ms: 1,

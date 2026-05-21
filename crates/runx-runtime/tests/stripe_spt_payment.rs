@@ -339,9 +339,13 @@ fn stripe_spt_rail_packet(
 }
 
 fn skill_success(value: Value) -> SkillOutput {
+    let stdout = match serde_json::to_string(&value) {
+        Ok(stdout) => stdout,
+        Err(error) => return skill_failure(&format!("test JSON serialization failed: {error}")),
+    };
     SkillOutput {
         status: InvocationStatus::Success,
-        stdout: serde_json::to_string(&value).expect("test JSON should serialize"),
+        stdout,
         stderr: String::new(),
         exit_code: Some(0),
         duration_ms: 1,
@@ -361,9 +365,17 @@ fn skill_failure(message: &str) -> SkillOutput {
 }
 
 fn skill_failure_with_stdout(value: Value, message: &str) -> SkillOutput {
+    let stdout = match serde_json::to_string(&value) {
+        Ok(stdout) => stdout,
+        Err(error) => {
+            return skill_failure(&format!(
+                "{message}; test JSON serialization failed: {error}"
+            ));
+        }
+    };
     SkillOutput {
         status: InvocationStatus::Failure,
-        stdout: serde_json::to_string(&value).expect("test JSON should serialize"),
+        stdout,
         stderr: message.to_owned(),
         exit_code: Some(1),
         duration_ms: 1,
