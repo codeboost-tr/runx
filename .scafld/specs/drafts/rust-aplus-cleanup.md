@@ -54,6 +54,29 @@ Items touching files under active parallel work are marked **[blocked-until:
   `civil_from_unix_seconds`, and `civil_from_days` implementations from
   `runtime/scaffold/ids.rs` and `runtime/registry/local/util.rs`. Both now use
   one private `runtime/time.rs` helper.
+- **L1: runtime module-file style** — converted the 10 legacy `mod.rs` files in
+  `runx-runtime` (`adapters`, `adapters/mcp`, `connect`, `dev`, `execution`,
+  `execution/harness`, `receipts`, `registry`, `scaffold`, `tool_catalogs`) to
+  modern `foo.rs` siblings via `git mv` (100% rename, no content change). Zero
+  `mod.rs` remain in the crate; it now matches every other crate. clippy green.
+- **D: default-timestamp constant** — the MCP server path invented its own
+  `"2026-05-20T00:00:00Z"` (`adapters/mcp/server_skill.rs`) that diverged from
+  the runner default `"2026-05-18T00:00:00Z"` (`execution/runner.rs`,
+  `execution/skill_run.rs`) — a latent determinism bug. All four sites now read
+  one `pub(crate) const DEFAULT_CREATED_AT` in `runtime/time.rs`. clippy green.
+- **C: sha256 helpers (core/receipts/runtime)** — added the canonical
+  `hex_lower` / `sha256_hex` / `sha256_prefixed` (all `&[u8]`) to
+  `runx-contracts::fingerprint` and re-exported them. Removed the duplicate
+  private definitions from `core/policy/authority_proof.rs`,
+  `receipts/canonical.rs`, and the runtime copies (`approval.rs`,
+  `adapters/mcp/adapter.rs`, `adapters/a2a.rs`, `adapters/catalog.rs`,
+  `doctor.rs`, `tool_catalogs/hash.rs`, `registry/install.rs`,
+  `registry/local/util.rs`); callers now use the shared API (`&str` sites pass
+  `.as_bytes()`). The 3 contracts-internal copies (`target_runner/plan.rs`,
+  `post_merge_observer/plan.rs`, `act_assignment/hash.rs`) are deferred per the
+  spec's "fold-in-after" sequencing — they sit in actively-reshaped files.
+  contracts/core/receipts clippy green; runtime edits verified clean (the only
+  runtime build errors are unrelated in-flight payment-ledger work).
 
 ## Tier 1 — correctness / drift risk
 
@@ -90,13 +113,13 @@ Items touching files under active parallel work are marked **[blocked-until:
 
 ### D. Hardcoded magic constants (latent bug)
 
-- **[partially blocked: runner.rs active]** Two different fake "default"
-  timestamps in four places: `"2026-05-20T00:00:00Z"`
-  (`adapters/mcp/server_skill.rs:190,250`) and `"2026-05-18T00:00:00Z"`
-  (`execution/runner.rs:39`, `execution/skill_run.rs:24` `DEFAULT_CREATED_AT`).
-  The MCP server path invents its own date that **diverges** from the runner's
-  default — a latent determinism bug. → one named const; the MCP server path
-  should inject `created_at` from `RuntimeOptions` rather than hardcode.
+- **[done]** Two different fake "default" timestamps unified into one
+  `pub(crate) const DEFAULT_CREATED_AT` in `runtime/time.rs`. The MCP server
+  path's divergent `"2026-05-20T00:00:00Z"` (a latent determinism bug) is gone;
+  `server_skill.rs`, `execution/runner.rs`, and `execution/skill_run.rs` all
+  reference the shared const. (The MCP path constructs its own `RuntimeOptions`,
+  so there is no upstream `created_at` to inject — one canonical const is the
+  correct fix.)
 
 ### E. The `runx:` URI scheme is hand-built and hand-parsed
 
@@ -120,15 +143,14 @@ Items touching files under active parallel work are marked **[blocked-until:
 
 ### C. Duplicated primitive helpers
 
-- **`sha256_hex` / `sha256_prefixed` / `hex_lower` defined 8 times**:
-  `contracts/act_assignment/hash.rs:87,91`,
-  `contracts/post_merge_observer/plan.rs:858,862`,
-  `contracts/target_runner/plan.rs:658`,
-  `core/policy/authority_proof.rs:627,632`,
-  `receipts/canonical.rs:9,42`, `runtime/doctor.rs:751`.
-  → one canonical impl in `runx-contracts::fingerprint` (every crate depends on
-  contracts). *Two of the contracts copies are in files under active reshape;
-  do the core/receipts/runtime consolidation first, fold contracts in after.*
+- **[done for core/receipts/runtime]** `sha256_hex` / `sha256_prefixed` /
+  `hex_lower` — canonical impls now live in `runx-contracts::fingerprint`
+  (re-exported from the crate root). All core/receipts/runtime copies removed
+  and repointed at the shared API. **Remaining (deferred):** the 3
+  contracts-internal copies in `act_assignment/hash.rs`,
+  `post_merge_observer/plan.rs`, `target_runner/plan.rs` — fold these in once
+  their reshape settles (they are byte-equivalent `&str` variants; replace with
+  `runx_contracts::sha256_*(x.as_bytes())`).
 - `reference_type_name()` — **byte-identical** in `runtime/receipts/seal.rs:617`
   and `runtime/execution/target_runner.rs:901`. → one shared fn, or a
   `ReferenceType::as_str()` in contracts. *Both files active (RunxRef); after.*

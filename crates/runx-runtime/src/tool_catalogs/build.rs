@@ -3,11 +3,11 @@ use std::fs;
 use std::io::Read;
 use std::path::{Path, PathBuf};
 
+use runx_contracts::sha256_prefixed;
 use runx_contracts::tools::{
     BuiltToolItem, JsonPayload, JsonPayloadObject, RuntimeCommand, ToolBuildReport,
     ToolBuildReportSchema, ToolBuildStatus, ToolManifest, ToolManifestSchema, ToolOutput,
 };
-use runx_contracts::sha256_prefixed;
 use serde::Deserialize;
 
 use super::error::ToolCatalogError;
