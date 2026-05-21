@@ -2,7 +2,7 @@
 spec_version: '2.0'
 task_id: rust-kernel-blocking-promotion
 created: '2026-05-17T00:30:00Z'
-updated: '2026-05-21T14:08:58+10:00'
+updated: '2026-05-21T22:14:35+10:00'
 status: draft
 harden_status: not_run
 size: medium
@@ -25,31 +25,31 @@ Conservative advisory-start evidence is recorded from the archived completed
 still missing.
 Blockers: 5 clean kernel-touching PRs landed while Rust kernel parity checks
 are advisory. Current full local `node scripts/check-rust-kernel-parity.mjs`
-also fails at `cargo fmt --check` because existing untracked
-`crates/runx-cli/tests/locality.rs` needs rustfmt; that file is outside this
-promotion evidence slice and was not edited.
+passes, but that only clears the local parity prerequisite; it does not satisfy
+the five-PR soak gate or authorize the CI flip.
 Allowed follow-up command: run the evidence script against audited evidence; do
 not run `scafld harden rust-kernel-blocking-promotion`.
-Latest runner update: 2026-05-20 clean-kernel counter live-GitHub mode now
+Counter update: 2026-05-20 clean-kernel counter live-GitHub mode now
 requires parseable advisory-start timestamps for timestamped PR metadata,
 requires live GitHub records to include post-advisory merge times, and requires
 the Rust kernel parity check itself to pass. A read-only live probe from
 `2026-05-20T00:00:00Z` found zero qualifying kernel PRs; the checked-in fixture
 still has four qualifying records, so the CI promotion remains blocked.
-Earlier local evidence update: 2026-05-21 reran the full Rust kernel parity
-gate after refreshing the stale `runx-core` public API snapshot; `node
-scripts/check-rust-kernel-parity.mjs` passed in that earlier run. That evidence
-did not satisfy the live five-PR soak gate and did not authorize the CI flip.
+Latest local evidence update: 2026-05-21T22:14:35+10:00 reran the full Rust
+kernel parity gate after aligning the credential-envelope fixtures, tightening
+the `mcp-rmcp` crate-graph guard, clearing Rust style findings, and refreshing
+the stale `runx-core` public API snapshot. `node
+scripts/check-rust-kernel-parity.mjs` passed. This evidence does not satisfy
+the live five-PR soak gate and does not authorize the CI flip.
 Safe evidence/planning update: 2026-05-21T03:19:54Z recorded a conservative
 advisory-start timestamp of `2026-05-19T03:33:01Z` from the completed archived
 `rust-parity-ci-governance` spec. Fixture mode still counts 4 qualifying PRs;
 live GitHub mode against `runxhq/runx` still counts 0 qualifying PRs after
 that start.
-Latest local parity update: 2026-05-21T04:08:33Z re-ran the full local
-`node scripts/check-rust-kernel-parity.mjs` wrapper. It failed immediately at
-the rustfmt check on existing untracked `crates/runx-cli/tests/locality.rs`.
-This evidence does not satisfy the live five-PR soak gate and does not
-authorize the CI flip.
+Prior local parity update: 2026-05-21T04:08:33Z re-ran the full local wrapper
+and failed on a rustfmt check. That evidence is superseded by the
+2026-05-21T22:14:35+10:00 passing wrapper run, but the five-PR soak gate still
+blocks CI promotion.
 Review gate: not_started
 
 ## Summary
@@ -539,6 +539,28 @@ Local non-promoting evidence, 2026-05-21T04:08:33Z:
   `crates/runx-cli/tests/locality.rs`. This is outside this promotion evidence
   slice's allowed edit scope and blocks any CI promotion.
 
+Local non-promoting evidence, 2026-05-21T22:14:35+10:00:
+- `node scripts/check-rust-core-style.mjs` passed after non-semantic style
+  guard fixes in the MCP transport, connect, runner step, and payment-ledger
+  files.
+- `node scripts/check-rust-crate-graph.mjs` passed after the `mcp-rmcp`
+  feature contract was narrowed to the exact `rmcp` client dependency and the
+  scoped `tokio/process` + `tokio/io-util` features.
+- `pnpm contracts:schemas:check` passed after regenerating the credential
+  envelope schema.
+- `pnpm exec tsc -p tsconfig.typecheck.json --noEmit` passed.
+- `cargo test --manifest-path crates/Cargo.toml -p runx-runtime --features
+  mcp-rmcp --test mcp_adapter -- --nocapture` passed, 11 tests.
+- `cargo test --manifest-path crates/Cargo.toml -p runx-runtime --features
+  mcp-rmcp --lib rmcp_transport_tests -- --nocapture` passed, 4 tests.
+- `node scripts/check-rust-kernel-parity.mjs` passed end to end after
+  regenerating `crates/runx-core/api-snapshot.txt`. The wrapper covered cargo
+  fmt/check/clippy/workspace tests, crate graph, Rust style, cargo-deny, and
+  the public API snapshot gate.
+- CI promotion remains blocked because the five clean post-advisory
+  kernel-touching PRs are still not evidenced and `.github/workflows/ci.yml`
+  still intentionally keeps the Rust kernel parity step advisory.
+
 ## Metadata
 
 Estimated effort hours: 6
@@ -592,3 +614,8 @@ Supersession:
   still counts 0 qualifying PRs after the conservative advisory start, and the
   full parity wrapper now fails on rustfmt for existing untracked
   `crates/runx-cli/tests/locality.rs`. CI remains advisory.
+- 2026-05-21T22:14:35+10:00: Re-ran the full local parity wrapper after the
+  credential-envelope cutover, MCP feature-gate cleanup, Rust style cleanup,
+  and `runx-core` API snapshot regeneration. The wrapper passes end to end.
+  CI remains advisory because the five clean post-advisory PR soak evidence is
+  still missing.

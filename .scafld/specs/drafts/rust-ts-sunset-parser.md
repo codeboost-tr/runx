@@ -2,7 +2,7 @@
 spec_version: '2.0'
 task_id: rust-ts-sunset-parser
 created: '2026-05-18T00:00:00Z'
-updated: '2026-05-18T00:00:00Z'
+updated: '2026-05-21T22:00:00+10:00'
 status: draft
 harden_status: not_run
 size: medium
@@ -17,15 +17,16 @@ Status: draft
 Current phase: blocked
 Next: wait for parser importer migration specs to remove live TS consumers.
 Reason: draft created under `plans/rust-takeover.md`. Third TS sunset. On
-2026-05-20 this draft was rechecked again and the deletion objective is not
-currently valid because 56 live files still import `@runxhq/core/parser`,
+2026-05-21 this draft was rechecked again and the deletion objective is not
+currently valid because 54 live files still import `@runxhq/core/parser`,
 relative `packages/core/src/parser` modules, or runtime-local parser type
 surfaces.
 Blockers: parser importers still live after `rust-ts-sunset-policy` completion.
-Allowed follow-up command: `scafld harden rust-ts-sunset-parser`
-Latest runner update: 2026-05-20 importer census refreshed; deletion remains
-blocked and no harden/build should run for this draft until owning importer
-migration specs clear the census.
+Allowed follow-up command: none while blocked; do not run `scafld harden`
+for this draft.
+Latest runner update: 2026-05-21T22:00:00+10:00 importer census refreshed;
+deletion remains blocked and no harden/build should run for this draft until
+owning importer migration specs clear the census.
 Review gate: blocked
 
 ## Summary
@@ -38,7 +39,7 @@ consumer reads from `@runxhq/core/parser`.
 checkout. Do not approve or execute the deletion phase until the importer census
 below is clean.
 
-2026-05-20 second validation update: the importer census still finds 56 files.
+2026-05-21 validation update: the importer census still finds 54 files.
 The largest surviving groups are runtime-local execution/parser-type surfaces,
 CLI command readers, fixture/oracle generators, and tests. This update is
 inspection evidence only; it does not make deletion executable.
@@ -108,12 +109,13 @@ rg -l "(\.\./parser|\.\./\.\./parser|packages/core/src/parser)" packages/core sc
 rg -n "@runxhq/core/parser|\.\./parser|packages/core/src/parser" packages tests scripts --glob '!packages/core/src/parser/**' | wc -l
 ```
 
-Observed results on 2026-05-20:
+Observed results on 2026-05-21:
 
-- 50 files import `@runxhq/core/parser`.
-- 7 files refer to relative or direct `packages/core/src/parser` paths outside
+- 33 files import `@runxhq/core/parser`.
+- 6 files refer to relative or direct `packages/core/src/parser` paths outside
   the parser directory.
-- 59 total import/reference hits remain outside `packages/core/src/parser/**`.
+- 62 total import/reference hits remain outside `packages/core/src/parser/**`.
+- 54 union files still reference the parser package or source path.
 
 Representative live production importers:
 

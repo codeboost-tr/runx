@@ -2,7 +2,7 @@
 spec_version: '2.0'
 task_id: runx-target-repo-runners
 created: '2026-05-19T02:08:02Z'
-updated: '2026-05-21T09:45:53Z'
+updated: '2026-05-21T22:05:00+10:00'
 status: draft
 harden_status: in_progress
 size: large
@@ -14,7 +14,7 @@ risk_level: high
 ## Current State
 
 Status: draft
-Current phase: none
+Current phase: live provider adapter / target mutation slice
 Next: resolve live target execution blockers before marking harden passed
 Reason: hardening round in progress; the Rust target-runner path is
 fixture-executable for policy admission, same-repo/cross-repo planning,
@@ -28,8 +28,13 @@ has a transport-backed search client, but live end-to-end target mutation is
 still blocked.
 Allowed follow-up command: `scafld harden runx-target-repo-runners --mark-passed`
 only after the live execution blockers are resolved or explicitly descoped.
-Latest runner update: 2026-05-21 added a transport-backed GitHub Search API
-client for provider dedupe lookup. It sends the concrete open-PR search command,
+Latest runner update: 2026-05-21T22:05:00+10:00 dogfood audit confirmed this
+spec must stay draft: local contract/runtime target-runner tests exist and
+provider dedupe lookup is transport-backed, but there is still no real target
+checkout/git mutation, PR create/update, source publication pusher, or Aster
+scheduling/readback path in the reusable target-runner. Earlier on 2026-05-21
+added a transport-backed GitHub Search API client for provider dedupe lookup.
+It sends the concrete open-PR search command,
 redacts authorization headers in request debug output, projects only GitHub pull
 request search items for the target repo, and only marks markers/source refs
 present when they are echoed in returned PR text so reuse remains fail-closed.

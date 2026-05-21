@@ -2,7 +2,7 @@
 spec_version: '2.0'
 task_id: rust-aster-runtime-cutover
 created: '2026-05-18T00:00:00Z'
-updated: '2026-05-21T11:55:00+10:00'
+updated: '2026-05-21T22:05:00+10:00'
 status: draft
 harden_status: not_run
 size: large
@@ -25,10 +25,15 @@ Blockers: cloud package binding is still unverified by this draft because
 sibling cloud repo, but the cloud binding needs its own inspected pass.
 Allowed follow-up command: none during this refresh; do not run
 `scafld harden rust-aster-runtime-cutover`.
-Latest runner update: 2026-05-21 Aster checkout validation passed
-`npm run check`, targeted bridge tests, Rust `runx --version`, and the minimal
-proving-ground harness smoke. The smoke produced two sealed
-`runx.harness_receipt.v1` receipts through the Rust binary.
+Latest runner update: 2026-05-21T22:05:00+10:00 Aster checkout audit: local
+Aster repo `/Users/kam/dev/runx/aster` is clean at
+`2f6bf7d6db08b68f241d5f71555ff598a2a3d4b6`; its dogfood pin still targets the
+pushed Runx OSS SHA `ce2f27178553aae50a0113c2fd0d596fb3c247dc`, not this
+local OSS checkout's ahead HEAD `d0abac6f2a0174753096bdb70ec3b2398a705102`.
+Previous Aster checkout validation passed `npm run check`, targeted bridge
+tests, Rust `runx --version`, and the minimal proving-ground harness smoke.
+The smoke produced two sealed `runx.harness_receipt.v1` receipts through the
+Rust binary. Do not claim hosted Aster coverage for an unpushed local Runx SHA.
 Review gate: not_started
 
 ## Summary

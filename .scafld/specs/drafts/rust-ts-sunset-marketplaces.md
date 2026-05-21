@@ -2,7 +2,7 @@
 spec_version: '2.0'
 task_id: rust-ts-sunset-marketplaces
 created: '2026-05-18T00:00:00Z'
-updated: '2026-05-20T00:00:00Z'
+updated: '2026-05-21T22:00:00+10:00'
 status: draft
 harden_status: not_run
 size: small
@@ -18,16 +18,17 @@ Current phase: discovery refresh
 Next: unblock registry ownership and reroute marketplace consumers before
 approval.
 Reason: this draft describes a future deletion, not work that can be executed
-against the current tree. A fresh 2026-05-20 source scan still finds 14 files
-with live imports of `@runxhq/core/marketplaces` or marketplace surfaces across
-CLI, runtime-local, registry fallback, SDK, and tests. The prerequisite
+against the current tree. A fresh 2026-05-21 source scan still finds 9 exact
+import/path files with live imports of `@runxhq/core/marketplaces` or
+marketplace surfaces across CLI, runtime-local, registry fallback, SDK, and
+tests. The prerequisite
 `rust-ts-sunset-registry` is also archived as failed, not completed. Deleting
 `packages/core/src/marketplaces/**` now would break current package exports and
 live consumers.
 Blockers:
 - `rust-ts-sunset-registry` is archived with `status: failed`; the original
   dependency is not satisfied.
-- CLI dispatch and skill refs still import marketplace helpers and fixture
+- CLI skill refs and registry presentation still import marketplace helpers and fixture
   adapters from `@runxhq/core/marketplaces`.
 - Runtime-local skill install and SDK search/install surfaces still accept
   `MarketplaceAdapter` and call `resolveMarketplaceSkill` /
@@ -39,8 +40,9 @@ Blockers:
 - `packages/core/package.json` still exposes `./marketplaces`; remove it only
   after all importers are rerouted or retired by owning specs.
 Allowed follow-up command: none while blocked; do not run `scafld harden rust-ts-sunset-marketplaces`.
-Latest runner update: 2026-05-20T22:55:00+10:00 - refreshed source scan
-confirmed 14 files still reference marketplace surfaces; deletion remains
+Latest runner update: 2026-05-21T22:00:00+10:00 - refreshed source scan
+confirmed 9 exact import/path files still reference marketplace surfaces;
+deletion remains
 blocked.
 Review gate: not_started
 
@@ -84,8 +86,7 @@ Invariants:
 - `SkillSearchResult` ownership is explicit before deletion; registry search
   must not keep importing it from the marketplace package.
 
-Current live importers found in the 2026-05-20 source scan:
-- `packages/cli/src/dispatch.ts`
+Current live importers found in the 2026-05-21 source scan:
 - `packages/cli/src/skill-refs.ts`
 - `packages/cli/src/native-registry.ts`
 - `packages/cli/src/registry-fallback.ts`

@@ -2,7 +2,7 @@
 spec_version: '2.0'
 task_id: rust-nitrosend-dogfood
 created: '2026-05-18T00:00:00Z'
-updated: '2026-05-21T19:44:33+10:00'
+updated: '2026-05-21T22:05:00+10:00'
 status: draft
 harden_status: not_run
 size: medium
@@ -31,14 +31,20 @@ fixtures replay through the Rust binary, but no live target-runner/observer
 external replay has been added.
 Allowed follow-up command: none during this refresh; do not run
 `scafld harden rust-nitrosend-dogfood`.
-Latest runner update: 2026-05-21 closed the Segment dogfood evidence gap:
-`segment-from-prose` now rejects non-`runx.harness_receipt.v1` evidence and
-returns the sealed `receipt_id` to callers. 2026-05-20 added Rust contract
-request-admission coverage for the Nitrosend-like policy. The Rust API admits
-`nitrosend/nitrosend`, `nitrosend/api`, and `nitrosend/app` through the
-policy-backed source, target, runner, owner, dedupe, and closure/proof surface,
-and denies unknown target repos and missing source-thread routing before
-mutation.
+Latest runner update: 2026-05-21T22:05:00+10:00 Nitrosend checkout audit:
+local Nitrosend repo `/Users/kam/dev/nitrosend` is clean at
+`b6770fd2b3fa7f3743fb22118a358e0779b0ecfa`; its workflows still fetch Runx
+OSS SHA `50c531a424f6a0e50a14e554a50f1415714f0834`, not this local OSS
+checkout's ahead HEAD `d0abac6f2a0174753096bdb70ec3b2398a705102`. Local
+wrapper evidence is therefore local-binary evidence, not hosted CI evidence
+against the current local Runx HEAD. 2026-05-21 closed the Segment dogfood
+evidence gap: `segment-from-prose` now rejects non-`runx.harness_receipt.v1`
+evidence and returns the sealed `receipt_id` to callers. 2026-05-20 added Rust
+contract request-admission coverage for the Nitrosend-like policy. The Rust
+API admits `nitrosend/nitrosend`, `nitrosend/api`, and `nitrosend/app` through
+the policy-backed source, target, runner, owner, dedupe, and closure/proof
+surface, and denies unknown target repos and missing source-thread routing
+before mutation.
 Runtime skill fixtures are present; `fixtures/external/nitrosend/issue-intake`
 now contains the sanitized `api-source-thread.json` fixture; the Nitrosend-like
 policy fixture covers workspace, API, and app target routing; contract policy

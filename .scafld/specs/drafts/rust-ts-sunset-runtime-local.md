@@ -2,7 +2,7 @@
 spec_version: '2.0'
 task_id: rust-ts-sunset-runtime-local
 created: '2026-05-18T00:00:00Z'
-updated: '2026-05-21T05:52:03Z'
+updated: '2026-05-21T22:00:00+10:00'
 status: draft
 harden_status: not_run
 size: large
@@ -18,11 +18,11 @@ Current phase: none
 Next: smaller importer specs, not package deletion
 Reason: refreshed after the CLI importer completion and a small non-CLI
 contract fixture generator cleanup. This remains a deletion/cutover spec, not
-a compatibility-bridge spec. A 2026-05-21 exact-package census finds 117
+a compatibility-bridge spec. A 2026-05-21 exact-package census finds 92
 active files outside `.scafld/specs/**` and `dist/**` with
 runtime-local/adapters package references, imports, direct source paths, docs,
-fixtures, or package-resolution entries. Of those, 93 are outside the two
-packages being deleted and 66 are actual package import files outside those
+fixtures, or package-resolution entries. Of those, 68 are outside the two
+packages being deleted and 46 are actual package import files outside those
 packages. `packages/cli/src/**` has zero exact runtime-local/adapters package
 references in this tree. Blockers: not currently executable. `rust-harness`,
 `rust-runtime-skill-execution`, `rust-runtime-adapters-agent`,
@@ -36,7 +36,7 @@ package paths. Host-adapters and CLI source no longer import
 runtime-local/adapters in the current tree. All surviving local callers must be
 Rust-routed or explicitly sunset before deletion starts.
 Allowed follow-up command: `none`
-Latest runner update: 2026-05-21T15:52:10+10:00 importer census refreshed;
+Latest runner update: 2026-05-21T22:00:00+10:00 importer census refreshed;
 CLI source package references are zero; contract fixture generation no longer
 imports `packages/runtime-local/src/sdk/act-assignment.js`; deletion remains
 blocked by live non-CLI importers, tests, scripts, and package-resolution
@@ -100,8 +100,8 @@ Current reality as of this refresh:
   validation and `@runxhq/core/util` for stable hashing.
 - `packages/host-adapters/**` no longer has a runtime-local/adapters
   dependency or import in the current tree.
-- The refreshed 2026-05-21 exact-package census finds 117 active files outside
-  `.scafld/specs/**` and `dist/**` with runtime-local/adapters references; 93
+- The refreshed 2026-05-21 exact-package census finds 92 active files outside
+  `.scafld/specs/**` and `dist/**` with runtime-local/adapters references; 68
   of those are outside `packages/runtime-local/**` and `packages/adapters/**`.
 - Existing TS oracle generators remain useful before deletion. They are not
   a post-sunset execution path.
@@ -140,27 +140,24 @@ Current importer and blocker inventory:
   ```
 
 - 2026-05-21 refreshed exact-package active reference totals:
-  - 117 active files outside `.scafld/specs/**` and `dist/**`.
-  - 93 active files outside the two packages being deleted.
-  - 81 files with actual package import statements under
+  - 92 active files outside `.scafld/specs/**` and `dist/**`.
+  - 68 active files outside the two packages being deleted.
+  - 61 files with actual package import statements under
     `packages/**`, `plugins/**`, `tests/**`, and `scripts/**`.
-  - 66 actual package import files outside `packages/runtime-local/**` and
+  - 46 actual package import files outside `packages/runtime-local/**` and
     `packages/adapters/**`.
 - 2026-05-21 refreshed exact-package prefix census:
   - `README.md`: 1 file.
-  - `crates/runx-runtime`: 2 files.
   - `docs`: 3 files.
   - `fixtures/cli-parity`: 1 file.
   - `fixtures/rust-cli-cutover-negative`: 1 file.
   - root `package.json`: 1 file.
   - `packages/adapters`: 12 files.
-  - `packages/langchain`: 3 files.
   - `packages/runtime-local`: 12 files.
-  - `plugins/ide-core`: 2 files.
   - `pnpm-lock.yaml`: 1 file.
-  - `scripts`: 9 files.
+  - `scripts`: 8 files.
   - `skills/write-harness`: 1 file.
-  - `tests`: 66 files.
+  - `tests`: 49 files.
   - `tsconfig.base.json`: 1 file.
   - `vitest.workspace-aliases.ts`: 1 file.
 - Package manifests and path aliases:
@@ -169,8 +166,10 @@ Current importer and blocker inventory:
   - `packages/cli/package.json` no longer declares either dependency, and
     `packages/cli/src/**` has zero exact runtime-local/adapters references in
     the current tree.
-  - `plugins/ide-core/package.json` depends on `@runxhq/adapters`.
-  - `packages/langchain/package.json` depends on `@runxhq/runtime-local`.
+  - `plugins/ide-core/package.json` no longer references either package in
+    this census.
+  - `packages/langchain/package.json` no longer references either package in
+    this census.
   - `packages/host-adapters/package.json` no longer references either package.
   - `packages/adapters/package.json` depends on `@runxhq/runtime-local`.
   - `tsconfig.base.json` aliases `@runxhq/adapters`, subpaths,
@@ -184,24 +183,20 @@ Current importer and blocker inventory:
   - `packages/cli/src/**` is no longer a package-import blocker; the CLI
     importer routing slice is archived completed. Leave parent-owned CLI
     dead-command cleanup out of this spec.
-  - `plugins/ide-core/src/actions.ts` imports adapters and runtime-local
-    harness/SDK surfaces.
-  - `packages/langchain/src/**` imports runtime-local SDK, tool-catalogs, and
-    result types and must move to CLI JSON or another boundary ratified by
-    `rust-ts-interop-boundary`.
+  - `plugins/ide-core/src/**` has zero exact runtime-local/adapters package
+    references in the current tree.
+  - `packages/langchain/src/**` has zero exact runtime-local/adapters package
+    references in the current tree.
   - `packages/adapters/src/**` imports runtime-local MCP, sandbox, harness,
     SDK, and tool-catalog helpers; these imports confirm adapters depend on
     runtime-local rather than runtime-local depending on adapters.
   - `packages/runtime-local/src/**` still has self-referential public package
     exports and subpath imports; these are deleted with the package, not routed.
 - Rust-side direct package-path references:
-  - `crates/runx-runtime/src/adapters/catalog.rs` pins the hash of
-    `packages/runtime-local/src/harness/mcp-fixture.ts` for catalog/MCP oracle
-    metadata.
-  - `crates/runx-runtime/src/doctor.rs` has a file-budget probe for
-    `packages/runtime-local/src/runner-local/index.ts`.
+  - The current exact-package census finds zero `crates/runx-runtime/**`
+    references to runtime-local/adapters package paths. Keep this at zero.
 - Test importers:
-  - 66 files under `tests/**` still import package APIs or direct package
+  - 49 files under `tests/**` still import package APIs or direct package
     source paths. They cover graph runner/fanout/governance/registry refs,
     local skill runner, sourcey, scafld, issue-to-pr, issue-intake, MCP, A2A,
     approval, auth, history, receipt inspection, package resolution/profile,
@@ -378,12 +373,6 @@ Can be deleted or rerouted now:
   onto `@runxhq/contracts` validation plus `@runxhq/core/util` stable hashing.
 
 Needs a fresh smaller spec before deletion:
-- `plugins/ide-core/**`: decide whether the private IDE core is sunset or
-  routed to Rust CLI/contract boundaries; do not replace the runtime-local SDK
-  with a compatibility facade.
-- `packages/langchain/**`: decide whether the optional package is sunset or
-  rebuilt around a stable Rust CLI/contract boundary. Local type redefinitions
-  that preserve runtime-local behavior are not acceptable shims.
 - Adapter oracle scripts:
   `scripts/generate-a2a-adapter-fixtures.ts`,
   `scripts/generate-agent-adapter-fixtures.ts`,
@@ -393,9 +382,6 @@ Needs a fresh smaller spec before deletion:
 - Root `tests/**`: triage into Rust parity/CLI JSON coverage, package-internal
   runtime-local/adapters tests deleted with the packages, or obsolete tests.
   Do not touch payment tests in this sunset slice.
-- Rust package-path probes in `crates/runx-runtime/src/adapters/catalog.rs`
-  and `crates/runx-runtime/src/doctor.rs` need a Rust-owned replacement or
-  deletion with targeted Rust checks.
 - Root package metadata, lockfile entries, TS path aliases, vitest aliases,
   generated API docs, active fixtures, and the package directories themselves
   are final package-boundary cleanup after importer gates are zero.
@@ -411,12 +397,11 @@ This draft is still not executable as a package deletion. The next executable
 work must be narrower than this sunset and should land in separate specs:
 
 1. Non-CLI package boundary routing:
-   - Decide whether `plugins/ide-core` is sunset or routed to Rust harness/SDK
-     contracts.
-   - Route or sunset `packages/langchain` so it no longer depends on
-     runtime-local SDK/tool-catalog/result types.
-   - Acceptance gate: no runtime-local/adapters package imports or manifest
-     deps under `plugins/ide-core/**` or `packages/langchain/**`.
+   - Keep `plugins/ide-core/**`, `packages/langchain/**`, `packages/cli/src/**`,
+     `packages/host-adapters/**`, and `crates/runx-runtime/**` at zero exact
+     runtime-local/adapters references.
+   - Acceptance gate: the zero-count areas above remain zero while the
+     remaining package/source/test references are retired by narrower specs.
 2. Oracle and fixture ownership cleanup:
    - For `generate-a2a-adapter-fixtures`, `generate-agent-adapter-fixtures`,
      `generate-runtime-catalog-adapter-oracles`, and
@@ -428,20 +413,14 @@ work must be narrower than this sunset and should land in separate specs:
    - Acceptance gate: every remaining oracle generator has a Rust owner or is
      deleted before package deletion.
 3. Test-suite triage:
-   - Classify the 66 `tests/**` reference files as Rust parity coverage, CLI JSON
+   - Classify the 49 `tests/**` reference files as Rust parity coverage, CLI JSON
      coverage, package-internal coverage deleted with runtime-local/adapters,
      or obsolete tests.
    - Exclude payment/x402 files from this sunset slice unless a separate
      payment owner explicitly scopes them.
    - Acceptance gate: no root `tests/**` file imports runtime-local/adapters or
      direct package source paths.
-4. Rust path-probe cleanup:
-   - Replace or delete runtime-local package-path expectations in
-     `crates/runx-runtime/src/adapters/catalog.rs` and
-     `crates/runx-runtime/src/doctor.rs` through Rust-owned invariants.
-   - Acceptance gate: targeted `runx-runtime` catalog/doctor tests pass and no
-     Rust source file names `packages/runtime-local` or `packages/adapters`.
-5. Package-boundary deletion cleanup:
+4. Package-boundary deletion cleanup:
    - Remove root devDependencies, TS path aliases, vitest aliases, pnpm lock
      links, docs/API-surface entries, active fixture references, and package
      directories only after the above importer gates are zero.
@@ -547,17 +526,16 @@ node scripts/check-rust-core-style.mjs
   `rust-runtime-skill-execution`, any Rust adapter spec, or
   `rust-mcp-server-harness-receipt-seal` losing sealed harness receipt proof or
   reintroducing TS runtime-local dispatch.
-- The 2026-05-21 importer census is nonzero: 117 active exact-package
+- The 2026-05-21 importer census is nonzero: 92 active exact-package
   reference files remain outside `.scafld/specs/**` and `dist/**`, including
-  93 outside the two packages to delete and 66 actual package import files
+  68 outside the two packages to delete and 46 actual package import files
   outside those packages.
 - Any surviving local caller still importing `@runxhq/runtime-local` or
   `@runxhq/adapters`.
 - `packages/cli/src/**` must stay at zero exact runtime-local/adapters
   references while parent-owned CLI cleanup continues out of band.
-- `plugins/ide-core/**` and `packages/langchain/**` still depending on or
-  importing runtime-local/adapters instead of a stable Rust/contract/CLI
-  boundary or being explicitly sunset.
+- `plugins/ide-core/**` and `packages/langchain/**` must stay at zero exact
+  runtime-local/adapters references.
 - Root package metadata, pnpm lock entries, `tsconfig.base.json`, or
   `vitest.workspace-aliases.ts` still resolving runtime-local/adapters after
   callers are routed.

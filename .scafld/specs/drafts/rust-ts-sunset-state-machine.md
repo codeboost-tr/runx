@@ -2,7 +2,7 @@
 spec_version: '2.0'
 task_id: rust-ts-sunset-state-machine
 created: '2026-05-18T00:00:00Z'
-updated: '2026-05-20T00:00:00Z'
+updated: '2026-05-21T22:00:00+10:00'
 status: draft
 harden_status: not_run
 size: medium
@@ -20,7 +20,7 @@ orchestration transition/planning consumers before approval.
 Reason: the deletion remains blocked, but a prerequisite slice is executable
 against the current tree and is already present: runtime-local sequential graph
 state creation now goes through the existing Rust kernel bridge. A fresh
-2026-05-20 source scan still finds 26 files with live runtime-local imports of
+2026-05-21 source scan still finds 19 files and 26 hits with live imports of
 `@runxhq/core/state-machine` or state-machine surfaces, fixture generators
 still use the TS source as the oracle, and
 `packages/core/package.json` still exposes `./state-machine`.
@@ -43,10 +43,10 @@ Blockers:
   to keep the TS import path alive.
 Allowed follow-up command: none while blocked; do not run `scafld harden` for
 this draft.
-Latest runner update: 2026-05-20T22:55:00+10:00 - importer census refreshed:
-26 files still reference state-machine surfaces. The completed kernel bridge
-slice remains useful, but deletion remains blocked by transition/planning
-consumers and fixture-oracle ownership.
+Latest runner update: 2026-05-21T22:00:00+10:00 - importer census refreshed:
+19 files and 26 hits still reference state-machine surfaces. The completed
+kernel bridge slice remains useful, but deletion remains blocked by
+transition/planning consumers and fixture-oracle ownership.
 Review gate: not_started
 
 ## Summary
@@ -116,7 +116,7 @@ Current TypeScript deletion targets:
   deleted and add/keep a boundary assertion that `./state-machine` is no longer
   exported.
 
-Current live importers found in source by the 2026-05-20 scan after the
+Current live importers found in source by the 2026-05-21 scan after the
 prerequisite slice:
 - `packages/runtime-local/src/runner-local/orchestrator.ts`
 - `packages/runtime-local/src/runner-local/index.ts`
