@@ -2,8 +2,8 @@
 spec_version: '2.0'
 task_id: x402-pay-idempotency-recovery-v1
 created: '2026-05-21T00:00:00Z'
-updated: '2026-05-22T00:55:00+10:00'
-status: active
+updated: '2026-05-21T17:31:48Z'
+status: completed
 harden_status: not_run
 size: medium
 risk_level: high
@@ -13,21 +13,14 @@ risk_level: high
 
 ## Current State
 
-Status: complete
-Current phase: phase1 runtime complete; fixture promotion complete
-Next: keep runtime and harness fixtures as regression coverage
-Reason: Durable payment state primitives now exist and have focused runtime
-coverage. P1.7 is covered at runtime by replaying a sealed idempotency entry
-from replay-safe stored outputs without a second rail invocation. P1.9 remains
-covered by proving a consumed spend capability with a new idempotency key denies
-before rail. P1.11 is covered at runtime by escalating an in-flight rail
-mutation without issuing a second rail mutation. All three cases now also have
-standalone `x402-pay-idempotency-*` harness fixtures.
-Blockers: none for P1.7/P1.9/P1.11 runtime and fixture coverage.
-Allowed follow-up command: `scafld validate x402-pay-idempotency-recovery-v1`
-Latest runner update: 2026-05-22T00:55:00+10:00 promoted the standalone
-fixture matrix and validated it through the Rust harness.
-Review gate: not_started
+Status: completed
+Current phase: final
+Next: done
+Reason: task completed
+Blockers: none
+Allowed follow-up command: `none`
+Latest runner update: 2026-05-21T17:31:48Z
+Review gate: pass
 
 ## Summary
 
@@ -173,205 +166,130 @@ replay/recovery behavior, and promoted fixture-backed coverage:
 
 Profile: strict
 
-Definition of done:
-- [x] `dod1` P1.7 fixture proves same idempotency key returns the original
-  receipt and the mock rail execution count stays one.
-- [x] `dod2` P1.9 fixture proves the second use of a consumed spend capability
-  is rejected by core from persisted state.
-- [x] `dod3` P1.11 fixture proves recovery by idempotency key from a partial
-  mock rail mutation.
-- [x] `dod4` All new fixture paths are named `x402-pay-idempotency-*`.
-
 Validation:
 - [x] `v1` spec - This scafld spec validates.
-  - Command: `scafld validate x402-pay-idempotency-recovery-v1`
-  - Expected kind: `exit_code_zero`
-  - Status: pass
-  - Evidence: exit code was 0 on 2026-05-21T13:05:33Z
-  - Source event: local
-- [x] `v2` state-layer - Durable payment state has executable coverage.
   - Command: `cargo test --manifest-path crates/Cargo.toml -p runx-runtime --test payment_state`
   - Expected kind: `exit_code_zero`
   - Status: pass
-  - Evidence: `crates/runx-runtime/src/payment_state.rs` now exposes typed
-    idempotency lookup, consumed spend capability lookup, and mock rail mutation
-    persistence. `crates/runx-runtime/tests/payment_state.rs` covers sealed
-    step-state persistence through public lookup helpers, first-record-wins
-    idempotency persistence, consumed capability lookup, and partial rail
-    mutation persistence without exposing a sealed replay entry. The command
-    passed on 2026-05-21T13:05:33Z with 7 tests.
-  - Source event: local
+  - Evidence: exit code was 0
+  - Source event: entry-34
 - [x] `v3` fixture - Idempotency replay fixture passes.
   - Command: `runx harness fixtures/harness/x402-pay-idempotency-replay.yaml`
   - Expected kind: `exit_code_zero`
   - Status: pass
-  - Evidence: native CLI `cargo run --quiet --manifest-path crates/Cargo.toml -p runx-cli -- harness fixtures/harness/x402-pay-idempotency-replay.yaml --json`
-    exited 0 on 2026-05-22T00:55:00+10:00 with a closed graph receipt. The
-    focused Rust harness test also proves the sealed fulfill receipt is
-    replayed and rail invocation count stays one.
-  - Source event: local
+  - Evidence: exit code was 0
+  - Source event: entry-35
 - [x] `v4` fixture - Spend capability reuse fixture passes.
   - Command: `runx harness fixtures/harness/x402-pay-idempotency-capability-reuse.yaml`
   - Expected kind: `exit_code_zero`
   - Status: pass
-  - Evidence: native CLI `cargo run --quiet --manifest-path crates/Cargo.toml -p runx-cli -- harness fixtures/harness/x402-pay-idempotency-capability-reuse.yaml --json`
-    exited 0 on 2026-05-22T00:55:00+10:00 with a blocked graph receipt and
-    reason `x402_idempotency_capability_reuse_blocked`. The focused Rust
-    harness test also proves the second graph run is denied before a second rail
-    mutation.
-  - Source event: local
+  - Evidence: exit code was 0
+  - Source event: entry-36
 - [x] `v5` fixture - Partial mutation recovery fixture passes.
   - Command: `runx harness fixtures/harness/x402-pay-idempotency-crash-recovery.yaml`
   - Expected kind: `exit_code_zero`
   - Status: pass
-  - Evidence: native CLI `cargo run --quiet --manifest-path crates/Cargo.toml -p runx-cli -- harness fixtures/harness/x402-pay-idempotency-crash-recovery.yaml --json`
-    exited 0 on 2026-05-22T00:55:00+10:00 with a deferred graph receipt and
-    reason `x402_idempotency_recovery_escalated`. The focused Rust harness test
-    also proves the second graph run escalates from persisted partial rail
-    mutation state before retrying the rail.
-  - Source event: local
+  - Evidence: exit code was 0
+  - Source event: entry-37
 - [x] `v6` runtime P1.9 - Reusing the same single-use spend capability is
-  denied from persisted state before a second rail call.
   - Command: `cargo test --manifest-path crates/Cargo.toml -p runx-runtime --test payment_execution x402_paid_echo_reused_spend_capability_with_new_idempotency_denied_from_persisted_state_before_second_rail -- --nocapture`
   - Expected kind: `exit_code_zero`
   - Status: pass
-  - Evidence: exit code was 0 on 2026-05-21T14:09:12Z; the first paid echo run
-    sealed a spend under `payment:paid-echo-001`, the second run used
-    `payment:paid-echo-002`, returned `AuthorityDenied { verb: Spend, step_id:
-    fulfill }` with an already-consumed reason, and the recorded
-    `pay-fulfill-rail` invocation count stayed at one.
-  - Source event: local
+  - Evidence: exit code was 0
+  - Source event: entry-38
 - [x] `v7` runtime P1.7 - Replaying the same sealed idempotency key returns the
-  sealed payment output and does not execute a second rail call.
   - Command: `cargo test --manifest-path crates/Cargo.toml -p runx-runtime --test payment_execution x402_paid_echo_replays_sealed_idempotency_without_second_rail -- --nocapture`
   - Expected kind: `exit_code_zero`
   - Status: pass
-  - Evidence: exit code was 0 on 2026-05-21T14:09:12Z; the second paid echo run
-    succeeded, the replayed fulfill receipt id and digest matched the first run,
-    the paid echo step received the stored proof, the `pay-fulfill-rail`
-    invocation count stayed at one, and persisted replay state did not contain
-    the rail session material reference.
-  - Source event: local
+  - Evidence: exit code was 0
+  - Source event: entry-39
 - [x] `v8` runtime regression - Payment execution suite still passes with replay
-  and consumed-capability denial both enabled.
   - Command: `cargo test --manifest-path crates/Cargo.toml -p runx-runtime --test payment_execution -- --nocapture`
   - Expected kind: `exit_code_zero`
   - Status: pass
-  - Evidence: exit code was 0 on 2026-05-22T00:55:00+10:00; 18 tests passed.
-  - Source event: local
+  - Evidence: exit code was 0
+  - Source event: entry-40
 - [x] `v9` runtime P1.11 - In-flight rail mutation recovery escalates without
-  issuing a second rail mutation.
   - Command: `cargo test --manifest-path crates/Cargo.toml -p runx-runtime --test payment_execution x402_paid_echo_partial_mutation_escalates_without_second_rail -- --nocapture`
   - Expected kind: `exit_code_zero`
   - Status: pass
-  - Evidence: exit code was 0 on 2026-05-21T14:17:26Z; the first paid echo run
-    recorded a partial rail mutation, the second run returned
-    `AuthorityDenied { verb: Spend, step_id: fulfill }` with a recovery
-    escalation reason before adapter invocation, `pay-fulfill-rail` invocation
-    count stayed at one, and persisted rail mutation state moved to
-    `escalated`.
-  - Source event: local
+  - Evidence: exit code was 0
+  - Source event: entry-41
 - [x] `v10` compatibility - v2 payment state opens fail-closed after v3 replay
-  fields were added.
   - Command: `cargo test --manifest-path crates/Cargo.toml -p runx-runtime --test payment_state -- --nocapture`
   - Expected kind: `exit_code_zero`
   - Status: pass
-  - Evidence: exit code was 0 on 2026-05-21T14:17:26Z; 8 tests passed,
-    including v2 state loading that preserves consumed capability state while
-    dropping legacy sealed idempotency entries that lack replay-safe outputs.
-  - Source event: local
+  - Evidence: exit code was 0
+  - Source event: entry-42
 
 ## Phase 1: State Layer Contract
 
-Goal: expose the durable state needed for P1.7, P1.9, and P1.11.
-
-Status: complete
+Status: completed
 Dependencies: none
 
+Objective: Complete this phase.
+
 Changes:
-- `crates/runx-runtime/src/payment_state.rs` - persists idempotency entries,
-  spend capability consumption, and mock rail mutation state.
-- `crates/runx-runtime/tests/payment_state.rs` - covers the durable state
-  semantics available before fixture-level replay/recovery.
+- `crates/runx-runtime/src/payment_state.rs` - persists idempotency entries, spend capability consumption, and mock rail mutation state.
+- `crates/runx-runtime/tests/payment_state.rs` - covers the durable state semantics available before fixture-level replay/recovery.
 
 Acceptance:
 - [x] `ac1_1` state - A sealed payment receipt can be looked up by
-  idempotency key after process restart.
   - Command: `cargo test --manifest-path crates/Cargo.toml -p runx-runtime --test payment_state persists_sealed_payment_step_state_for_replay_and_reuse_lookups`
   - Expected kind: `exit_code_zero`
   - Status: pass
-  - Evidence: public lookup returns the sealed receipt ref from file-backed
-    state resolved via the receipt directory fallback.
-  - Source event: local
+  - Evidence: exit code was 0
+  - Source event: entry-10
 - [x] `ac1_2` state - A consumed spend capability ref is rejected when reused
-  without requiring the fixture to seed `consumed_spend_capability_refs`.
   - Command: `cargo test --manifest-path crates/Cargo.toml -p runx-runtime --test payment_execution x402_paid_echo_reused_spend_capability_with_new_idempotency_denied_from_persisted_state_before_second_rail -- --nocapture`
   - Expected kind: `exit_code_zero`
   - Status: pass
-  - Evidence: the runtime injected persisted consumed capability state into
-    core admission and denied before the second rail invocation.
-  - Source event: local
+  - Evidence: exit code was 0
+  - Source event: entry-11
 - [x] `ac1_4` state - A sealed idempotency entry can be replayed from stored
-  outputs without issuing a second rail mutation.
   - Command: `cargo test --manifest-path crates/Cargo.toml -p runx-runtime --test payment_execution x402_paid_echo_replays_sealed_idempotency_without_second_rail -- --nocapture`
   - Expected kind: `exit_code_zero`
   - Status: pass
-  - Evidence: the runner short-circuited before adapter invocation for
-    `pay-fulfill-rail`, rebuilt the first fulfill receipt id/digest, and
-    forwarded the stored proof to the paid echo step.
-  - Source event: local
+  - Evidence: exit code was 0
+  - Source event: entry-12
 - [x] `ac1_3` state - A partial mock rail mutation is recoverable by
-  idempotency key without issuing a second rail mutation.
   - Command: `cargo test --manifest-path crates/Cargo.toml -p runx-runtime --test payment_execution x402_paid_echo_partial_mutation_escalates_without_second_rail -- --nocapture`
   - Expected kind: `exit_code_zero`
   - Status: pass
-  - Evidence: the runner observes the existing in-flight mutation by idempotency
-    key, validates the current authority shape, escalates typed rail mutation
-    state, and denies before a second `pay-fulfill-rail` invocation.
-  - Source event: local
+  - Evidence: exit code was 0
+  - Source event: entry-13
 
 ## Phase 2: Executable Fixtures
 
-Goal: add the three fixture-backed eventualities now that Phase 1 runtime
-semantics are executable.
+Status: completed
+Dependencies: none
 
-Status: complete
-Dependencies:
-- phase1
+Objective: Complete this phase.
 
 Changes:
-- `fixtures/harness/x402-pay-idempotency-replay.yaml` -
-  executes one payment, replays the same idempotency key, and asserts the first
-  receipt is returned with one rail mutation.
-- `fixtures/harness/x402-pay-idempotency-capability-reuse.yaml` - executes one
-  payment, attempts a second spend with the same capability ref, and asserts a
-  core denial before rail execution.
-- `fixtures/harness/x402-pay-idempotency-crash-recovery.yaml` - simulates a
-  crash after partial mock rail mutation, invokes recovery by idempotency key,
-  and asserts escalation before a second rail execution.
+- `fixtures/harness/x402-pay-idempotency-replay.yaml` - executes one payment, replays the same idempotency key, and asserts the first receipt is returned with one rail mutation.
+- `fixtures/harness/x402-pay-idempotency-capability-reuse.yaml` - executes one payment, attempts a second spend with the same capability ref, and asserts a core denial before rail execution.
+- `fixtures/harness/x402-pay-idempotency-crash-recovery.yaml` - simulates a crash after partial mock rail mutation, invokes recovery by idempotency key, and asserts escalation before a second rail execution.
 
 Acceptance:
 - [x] `ac2_1` fixture - P1.7 has a runnable fixture.
   - Command: `test -f fixtures/harness/x402-pay-idempotency-replay.yaml`
   - Expected kind: `exit_code_zero`
   - Status: pass
-  - Evidence: file exists and passed through the Rust harness x402 idempotency
-    sequence test on 2026-05-22T00:42:00+10:00.
-  - Source event: local
+  - Evidence: exit code was 0
+  - Source event: entry-18
 - [x] `ac2_2` fixture - P1.9 has a runnable fixture.
   - Command: `test -f fixtures/harness/x402-pay-idempotency-capability-reuse.yaml`
   - Expected kind: `exit_code_zero`
   - Status: pass
-  - Evidence: file exists and passed through the Rust harness x402 idempotency
-    sequence test on 2026-05-22T00:42:00+10:00.
-  - Source event: local
+  - Evidence: exit code was 0
+  - Source event: entry-19
 - [x] `ac2_3` fixture - P1.11 has a runnable fixture.
   - Command: `test -f fixtures/harness/x402-pay-idempotency-crash-recovery.yaml`
   - Expected kind: `exit_code_zero`
   - Status: pass
-  - Evidence: file exists and passed through the Rust harness x402 idempotency
-    sequence test on 2026-05-22T00:42:00+10:00.
-  - Source event: local
+  - Evidence: exit code was 0
+  - Source event: entry-20
 
 ## Rollback
 
@@ -382,26 +300,22 @@ Commands:
 
 ## Review
 
-Status: not_started
-Verdict: none
-Timestamp: none
-Review rounds: none
-Reviewer mode: none
-Reviewer session: none
-Round status: none
-Override applied: none
-Override reason: none
-Override confirmed at: none
-Reviewed head: none
-Reviewed dirty: none
-Reviewed diff: none
-Blocking count: none
-Non-blocking count: none
+Status: completed
+Verdict: pass
+Mode: verify
+Provider: command
+Output: command.stdout
+Summary: Command-provider verification pass. Rechecked x402-pay-idempotency-recovery-v1: durable payment-state tests pass, runtime P1.7/P1.9/P1.11 payment_execution coverage passes, the full payment execution regression suite passes, and the promoted harness fixtures pass when run through the native Rust CLI binary. The prior exit-127 blocker was command PATH, not runtime behavior; build was rerun with crates/target/debug on PATH and the spec advanced to review. No completion blockers found.
+
+Attack log:
+- `durable payment state`: run payment_state coverage for sealed replay, consumed capability, and partial mutation records -> clean
+- `P1.7 replay`: run x402_paid_echo_replays_sealed_idempotency_without_second_rail -> clean
+- `P1.9 consumed capability`: run x402_paid_echo_reused_spend_capability_with_new_idempotency_denied_from_persisted_state_before_second_rail -> clean
+- `P1.11 recovery escalation`: run x402_paid_echo_partial_mutation_escalates_without_second_rail -> clean
+- `fixture matrix`: run native CLI harness fixtures for replay, capability reuse, and crash recovery -> clean
+- `PATH blocker`: inspect failed diagnostics showing sh: runx: command not found, then verify rerun with crates/target/debug on PATH advanced to review -> clean
 
 Findings:
-- none
-
-Passes:
 - none
 
 ## Self Eval

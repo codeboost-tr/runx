@@ -2,8 +2,8 @@
 spec_version: '2.0'
 task_id: ts-extension-survivorship-boundary
 created: '2026-05-21T13:04:12Z'
-updated: '2026-05-22T03:22:00+10:00'
-status: active
+updated: '2026-05-21T17:32:58Z'
+status: completed
 harden_status: not_run
 size: medium
 risk_level: high
@@ -13,27 +13,14 @@ risk_level: high
 
 ## Current State
 
-Status: active
-Current phase: boundary language, spec alignment, and static guardrails landed
-Next: leave runtime-local/adapters deletion blocked on the child sunset specs
-and external adapter/credential/SDK protocol work
-Reason: the Rust takeover must delete the trusted TypeScript runtime without
-turning the runx extension ecosystem into a Rust-only surface.
-Blockers: no blocker remains for this boundary guardrail itself. The broader
-runtime-local/adapters deletion remains blocked because
-`external-adapter-plugin-protocol-v1`, `credential-broker-delivery-contract-v1`,
-and non-execution extension lanes still need their final runtime/SDK protocols.
-Allowed follow-up command: `scafld harden ts-extension-survivorship-boundary`
-Latest runner update: 2026-05-22T03:22:00+10:00 revalidated the active
-guardrail spec and reran `node scripts/check-boundaries.mjs`. Docs/specs
-contain the required trusted-runtime/language-neutral extension boundary
-language. This spec now serves as a boundary ledger; it must not be used to
-delete runtime-local directly.
-Review gate: boundary_ready
-Lifecycle note: the suggested `scafld harden ts-extension-survivorship-boundary`
-command is blocked because harden only operates on drafts; `scafld complete
-ts-extension-survivorship-boundary --json` is also blocked because this promoted
-active spec has no session review ledger.
+Status: completed
+Current phase: final
+Next: done
+Reason: task completed
+Blockers: none
+Allowed follow-up command: `none`
+Latest runner update: 2026-05-21T17:32:58Z
+Review gate: pass
 
 ## Summary
 
@@ -161,59 +148,47 @@ Validation:
 
 ## Phase 1: Boundary Language
 
-Goal: make the architecture unambiguous.
-
-Status: complete
+Status: completed
 Dependencies: none
 
+Objective: Complete this phase.
+
 Changes:
-- Update `ts-interop-boundary.md` to add language-neutral extension protocols
-  as stable crossings, with `external-adapter-plugin-protocol-v1` limited to
-  the external execution-adapter lane.
-- Update package dispositions so `@runxhq/adapters` sunset means "built-in
-  trusted adapters move to Rust", not "custom adapters must become Rust".
+- Update `ts-interop-boundary.md` to add language-neutral extension protocols as stable crossings, with `external-adapter-plugin-protocol-v1` limited to the external execution-adapter lane.
+- Update package dispositions so `@runxhq/adapters` sunset means "built-in trusted adapters move to Rust", not "custom adapters must become Rust".
 - Update `README.md` and `rust-kernel-architecture.md` with the same split.
 
 Acceptance:
-- No active doc describes TypeScript as a local runtime fallback.
-- No active doc implies integrations must be ported into Rust.
+- none
 
 ## Phase 2: Spec Alignment
 
-Goal: align pending work with the boundary.
-
-Status: complete
+Status: completed
 Dependencies: Phase 1
 
+Objective: Complete this phase.
+
 Changes:
-- Update `embedded-sdk-migration-story` to treat cloud in-process semantics as
-  a binding/process-protocol problem, not as a reason to keep runtime-local.
-- Update `rust-ts-sunset-runtime-local` so cloud agent-runner is a blocker
-  until it has a stable boundary, not a settled fact.
-- Update `rust-aster-runtime-cutover` open questions to reference the allowed
-  boundary categories.
+- Update `embedded-sdk-migration-story` to treat cloud in-process semantics as a binding/process-protocol problem, not as a reason to keep runtime-local.
+- Update `rust-ts-sunset-runtime-local` so cloud agent-runner is a blocker until it has a stable boundary, not a settled fact.
+- Update `rust-aster-runtime-cutover` open questions to reference the allowed boundary categories.
 
 Acceptance:
-- Sunset specs block on missing extension/cloud boundaries without preserving a
-  TypeScript runtime shim.
+- none
 
 ## Phase 3: Static Guardrails
 
-Goal: make the standard hard to regress.
-
-Status: complete
+Status: completed
 Dependencies: Phase 1
 
+Objective: Complete this phase.
+
 Changes:
-- Extend boundary checks so surviving TypeScript packages cannot import
-  runtime-local/adapters or introduce shim/v2/compat compatibility packages or
-  aliases.
-- Keep current runtime-local/adapters package internals and tests classified as
-  deletion blockers rather than failing the guardrail before the sunset lands.
+- Extend boundary checks so surviving TypeScript packages cannot import runtime-local/adapters or introduce shim/v2/compat compatibility packages or aliases.
+- Keep current runtime-local/adapters package internals and tests classified as deletion blockers rather than failing the guardrail before the sunset lands.
 
 Acceptance:
-- The guardrail passes in the current dual-tree state and fails for a new
-  surviving-package runtime-local import or compatibility package.
+- none
 
 ## Rollback
 
@@ -223,9 +198,21 @@ runtime execution as the escape hatch.
 
 ## Review
 
-Review must reject any wording that equates "delete TS runtime" with "all
-extension authors must write Rust", and must also reject any wording that keeps
-`@runxhq/runtime-local` as a hidden compatibility runtime.
+Status: completed
+Verdict: pass
+Mode: verify
+Provider: command
+Output: command.stdout
+Summary: Command-provider verification pass. Rechecked ts-extension-survivorship-boundary: docs and specs state Rust is the trusted local runtime, TypeScript survives only for language-neutral contracts, clients, host adapters, cloud/product, authoring, and extension protocols, boundary checks pass, and broader runtime-local/adapters deletion remains delegated to child sunset specs. No completion blockers for this boundary guardrail.
+
+Attack log:
+- `boundary docs`: verify required extension-boundary vocabulary in docs/specs -> clean
+- `static guardrail`: run node scripts/check-boundaries.mjs -> clean
+- `scafld validation`: run scafld validate ts-extension-survivorship-boundary --json -> clean
+- `scope discipline`: confirm runtime-local/adapters deletion remains delegated to child sunset specs -> clean
+
+Findings:
+- none
 
 ## Origin
 

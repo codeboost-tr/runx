@@ -2,8 +2,8 @@
 spec_version: '2.0'
 task_id: x402-pay-idempotency-fixtures-v1
 created: '2026-05-21T14:25:00Z'
-updated: '2026-05-22T00:55:00+10:00'
-status: active
+updated: '2026-05-21T17:31:48Z'
+status: completed
 harden_status: not_run
 size: medium
 risk_level: high
@@ -13,17 +13,14 @@ risk_level: high
 
 ## Current State
 
-Status: complete
-Current phase: validation complete
-Next: keep as regression fixture coverage for x402 payment changes
-Reason: standalone harness fixtures now prove replay, consumed-capability
-denial, and partial-mutation recovery against real cli-tool skills and one
-shared payment-state file.
-Blockers: none for runtime fixture promotion.
-Allowed follow-up command: `scafld validate x402-pay-idempotency-fixtures-v1`
-Latest runner update: 2026-05-22T00:55:00+10:00 promoted P1.7, P1.9, and
-P1.11 to executable `x402-pay-idempotency-*` harness fixtures.
-Review gate: not_started
+Status: completed
+Current phase: final
+Next: done
+Reason: task completed
+Blockers: none
+Allowed follow-up command: `none`
+Latest runner update: 2026-05-21T17:31:48Z
+Review gate: pass
 
 ## Summary
 
@@ -99,3 +96,22 @@ Out of scope:
 
 Follow-up from `x402-pay-idempotency-recovery-v1`: runtime blockers are cleared;
 fixtures are the remaining proof surface.
+
+## Review
+
+Status: completed
+Verdict: pass
+Mode: verify
+Provider: command
+Output: command.stdout
+Summary: Command-provider verification pass. Rechecked x402-pay-idempotency-fixtures-v1: all x402-pay-idempotency-* fixture paths are present, focused harness fixture coverage passed, payment_execution passed, and native CLI harness replay supports the promoted fixture matrix with closed/blocked/deferred receipts. No completion blockers found.
+
+Attack log:
+- `fixture naming`: verify promoted fixture paths use x402-pay-idempotency-* -> clean
+- `harness sequence coverage`: run focused harness_fixtures x402_idempotency test -> clean
+- `payment runtime regression`: run payment_execution suite -> clean
+- `native CLI fixture matrix`: run cargo run -p runx-cli -- harness fixtures/harness/x402-pay-idempotency-*.yaml --json and verify three receipts -> clean
+
+Findings:
+- none
+
