@@ -2,7 +2,7 @@
 spec_version: '2.0'
 task_id: rust-dev
 created: '2026-05-18T00:00:00Z'
-updated: '2026-05-21T03:22:18Z'
+updated: '2026-05-21T04:05:38Z'
 status: draft
 harden_status: in_progress
 size: medium
@@ -14,8 +14,9 @@ risk_level: medium
 ## Current State
 
 Status: draft
-Current phase: native skill/graph fixture execution plus CLI presentation parity slice implemented
-Next: CLI watch cutover decision
+Current phase: native skill/graph fixture execution plus CLI presentation parity slice implemented; CLI watch cutover decision recorded
+Next: keep any long-running CLI watch loop in a separate feature spec if
+product behavior changes
 Reason: a narrow Rust runtime slice now exists for dev fixture discovery,
 deterministic tool fixture execution, executable fixture workspace files,
 polling watch debounce, presentation, and dev-mode receipt metadata tagging.
@@ -24,16 +25,20 @@ Rust harness replay path and validate against the dev fixture expectation
 engine. Repo-integration skill fixtures bind workspace cwd through `RUNX_CWD`
 instead of process-global cwd mutation. The Rust CLI dev JSON path now
 pretty-prints like the TS CLI, and the native dev terminal presentation uses
-the same no-color status glyphs as the TS presentation. This is not complete
-`runx dev` parity yet.
-Blockers: the Rust CLI dev command is owned by the CLI cutover worker; the TS
-command currently parses `--watch` but does not run a watch loop, so CLI-level
-watch parity still needs an owning cutover decision before Rust should expose a
-long-running watch loop.
-Allowed follow-up command: make the explicit CLI watch decision, then wire the
-chosen Rust behavior and rerun runtime and CLI dev validation; do not mark
-passed until the remaining blockers are closed.
-Latest runner update: 2026-05-21T03:22:18Z
+the same no-color status glyphs as the TS presentation. The CLI watch decision
+is to keep `runx dev --watch` fail-closed in Rust until a separate watch-loop
+feature spec exists: TS parses `devWatch` in `packages/cli/src/args.ts` but
+does not pass or use it in `packages/cli/src/commands/dev.ts`, and TS help does
+not advertise `--watch`. Exposing a Rust loop now would be a new user-visible
+feature with unspecified terminal, JSON, cancellation, and exit-code behavior.
+This is not complete `runx dev` parity yet.
+Blockers: none for the CLI watch cutover decision. Focused runtime validation
+passed after the unrelated post-merge observer compile drift was resolved. A
+future long-running CLI watch loop remains intentionally deferred to a separate
+feature spec instead of being hidden behind a compatibility shim.
+Allowed follow-up command: do not run
+`scafld harden rust-dev --mark-passed` for this decision-only slice.
+Latest runner update: 2026-05-21T04:05:38Z
 Review gate: not_started
 
 ## Summary
@@ -153,6 +158,24 @@ Checks:
 - `scafld validate rust-dev`: passed.
 - `scafld status rust-dev`: reported draft status with next step still the CLI
   watch decision.
+- `cargo test --manifest-path crates/Cargo.toml -p runx-cli dev_ -- --nocapture`:
+  passed with the dev JSON unit test plus dev launcher routing tests, including
+  `runx dev --watch` failing closed.
+- `cargo test --manifest-path crates/Cargo.toml -p runx-runtime --test dev -- --nocapture`:
+  blocked before dev tests by unrelated compile drift in
+  `crates/runx-contracts/src/post_merge_observer.rs`; the error was unresolved
+  import `plan::normalize_post_merge_observer_command`, and that file is
+  outside this slice's ownership.
+- `git diff --check -- .scafld/specs/drafts/rust-dev.md crates/runx-cli/src/launcher.rs crates/runx-cli/tests/launcher.rs crates/runx-runtime/src/dev`:
+  passed.
+- `scafld validate rust-dev`: passed.
+- `scafld status rust-dev`: reported draft status with the next step to rerun
+  focused runtime and CLI dev validation.
+- `cargo test --manifest-path crates/Cargo.toml -p runx-runtime --test dev -- --nocapture`:
+  passed with 6 tests after the unrelated post-merge observer compile drift was
+  resolved.
+- `scafld validate rust-dev`: passed.
+- `git diff --check`: passed.
 
 Issues:
 - Runtime slice implemented under `crates/runx-runtime/src/dev/**` with
@@ -164,8 +187,11 @@ Issues:
   the Rust harness replay path with stable fixture output projection.
 - Native skill/graph repo-integration fixtures bind workspace cwd through
   `RUNX_CWD` without process-global cwd mutation.
-- CLI dev routing and watch cutover intentionally untouched; the TS command
-  parses `--watch` without running a watch loop, so Rust still fails closed on
-  that flag until the product behavior is explicit.
+- CLI dev routing keeps `--watch` fail-closed. Decision evidence: TS parses
+  `devWatch` but `handleDevCommand` does not receive or use it, TS help does
+  not advertise `--watch`, and the Rust launcher test already asserts
+  `runx dev --watch` returns `unknown dev flag --watch`.
 - CLI dev JSON and no-color terminal presentation parity tightened in the Rust
   CLI/runtime.
+- Focused runtime validation passed after unrelated post-merge observer compile
+  drift was resolved outside this slice's ownership.
