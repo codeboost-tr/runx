@@ -11,8 +11,9 @@ use runx_runtime::target_runner::{
     TargetRepoRunnerAdapter, TargetRepoRunnerAdapterError, TargetRepoRunnerFixtureExecutionInput,
     TargetRepoRunnerGovernedRunnerInvocation, TargetRepoRunnerGovernedRunnerObservation,
     TargetRepoRunnerPullRequestObservationRequest, TargetRepoRunnerRuntimeError,
-    execute_target_repo_runner_execution_fixture, execute_target_repo_runner_fixture,
-    execute_target_repo_runner_with_adapter,
+    TargetRepoRunnerSourcePublicationCommand, TargetRepoRunnerSourcePublicationObservation,
+    TargetRepoRunnerSourcePublicationRequest, execute_target_repo_runner_execution_fixture,
+    execute_target_repo_runner_fixture, execute_target_repo_runner_with_adapter,
 };
 
 const NITROSEND_LIKE: &str =
@@ -205,6 +206,7 @@ fn live_adapter_composes_observations_into_revision_receipt_without_network()
         created_pull_request: created_pull_request(),
         provider_pull_requests: Vec::new(),
         expected_disposition: TargetRepoRunnerPullRequestDisposition::Create,
+        omit_source_issue_publication: false,
         events: Vec::new(),
     };
 
@@ -212,7 +214,13 @@ fn live_adapter_composes_observations_into_revision_receipt_without_network()
 
     assert_eq!(
         adapter.events,
-        vec!["checkout", "dedupe", "runner", "pull_request"]
+        vec![
+            "checkout",
+            "dedupe",
+            "runner",
+            "pull_request",
+            "source_publication"
+        ]
     );
     assert_eq!(
         live.execution.disposition,
@@ -264,6 +272,44 @@ fn live_adapter_composes_observations_into_revision_receipt_without_network()
         ),
         Some("runx.target_repo_runner.v1")
     );
+    assert_eq!(live.source_publication_request.commands.len(), 2);
+    assert_eq!(
+        live.source_publication_receipt.harness.state,
+        HarnessState::Sealed
+    );
+    assert_eq!(live.source_publication_receipt.harness.acts.len(), 1);
+    assert_eq!(
+        live.source_publication_receipt.harness.acts[0].form,
+        ActForm::Reply
+    );
+    assert_eq!(
+        live.source_publication_receipt.harness.acts[0]
+            .closure
+            .reason_code,
+        "target_runner_source_published"
+    );
+    assert_eq!(
+        live.source_publication_projection.pull_request_ref.uri,
+        "https://github.com/nitrosend/api/pull/145"
+    );
+    assert_eq!(
+        live.source_publication_projection
+            .source_issue_ref
+            .as_ref()
+            .map(|reference| reference.uri.as_str()),
+        Some("https://github.com/nitrosend/nitrosend/issues/482")
+    );
+    assert_eq!(
+        live.source_publication_projection.source_thread_ref.uri,
+        "slack://nitrosend/C0APFMY0V8Q/1778834840.485629"
+    );
+    assert_eq!(
+        nested_string(
+            &live.source_publication_projection.metadata,
+            &["target_runner", "contract"]
+        ),
+        Some("runx.target_repo_runner.source_publication.v1")
+    );
 
     let digest = canonical_receipt_body_digest(&live.revision_receipt)?;
     assert_eq!(live.revision_receipt.seal.digest, digest);
@@ -272,7 +318,9 @@ fn live_adapter_composes_observations_into_revision_receipt_without_network()
         format!("sig:{digest}")
     );
     assert_public_only(&live.revision_receipt)?;
+    assert_public_only(&live.source_publication_receipt)?;
     assert_hard_cutover_vocabulary_only(&live.revision_receipt)?;
+    assert_hard_cutover_vocabulary_only(&live.source_publication_receipt)?;
     Ok(())
 }
 
@@ -294,12 +342,16 @@ fn live_adapter_reuses_provider_pull_request_without_runner_and_seals_reuse_meta
         created_pull_request: created_pull_request(),
         provider_pull_requests: vec![existing],
         expected_disposition: TargetRepoRunnerPullRequestDisposition::Reuse,
+        omit_source_issue_publication: false,
         events: Vec::new(),
     };
 
     let live = execute_target_repo_runner_with_adapter(&plan, &mut adapter, CREATED_AT)?;
 
-    assert_eq!(adapter.events, vec!["checkout", "dedupe", "pull_request"]);
+    assert_eq!(
+        adapter.events,
+        vec!["checkout", "dedupe", "pull_request", "source_publication"]
+    );
     assert!(live.runner_observation.is_none());
     assert_eq!(
         live.execution.disposition,
@@ -333,8 +385,53 @@ fn live_adapter_reuses_provider_pull_request_without_runner_and_seals_reuse_meta
         live.revision_projection.disposition,
         TargetRepoRunnerPullRequestDisposition::Reuse
     );
+    assert_eq!(
+        nested_string(
+            &live.source_publication_projection.metadata,
+            &["dedupe", "result"]
+        ),
+        Some("reused")
+    );
+    assert_eq!(
+        live.source_publication_projection.pull_request_ref.uri,
+        "https://github.com/nitrosend/api/pull/144"
+    );
     assert_public_only(&live.revision_receipt)?;
+    assert_public_only(&live.source_publication_receipt)?;
     assert_hard_cutover_vocabulary_only(&live.revision_receipt)?;
+    assert_hard_cutover_vocabulary_only(&live.source_publication_receipt)?;
+    Ok(())
+}
+
+#[test]
+fn live_adapter_fails_when_source_publication_readback_omits_source_issue()
+-> Result<(), Box<dyn std::error::Error>> {
+    let policy: OperationalPolicy = serde_json::from_str(NITROSEND_LIKE)?;
+    let plan = plan_target_repo_runner(&policy, &nitrosend_request("nitrosend/api"))?;
+    let mut adapter = FakeTargetRepoRunnerAdapter {
+        created_pull_request: created_pull_request(),
+        provider_pull_requests: Vec::new(),
+        expected_disposition: TargetRepoRunnerPullRequestDisposition::Create,
+        omit_source_issue_publication: true,
+        events: Vec::new(),
+    };
+
+    let error = execute_target_repo_runner_with_adapter(&plan, &mut adapter, CREATED_AT).err();
+
+    assert!(matches!(
+        error,
+        Some(TargetRepoRunnerRuntimeError::SourcePublicationMismatch(_))
+    ));
+    assert_eq!(
+        adapter.events,
+        vec![
+            "checkout",
+            "dedupe",
+            "runner",
+            "pull_request",
+            "source_publication"
+        ]
+    );
     Ok(())
 }
 
@@ -360,6 +457,7 @@ struct FakeTargetRepoRunnerAdapter {
     created_pull_request: TargetRepoRunnerExistingPullRequest,
     provider_pull_requests: Vec<TargetRepoRunnerProviderPullRequest>,
     expected_disposition: TargetRepoRunnerPullRequestDisposition,
+    omit_source_issue_publication: bool,
     events: Vec<&'static str>,
 }
 
@@ -454,6 +552,78 @@ impl TargetRepoRunnerAdapter for FakeTargetRepoRunnerAdapter {
             }
         }
     }
+
+    fn publish_source_update(
+        &mut self,
+        request: &TargetRepoRunnerSourcePublicationRequest,
+    ) -> Result<TargetRepoRunnerSourcePublicationObservation, TargetRepoRunnerAdapterError> {
+        self.events.push("source_publication");
+        assert_source_publication_commands(request);
+        Ok(TargetRepoRunnerSourcePublicationObservation {
+            source_issue_ref: if self.omit_source_issue_publication {
+                None
+            } else {
+                request.publication.source_issue_ref.clone()
+            },
+            source_thread_ref: request.publication.source_thread_ref.clone(),
+            pull_request_ref: request.publication.pull_request_ref.clone(),
+            revision_receipt_ref: request.revision_receipt_ref.clone(),
+            published_refs: vec![
+                Reference {
+                    reference_type: ReferenceType::ExternalUrl,
+                    uri: "https://github.com/nitrosend/nitrosend/issues/482#issuecomment-9001"
+                        .to_owned(),
+                    provider: Some("github".to_owned()),
+                    locator: Some("nitrosend/nitrosend#482-comment-9001".to_owned()),
+                    label: Some("source issue target PR comment".to_owned()),
+                    observed_at: Some(CREATED_AT.to_owned()),
+                    proof_kind: None,
+                },
+                Reference {
+                    reference_type: ReferenceType::SlackThread,
+                    uri: "slack://nitrosend/C0APFMY0V8Q/1778834840.485629/reply/1778835000.000100"
+                        .to_owned(),
+                    provider: Some("slack".to_owned()),
+                    locator: Some("C0APFMY0V8Q/1778835000.000100".to_owned()),
+                    label: Some("source thread target PR reply".to_owned()),
+                    observed_at: Some(CREATED_AT.to_owned()),
+                    proof_kind: None,
+                },
+            ],
+            metadata: request.publication.metadata.clone(),
+        })
+    }
+}
+
+fn assert_source_publication_commands(request: &TargetRepoRunnerSourcePublicationRequest) {
+    assert_eq!(request.commands.len(), 2);
+    let mut saw_issue_comment = false;
+    let mut saw_thread_reply = false;
+    for command in &request.commands {
+        match command {
+            TargetRepoRunnerSourcePublicationCommand::SourceIssueComment { target, body } => {
+                saw_issue_comment = true;
+                assert_eq!(
+                    target.uri,
+                    "https://github.com/nitrosend/nitrosend/issues/482"
+                );
+                assert!(body.contains(&request.publication.pull_request_ref.uri));
+                assert!(body.contains(&request.revision_receipt_ref.uri));
+                assert!(body.contains("Human review remains the merge gate."));
+            }
+            TargetRepoRunnerSourcePublicationCommand::SourceThreadReply { target, body } => {
+                saw_thread_reply = true;
+                assert_eq!(
+                    target.uri,
+                    "slack://nitrosend/C0APFMY0V8Q/1778834840.485629"
+                );
+                assert!(body.contains(&request.publication.pull_request_ref.uri));
+                assert!(body.contains("Target repo: nitrosend/api"));
+            }
+        }
+    }
+    assert!(saw_issue_comment);
+    assert!(saw_thread_reply);
 }
 
 fn readiness(scafld_ready: bool) -> TargetRepoRunnerReadinessObservation {

@@ -2,7 +2,7 @@
 spec_version: '2.0'
 task_id: runx-target-repo-runners
 created: '2026-05-19T02:08:02Z'
-updated: '2026-05-20T10:26:59Z'
+updated: '2026-05-21T03:43:32Z'
 status: draft
 harden_status: in_progress
 size: large
@@ -26,11 +26,12 @@ create/update, outbox pushers for source issue/thread publication, and Aster
 scheduling/readback are not implemented in this target-runner path.
 Allowed follow-up command: `scafld harden runx-target-repo-runners --mark-passed`
 only after the live execution blockers are resolved or explicitly descoped.
-Latest runner update: 2026-05-20 added canonical local PR receipt dedupe
-metadata for created versus reused PR paths on top of explicit same-repo
-contract coverage and the existing cross-repo runtime fixture boundary.
-Remaining target-runner work is provider/git/outbox/Aster integration rather
-than contract drift.
+Latest runner update: 2026-05-21 added runtime source-publication commands,
+adapter readback validation, and a sealed reply receipt for the source
+issue/thread update after the target pull-request receipt is sealed.
+Remaining target-runner work is concrete provider lookup, checkout/git
+mutation, PR create/update, source-publication pushers, and Aster
+scheduling/readback rather than contract drift.
 Review gate: not_started
 
 ## Summary
@@ -169,6 +170,9 @@ Required behavior:
   remains.
 - [ ] Source GitHub issue receives the target PR link.
 - [ ] Source Slack thread metadata survives through all outbox receipt nodes.
+- [x] Runtime source-publication adapter requests include source issue and
+  source-thread commands with the target PR link, and readback is sealed as a
+  reply receipt carrying dedupe metadata.
 - [x] Public output excludes local checkout paths and env-secret values.
 
 ## Phase 1: Contract
@@ -211,6 +215,8 @@ Acceptance:
   observations before PR mutation and fails closed on stale/not-ready readiness.
 - [x] Cross-repo fixture produces target PR receipt and source issue/thread
   reply receipt.
+- [x] Live-adapter fixture publishes source issue/thread commands after the
+  sealed PR receipt and fails closed when source issue readback is missing.
 
 ## Phase 3: Dedupe
 
@@ -277,7 +283,8 @@ Started: 2026-05-20T10:26:59Z
 Ended: none
 
 Checks:
-- none
+- `cargo test --manifest-path crates/Cargo.toml -p runx-contracts --test target_runner`
+- `cargo test --manifest-path crates/Cargo.toml -p runx-runtime --test target_runner`
 
 Issues:
 - none
@@ -307,3 +314,7 @@ Issues:
   the minimal single-repo policy fixture. Remaining work is not contract drift;
   it is live provider/git mutation, source publication outbox integration, and
   Aster scheduling/readback.
+- 2026-05-21: Added runtime source-publication command generation, adapter
+  readback validation, sealed reply receipt projection, and negative readback
+  coverage for missing source issue publication. Remaining work is the concrete
+  provider/git/outbox/Aster adapters.
