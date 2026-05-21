@@ -20,15 +20,15 @@ Next: add Rust runtime replay only after target execution and observer runtime
 gates are ready
 Reason: refreshed against the current local OSS checkout and the actual
 Nitrosend repo. OSS fixture and policy contract validation is still green, and
-Nitrosend wrapper harness tests still replay through the Rust binary, but the
-actual Nitrosend `config/runx-issue-flow.json` now contains a top-level
-`post_merge` block that the current Rust operational-policy schema rejects.
+Nitrosend wrapper harness tests replay through the Rust binary. The previous
+Nitrosend policy drift (`post_merge`) was fixed in Nitrosend commit `b6770fd`;
+the current Nitrosend `config/runx-issue-flow.json` passes Rust policy
+lint/inspect against the canonical `outcomes` surface.
 Blockers: `runx-target-repo-runners` and
 `runx-post-merge-closure-observer` are still draft for live external replay.
 A sanitized external-shaped fixture contract exists and Nitrosend local wrapper
 fixtures replay through the Rust binary, but no live target-runner/observer
-external replay has been added. The actual Nitrosend policy/schema drift must
-also be resolved before this dogfood spec can advance.
+external replay has been added.
 Allowed follow-up command: none during this refresh; do not run
 `scafld harden rust-nitrosend-dogfood`.
 Latest runner update: 2026-05-21 closed the Segment dogfood evidence gap:
@@ -242,10 +242,12 @@ git diff --check -- .scafld/specs/drafts/rust-nitrosend-dogfood.md
   `crates/runx-runtime/src` plus fixtures and skills passed.
 - `scafld validate rust-nitrosend-dogfood --json` passed.
 - In Nitrosend, `/Users/kam/dev/runx/runx/oss/crates/target/debug/runx policy lint config/runx-issue-flow.json --json`
-  failed because `config/runx-issue-flow.json` contains unknown top-level field
-  `post_merge`; the current Rust schema expects `outcomes` for that surface.
+  initially failed because `config/runx-issue-flow.json` still contained the
+  retired top-level `post_merge` block. This was superseded by Nitrosend commit
+  `b6770fd`, which moved the file to canonical `outcomes`.
 - In Nitrosend, `/Users/kam/dev/runx/runx/oss/crates/target/debug/runx policy inspect config/runx-issue-flow.json --json`
-  failed for the same `post_merge` schema mismatch.
+  initially failed for the same retired `post_merge` surface, and now passes
+  after `b6770fd`.
 - In Nitrosend,
   `RUNX_BIN=/Users/kam/dev/runx/runx/oss/crates/target/debug/runx node --test scripts/onboarding.test.mjs scripts/segment-from-prose.test.mjs scripts/issue-intake.test.mjs scripts/github-issue-thread.test.mjs scripts/post-issue-intake-comments.test.mjs scripts/runx-target-outcome.test.mjs scripts/scafld-command-review.test.mjs scripts/runx-harness.test.mjs`
   passed: 122 tests, 0 skipped.
