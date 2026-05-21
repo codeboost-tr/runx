@@ -158,6 +158,30 @@ fn native_x402_negative_fixtures_refuse_without_settlement()
         "cap-exceeded fixture must not expose rail material"
     );
 
+    let broader_child = run_harness_fixture_failure(
+        "fixtures/harness/x402-pay-negative-authority-broader-child.yaml",
+        &["child payment authority is not a subset of parent authority"],
+    )?;
+    assert!(
+        !broader_child
+            .stdout
+            .contains("hrn_rcpt_x402-pay-negative-authority-broader-child_fulfill"),
+        "broader-child fixture must fail before rail fulfillment"
+    );
+    assert!(
+        !broader_child.stdout.contains("pay-fulfill-rail")
+            && !broader_child
+                .stdout
+                .contains("credential:mock:paid-echo-001"),
+        "broader-child fixture must not expose mock rail credential material"
+    );
+    assert!(
+        !broader_child
+            .stdout
+            .contains("rail-session-material:mock:paid-echo-001"),
+        "broader-child fixture must not expose rail material"
+    );
+
     let proofless = run_harness_fixture_failure(
         "fixtures/harness/x402-pay-negative-proofless-rail.yaml",
         &["rail proof"],
