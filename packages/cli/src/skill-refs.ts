@@ -1,5 +1,5 @@
 import { existsSync, readFileSync } from "node:fs";
-import { readFile, readdir, writeFile } from "node:fs/promises";
+import { mkdir, readFile, readdir, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -15,14 +15,9 @@ import {
   searchMarketplaceAdapters,
   type SkillSearchResult,
 } from "@runxhq/core/marketplaces";
-import {
-  ensureOfficialSkillCached,
-  type OfficialSkillLockEntry,
-  type OfficialSkillResolver,
-  type ParsedRegistryRef,
-} from "@runxhq/runtime-local";
+import { acquireRegistrySkill, type AcquiredRegistrySkill } from "@runxhq/core/registry";
 
-import { asRecord, errorMessage } from "@runxhq/core/util";
+import { asRecord, errorMessage, hashString, readOptionalFile } from "@runxhq/core/util";
 
 import { nativeRegistrySearchRequested, searchRegistryViaRustCli } from "./native-registry.js";
 import { searchRegistryFallback } from "./registry-fallback.js";
@@ -30,6 +25,25 @@ import { ensureRunxInstallState } from "./runx-state.js";
 
 let cachedBundledSkillsDir: string | undefined | null = null;
 let cachedOfficialSkillLock: readonly OfficialSkillLockEntry[] | undefined;
+
+interface OfficialSkillLockEntry {
+  readonly skill_id: string;
+  readonly version: string;
+  readonly digest: string;
+}
+
+interface ParsedRegistryRef {
+  readonly kind: "registry";
+  readonly skillId: string;
+  readonly owner: string;
+  readonly name: string;
+  readonly version?: string;
+  readonly raw: string;
+}
+
+interface OfficialSkillResolver {
+  resolve(ref: ParsedRegistryRef): Promise<string | undefined>;
+}
 
 export function preferredRunCommand(skillName: string): string {
   return `runx skill ${skillName}`;
@@ -120,6 +134,164 @@ export function createOfficialSkillResolver(env: NodeJS.ProcessEnv): OfficialSki
       return cache.skillPath;
     },
   };
+}
+
+async function ensureOfficialSkillCached(options: {
+  readonly cacheRoot: string;
+  readonly registryBaseUrl: string;
+  readonly installationId: string;
+  readonly entry: OfficialSkillLockEntry;
+}): Promise<{ readonly skillPath: string; readonly fromCache: boolean }> {
+  const skillPath = officialSkillCachePath(options.cacheRoot, options.entry);
+  const cachedMarkdown = await readOptionalFile(path.join(skillPath, "SKILL.md"));
+  if (cachedMarkdown && hashString(cachedMarkdown) === options.entry.digest) {
+    await syncPackagedOfficialSkillAssets(skillPath, options.entry.skill_id);
+    await restoreOfficialRunnerManifestFromProfileState(skillPath);
+    return { skillPath, fromCache: true };
+  }
+
+  const acquisition = await acquireRegistrySkill(options.entry.skill_id, {
+    baseUrl: options.registryBaseUrl,
+    installationId: options.installationId,
+    version: options.entry.version,
+    channel: "cli",
+  });
+  const computedDigest = hashString(acquisition.markdown);
+  if (
+    acquisition.version !== options.entry.version ||
+    acquisition.digest !== options.entry.digest ||
+    computedDigest !== options.entry.digest
+  ) {
+    throw new Error(
+      `Official skill verification failed for ${options.entry.skill_id}: expected ${options.entry.version} sha256:${options.entry.digest}, received ${acquisition.version} sha256:${acquisition.digest} (computed sha256:${computedDigest}).`,
+    );
+  }
+
+  await mkdir(skillPath, { recursive: true });
+  await writeFile(path.join(skillPath, "SKILL.md"), acquisition.markdown, "utf8");
+  await writeOfficialRunnerManifest(skillPath, acquisition);
+  await writeOfficialProfileState(skillPath, acquisition);
+  await syncPackagedOfficialSkillAssets(skillPath, acquisition.skill_id);
+  return { skillPath, fromCache: false };
+}
+
+function officialSkillCachePath(cacheRoot: string, entry: OfficialSkillLockEntry): string {
+  const [owner, name] = splitSkillId(entry.skill_id);
+  return path.join(cacheRoot, owner, name, entry.version);
+}
+
+async function syncPackagedOfficialSkillAssets(targetSkillPath: string, skillId: string): Promise<void> {
+  const packagedSkillDir = resolvePackagedOfficialSkillDir(skillId);
+  if (!packagedSkillDir) {
+    return;
+  }
+  const entries = await readdir(packagedSkillDir, { withFileTypes: true });
+  for (const entry of entries) {
+    if (!entry.isFile() || entry.name === "SKILL.md") {
+      continue;
+    }
+    const sourcePath = path.join(packagedSkillDir, entry.name);
+    const targetPath = path.join(targetSkillPath, entry.name);
+    await mkdir(path.dirname(targetPath), { recursive: true });
+    await writeFile(targetPath, await readFile(sourcePath));
+  }
+}
+
+function resolvePackagedOfficialSkillDir(skillId: string): string | undefined {
+  const bundledSkillsDir = resolveBundledSkillsDir();
+  if (!bundledSkillsDir) {
+    return undefined;
+  }
+  const [, name] = splitSkillId(skillId);
+  const candidate = path.join(bundledSkillsDir, name);
+  return existsSync(candidate) ? candidate : undefined;
+}
+
+async function writeOfficialProfileState(skillPath: string, acquisition: AcquiredRegistrySkill): Promise<void> {
+  if (!acquisition.profile_document) {
+    return;
+  }
+  const profileStatePath = path.join(skillPath, ".runx", "profile.json");
+  await mkdir(path.dirname(profileStatePath), { recursive: true });
+  await writeFile(
+    profileStatePath,
+    `${JSON.stringify(
+      {
+        schema_version: "runx.skill-profile.v1",
+        skill: {
+          name: acquisition.name,
+          path: "SKILL.md",
+          digest: acquisition.digest,
+        },
+        profile: {
+          document: acquisition.profile_document,
+          digest: acquisition.profile_digest,
+          runner_names: acquisition.runner_names,
+        },
+        origin: {
+          source: "runx-registry",
+          skill_id: acquisition.skill_id,
+          version: acquisition.version,
+        },
+      },
+      null,
+      2,
+    )}\n`,
+    "utf8",
+  );
+}
+
+async function writeOfficialRunnerManifest(skillPath: string, acquisition: AcquiredRegistrySkill): Promise<void> {
+  const document = acquisition.profile_document;
+  if (!document) {
+    return;
+  }
+  verifyProfileDigest(acquisition.skill_id, document, acquisition.profile_digest);
+  await writeFile(path.join(skillPath, "X.yaml"), document, "utf8");
+}
+
+async function restoreOfficialRunnerManifestFromProfileState(skillPath: string): Promise<void> {
+  const manifestPath = path.join(skillPath, "X.yaml");
+  if (existsSync(manifestPath)) {
+    return;
+  }
+  const stateRaw = await readOptionalFile(path.join(skillPath, ".runx", "profile.json"));
+  if (!stateRaw) {
+    return;
+  }
+  const state = asRecord(JSON.parse(stateRaw));
+  const origin = asRecord(state?.origin);
+  const profile = asRecord(state?.profile);
+  const document = profile?.document;
+  if (typeof document !== "string" || document.length === 0) {
+    return;
+  }
+  verifyProfileDigest(
+    typeof origin?.skill_id === "string" ? origin.skill_id : "official skill",
+    document,
+    typeof profile?.digest === "string" ? profile.digest : undefined,
+  );
+  await writeFile(manifestPath, document, "utf8");
+}
+
+function verifyProfileDigest(skillId: string, document: string, expectedDigest: string | undefined): void {
+  if (!expectedDigest) {
+    return;
+  }
+  const actualDigest = hashString(document);
+  if (actualDigest !== expectedDigest) {
+    throw new Error(
+      `Official skill profile verification failed for ${skillId}: expected sha256:${expectedDigest}, computed sha256:${actualDigest}.`,
+    );
+  }
+}
+
+function splitSkillId(skillId: string): readonly [string, string] {
+  const parts = skillId.split("/");
+  if (parts.length !== 2 || !parts[0] || !parts[1]) {
+    throw new Error(`Invalid registry skill id '${skillId}'. Expected '<owner>/<name>'.`);
+  }
+  return [parts[0], parts[1]];
 }
 
 const SIBLING_SKILL_REF_PATTERN = /(\bskill:\s*)\.\.\/([A-Za-z0-9][A-Za-z0-9_-]*)\b/g;

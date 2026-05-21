@@ -20,6 +20,8 @@ struct TreeCase {
     name: String,
     root_receipt: String,
     supplied_child_receipts: Vec<String>,
+    #[serde(default)]
+    resolver_error_receipt_ids: Vec<String>,
     config: FixtureTreeConfig,
     expected: ExpectedVerification,
 }
@@ -62,6 +64,7 @@ fn receipt_tree_fixture_oracle_matches_ordered_findings() -> Result<(), String> 
         let children = oracle.child_receipts(&case.supplied_child_receipts)?;
         let resolver = FixtureResolver {
             children: &children,
+            resolver_error_receipt_ids: &case.resolver_error_receipt_ids,
         };
 
         let verification =
@@ -100,6 +103,7 @@ impl Oracle {
 
 struct FixtureResolver<'a> {
     children: &'a [HarnessReceipt],
+    resolver_error_receipt_ids: &'a [String],
 }
 
 impl ReceiptResolver for FixtureResolver<'_> {
@@ -107,6 +111,13 @@ impl ReceiptResolver for FixtureResolver<'_> {
         let Some(receipt_id) = referenced_receipt_id(reference) else {
             return ReceiptResolveResult::Malformed;
         };
+        if self
+            .resolver_error_receipt_ids
+            .iter()
+            .any(|id| id == receipt_id)
+        {
+            return ReceiptResolveResult::ResolverError;
+        }
         let mut matches = self
             .children
             .iter()

@@ -2,7 +2,7 @@
 spec_version: '2.0'
 task_id: rust-receipt-tree-resolution
 created: '2026-05-19T02:08:02Z'
-updated: '2026-05-19T05:51:55Z'
+updated: '2026-05-21T05:37:57Z'
 status: completed
 harden_status: passed
 size: medium
@@ -284,6 +284,27 @@ Findings:
   - Evidence: tree.rs:40-46 defines `enum ReceiptResolveResult { Found, Missing, Malformed, Ambiguous }` (4 variants). verify/finding.rs:23 declares `ChildReceiptResolverError` in `ReceiptFindingCode`, but no resolver outcome maps to it and no production or test path emits the code. The Phase 1 spec entry under `.scafld/specs/active/rust-receipt-tree-resolution.md` (Phase 1 Changes) states: "Define resolver outcomes as exactly one receipt, missing, malformed, ambiguous, or resolver error; suffix search is never a resolver fallback."
   - Impact: External resolvers (especially future IO-bound runtime resolvers that wrap filesystem reads) have no contract-level way to signal a transient resolver error distinct from missing/malformed/ambiguous, forcing semantic overloading or panics. The defined-but-unused finding code is also dead surface under the `no_legacy_code` invariant.
   - Validation: cargo test -p runx-receipts (oracle + tree unit tests); a new fixture case using a stub resolver that returns `ResolverError` should produce an ordered finding with code `ChildReceiptResolverError`.
+
+## Follow-up Evidence
+
+### 2026-05-21 resolver-error acceptance
+
+Status: completed
+
+Summary: The still-valid resolver-error gap was closed without changing the
+ratified receipt shape. `ReceiptResolveResult` now has an explicit
+`ResolverError` outcome that fails closed with `ChildReceiptResolverError` at
+the child ref path. Structural tree verification, strict tree proof
+verification, and the runtime receipt-tree verifier continue to operate on
+sealed `runx.harness_receipt.v1` nodes where parent graph receipts link child
+harness receipt refs. No legacy receipt aliases, shims, suffix lookup, or
+payment paths were introduced.
+
+Evidence:
+- `cargo test --manifest-path crates/Cargo.toml -p runx-receipts tree` passed.
+- `cargo test --manifest-path crates/Cargo.toml -p runx-runtime --test receipt_tree` passed.
+- `cargo fmt --manifest-path crates/Cargo.toml --all --check` passed.
+- `git diff --check -- crates/runx-receipts/src/tree.rs crates/runx-receipts/tests/receipt_tree_fixtures.rs fixtures/runtime/receipt-tree/oracle.json` passed.
 
 ## Self Eval
 

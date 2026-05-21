@@ -962,6 +962,26 @@
       }
     },
     {
+      "name": "resolver-error",
+      "root_receipt": "root_to_a",
+      "supplied_child_receipts": [],
+      "resolver_error_receipt_ids": ["hrn_rcpt_child_a"],
+      "config": {
+        "max_depth": 64,
+        "max_breadth": 1024,
+        "require_parent_links": false
+      },
+      "expected": {
+        "valid": false,
+        "findings": [
+          {
+            "code": "ChildReceiptResolverError",
+            "path": "harness.child_harness_receipt_refs[0]"
+          }
+        ]
+      }
+    },
+    {
       "name": "malformed-uri",
       "root_receipt": "root_malformed_uri",
       "supplied_child_receipts": ["child_a"],

@@ -47,6 +47,7 @@ pub enum ReceiptResolveResult<'a> {
     Missing,
     Malformed,
     Ambiguous,
+    ResolverError,
 }
 
 pub fn validate_receipt_tree(
@@ -427,6 +428,7 @@ impl<R: ReceiptResolver, P: ChildProofPolicy> TreeTraversal<'_, R, P> {
             ReceiptResolveResult::Missing => return vec![missing_child(path)],
             ReceiptResolveResult::Malformed => return vec![malformed_child_ref(path)],
             ReceiptResolveResult::Ambiguous => return vec![ambiguous_child(path)],
+            ReceiptResolveResult::ResolverError => return vec![resolver_error(path)],
         };
         let child = resolved.receipt;
         if self.visiting.contains(child.id.as_str()) {
@@ -489,6 +491,14 @@ fn ambiguous_child(path: &str) -> ReceiptFinding {
         code: ReceiptFindingCode::ChildReceiptAmbiguous,
         path: path.to_owned(),
         message: "child harness receipt ref resolved to multiple supplied receipts".to_owned(),
+    }
+}
+
+fn resolver_error(path: &str) -> ReceiptFinding {
+    ReceiptFinding {
+        code: ReceiptFindingCode::ChildReceiptResolverError,
+        path: path.to_owned(),
+        message: "child harness receipt ref resolver failed before proof verification".to_owned(),
     }
 }
 
@@ -667,6 +677,24 @@ mod tests {
         assert_finding(
             &verification,
             ReceiptFindingCode::ChildReceiptAmbiguous,
+            "harness.child_harness_receipt_refs[0]",
+        );
+        Ok(())
+    }
+
+    #[test]
+    fn resolver_error_result_is_a_stable_finding() -> Result<(), serde_json::Error> {
+        let root = fixture(SUCCESS_RECEIPT)?;
+
+        let verification = verify_receipt_tree_with_resolver(
+            &root,
+            &ResolverErrorResolver,
+            ReceiptTreeConfig::default(),
+        );
+
+        assert_finding(
+            &verification,
+            ReceiptFindingCode::ChildReceiptResolverError,
             "harness.child_harness_receipt_refs[0]",
         );
         Ok(())
@@ -978,6 +1006,26 @@ mod tests {
     }
 
     #[test]
+    fn strict_tree_proof_rejects_resolver_error() -> Result<(), serde_json::Error> {
+        let root = proof_root()?;
+        let proof_contexts = FixtureProofContexts::default();
+
+        let verification = verify_receipt_tree_proof_with_resolver(
+            &root,
+            &ResolverErrorResolver,
+            ReceiptTreeConfig::default(),
+            &proof_contexts,
+        );
+
+        assert_finding(
+            &verification,
+            ReceiptFindingCode::ChildReceiptResolverError,
+            "harness.child_harness_receipt_refs[0]",
+        );
+        Ok(())
+    }
+
+    #[test]
     fn strict_tree_proof_rejects_custom_resolver_duplicate_id_child_after_reached()
     -> Result<(), serde_json::Error> {
         let mut root = proof_root()?;
@@ -1134,6 +1182,18 @@ mod tests {
     impl ReceiptResolver for AmbiguousResolver {
         fn resolve_child<'a>(&'a self, _reference: &Reference) -> ReceiptResolveResult<'a> {
             ReceiptResolveResult::Ambiguous
+        }
+
+        fn supplied_receipts<'a>(&'a self) -> Vec<ResolvedReceipt<'a>> {
+            Vec::new()
+        }
+    }
+
+    struct ResolverErrorResolver;
+
+    impl ReceiptResolver for ResolverErrorResolver {
+        fn resolve_child<'a>(&'a self, _reference: &Reference) -> ReceiptResolveResult<'a> {
+            ReceiptResolveResult::ResolverError
         }
 
         fn supplied_receipts<'a>(&'a self) -> Vec<ResolvedReceipt<'a>> {

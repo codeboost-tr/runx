@@ -9,24 +9,7 @@ const runxScope = "@runxhq";
 const adaptersPackage = `${runxScope}/adapters`;
 const runtimeLocalPackage = `${runxScope}/runtime-local`;
 
-const ALLOWED_RUNTIME_IMPORTERS = new Map<string, readonly string[]>([
-  ["packages/cli/src/agent-runtime.ts", [`${adaptersPackage}/agent`]],
-  ["packages/cli/src/commands/dev/skill-fixture.ts", [
-    adaptersPackage,
-    runtimeLocalPackage,
-    `${runtimeLocalPackage}/tool-catalogs`,
-  ]],
-  ["packages/cli/src/commands/history.ts", [runtimeLocalPackage]],
-  ["packages/cli/src/dispatch.ts", [
-    adaptersPackage,
-    runtimeLocalPackage,
-    `${runtimeLocalPackage}/harness`,
-    `${runtimeLocalPackage}/sdk`,
-    `${runtimeLocalPackage}/tool-catalogs`,
-  ]],
-  ["packages/cli/src/registry-fallback.ts", [`${runtimeLocalPackage}/sdk`]],
-  ["packages/cli/src/skill-refs.ts", [runtimeLocalPackage]],
-]);
+const ALLOWED_RUNTIME_IMPORTERS = new Map<string, readonly string[]>();
 
 describe("CLI runtime-local importer boundary", () => {
   it("keeps runtime-local and adapters imports pinned to execution-owned blockers", async () => {

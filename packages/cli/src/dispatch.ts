@@ -1,47 +1,31 @@
 import path from "node:path";
 
-import { createDefaultSkillAdapters, resolveDefaultSkillAdapters } from "@runxhq/adapters";
 import {
   isRemoteRegistryUrl,
-  loadLocalSkillPackage,
   resolvePathFromUserInput,
   resolveRunxGlobalHomeDir,
   resolveRunxKnowledgeDir,
   resolveRunxRegistryTarget,
   resolveSkillInstallRoot,
 } from "@runxhq/core/config";
-import { runHarnessTarget, validatePublishHarness } from "@runxhq/runtime-local/harness";
-import { createFixtureMarketplaceAdapter, isMarketplaceRef } from "@runxhq/core/marketplaces";
 import { createFileKnowledgeStore } from "@runxhq/core/knowledge";
-import { createRunxSdk } from "@runxhq/runtime-local/sdk";
-import { resolveEnvToolCatalogAdapters, searchToolCatalogAdapters } from "@runxhq/runtime-local/tool-catalogs";
-import {
-  defaultReceiptDir,
-  installLocalSkill,
-  readPendingRunState,
-  runLocalSkill,
-  type Caller,
-  type RegistryStore,
-  type RunLineageMetadata,
-  type RunLocalSkillResult,
-} from "@runxhq/runtime-local";
 
 import type { ParsedArgs } from "./args.js";
 import type { CliIo, CliServices } from "./index.js";
-import { createAgentRuntimeLoader, createNonInteractiveCaller } from "./callers.js";
+import type {
+  Caller,
+  CliRuntimeReceipt,
+  CliSkillRunResult,
+  RegistryStore,
+} from "./cli-runtime-contracts.js";
 import {
   renderCliError,
   renderConfigResult,
-  renderHarnessResult,
   renderInitResult,
-  renderInstallResult,
   renderKnowledgeProjections,
   renderListResult,
   renderNewResult,
-  renderPublishResult,
   renderSearchResults,
-  renderToolInspectResult,
-  renderToolSearchResults,
   writeLocalSkillResult,
 } from "./cli-presentation.js";
 import { handleConfigCommand } from "./commands/config.js";
@@ -57,7 +41,6 @@ import {
   resolveUrlAddApiBaseUrl,
   UrlAddCliError,
 } from "./commands/url-add.js";
-import { handleDevCommand, renderDevResult } from "./commands/dev.js";
 import {
   explainDoctorDiagnostic,
   handleDoctorCommand,
@@ -69,7 +52,6 @@ import {
 import {
   handleDiffCommand,
   handleHistoryCommand,
-  handleInspectCommand,
   handleInspectRunCommand,
   handleReplaySeedCommand,
   renderHistory,
@@ -81,11 +63,8 @@ import { handleInitCommand } from "./commands/init.js";
 import { handleListCommand } from "./commands/list.js";
 import { handleMcpServeCommand } from "./commands/mcp.js";
 import { handleNewCommand } from "./commands/new.js";
-import { installRegistryViaRustCli, nativeRegistryInstallRequested } from "./native-registry.js";
 import { handlePolicyCommand, renderPolicyResult } from "./commands/policy.js";
 import {
-  createCliFileRegistryStore,
-  publishRegistrySkillMarkdown,
   resolveCliRegistryStoreForGraphs,
 } from "./registry-fallback.js";
 import {
@@ -94,9 +73,10 @@ import {
   type ToolCommandArgs,
 } from "./commands/tool.js";
 import { ensureRunxInstallState } from "./runx-state.js";
-import { resolveBundledCliToolRoots, resolveBundledCliVoiceProfilePath } from "./runtime-assets.js";
-import { createOfficialSkillResolver, resolveRunnableSkillReference, runSkillSearch } from "./skill-refs.js";
+import { resolveBundledCliToolRoots } from "./runtime-assets.js";
+import { resolveRunnableSkillReference, runSkillSearch } from "./skill-refs.js";
 import { streamTrainableReceipts } from "./trainable-receipts.js";
+import { runNativeRunx, type NativeRunxProcessResult } from "./native-runx.js";
 
 export async function dispatchCli(
   parsed: ParsedArgs,
@@ -108,22 +88,7 @@ export async function dispatchCli(
   const connectService = parsed.command === "connect" ? services.connect ?? resolveConfiguredConnectService(env) : services.connect;
 
   if (parsed.command === "harness" && parsed.harnessPath) {
-    const result = await runHarnessTarget(resolvePathFromUserInput(parsed.harnessPath, env), {
-      env,
-      registryStore: await resolveRegistryStoreForGraphs(env),
-      toolCatalogAdapters: resolveEnvToolCatalogAdapters(env),
-      adapters: createDefaultSkillAdapters(),
-      voiceProfilePath: await resolveBundledCliVoiceProfilePath(),
-    });
-    if (parsed.json) {
-      io.stdout.write(`${JSON.stringify(result, null, 2)}\n`);
-    } else {
-      io.stdout.write(renderHarnessResult(result));
-    }
-    for (const error of result.assertionErrors) {
-      io.stderr.write(`${error}\n`);
-    }
-    return result.assertionErrors.length === 0 ? 0 : 1;
+    return await writeNativeRunx(io, ["harness", resolvePathFromUserInput(parsed.harnessPath, env), "--json"], env);
   }
 
   if (parsed.command === "doctor") {
@@ -170,18 +135,14 @@ export async function dispatchCli(
   }
 
   if (parsed.command === "dev") {
-    const result = await handleDevCommand(parsed, env, {
-      resolveRegistryStoreForGraphs,
-      resolveDefaultReceiptDir,
-      createNonInteractiveCaller,
-      createAgentRuntimeLoader,
-    });
-    if (parsed.json) {
-      io.stdout.write(`${JSON.stringify(result, null, 2)}\n`);
-    } else {
-      io.stdout.write(renderDevResult(result, env));
+    if (parsed.devRecord || parsed.devRealAgents || parsed.devWatch) {
+      throw new Error("native runx dev does not support --record, --real-agents, or --watch yet.");
     }
-    return result.status === "success" || result.status === "skipped" ? 0 : 1;
+    const args = ["dev"];
+    if (parsed.devPath) args.push(parsed.devPath);
+    if (parsed.devLane) args.push("--lane", parsed.devLane);
+    if (parsed.json) args.push("--json");
+    return await writeNativeRunx(io, args, env);
   }
 
   if (parsed.command === "mcp" && parsed.mcpAction === "serve") {
@@ -267,38 +228,11 @@ export async function dispatchCli(
   }
 
   if (parsed.command === "tool" && parsed.toolAction === "search" && parsed.searchQuery) {
-    const results = await searchToolCatalogAdapters(
-      resolveEnvToolCatalogAdapters(env, parsed.sourceFilter),
-      parsed.searchQuery,
-    );
-    if (parsed.json) {
-      io.stdout.write(`${JSON.stringify({
-        status: "success",
-        query: parsed.searchQuery,
-        source: parsed.sourceFilter ?? "all",
-        results,
-      }, null, 2)}\n`);
-    } else {
-      io.stdout.write(renderToolSearchResults(results, env));
-    }
-    return 0;
+    return await writeNativeRunx(io, nativeToolArgs("search", parsed.searchQuery, parsed), env);
   }
 
   if (parsed.command === "tool" && parsed.toolAction === "inspect" && parsed.toolRef) {
-    const sdk = createRunxSdk({
-      env,
-      toolCatalogAdapters: resolveEnvToolCatalogAdapters(env, parsed.sourceFilter),
-    });
-    const result = await sdk.inspectTool({
-      ref: parsed.toolRef,
-      source: parsed.sourceFilter,
-    });
-    if (parsed.json) {
-      io.stdout.write(`${JSON.stringify({ status: "success", tool: result }, null, 2)}\n`);
-    } else {
-      io.stdout.write(renderToolInspectResult(result, env));
-    }
-    return 0;
+    return await writeNativeRunx(io, nativeToolArgs("inspect", parsed.toolRef, parsed), env);
   }
 
   if (parsed.command === "skill" && parsed.skillAction === "search" && parsed.searchQuery) {
@@ -354,34 +288,19 @@ export async function dispatchCli(
     const installState = registryTarget.mode === "remote"
       ? await ensureRunxInstallState(resolveRunxGlobalHomeDir(env))
       : undefined;
-    const result = nativeRegistryInstallRequested(env) && !isMarketplaceRef(parsed.skillRef)
-      ? await installRegistryViaRustCli({
-        ref: parsed.skillRef,
-        env,
-        registryOverride: parsed.registryUrl,
-        destinationRoot: resolveSkillInstallRoot(env, parsed.installTo),
-        version: parsed.installVersion,
-        expectedDigest: parsed.expectedDigest,
-        installationId: installState?.state.installation_id,
-      })
-      : await installLocalSkill({
-        ref: parsed.skillRef,
-        registryStore: registryTarget.mode === "local"
-          ? createCliFileRegistryStore(registryTarget.registryPath)
-          : undefined,
-        marketplaceAdapters: env.RUNX_ENABLE_FIXTURE_MARKETPLACE === "1" ? [createFixtureMarketplaceAdapter()] : [],
-        destinationRoot: resolveSkillInstallRoot(env, parsed.installTo),
-        version: parsed.installVersion,
-        expectedDigest: parsed.expectedDigest,
-        registryUrl: registryTarget.mode === "remote" ? registryTarget.registryUrl : parsed.registryUrl,
-        installationId: installState?.state.installation_id,
-      });
-    if (parsed.json) {
-      io.stdout.write(`${JSON.stringify({ status: "success", install: result }, null, 2)}\n`);
-    } else {
-      io.stdout.write(renderInstallResult(result, env));
-    }
-    return 0;
+    const args = [
+      "registry",
+      "install",
+      parsed.skillRef,
+      "--json",
+      "--to",
+      resolveSkillInstallRoot(env, parsed.installTo),
+    ];
+    pushOptionalFlag(args, "--registry", parsed.registryUrl);
+    pushOptionalFlag(args, "--version", parsed.installVersion);
+    pushOptionalFlag(args, "--digest", parsed.expectedDigest);
+    pushOptionalFlag(args, "--installation-id", installState?.state.installation_id);
+    return await writeNativeRunx(io, args, env);
   }
 
   if (parsed.command === "skill" && parsed.skillAction === "publish" && parsed.publishPath) {
@@ -389,31 +308,11 @@ export async function dispatchCli(
       throw new Error("Remote registry publish is not supported from the OSS CLI. Use a local registry store or the hosted admin surface.");
     }
     const resolvedPublishPath = resolvePathFromUserInput(parsed.publishPath, env);
-    const harness = await validatePublishHarness(resolvedPublishPath, {
-      env,
-      registryStore: await resolveRegistryStoreForGraphs(env),
-      toolCatalogAdapters: resolveEnvToolCatalogAdapters(env),
-      adapters: createDefaultSkillAdapters(),
-      voiceProfilePath: await resolveBundledCliVoiceProfilePath(),
-    });
-    if (harness.status === "failed") {
-      throw new Error(`Harness failed for ${resolvedPublishPath}: ${harness.assertion_errors.join("; ")}`);
-    }
-    const skillPackage = await loadLocalSkillPackage(resolvedPublishPath);
-    const result = await publishRegistrySkillMarkdown({
-      env,
-      registry: parsed.registryUrl,
-      markdown: skillPackage.markdown,
-      owner: parsed.publishOwner,
-      version: parsed.publishVersion,
-      profileDocument: skillPackage.profileDocument,
-    });
-    if (parsed.json) {
-      io.stdout.write(`${JSON.stringify({ status: "success", publish: { ...result, harness } }, null, 2)}\n`);
-    } else {
-      io.stdout.write(renderPublishResult({ ...result, harness }, env));
-    }
-    return 0;
+    const args = ["registry", "publish", resolvedPublishPath, "--json"];
+    pushOptionalFlag(args, "--registry", parsed.registryUrl);
+    pushOptionalFlag(args, "--owner", parsed.publishOwner);
+    pushOptionalFlag(args, "--version", parsed.publishVersion);
+    return await writeNativeRunx(io, args, env);
   }
 
   if (parsed.command === "skill" && parsed.skillAction === "inspect" && parsed.receiptId) {
@@ -445,7 +344,6 @@ export async function dispatchCli(
       },
       caller,
       env,
-      lineage: replaySeed.lineage,
     });
     return writeLocalSkillResult(io, env, parsed, result);
   }
@@ -465,25 +363,11 @@ export async function dispatchCli(
   }
 
   if (parsed.command === "history") {
-    const history = await handleHistoryCommand(parsed, env);
     if (parsed.json) {
-      io.stdout.write(`${JSON.stringify({
-        status: "success",
-        query: parsed.historyQuery,
-        filters: {
-          skill: parsed.historySkill,
-          status: parsed.historyStatus,
-          source_type: parsed.historySource,
-          actor: parsed.historyActor,
-          artifact_type: parsed.historyArtifactType,
-          since: parsed.historySince,
-          until: parsed.historyUntil,
-        },
-        ...history,
-      }, null, 2)}\n`);
-    } else {
-      io.stdout.write(renderHistory(history.receipts, env, parsed.historyQuery, history.pendingRuns));
+      return await writeNativeRunx(io, nativeHistoryArgs(parsed, env), env);
     }
+    const history = await handleHistoryCommand(parsed, env);
+    io.stdout.write(renderHistory(history.receipts, env, parsed.historyQuery, history.pendingRuns));
     return 0;
   }
 
@@ -528,10 +412,7 @@ export async function dispatchCli(
     const result = await executeLocalSkillCommand({
       skillPath: await resolveRunnableSkillReference("evolve", env),
       inputs: evolveInputs,
-      parsed: {
-        ...parsed,
-        runner: parsed.runner ?? (parsed.evolveObjective === undefined && !parsed.runId ? "introspect" : undefined),
-      },
+      parsed,
       caller,
       env,
     });
@@ -563,37 +444,29 @@ async function executeLocalSkillCommand(options: {
   readonly parsed: ParsedArgs;
   readonly caller: Caller;
   readonly env: NodeJS.ProcessEnv;
-  readonly lineage?: RunLineageMetadata;
-}): Promise<RunLocalSkillResult> {
+}): Promise<CliSkillRunResult> {
   const env = await withBundledCliToolRoots(options.env);
-  const adapters = await resolveDefaultSkillAdapters(env);
   const resolvedReceiptDir = options.parsed.receiptDir ? resolvePathFromUserInput(options.parsed.receiptDir, env) : undefined;
-  const hydratedLineage =
-    options.lineage
-    ?? (
-      options.parsed.runId
-        ? (await readPendingRunState(
-          resolvedReceiptDir ?? resolveDefaultReceiptDir(env),
-          options.parsed.runId,
-        ))?.lineage
-        : undefined
-    );
-  return await runLocalSkill({
-    skillPath: options.skillPath,
-    inputs: options.inputs,
-    answersPath: options.parsed.answersPath ? resolvePathFromUserInput(options.parsed.answersPath, env) : undefined,
-    caller: options.caller,
-    env,
-    receiptDir: resolvedReceiptDir,
-    runner: options.parsed.runner,
-    resumeFromRunId: options.parsed.runId,
-    registryStore: await resolveRegistryStoreForGraphs(env),
-    officialSkillResolver: createOfficialSkillResolver(env),
-    adapters,
-    toolCatalogAdapters: resolveEnvToolCatalogAdapters(env),
-    voiceProfilePath: await resolveBundledCliVoiceProfilePath(),
-    lineage: hydratedLineage,
-  });
+  if (options.parsed.runner) {
+    throw new Error("native runx skill execution does not support --runner; encode runner selection in X.yaml.");
+  }
+  void options.caller;
+
+  const args = ["skill", options.skillPath, ...inputArgs(options.inputs), "--json"];
+  pushOptionalFlag(args, "--receipt-dir", resolvedReceiptDir);
+  pushOptionalFlag(args, "--run-id", options.parsed.runId);
+  pushOptionalFlag(
+    args,
+    "--answers",
+    options.parsed.answersPath ? resolvePathFromUserInput(options.parsed.answersPath, env) : undefined,
+  );
+  if (options.parsed.nonInteractive) {
+    args.push("--non-interactive");
+  }
+
+  const result = await runNativeRunx(args, { env });
+  const output = parseNativeSkillOutput(args, result);
+  return nativeSkillRunResult(options.skillPath, output);
 }
 
 async function withBundledCliToolRoots(env: NodeJS.ProcessEnv): Promise<NodeJS.ProcessEnv> {
@@ -622,5 +495,156 @@ function resolveKnowledgeDir(env: NodeJS.ProcessEnv): string {
 }
 
 function resolveDefaultReceiptDir(env: NodeJS.ProcessEnv): string {
-  return defaultReceiptDir(env);
+  if (env.RUNX_RECEIPT_DIR) {
+    return path.resolve(env.RUNX_RECEIPT_DIR);
+  }
+  return path.join(resolveRunxGlobalHomeDir(env), "receipts");
+}
+
+async function writeNativeRunx(
+  io: CliIo,
+  args: readonly string[],
+  env: NodeJS.ProcessEnv,
+): Promise<number> {
+  const result = await runNativeRunx(args, { env });
+  if (result.stdout) {
+    io.stdout.write(result.stdout);
+  }
+  if (result.stderr) {
+    io.stderr.write(result.stderr);
+  }
+  return result.status ?? 1;
+}
+
+function nativeToolArgs(action: "search" | "inspect", value: string, parsed: ParsedArgs): string[] {
+  const args = ["tool", action, value];
+  pushOptionalFlag(args, "--source", parsed.sourceFilter);
+  if (parsed.json) {
+    args.push("--json");
+  }
+  return args;
+}
+
+function nativeHistoryArgs(parsed: ParsedArgs, env: NodeJS.ProcessEnv): string[] {
+  const args = ["history"];
+  if (parsed.historyQuery) args.push(parsed.historyQuery);
+  pushOptionalFlag(args, "--receipt-dir", parsed.receiptDir ? resolvePathFromUserInput(parsed.receiptDir, env) : undefined);
+  pushOptionalFlag(args, "--skill", parsed.historySkill);
+  pushOptionalFlag(args, "--status", parsed.historyStatus);
+  pushOptionalFlag(args, "--source", parsed.historySource);
+  pushOptionalFlag(args, "--actor", parsed.historyActor);
+  pushOptionalFlag(args, "--artifact-type", parsed.historyArtifactType);
+  pushOptionalFlag(args, "--since", parsed.historySince);
+  pushOptionalFlag(args, "--until", parsed.historyUntil);
+  args.push("--json");
+  return args;
+}
+
+function pushOptionalFlag(args: string[], flag: string, value: string | undefined): void {
+  if (value !== undefined && value.length > 0) {
+    args.push(flag, value);
+  }
+}
+
+function inputArgs(inputs: Readonly<Record<string, unknown>>): string[] {
+  const args: string[] = [];
+  for (const [key, value] of Object.entries(inputs)) {
+    if (value === undefined) {
+      continue;
+    }
+    args.push(`--${key}`, cliInputValue(value));
+  }
+  return args;
+}
+
+function cliInputValue(value: unknown): string {
+  if (typeof value === "string") {
+    return value;
+  }
+  return JSON.stringify(value);
+}
+
+function parseNativeSkillOutput(args: readonly string[], result: NativeRunxProcessResult): unknown {
+  if (result.status !== 0 && result.status !== 2) {
+    throw new Error(
+      `native runx ${args.join(" ")} failed with exit ${result.status}: ${firstNonEmpty(result.stderr, result.stdout, "no output")}`,
+    );
+  }
+  try {
+    return JSON.parse(result.stdout);
+  } catch (error) {
+    throw new Error(`native runx ${args.join(" ")} returned invalid skill JSON: ${(error as Error).message}`);
+  }
+}
+
+function nativeSkillRunResult(skillPath: string, value: unknown): CliSkillRunResult {
+  if (!isRecord(value)) {
+    throw new Error("native runx skill returned a non-object payload.");
+  }
+  const status = stringField(value, "status");
+  const skillName = stringField(value, "skill_name") ?? path.basename(skillPath);
+  if (status === "needs_agent") {
+    const runId = stringField(value, "run_id");
+    const requests = arrayField(value, "requests") as Extract<CliSkillRunResult, { readonly status: "needs_agent" }>["requests"];
+    if (!runId) {
+      throw new Error("native runx skill needs_agent payload is missing run_id.");
+    }
+    return {
+      status: "needs_agent",
+      skill: { name: skillName },
+      skillPath,
+      runId,
+      requests,
+    };
+  }
+  if (status === "sealed") {
+    const execution = recordField(value, "execution");
+    const receipt = recordField(value, "receipt") as CliRuntimeReceipt | undefined;
+    if (!execution || !receipt || typeof receipt.id !== "string" || typeof receipt.schema !== "string") {
+      throw new Error("native runx skill sealed payload is missing execution or receipt.");
+    }
+    return {
+      ...value,
+      status: receipt.seal?.disposition === "closed" ? "sealed" : "failure",
+      skill: { name: skillName },
+      execution: {
+        stdout: stringField(execution, "stdout") ?? "",
+        stderr: stringField(execution, "stderr") ?? "",
+        errorMessage: stringField(execution, "errorMessage") ?? stringField(execution, "error_message"),
+        ...execution,
+      },
+      receipt,
+    } as CliSkillRunResult;
+  }
+  throw new Error(`native runx skill returned unsupported status '${status ?? "<missing>"}'.`);
+}
+
+function isRecord(value: unknown): value is Readonly<Record<string, unknown>> {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
+function recordField(
+  value: Readonly<Record<string, unknown>>,
+  key: string,
+): Readonly<Record<string, unknown>> | undefined {
+  const field = value[key];
+  return isRecord(field) ? field : undefined;
+}
+
+function arrayField(value: Readonly<Record<string, unknown>>, key: string): readonly unknown[] {
+  const field = value[key];
+  return Array.isArray(field) ? field : [];
+}
+
+function stringField(value: Readonly<Record<string, unknown>>, key: string): string | undefined {
+  const field = value[key];
+  return typeof field === "string" ? field : undefined;
+}
+
+function firstNonEmpty(...values: readonly string[]): string {
+  for (const value of values) {
+    const trimmed = value.trim();
+    if (trimmed) return trimmed;
+  }
+  return "";
 }
