@@ -9,6 +9,7 @@ use std::time::{Instant, SystemTime, UNIX_EPOCH};
 
 use runx_contracts::{DoctorStatus, JsonObject, JsonValue};
 
+use super::skill::run_skill_or_graph_fixture;
 use super::tool::{materialize_fixture_string, materialize_fixture_value, run_tool_fixture};
 use super::types::{
     DevError, DevFixtureAssertion, DevFixtureAssertionKind, DevFixtureExecutionRoots,
@@ -100,18 +101,7 @@ impl DevFixtureExecutor for LocalDevFixtureExecutor {
     ) -> Result<DevFixtureResult, DevError> {
         match string_field(&fixture.target, "kind") {
             Some("tool") => run_tool_fixture(root, fixture),
-            Some("skill") | Some("graph") => Ok(failed_fixture(
-                fixture,
-                Instant::now(),
-                vec![DevFixtureAssertion {
-                    path: "target.kind".to_owned(),
-                    expected: Some(JsonValue::String("native skill/graph dev executor".to_owned())),
-                    actual: string_field(&fixture.target, "kind")
-                        .map(|value| JsonValue::String(value.to_owned())),
-                    kind: DevFixtureAssertionKind::ExactMismatch,
-                    message: "Native skill and graph dev fixture execution is not wired in this runtime slice.".to_owned(),
-                }],
-            )),
+            Some("skill") | Some("graph") => run_skill_or_graph_fixture(root, fixture),
             Some(_) | None => Ok(failed_fixture(
                 fixture,
                 Instant::now(),
