@@ -339,6 +339,7 @@ pub fn runx_core::policy::authority_term_has_verb(term: &runx_contracts::authori
 pub fn runx_core::policy::build_authority_proof(options: &runx_core::policy::BuildAuthorityProofOptions) -> runx_core::policy::AuthorityProof
 pub fn runx_core::policy::build_authority_proof_metadata(options: &runx_core::policy::BuildAuthorityProofOptions) -> runx_core::policy::AuthorityProofMetadata
 pub fn runx_core::policy::build_local_scope_admission(auth: core::option::Option<&runx_contracts::json::JsonValue>, grants: &[runx_core::policy::LocalAdmissionGrant], options: &runx_core::policy::LocalScopeAdmissionOptions) -> runx_core::policy::ScopeAdmission
+pub fn runx_core::policy::compute_maturity(signals: &runx_contracts::maturity::MaturitySignals) -> runx_contracts::maturity::MaturityTier
 pub fn runx_core::policy::default_public_work_policy() -> runx_core::policy::RequiredPublicWorkPolicy
 pub fn runx_core::policy::evaluate_public_comment_opportunity(request: &runx_core::policy::PublicCommentOpportunityRequest, policy: &runx_core::policy::PublicWorkPolicy) -> runx_core::policy::PublicCommentPolicyDecision
 pub fn runx_core::policy::evaluate_public_pull_request_candidate(request: &runx_core::policy::PublicPullRequestCandidateRequest, policy: &runx_core::policy::PublicWorkPolicy) -> runx_core::policy::PublicPolicyDecision

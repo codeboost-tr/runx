@@ -1,0 +1,134 @@
+{
+  "schema": "runx.skill_author_runtime.fixtures.v1",
+  "probe": "probe.mjs",
+  "skill_directory": "skill",
+  "cases": [
+    {
+      "id": "env-json",
+      "mode": "inspect-env",
+      "timeout_seconds": 5,
+      "sandbox": {
+        "profile": "readonly",
+        "cwd_policy": "skill-directory"
+      },
+      "inputs": {
+        "message": "hi",
+        "thread.title": "Docs",
+        "  repeated---separator  ": "ok"
+      },
+      "expected": {
+        "status": "sealed",
+        "stdout_json": {
+          "cwd_basename": "skill",
+          "inputs_source": "json",
+          "message": "hi",
+          "mode": "inspect-env",
+          "repeated_separator_env": "ok",
+          "runx_cwd_basename": "skill-author-runtime",
+          "thread_title_env": "Docs"
+        }
+      }
+    },
+    {
+      "id": "stdin-json",
+      "mode": "inspect-stdin",
+      "input_mode": "stdin",
+      "timeout_seconds": 5,
+      "sandbox": {
+        "profile": "readonly",
+        "cwd_policy": "skill-directory"
+      },
+      "inputs": {
+        "message": "from stdin"
+      },
+      "expected": {
+        "status": "sealed",
+        "stdout_json": {
+          "inputs_source": "stdin",
+          "message": "from stdin",
+          "mode": "inspect-stdin",
+          "stdin_keys": [
+            "message"
+          ]
+        }
+      }
+    },
+    {
+      "id": "large-input-path",
+      "mode": "inspect-large-input",
+      "large_input_bytes": 81920,
+      "timeout_seconds": 5,
+      "sandbox": {
+        "profile": "readonly",
+        "cwd_policy": "skill-directory"
+      },
+      "inputs": {
+        "message": "large"
+      },
+      "expected": {
+        "status": "sealed",
+        "stdout_json": {
+          "inputs_source": "path",
+          "large_env_present": false,
+          "large_length": 81920,
+          "message": "large",
+          "mode": "inspect-large-input"
+        }
+      }
+    },
+    {
+      "id": "workspace-cwd",
+      "mode": "inspect-env",
+      "cwd": "../workspace-target",
+      "timeout_seconds": 5,
+      "sandbox": {
+        "profile": "readonly",
+        "cwd_policy": "workspace"
+      },
+      "inputs": {
+        "message": "cwd"
+      },
+      "expected": {
+        "status": "sealed",
+        "stdout_json": {
+          "cwd_basename": "workspace-target",
+          "inputs_source": "json",
+          "message": "cwd",
+          "mode": "inspect-env",
+          "repeated_separator_env": null,
+          "runx_cwd_basename": "skill-author-runtime",
+          "thread_title_env": null
+        }
+      }
+    },
+    {
+      "id": "large-output",
+      "mode": "large-output",
+      "timeout_seconds": 5,
+      "sandbox": {
+        "profile": "readonly",
+        "cwd_policy": "skill-directory"
+      },
+      "inputs": {},
+      "expected": {
+        "status": "sealed",
+        "stdout_bytes": 1048576
+      }
+    },
+    {
+      "id": "timeout-descendant",
+      "mode": "timeout-descendant",
+      "timeout_seconds": 1,
+      "sandbox": {
+        "profile": "readonly",
+        "cwd_policy": "skill-directory"
+      },
+      "inputs": {},
+      "expected": {
+        "max_duration_ms": 2500,
+        "sentinel_absent_after_ms": 3000,
+        "status": "failure"
+      }
+    }
+  ]
+}

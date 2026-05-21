@@ -11,7 +11,7 @@ import {
 import { isRecord } from "../util/types.js";
 import { unique } from "../util/array.js";
 
-import { buildSkillId, type RegistrySkillVersion, type RegistrySourceMetadata, type RegistryStore } from "./store.js";
+import { buildSkillId, type MaturityTier, type RegistrySkillVersion, type RegistrySourceMetadata, type RegistryStore } from "./store.js";
 import {
   buildPublisherAttestations,
   buildSourceAttestations,
@@ -28,6 +28,7 @@ export interface IngestSkillOptions {
   readonly profileDocument?: string;
   readonly publisher?: RegistryPublisher;
   readonly trustTier?: RegistryTrustTier;
+  readonly maturity?: MaturityTier;
   readonly attestations?: readonly RegistryAttestation[];
   readonly sourceMetadata?: RegistrySourceMetadata;
   readonly upsert?: boolean;
@@ -102,6 +103,9 @@ export function buildRegistrySkillVersion(markdown: string, options: IngestSkill
     runner_names: bindingArtifact.runnerNames,
     source_type: skill.source.type,
     trust_tier: trustTier,
+    // Stamped from the computed value when the publish ran a harness; otherwise
+    // the "alpha" floor. Recomputed on each publish (an "after tests" event).
+    maturity: options.maturity ?? "alpha",
     catalog_kind: catalog.kind,
     catalog_audience: catalog.audience,
     catalog_visibility: catalog.visibility,

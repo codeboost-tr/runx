@@ -2,7 +2,7 @@
 spec_version: '2.0'
 task_id: runx-target-repo-runners
 created: '2026-05-19T02:08:02Z'
-updated: '2026-05-21T22:05:00+10:00'
+updated: '2026-05-22T00:00:00+10:00'
 status: draft
 harden_status: in_progress
 size: large
@@ -14,33 +14,29 @@ risk_level: high
 ## Current State
 
 Status: draft
-Current phase: live provider adapter / target mutation slice
+Current phase: typed target checkout/git mutation adapter proof
 Next: resolve live target execution blockers before marking harden passed
 Reason: hardening round in progress; the Rust target-runner path is
 fixture-executable for policy admission, same-repo/cross-repo planning,
 readiness gating, provider dedupe observations, PR create/reuse receipt
 metadata, and source-publication receipt metadata, but it is not live-target
 executable.
-Blockers: target checkout/git mutation, pull-request create/update, outbox
+Blockers: real target checkout/git mutation, pull-request create/update, outbox
 pushers for source issue/thread publication, and Aster scheduling/readback are
 not implemented in this target-runner path. Live GitHub provider API lookup now
-has a transport-backed search client, but live end-to-end target mutation is
-still blocked.
+has a transport-backed search client, and the create path has a fixture-backed
+typed git mutation adapter proof, but live end-to-end target mutation is still
+blocked.
 Allowed follow-up command: `scafld harden runx-target-repo-runners --mark-passed`
 only after the live execution blockers are resolved or explicitly descoped.
-Latest runner update: 2026-05-21T22:05:00+10:00 dogfood audit confirmed this
-spec must stay draft: local contract/runtime target-runner tests exist and
-provider dedupe lookup is transport-backed, but there is still no real target
-checkout/git mutation, PR create/update, source publication pusher, or Aster
-scheduling/readback path in the reusable target-runner. Earlier on 2026-05-21
-added a transport-backed GitHub Search API client for provider dedupe lookup.
-It sends the concrete open-PR search command,
-redacts authorization headers in request debug output, projects only GitHub pull
-request search items for the target repo, and only marks markers/source refs
-present when they are echoed in returned PR text so reuse remains fail-closed.
-Remaining target-runner work is checkout/git mutation, PR create/update,
-source-publication pushers, and Aster scheduling/readback rather than contract
-drift.
+Latest runner update: 2026-05-22T00:00:00+10:00 added the next fixture-only
+adapter proof: create-path live-adapter execution now emits a typed target git
+mutation command after governed runner observation and before pull-request
+observation, validates target repo/branch/head readback, and proves the reuse
+path skips git mutation. This still makes no live network, git, or PR creation
+calls. The spec must stay draft because real target checkout/git mutation,
+PR create/update, source publication pushers, and Aster scheduling/readback
+remain open.
 Review gate: not_started
 
 ## Summary
@@ -184,6 +180,10 @@ Required behavior:
   reply receipt carrying dedupe metadata.
 - [x] Runtime live adapter receives fail-closed typed checkout and GitHub PR
   dedupe search commands before provider readback, with no local path leakage.
+- [x] Runtime live-adapter fixture receives a fail-closed typed target git
+  mutation command before PR observation on create, validates public target
+  repo/branch/head readback, and skips git mutation on reuse without live
+  network/git/PR calls.
 - [x] Public output excludes local checkout paths and env-secret values.
 
 ## Phase 1: Contract
@@ -231,6 +231,11 @@ Acceptance:
 - [x] Live-adapter checkout receives a typed command that carries only public
   repo identity, runner identity, base branch, scafld requirements, and mutation
   admission, and rejects malformed target repo ids before adapter calls.
+- [x] Live-adapter create path receives a typed git mutation command carrying
+  public repo identity, base branch, deterministic branch, dedupe key, source
+  issue/thread refs, runner refs, artifact refs, verification refs, and local
+  path hiding; fixture readback rejects target/branch/head mismatches and reuse
+  does not invoke git mutation.
 
 ## Phase 3: Dedupe
 
@@ -346,3 +351,8 @@ Issues:
   target-runner open-PR dedupe search command, with readback projection and
   HTTP error coverage. Remaining work is real target checkout/git mutation, PR
   create/update, source-publication pushers, and Aster scheduling/readback.
+- 2026-05-22: Added fixture-backed typed target git mutation adapter proof.
+  Create-path adapter execution now emits and validates a public-only git
+  mutation command before PR observation, while provider-dedupe reuse skips git
+  mutation. No live checkout/git/PR creation was added; real mutation remains a
+  blocker.

@@ -2,9 +2,10 @@ import { readFile, stat } from "node:fs/promises";
 import path from "node:path";
 
 import { resolveLocalSkillProfile } from "@runxhq/core/config";
-import { parseRunnerManifestYaml, parseSkillMarkdown, validateRunnerManifest } from "@runxhq/core/parser";
+import { parseRunnerManifestYaml, validateRunnerManifest } from "@runxhq/core/parser";
 
 import { runHarnessTarget, type HarnessRunOptions, type HarnessSuiteResult } from "./runner.js";
+import { parseSkillFrontmatter } from "./skill-frontmatter.js";
 
 export interface PublishHarnessSummary {
   readonly status: "passed" | "failed" | "not_declared";
@@ -13,6 +14,9 @@ export interface PublishHarnessSummary {
   readonly assertion_errors: readonly string[];
   readonly case_names: readonly string[];
   readonly receipt_ids: readonly string[];
+  // Cases that exercised the skill inside a graph (produced a graph receipt).
+  // Feeds the stable-maturity graph-integration signal.
+  readonly graph_case_count: number;
 }
 
 export async function validatePublishHarness(
@@ -42,6 +46,7 @@ export async function validatePublishHarness(
     assertion_errors: result.assertionErrors,
     case_names: result.cases.map((entry) => entry.fixture.name),
     receipt_ids: receiptIds,
+    graph_case_count: result.cases.filter((entry) => entry.graphReceipt).length,
   };
 }
 
@@ -53,7 +58,7 @@ async function resolveInlineHarnessProfileDocument(targetPath: string): Promise<
     return undefined;
   }
   const markdown = await readFile(skillPath, "utf8");
-  const raw = parseSkillMarkdown(markdown);
+  const raw = parseSkillFrontmatter(markdown);
   const skillName = typeof raw.frontmatter.name === "string" ? raw.frontmatter.name : undefined;
   if (!skillName) {
     return undefined;
@@ -70,6 +75,7 @@ function emptyHarnessSummary(): PublishHarnessSummary {
     assertion_errors: [],
     case_names: [],
     receipt_ids: [],
+    graph_case_count: 0,
   };
 }
 

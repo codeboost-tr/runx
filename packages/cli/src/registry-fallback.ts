@@ -3,12 +3,12 @@ import {
   resolveRunxRegistryPath,
   resolveRunxRegistryTarget,
 } from "@runxhq/core/config";
-import type { SkillSearchResult } from "@runxhq/core/marketplaces";
 import {
   createHttpCachedRegistryStore,
   createFileRegistryStore,
   searchRemoteRegistry,
   searchRegistry,
+  type SkillSearchResult,
   type RegistryStore as CoreRegistryStore,
 } from "@runxhq/core/registry";
 

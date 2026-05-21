@@ -38,6 +38,38 @@ const forbiddenPureNodeImports = new Set([
   "worker_threads",
   "node:worker_threads",
 ]);
+const sunsetTsPackageNames = new Set(["runtime-local", "adapters"]);
+const sunsetTsPackageImportPrefixes = ["@runxhq/runtime-local", "@runxhq/adapters"];
+const forbiddenCompatibilityPackageNames = new Set([
+  "@runxhq/runtime-local-v2",
+  "@runxhq/adapters-v2",
+  "@runxhq/runtime-local-shim",
+  "@runxhq/adapters-shim",
+  "@runxhq/runtime-local-compat",
+  "@runxhq/adapters-compat",
+  "@runxhq/runtime-local-compatibility",
+  "@runxhq/adapters-compatibility",
+  "runtime-local-v2",
+  "adapters-v2",
+  "runtime-local-shim",
+  "adapters-shim",
+  "runtime-local-compat",
+  "adapters-compat",
+  "runtime-local-compatibility",
+  "adapters-compatibility",
+]);
+const forbiddenCompatibilityPackageDirectoryNames = new Set([
+  "runtime-local-v2",
+  "adapters-v2",
+  "runtime-local-shim",
+  "adapters-shim",
+  "runtime-local-compat",
+  "adapters-compat",
+  "runtime-local-compatibility",
+  "adapters-compatibility",
+]);
+const packageDependencyFields = ["dependencies", "devDependencies", "peerDependencies", "optionalDependencies"];
+const aliasConfigFiles = ["tsconfig.base.json", "vitest.workspace-aliases.ts"];
 const forbiddenPackageImports = {
   core: {
     prefixes: [
@@ -92,6 +124,8 @@ const packageManifestCache = new Map();
 const workspacePackageNames = await readWorkspacePackageNames();
 
 await checkPackageExports();
+await checkForbiddenCompatibilityPackages();
+await checkForbiddenCompatibilityAliases();
 await checkForbiddenCoreRuntimeDirectories();
 for (const filePath of await findSourceFiles(workspaceRoot)) {
   await checkSourceFile(filePath);
@@ -126,6 +160,101 @@ async function checkPackageExports() {
   }
 }
 
+async function checkForbiddenCompatibilityPackages() {
+  const packagesDir = path.join(workspaceRoot, "packages");
+  const manifestPaths = [path.join(workspaceRoot, "package.json")];
+
+  for (const entry of await readdir(packagesDir, { withFileTypes: true })) {
+    if (!entry.isDirectory()) {
+      continue;
+    }
+
+    if (forbiddenCompatibilityPackageDirectoryNames.has(entry.name)) {
+      findings.push(`packages/${entry.name} uses a compatibility package directory; runtime-local/adapters shims are not allowed.`);
+    }
+
+    manifestPaths.push(path.join(packagesDir, entry.name, "package.json"));
+  }
+
+  for (const manifestPath of manifestPaths) {
+    const manifest = await readJsonIfExists(manifestPath);
+    if (!manifest) {
+      continue;
+    }
+
+    const rel = toPosix(path.relative(workspaceRoot, manifestPath));
+    if (isForbiddenCompatibilityPackageName(manifest.name)) {
+      findings.push(`${rel} names ${manifest.name}; runtime-local/adapters compatibility packages are not allowed.`);
+    }
+
+    for (const field of packageDependencyFields) {
+      const dependencies = manifest[field];
+      if (!dependencies || typeof dependencies !== "object" || Array.isArray(dependencies)) {
+        continue;
+      }
+
+      for (const dependencyName of Object.keys(dependencies)) {
+        if (isForbiddenCompatibilityPackageName(dependencyName)) {
+          findings.push(`${rel} declares ${dependencyName} in ${field}; runtime-local/adapters compatibility packages are not allowed.`);
+        }
+      }
+    }
+  }
+}
+
+async function checkForbiddenCompatibilityAliases() {
+  for (const relativePath of aliasConfigFiles) {
+    const absolutePath = path.join(workspaceRoot, relativePath);
+    const source = await readFile(absolutePath, "utf8");
+
+    if (relativePath.endsWith(".json")) {
+      checkJsonAliasConfig(relativePath, JSON.parse(source));
+      continue;
+    }
+
+    checkTextAliasConfig(relativePath, source);
+  }
+}
+
+function checkJsonAliasConfig(rel, config) {
+  const paths = config?.compilerOptions?.paths;
+  if (!paths || typeof paths !== "object" || Array.isArray(paths)) {
+    return;
+  }
+
+  for (const [alias, targets] of Object.entries(paths)) {
+    checkAliasToken(rel, alias);
+    const targetList = Array.isArray(targets) ? targets : [targets];
+    for (const target of targetList) {
+      if (typeof target === "string") {
+        checkAliasToken(rel, target);
+      }
+    }
+  }
+}
+
+function checkTextAliasConfig(rel, source) {
+  for (const token of extractStringLiterals(source)) {
+    checkAliasToken(rel, token);
+  }
+}
+
+function checkAliasToken(rel, token) {
+  const normalized = toPosix(token);
+  const packageName = packageSpecifierName(normalized.replace(/\/\*$/, ""));
+  if (isForbiddenCompatibilityPackageName(packageName)) {
+    findings.push(`${rel} aliases ${token}; runtime-local/adapters compatibility aliases are not allowed.`);
+    return;
+  }
+
+  for (const segment of normalized.split(/[\/\\]/)) {
+    if (forbiddenCompatibilityPackageDirectoryNames.has(segment)) {
+      findings.push(`${rel} aliases ${token}; runtime-local/adapters compatibility aliases are not allowed.`);
+      return;
+    }
+  }
+}
+
 async function checkForbiddenCoreRuntimeDirectories() {
   for (const directoryName of forbiddenCoreRuntimeDirs) {
     const directoryPath = path.join(workspaceRoot, "packages", "core", "src", directoryName);
@@ -148,9 +277,13 @@ async function checkSourceFile(filePath) {
     }
 
     if (packageSource) {
-      checkForbiddenPackageImport(rel, packageSource.packageName, specifier);
+      if (!checkSurvivingTsPackageImport(rel, packageSource.packageName, specifier)) {
+        checkForbiddenPackageImport(rel, packageSource.packageName, specifier);
+      }
       await checkDeclaredWorkspaceImport(rel, packageSource.packageName, specifier);
     }
+
+    checkForbiddenCompatibilityImport(rel, specifier);
 
     if (packageSource?.packageName === "core") {
       checkCoreImport(rel, packageSource.domain, specifier);
@@ -188,13 +321,33 @@ function checkCoreImport(rel, domain, specifier) {
   }
 }
 
+function checkSurvivingTsPackageImport(rel, packageName, specifier) {
+  if (sunsetTsPackageNames.has(packageName)) {
+    return false;
+  }
+
+  if (sunsetTsPackageImportPrefixes.some((prefix) => specifierMatchesPackageName(specifier, prefix))) {
+    findings.push(`${rel} imports ${specifier}; surviving TypeScript packages must not depend on sunset @runxhq/runtime-local or @runxhq/adapters packages.`);
+    return true;
+  }
+
+  return false;
+}
+
 function checkForbiddenPackageImport(rel, packageName, specifier) {
   const rule = forbiddenPackageImports[packageName];
   if (!rule) {
     return;
   }
-  if (rule.prefixes.some((prefix) => specifier === prefix || specifier.startsWith(`${prefix}/`))) {
+  if (rule.prefixes.some((prefix) => specifierMatchesPackageName(specifier, prefix))) {
     findings.push(`${rel} imports ${specifier}; ${rule.reason}`);
+  }
+}
+
+function checkForbiddenCompatibilityImport(rel, specifier) {
+  const packageName = packageSpecifierName(specifier);
+  if (isForbiddenCompatibilityPackageName(packageName)) {
+    findings.push(`${rel} imports ${specifier}; runtime-local/adapters compatibility packages are not allowed.`);
   }
 }
 
@@ -245,6 +398,16 @@ function extractSpecifiers(source) {
   return specifiers;
 }
 
+function extractStringLiterals(source) {
+  const literals = [];
+  const stringLiteralPattern = /["']([^"']+)["']/g;
+  let match;
+  while ((match = stringLiteralPattern.exec(source)) !== null) {
+    literals.push(match[1]);
+  }
+  return literals;
+}
+
 function getPackageSource(rel) {
   const parts = rel.split("/");
   if (parts[0] !== "packages" || parts[2] !== "src") {
@@ -259,6 +422,27 @@ function getPackageSource(rel) {
 function workspaceDependencyName(specifier) {
   const match = /^(@runxhq\/[^/]+)/.exec(specifier);
   return match?.[1];
+}
+
+function packageSpecifierName(specifier) {
+  if (specifier.startsWith(".")) {
+    return undefined;
+  }
+
+  const parts = specifier.split("/");
+  if (specifier.startsWith("@")) {
+    return parts.length >= 2 ? `${parts[0]}/${parts[1]}` : specifier;
+  }
+
+  return parts[0];
+}
+
+function specifierMatchesPackageName(specifier, packageName) {
+  return specifier === packageName || specifier.startsWith(`${packageName}/`);
+}
+
+function isForbiddenCompatibilityPackageName(packageName) {
+  return typeof packageName === "string" && forbiddenCompatibilityPackageNames.has(packageName);
 }
 
 async function readWorkspacePackageNames() {

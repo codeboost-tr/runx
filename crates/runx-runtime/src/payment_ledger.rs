@@ -359,8 +359,10 @@ pub fn persist_x402_payment_ledger_projection_event(
     steps: &[StepRun],
     scenario_id: &str,
 ) -> Result<Option<PaymentLedgerRuntimeEvent>, PaymentLedgerProjectionError> {
-    if graph_receipt.seal.disposition != ClosureDisposition::Closed
-        || !steps.iter().any(has_payment_reservation_packet)
+    if !matches!(
+        graph_receipt.seal.disposition,
+        ClosureDisposition::Closed | ClosureDisposition::Blocked
+    ) || !steps.iter().any(has_payment_reservation_packet)
     {
         return Ok(None);
     }

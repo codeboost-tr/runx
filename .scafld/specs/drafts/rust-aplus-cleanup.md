@@ -2,7 +2,7 @@
 spec_version: '2.0'
 task_id: rust-aplus-cleanup
 created: '2026-05-21T03:50:00Z'
-updated: '2026-05-21T04:18:10Z'
+updated: '2026-05-22T00:39:00+10:00'
 status: draft
 harden_status: not_run
 size: medium
@@ -77,6 +77,12 @@ Items touching files under active parallel work are marked **[blocked-until:
   spec's "fold-in-after" sequencing — they sit in actively-reshaped files.
   contracts/core/receipts clippy green; runtime edits verified clean (the only
   runtime build errors are unrelated in-flight payment-ledger work).
+- **External adapter + MCP staged proof style cleanup** — the 2026-05-22
+  execution slices removed non-payment `check-rust-core-style` findings by
+  making external-adapter frame dispatch typed, avoiding public
+  `serde_json::Value` in the staged rmcp server bridge, and documenting the
+  large external-adapter process-supervisor file. Focused external-adapter and
+  MCP tests pass.
 
 ## Tier 1 — correctness / drift risk
 
@@ -293,10 +299,17 @@ L5-L8 are tidiness.
   Collapsing breaks cross-language parity. Verified against the TS schema.
 - `ReferenceType::` / `AuthorityVerb` comparisons: already typed + exhaustive —
   the *correct* pattern the stringly ones should converge to.
-- `serde_json::Value` in public APIs: zero instances.
+- `serde_json::Value` in public APIs outside the active payment recovery lane:
+  zero instances after the external-adapter/MCP cleanup. The remaining style
+  finding is `payment_state.rs` and belongs to the concurrent
+  payment→authority workstream.
 
 ## Sequencing
 
+0. Active payment→authority lane must clear the remaining Rust style findings:
+   `execution/runner/authority.rs` file/function size,
+   `execution/runner/steps.rs` replay helper size, and `payment_state.rs`
+   public `serde_json::Value`.
 1. After payment→authority lands: confirm Class B(payment), K resolved.
 2. After source_type→SourceKind lands: A(source_type/input_mode), then A
    (CatalogMetadata, SkillSandbox), then K collapse.

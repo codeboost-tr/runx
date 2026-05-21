@@ -141,6 +141,65 @@ fn native_x402_ledger_projection() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 #[test]
+fn native_x402_refusal_ledger_projection() -> Result<(), Box<dyn std::error::Error>> {
+    let receipt_dir = isolated_receipt_dir()?;
+    let output = native_command()?
+        .env("RUNX_RECEIPT_DIR", &receipt_dir)
+        .args([
+            "harness",
+            "fixtures/harness/x402-pay-ledger-governed-refusal.yaml",
+            "--json",
+        ])
+        .output()?;
+    assert_success(&output)?;
+
+    let receipt: Value = serde_json::from_slice(&output.stdout)?;
+    assert_eq!(receipt["seal"]["disposition"], "blocked");
+
+    let projection_path = receipt_dir
+        .join("artifacts")
+        .join("payment-ledger")
+        .join("x402-pay")
+        .join("hrn_rcpt_x402-pay-ledger-governed-refusal.json");
+    let projection: Value = serde_json::from_str(&fs::read_to_string(&projection_path)?)?;
+    assert_eq!(
+        projection["schema_version"],
+        "runx.payment_ledger_projection.v1"
+    );
+    assert_eq!(projection["payment_profile"], "x402-pay");
+    assert_eq!(projection["scenario_id"], "P1.3");
+    assert_eq!(projection["disposition"], "refused");
+    assert_eq!(projection["accrual"]["amount_minor"], 0);
+    assert_eq!(
+        projection["accrual"]["rail_proof_refs"]
+            .as_array()
+            .map(Vec::len),
+        Some(0)
+    );
+    assert_eq!(projection["refusal"]["reason_code"], "cap_exceeded");
+    assert_eq!(projection["refusal"]["rail_call_performed"], false);
+    assert_eq!(projection["refusal"]["ledger_spend_recorded"], false);
+
+    let ledger_path = receipt_dir
+        .join("ledgers")
+        .join("gx_x402-pay-ledger-governed-refusal.jsonl");
+    let ledger = fs::read_to_string(&ledger_path)?;
+    let lines = ledger.lines().collect::<Vec<_>>();
+    assert_eq!(lines.len(), 1);
+    let event: Value = serde_json::from_str(lines[0])?;
+    assert_eq!(event["entry"]["type"], "run_event");
+    assert_eq!(event["entry"]["data"]["kind"], "payment_ledger_projected");
+    assert_eq!(
+        event["entry"]["data"]["detail"]["projection_artifact_id"],
+        "x402-pay:runx:harness_receipt:hrn_rcpt_x402-pay-ledger-governed-refusal"
+    );
+    assert_eq!(event["entry"]["data"]["detail"]["disposition"], "refused");
+
+    fs::remove_dir_all(&receipt_dir).ok();
+    Ok(())
+}
+
+#[test]
 fn native_x402_stripe_spt_happy_path_runs_without_typescript()
 -> Result<(), Box<dyn std::error::Error>> {
     let receipt = run_harness_fixture(

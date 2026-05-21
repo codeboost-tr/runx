@@ -1,6 +1,9 @@
 # runx OSS
 
-Public open-source boundary for the runx CLI, trusted kernel, adapters, SDK, harness, local receipts, registry CE, marketplace adapters, official skills, and IDE plugin shells.
+Public open-source boundary for the runx CLI, trusted Rust local runtime,
+generated contracts, language-neutral extension protocols, SDKs, harness, local
+receipts, registry CE, marketplace integrations, official skills, and IDE
+plugin shells.
 
 The npm CLI package is `@runxhq/cli` and exposes the `runx` binary.
 
@@ -105,13 +108,26 @@ domains.
 For the generated package export index, see [docs/api-surface.md](docs/api-surface.md).
 
 `runx-runtime` is the canonical local runtime. It owns local skill, graph,
-harness, receipt, history, policy, authority, payment, MCP, adapter, and
-sandbox orchestration for the native CLI path.
+harness, receipt, history, policy, authority, payment, sandbox enforcement,
+MCP, built-in adapter execution, and external execution-adapter supervision for
+the native CLI path.
 
 `@runxhq/runtime-local` and `@runxhq/adapters` are sunset TypeScript
-compatibility surfaces. They may wrap or test Rust behavior during the cutover,
-but they must not become the only implementation of trusted local execution.
-New local orchestration work belongs in Rust first.
+compatibility surfaces. They may contain wrappers, generated protocol types,
+helper SDKs, or tests during the cutover, but they must not execute trusted
+local runtime fallback behavior. New local orchestration work belongs in Rust
+first, and package wrappers must fail closed when a supported native binary is
+not available.
+
+TypeScript remains for generated contracts, CLI/client wrappers,
+cloud/product integrations, host adapters, authoring tooling, and helper SDKs
+over language-neutral protocols. Host adapters can shape host responses over
+the runx host protocol; they do not own local execution. External execution
+adapter authors target manifests and wire protocols, so they do not need Rust,
+`runx-core`, `runx-runtime`, or a fork of the core repository. Source-event
+ingress, hosted runtime binding, catalog/read-model access, and thread/outbox
+provider adapters are separate protocol lanes, not reasons to broaden the
+execution-adapter protocol into a second runtime.
 
 Command-surface ownership:
 
@@ -121,6 +137,8 @@ Command-surface ownership:
 | `runx harness <fixture.yaml>` | Rust harness replay | compatibility tests and wrappers |
 | receipts and history | Rust receipt store and journal | display/client views |
 | policy, authority, payment, x402 | Rust core/runtime policy | published type mirrors and product UX |
+| external execution-adapter protocol | `runx-runtime` supervisor | generated types, helper SDKs, host/client wrappers |
+| non-execution extension protocols | lane-specific Rust/cloud owners | generated types, helper SDKs, provider glue |
 | marketplace and docs tooling | TypeScript/scafld until separately cut over | canonical for authoring UX |
 
 ### Local Sandbox Enforcement
@@ -357,6 +375,15 @@ The package must include `dist/index.js` and `dist/index.d.ts`, and `dist/index.
 
 - `oss/` must not import from `cloud/`.
 - State-machine and policy packages remain pure.
-- Executor dispatches adapters but does not write receipts.
-- Adapters own side effects.
-- CLI, SDK, IDE plugin, and MCP entrypoints delegate to runner contracts instead of duplicating the engine.
+- Rust owns trusted local runtime/execution, including sandbox, receipts,
+  policy, authority, payment, harness, built-in adapters, and external
+  execution-adapter supervision.
+- TypeScript runtime-local and adapters packages must not be fallback
+  executors for trusted local behavior.
+- External execution adapters own their side effects behind language-neutral
+  protocols and manifests; non-execution extension lanes have their own
+  protocol contracts.
+- External extension authors must not need Rust, a `runx-core` or
+  `runx-runtime` dependency, or a core repository fork.
+- CLI, SDK, IDE plugin, host adapter, and MCP entrypoints delegate to runner
+  contracts or external protocols instead of duplicating the engine.

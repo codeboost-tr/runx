@@ -2,7 +2,7 @@
 spec_version: '2.0'
 task_id: rust-kernel-blocking-promotion
 created: '2026-05-17T00:30:00Z'
-updated: '2026-05-21T22:14:35+10:00'
+updated: '2026-05-22T00:30:13+10:00'
 status: draft
 harden_status: not_run
 size: medium
@@ -41,6 +41,11 @@ the `mcp-rmcp` crate-graph guard, clearing Rust style findings, and refreshing
 the stale `runx-core` public API snapshot. `node
 scripts/check-rust-kernel-parity.mjs` passed. This evidence does not satisfy
 the live five-PR soak gate and does not authorize the CI flip.
+Latest soak evidence update: 2026-05-22T00:30:13+10:00 reran the clean-kernel
+counter tests and fixture/live count commands. Counter tests passed, fixture
+mode still counts four qualifying records, and live GitHub mode against
+`runxhq/runx` still counts zero qualifying PRs after the conservative advisory
+start. The five-PR soak gate remains blocked.
 Safe evidence/planning update: 2026-05-21T03:19:54Z recorded a conservative
 advisory-start timestamp of `2026-05-19T03:33:01Z` from the completed archived
 `rust-parity-ci-governance` spec. Fixture mode still counts 4 qualifying PRs;
@@ -281,7 +286,7 @@ Validation:
   - Command: `pnpm exec tsx scripts/count-clean-kernel-prs.ts --min 5`
   - Expected kind: `exit_code_zero`
   - Timeout seconds: 60
-  - Status: failed 2026-05-21T04:08:33Z with 4 qualifying fixture records,
+  - Status: failed 2026-05-22T00:30:13+10:00 with 4 qualifying fixture records,
     below the required 5.
 - [ ] `v3` command - Rust kernel parity checks are no longer advisory.
   - Command: `! rg -n 'continue-on-error: true' .github/workflows/ci.yml | rg -qE 'cargo-deny|cargo public-api|check-rust-kernel-parity'`
@@ -333,7 +338,7 @@ Acceptance:
   - Command: `pnpm exec tsx scripts/count-clean-kernel-prs.ts --min 5`
   - Expected kind: `exit_code_zero`
   - Timeout seconds: 60
-  - Status: failed 2026-05-21T04:08:33Z with 4 qualifying fixture records,
+  - Status: failed 2026-05-22T00:30:13+10:00 with 4 qualifying fixture records,
     below the required 5.
 - [ ] `ac2_2` command - evidence is recorded in this spec.
   - Command: `rg -n 'Clean PR evidence: filled' .scafld/specs/drafts/rust-kernel-blocking-promotion.md`
@@ -561,6 +566,18 @@ Local non-promoting evidence, 2026-05-21T22:14:35+10:00:
   kernel-touching PRs are still not evidenced and `.github/workflows/ci.yml`
   still intentionally keeps the Rust kernel parity step advisory.
 
+Local non-promoting evidence, 2026-05-22T00:30:13+10:00:
+- `pnpm exec vitest run --config vitest.config.ts tests/count-clean-kernel-prs.test.ts`
+  passed, 10 tests.
+- `pnpm exec tsx scripts/count-clean-kernel-prs.ts --fixture tests/fixtures/clean-kernel-prs.json --min 5`
+  failed closed with 4 qualifying fixture records: PRs 101, 102, 103, and 108.
+- `pnpm exec tsx scripts/count-clean-kernel-prs.ts --min 5` failed closed
+  with the same 4 qualifying fixture records, below the required 5.
+- `pnpm exec tsx scripts/count-clean-kernel-prs.ts --from-github --repo runxhq/runx --advisory-start 2026-05-19T03:33:01Z --min 5 --limit 100`
+  reached live GitHub metadata and failed closed with 0 qualifying live records.
+  The latest returned merged PR was PR 36, merged at 2026-05-14T14:17:35Z,
+  which is before the conservative advisory start. CI promotion remains blocked.
+
 ## Metadata
 
 Estimated effort hours: 6
@@ -619,3 +636,7 @@ Supersession:
   and `runx-core` API snapshot regeneration. The wrapper passes end to end.
   CI remains advisory because the five clean post-advisory PR soak evidence is
   still missing.
+- 2026-05-22T00:30:13+10:00: Re-ran the clean-kernel counter evidence slice.
+  Counter tests passed, fixture/default count mode still found only 4
+  qualifying records, and live GitHub mode found 0 qualifying records after
+  the conservative advisory start. CI remains advisory.

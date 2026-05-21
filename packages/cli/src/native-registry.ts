@@ -1,7 +1,7 @@
 import { spawn } from "node:child_process";
 import process from "node:process";
 
-import type { SkillSearchResult } from "@runxhq/core/marketplaces";
+import type { SkillSearchResult } from "@runxhq/core/registry";
 import { asRecord, errorMessage } from "@runxhq/core/util";
 
 export interface NativeRegistryOptions {

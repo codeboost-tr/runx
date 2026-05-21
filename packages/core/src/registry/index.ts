@@ -39,6 +39,7 @@ export {
 } from "./links.js";
 export { publishSkillMarkdown, type PublishSkillMarkdownOptions, type PublishSkillMarkdownResult } from "./publish.js";
 export { parseRegistrySkillRef, resolveRegistrySkill, type RegistrySkillResolution } from "./resolve.js";
+export type { SkillRunnerMode, SkillSearchResult, SkillSearchSource, SkillSearchTrustTier } from "./search-result.js";
 export { normalizeRegistrySearchResult, searchRegistry, type RegistrySearchResult } from "./search.js";
 export {
   FileRegistryStore,
@@ -54,8 +55,10 @@ export {
   type RegistrySkillVersion,
   type RegistryStore,
   type RegistryTrustTier,
+  type MaturityTier,
   type PutVersionOptions,
 } from "./store.js";
+export { computeMaturity, type MaturitySignals } from "./maturity.js";
 export {
   HttpCachedRegistryStore,
   createHttpCachedRegistryStore,

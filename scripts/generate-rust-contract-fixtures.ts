@@ -815,7 +815,16 @@ function agentActResolutionRequest(): Readonly<Record<string, unknown>> {
       agent: "codex",
       task: "Summarize receipt",
       envelope: {
-        schema: "runx.agent_context.v1",
+        allowed_tools: [],
+        current_context: [],
+        historical_context: [],
+        inputs: {},
+        instructions: "Summarize receipt",
+        provenance: [],
+        run_id: "run_1",
+        skill: "review-receipt",
+        step_id: "step_1",
+        trust_boundary: "test",
       },
     },
   };

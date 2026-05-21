@@ -13,9 +13,8 @@ import {
 import {
   createFixtureMarketplaceAdapter,
   searchMarketplaceAdapters,
-  type SkillSearchResult,
 } from "@runxhq/core/marketplaces";
-import { acquireRegistrySkill, type AcquiredRegistrySkill } from "@runxhq/core/registry";
+import { acquireRegistrySkill, type AcquiredRegistrySkill, type SkillSearchResult } from "@runxhq/core/registry";
 
 import { asRecord, errorMessage, hashString, readOptionalFile } from "@runxhq/core/util";
 

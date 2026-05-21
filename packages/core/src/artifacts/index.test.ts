@@ -4,6 +4,8 @@ import path from "node:path";
 
 import { describe, expect, it } from "vitest";
 
+import { canonicalJsonStringify, sha256Hex } from "@runxhq/contracts";
+
 import {
   appendLedgerEntries,
   appendPreparedLedgerEntries,
@@ -26,8 +28,15 @@ describe("ledger tamper evidence", () => {
       await appendLedgerEntries({ receiptDir, runId, entries: [second] });
 
       const rawLines = (await readFile(resolveLedgerPath(receiptDir, runId), "utf8")).trim().split("\n");
+      const firstRecord = JSON.parse(rawLines[0] ?? "{}") as {
+        readonly chain: {
+          readonly algorithm: string;
+          readonly canonicalization: string;
+          readonly entry_hash: string;
+        };
+      };
       expect(rawLines).toHaveLength(2);
-      expect(JSON.parse(rawLines[0] ?? "{}")).toMatchObject({
+      expect(firstRecord).toMatchObject({
         schema_version: "runx.ledger.entry.v1",
         chain: {
           version: "runx.ledger.chain.v1",
@@ -39,6 +48,16 @@ describe("ledger tamper evidence", () => {
             artifact_id: first.meta.artifact_id,
           },
         },
+      });
+      expect(firstRecord.chain).toMatchObject({
+        algorithm: "sha256",
+        canonicalization: "runx.stable-json.v1",
+        entry_hash: sha256Hex(canonicalJsonStringify({
+          version: "runx.ledger.chain-payload.v1",
+          index: 0,
+          previous_hash: null,
+          entry: first,
+        })),
       });
 
       await expect(readLedgerEntries(receiptDir, runId)).resolves.toEqual([first, second]);

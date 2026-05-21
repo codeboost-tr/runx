@@ -1,26 +1,11 @@
 import { describe, expect, it } from "vitest";
 
-import { parseSkillMarkdown, validateSkill } from "@runxhq/core/parser";
 import { createHarnessHookAdapter } from "./agent-hook.js";
+import type { SkillSource } from "../parser-types.js";
 
 describe("harness-hook adapter", () => {
   it("invokes a deterministic hook through the adapter seam", async () => {
-    const skill = validateSkill(
-      parseSkillMarkdown(`---
-name: review-receipt
-source:
-  type: harness-hook
-  hook: review-receipt
-  outputs:
-    verdict: string
-inputs:
-  receipt_id:
-    type: string
-    required: true
----
-Review a receipt.
-`),
-    );
+    const source = harnessHookSource("review-receipt", { verdict: "string" });
     const adapter = createHarnessHookAdapter({
       handlers: {
         "review-receipt": () => ({ output: { verdict: "pass" } }),
@@ -28,7 +13,7 @@ Review a receipt.
     });
 
     const result = await adapter.invoke({
-      source: skill.source,
+      source,
       inputs: { receipt_id: "rx_123" },
       skillDirectory: process.cwd(),
       env: process.env,
@@ -46,16 +31,7 @@ Review a receipt.
   });
 
   it("returns sanitized failure metadata", async () => {
-    const skill = validateSkill(
-      parseSkillMarkdown(`---
-name: failing-hook
-source:
-  type: harness-hook
-  hook: fail
----
-Fail.
-`),
-    );
+    const source = harnessHookSource("fail");
     const adapter = createHarnessHookAdapter({
       handlers: {
         fail: () => ({ status: "failure", errorMessage: "fixture failure" }),
@@ -63,7 +39,7 @@ Fail.
     });
 
     const result = await adapter.invoke({
-      source: skill.source,
+      source,
       inputs: {},
       skillDirectory: process.cwd(),
       env: process.env,
@@ -79,3 +55,17 @@ Fail.
     });
   });
 });
+
+function harnessHookSource(hook: string, outputs?: Readonly<Record<string, unknown>>): SkillSource {
+  return {
+    type: "harness-hook",
+    args: [],
+    hook,
+    outputs,
+    raw: {
+      type: "harness-hook",
+      hook,
+      ...(outputs ? { outputs } : {}),
+    },
+  };
+}

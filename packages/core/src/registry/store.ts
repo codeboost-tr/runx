@@ -11,6 +11,11 @@ import {
 } from "../util/validators.js";
 
 export type RegistryTrustTier = "first_party" | "verified" | "community";
+
+// Skill readiness, orthogonal to trust. Computed from harness signals at event
+// points (publish, harness seal) and stored; readers never recompute it.
+// Canonical algorithm: runx-core::policy::compute_maturity.
+export type MaturityTier = "alpha" | "beta" | "stable";
 export type RegistryPublisherKind = "organization" | "user" | "team" | "service" | "publisher";
 export type RegistryAttestationKind = "source" | "publisher" | "verification";
 export type RegistryAttestationStatus = "verified" | "declared";
@@ -62,6 +67,8 @@ export interface RegistrySkillVersion {
   readonly runner_names: readonly string[];
   readonly source_type: string;
   readonly trust_tier: RegistryTrustTier;
+  // Optional during the dual-tree window; absent reads as the "alpha" floor.
+  readonly maturity?: MaturityTier;
   readonly catalog_kind?: "skill" | "graph";
   readonly catalog_audience?: "public" | "builder" | "operator";
   readonly catalog_visibility?: "public" | "private";

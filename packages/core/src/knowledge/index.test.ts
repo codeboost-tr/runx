@@ -2,7 +2,9 @@ import { mkdir, mkdtemp, rm, writeFile } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
+
+import { canonicalJsonStringify, sha256Hex } from "@runxhq/contracts";
 
 import {
   createFileKnowledgeStore,
@@ -504,6 +506,7 @@ describe("thread contract", () => {
   it("pushes and rehydrates through the file thread adapter", async () => {
     const tempDir = await mkdtemp(path.join(os.tmpdir(), "runx-thread-file-"));
     const statePath = path.join(tempDir, "thread.json");
+    const pushedAt = "2026-05-22T01:02:03.000Z";
     const initial = {
       kind: "runx.thread.v1",
       adapter: {
@@ -521,6 +524,8 @@ describe("thread contract", () => {
 
     try {
       await writeFile(statePath, `${JSON.stringify(initial, null, 2)}\n`);
+      vi.useFakeTimers();
+      vi.setSystemTime(new Date(pushedAt));
       const state = validateThread(initial);
       const result = await pushOutboxEntryViaAdapter({
         thread: state,
@@ -532,6 +537,7 @@ describe("thread contract", () => {
         },
         next_status: "draft",
       });
+      vi.useRealTimers();
 
       expect(result.status).toBe("pushed");
       expect(result.outbox_entry).toMatchObject({
@@ -547,6 +553,16 @@ describe("thread contract", () => {
           status: "draft",
         }),
       ]);
+      expect(result.thread.entries.at(-1)?.entry_id).toBe(`entry_${sha256Hex(canonicalJsonStringify({
+        thread: "local://provider/issues/123",
+        outbox_entry: "pull_request:fixture-task",
+        pushed_at: pushedAt,
+      })).slice(0, 24)}`);
+      expect(result.thread.adapter.cursor).toBe(`push:${sha256Hex(canonicalJsonStringify({
+        outbox_entry: "pull_request:fixture-task",
+        pushed_at: pushedAt,
+      })).slice(0, 12)}`);
+      expect(result.thread.adapter.cursor).not.toContain("sha256:");
       expect(result.thread.entries.at(-1)).toMatchObject({
         entry_kind: "status",
         structured_data: {
@@ -568,6 +584,7 @@ describe("thread contract", () => {
         }),
       ]);
     } finally {
+      vi.useRealTimers();
       await rm(tempDir, { recursive: true, force: true });
     }
   });

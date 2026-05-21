@@ -97,6 +97,12 @@ pub struct Question {
     pub question_type: String,
 }
 
+/// Host protocol approval request gate carried by `ResolutionRequest::Approval`.
+///
+/// This is distinct from `authority_proof.approval_gate`, which records an
+/// approval decision with `gate_id`, `gate_type`, and `decision` fields after
+/// policy evaluation. Keep this shape aligned with the host resolution request
+/// schema; do not use it as the authority-proof decision record.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct ApprovalGate {

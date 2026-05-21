@@ -1,5 +1,5 @@
 use std::cell::RefCell;
-use std::collections::VecDeque;
+use std::collections::{BTreeMap, VecDeque};
 use std::fs;
 use std::path::{Path, PathBuf};
 use std::rc::Rc;
@@ -10,6 +10,10 @@ use runx_contracts::{
 };
 use runx_core::state_machine::GraphStatus;
 use runx_receipts::ReceiptTreeConfig;
+use runx_runtime::payment_state::{
+    FileBackedPaymentStateStore, PaymentRecoveryState, RUNX_PAYMENT_STATE_PATH_ENV,
+    RailMutationStatus,
+};
 use runx_runtime::{
     Host, InvocationStatus, Runtime, RuntimeError, RuntimeOptions, SkillAdapter, SkillInvocation,
     SkillOutput, validate_runtime_receipt_tree,
@@ -376,6 +380,243 @@ fn x402_paid_echo_returns_echo_only_after_sealed_payment_proof()
 }
 
 #[test]
+fn x402_paid_echo_replays_sealed_idempotency_without_second_rail()
+-> Result<(), Box<dyn std::error::Error>> {
+    let fixture = PaidEchoFixture::new()?;
+    let state_dir = tempfile::tempdir()?;
+    let payment_state_path = state_dir.path().join("payment-state.json");
+    let mut env = BTreeMap::new();
+    env.insert(
+        RUNX_PAYMENT_STATE_PATH_ENV.to_owned(),
+        payment_state_path.to_string_lossy().into_owned(),
+    );
+    let adapter = PaidEchoAdapter::new(PaidEchoRailProof::Present);
+    let invocations = adapter.invocations();
+    let runtime = Runtime::new(
+        adapter,
+        RuntimeOptions {
+            env,
+            ..RuntimeOptions::default()
+        },
+    );
+
+    let mut first_host = ApprovalHost::approved(true);
+    let first = runtime.run_graph_file_with_host(fixture.graph_path(), &mut first_host)?;
+    assert_eq!(first.state.status, GraphStatus::Succeeded);
+
+    let mut second_host = ApprovalHost::approved(true);
+    let second = runtime.run_graph_file_with_host(fixture.graph_path(), &mut second_host)?;
+    assert_eq!(second.state.status, GraphStatus::Succeeded);
+    assert_eq!(
+        step_run(&second.steps, "fulfill")?.receipt.id,
+        step_run(&first.steps, "fulfill")?.receipt.id,
+        "idempotency replay must return the first sealed step receipt id"
+    );
+    assert_eq!(
+        step_run(&second.steps, "fulfill")?.receipt.seal.digest,
+        step_run(&first.steps, "fulfill")?.receipt.seal.digest,
+        "idempotency replay must rebuild the first sealed step receipt digest"
+    );
+    assert_eq!(
+        object_field(
+            &step_run(&second.steps, "echo")?.outputs,
+            "paid_echo_result"
+        )?
+        .get("payment_proof_ref"),
+        Some(&JsonValue::String(
+            "receipt-proof:mock:paid-echo-001".to_owned()
+        ))
+    );
+
+    let fulfill_count = invocations
+        .borrow()
+        .iter()
+        .filter(|invocation| invocation.skill_name == "pay-fulfill-rail")
+        .count();
+    assert_eq!(
+        fulfill_count, 1,
+        "sealed idempotency replay must not execute a second rail call"
+    );
+    let echo_count = invocations
+        .borrow()
+        .iter()
+        .filter(|invocation| invocation.skill_name == "paid-echo")
+        .count();
+    assert_eq!(
+        echo_count, 2,
+        "replay must still forward the scoped credential/proof to the paid tool"
+    );
+    let state_text = std::fs::read_to_string(&payment_state_path)?;
+    assert!(
+        !state_text.contains(PAID_ECHO_RAIL_SESSION_MATERIAL_REF),
+        "payment replay state must not persist rail session material"
+    );
+    Ok(())
+}
+
+#[test]
+fn x402_paid_echo_reused_spend_capability_with_new_idempotency_denied_from_persisted_state_before_second_rail()
+-> Result<(), Box<dyn std::error::Error>> {
+    let fixture = PaidEchoFixture::new()?;
+    let state_dir = tempfile::tempdir()?;
+    let payment_state_path = state_dir.path().join("payment-state.json");
+    let mut env = BTreeMap::new();
+    env.insert(
+        RUNX_PAYMENT_STATE_PATH_ENV.to_owned(),
+        payment_state_path.to_string_lossy().into_owned(),
+    );
+    let adapter = PaidEchoAdapter::with_idempotency_keys(
+        PaidEchoRailProof::Present,
+        [PAID_ECHO_IDEMPOTENCY_KEY, "payment:paid-echo-002"],
+    );
+    let invocations = adapter.invocations();
+    let runtime = Runtime::new(
+        adapter,
+        RuntimeOptions {
+            env,
+            ..RuntimeOptions::default()
+        },
+    );
+
+    let mut first_host = ApprovalHost::approved(true);
+    let first = runtime.run_graph_file_with_host(fixture.graph_path(), &mut first_host)?;
+    assert_eq!(first.state.status, GraphStatus::Succeeded);
+
+    let mut second_host = ApprovalHost::approved(true);
+    let second = runtime.run_graph_file_with_host(fixture.graph_path(), &mut second_host);
+    match second {
+        Err(RuntimeError::AuthorityDenied {
+            verb,
+            step_id,
+            reason,
+        }) => {
+            assert_eq!(verb, AuthorityVerb::Spend);
+            assert_eq!(step_id, "fulfill");
+            assert!(
+                reason.contains("already consumed"),
+                "second spend should be denied from persisted consumption, got: {reason}"
+            );
+        }
+        Ok(run) => {
+            return Err(std::io::Error::other(format!(
+                "reused spend capability with a new idempotency key should deny the second run, ran {:?}",
+                step_ids(&run.steps)
+            ))
+            .into());
+        }
+        Err(error) => {
+            return Err(std::io::Error::other(format!("unexpected runtime error: {error}")).into());
+        }
+    }
+
+    let fulfill_count = invocations
+        .borrow()
+        .iter()
+        .filter(|invocation| invocation.skill_name == "pay-fulfill-rail")
+        .count();
+    assert_eq!(
+        fulfill_count, 1,
+        "persisted consumed spend capability must deny before a second rail call"
+    );
+    Ok(())
+}
+
+#[test]
+fn x402_paid_echo_partial_mutation_escalates_without_second_rail()
+-> Result<(), Box<dyn std::error::Error>> {
+    let fixture = PaidEchoFixture::new()?;
+    let state_dir = tempfile::tempdir()?;
+    let payment_state_path = state_dir.path().join("payment-state.json");
+    let mut env = BTreeMap::new();
+    env.insert(
+        RUNX_PAYMENT_STATE_PATH_ENV.to_owned(),
+        payment_state_path.to_string_lossy().into_owned(),
+    );
+    let adapter = PaidEchoAdapter::new(PaidEchoRailProof::Partial);
+    let invocations = adapter.invocations();
+    let runtime = Runtime::new(
+        adapter,
+        RuntimeOptions {
+            env,
+            ..RuntimeOptions::default()
+        },
+    );
+
+    let mut first_host = ApprovalHost::approved(true);
+    let first = runtime.run_graph_file_with_host(fixture.graph_path(), &mut first_host);
+    match first {
+        Err(RuntimeError::SkillFailed {
+            skill_name,
+            message,
+        }) => {
+            assert_eq!(skill_name, "fulfill");
+            assert!(
+                message.contains("partial rail mutation"),
+                "first run should fail after recording a partial rail mutation, got: {message}"
+            );
+        }
+        Ok(run) => {
+            return Err(std::io::Error::other(format!(
+                "partial rail mutation should fail the first run before echo, ran {:?}",
+                step_ids(&run.steps)
+            ))
+            .into());
+        }
+        Err(error) => {
+            return Err(std::io::Error::other(format!("unexpected runtime error: {error}")).into());
+        }
+    }
+
+    let mut second_host = ApprovalHost::approved(true);
+    let second = runtime.run_graph_file_with_host(fixture.graph_path(), &mut second_host);
+    match second {
+        Err(RuntimeError::AuthorityDenied {
+            verb,
+            step_id,
+            reason,
+        }) => {
+            assert_eq!(verb, AuthorityVerb::Spend);
+            assert_eq!(step_id, "fulfill");
+            assert!(
+                reason.contains("recovery escalated"),
+                "second run should escalate recovery instead of retrying rail, got: {reason}"
+            );
+        }
+        Ok(run) => {
+            return Err(std::io::Error::other(format!(
+                "in-flight rail mutation should escalate before a second rail call, ran {:?}",
+                step_ids(&run.steps)
+            ))
+            .into());
+        }
+        Err(error) => {
+            return Err(std::io::Error::other(format!("unexpected runtime error: {error}")).into());
+        }
+    }
+
+    let fulfill_count = invocations
+        .borrow()
+        .iter()
+        .filter(|invocation| invocation.skill_name == "pay-fulfill-rail")
+        .count();
+    assert_eq!(
+        fulfill_count, 1,
+        "partial recovery escalation must not issue a second rail mutation"
+    );
+    let store = FileBackedPaymentStateStore::open(&payment_state_path)?;
+    let mutation = store
+        .lookup_rail_mutation(&runx_runtime::payment_state::PaymentIdempotencyKey::new(
+            "mock",
+            "merchant:paid-echo",
+            PAID_ECHO_IDEMPOTENCY_KEY,
+        ))
+        .ok_or("rail mutation should be persisted")?;
+    assert_eq!(mutation.status, RailMutationStatus::Escalated);
+    assert_eq!(mutation.recovery_state, PaymentRecoveryState::Escalated);
+    Ok(())
+}
+
+#[test]
 fn x402_paid_echo_denied_approval_never_invokes_payment_or_echo()
 -> Result<(), Box<dyn std::error::Error>> {
     let fixture = PaidEchoFixture::new()?;
@@ -563,6 +804,7 @@ impl SkillAdapter for RecordingAdapter {
 enum PaidEchoRailProof {
     Present,
     Missing,
+    Partial,
 }
 
 #[derive(Clone, Debug)]
@@ -574,18 +816,41 @@ struct PaidEchoInvocation {
 struct PaidEchoAdapter {
     invocations: Rc<RefCell<Vec<PaidEchoInvocation>>>,
     rail_proof: PaidEchoRailProof,
+    idempotency_keys: Rc<RefCell<VecDeque<String>>>,
+    current_idempotency_key: Rc<RefCell<String>>,
 }
 
 impl PaidEchoAdapter {
     fn new(rail_proof: PaidEchoRailProof) -> Self {
+        Self::with_idempotency_keys(rail_proof, [PAID_ECHO_IDEMPOTENCY_KEY])
+    }
+
+    fn with_idempotency_keys<const N: usize>(
+        rail_proof: PaidEchoRailProof,
+        idempotency_keys: [&str; N],
+    ) -> Self {
         Self {
             invocations: Rc::new(RefCell::new(Vec::new())),
             rail_proof,
+            idempotency_keys: Rc::new(RefCell::new(VecDeque::from(
+                idempotency_keys.map(str::to_owned),
+            ))),
+            current_idempotency_key: Rc::new(RefCell::new(PAID_ECHO_IDEMPOTENCY_KEY.to_owned())),
         }
     }
 
     fn invocations(&self) -> Rc<RefCell<Vec<PaidEchoInvocation>>> {
         Rc::clone(&self.invocations)
+    }
+
+    fn reserve_idempotency_key(&self) -> String {
+        let key = self
+            .idempotency_keys
+            .borrow_mut()
+            .pop_front()
+            .unwrap_or_else(|| self.current_idempotency_key.borrow().clone());
+        *self.current_idempotency_key.borrow_mut() = key.clone();
+        key
     }
 }
 
@@ -623,17 +888,30 @@ impl SkillAdapter for PaidEchoAdapter {
                     }
                 }
             })),
-            "pay-reserve" => skill_success(json!({
-                "payment_reservation_packet": {
-                    "data": {
-                        "payment_decision": paid_echo_reservation_decision(),
-                        "reserved_payment_authority": paid_echo_reserved_payment_authority(),
-                        "spend_capability_ref": paid_echo_spend_capability_ref(),
-                        "idempotency": { "key": PAID_ECHO_IDEMPOTENCY_KEY }
+            "pay-reserve" => {
+                let idempotency_key = self.reserve_idempotency_key();
+                skill_success(json!({
+                    "payment_reservation_packet": {
+                        "data": {
+                            "payment_decision": paid_echo_reservation_decision(),
+                            "reserved_payment_authority": paid_echo_reserved_payment_authority(&idempotency_key),
+                            "spend_capability_ref": paid_echo_spend_capability_ref(),
+                            "idempotency": { "key": idempotency_key }
+                        }
                     }
-                }
-            })),
-            "pay-fulfill-rail" => skill_success(paid_echo_rail_packet(self.rail_proof)),
+                }))
+            }
+            "pay-fulfill-rail" if matches!(self.rail_proof, PaidEchoRailProof::Partial) => {
+                let idempotency_key = self.current_idempotency_key.borrow().clone();
+                skill_failure_with_stdout(
+                    paid_echo_partial_rail_packet(&idempotency_key),
+                    "partial rail mutation recorded before terminal proof",
+                )
+            }
+            "pay-fulfill-rail" => {
+                let idempotency_key = self.current_idempotency_key.borrow().clone();
+                skill_success(paid_echo_rail_packet(self.rail_proof, &idempotency_key))
+            }
             "paid-echo" => {
                 if request
                     .inputs
@@ -690,7 +968,26 @@ fn skill_failure(message: &str) -> SkillOutput {
     }
 }
 
-fn paid_echo_rail_packet(rail_proof: PaidEchoRailProof) -> Value {
+fn skill_failure_with_stdout(value: Value, message: &str) -> SkillOutput {
+    let stdout = match serde_json::to_string(&value) {
+        Ok(stdout) => stdout,
+        Err(error) => {
+            return skill_failure(&format!(
+                "{message}; test JSON serialization failed: {error}"
+            ));
+        }
+    };
+    SkillOutput {
+        status: InvocationStatus::Failure,
+        stdout,
+        stderr: message.to_owned(),
+        exit_code: Some(1),
+        duration_ms: 1,
+        metadata: JsonObject::new(),
+    }
+}
+
+fn paid_echo_rail_packet(rail_proof: PaidEchoRailProof, idempotency_key: &str) -> Value {
     let mut data = json!({
         "rail_result": {
             "status": "fulfilled",
@@ -708,11 +1005,32 @@ fn paid_echo_rail_packet(rail_proof: PaidEchoRailProof) -> Value {
     if matches!(rail_proof, PaidEchoRailProof::Present) {
         data["rail_proof"] = json!({
             "proof_ref": "receipt-proof:mock:paid-echo-001",
-            "idempotency_key": PAID_ECHO_IDEMPOTENCY_KEY,
+            "idempotency_key": idempotency_key,
             "rail_session_material_ref": PAID_ECHO_RAIL_SESSION_MATERIAL_REF
         });
     }
     json!({ "payment_rail_packet": { "data": data } })
+}
+
+fn paid_echo_partial_rail_packet(idempotency_key: &str) -> Value {
+    json!({
+        "payment_rail_packet": {
+            "data": {
+                "rail_result": {
+                    "status": "partial",
+                    "rail": "mock",
+                    "amount_minor": 125,
+                    "currency": "USD",
+                    "counterparty": "merchant:paid-echo"
+                },
+                "recovery_hint": {
+                    "status": "partial",
+                    "idempotency_key": idempotency_key,
+                    "next_action": "recover_by_idempotency_key"
+                }
+            }
+        }
+    })
 }
 
 struct ApprovalHost {
@@ -1081,7 +1399,7 @@ fn reservation_decision() -> Value {
     })
 }
 
-fn paid_echo_reserved_payment_authority() -> Value {
+fn paid_echo_reserved_payment_authority(idempotency_key: &str) -> Value {
     json!({
         "parent_authority": paid_echo_payment_term("paid-echo-parent", ["quote", "reserve", "spend", "verify"], 10_000),
         "child_authority": paid_echo_payment_term("paid-echo-child", ["reserve", "spend"], 2_500),
@@ -1092,7 +1410,7 @@ fn paid_echo_reserved_payment_authority() -> Value {
             "child_harness_ref": paid_echo_child_harness_ref(),
             "act_id": "act_fulfill",
             "reservation_decision_id": "decision_paid_echo_reservation",
-            "idempotency_key": PAID_ECHO_IDEMPOTENCY_KEY,
+            "idempotency_key": idempotency_key,
             "amount_minor": 125,
             "currency": "USD",
             "counterparty": "merchant:paid-echo",

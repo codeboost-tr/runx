@@ -1,9 +1,6 @@
 import { asRecord, hashString } from "@runxhq/core/util";
 
 import { createFixtureMcpToolCatalogAdapter } from "./fixture.js";
-import {
-  validateToolManifest,
-} from "@runxhq/core/parser";
 import type { SkillInput, SkillSource, ValidatedTool } from "../parser-types.js";
 
 export const runtimeLocalToolCatalogsPackage = "@runxhq/runtime-local/tool-catalogs";
@@ -205,6 +202,65 @@ export function createImportedTool(options: {
   readonly tool: ValidatedTool;
   readonly result: ToolCatalogSearchResult;
 } {
+  const { document, qualifiedName, scopes, catalogRef } = importedToolDocument(options);
+
+  return {
+    tool: {
+      name: qualifiedName,
+      description: options.description,
+      source: {
+        type: "catalog",
+        args: [],
+        catalogRef,
+        raw: {
+          type: "catalog",
+          catalog_ref: catalogRef,
+        },
+      },
+      inputs: document.inputs,
+      scopes,
+      runx: document.runx,
+      raw: {
+        document,
+        raw: `${JSON.stringify(document, null, 2)}\n`,
+      },
+    },
+    result: {
+      tool_id: `${options.source}/${qualifiedName}`,
+      name: qualifiedName,
+      summary: options.description,
+      source: options.source,
+      source_label: options.sourceLabel,
+      source_type: options.sourceType,
+      namespace: options.namespace,
+      external_name: options.externalName,
+      required_scopes: scopes,
+      tags: options.tags ?? [options.sourceType],
+      catalog_ref: catalogRef,
+    },
+  };
+}
+
+function importedToolDocument(options: {
+  readonly name: string;
+  readonly description?: string;
+  readonly namespace: string;
+  readonly externalName: string;
+  readonly source: string;
+  readonly sourceLabel: string;
+  readonly sourceType: string;
+  readonly inputSchema?: Readonly<Record<string, unknown>>;
+  readonly scopes?: readonly string[];
+  readonly tags?: readonly string[];
+}): {
+  readonly document: Record<string, unknown> & {
+    readonly inputs: Readonly<Record<string, SkillInput>>;
+    readonly runx: Record<string, unknown>;
+  };
+  readonly qualifiedName: string;
+  readonly scopes: readonly string[];
+  readonly catalogRef: string;
+} {
   const qualifiedName = `${options.namespace}.${options.name}`;
   const scopes = options.scopes ?? [qualifiedName];
   const catalogRef = `${options.source}:${qualifiedName}`;
@@ -238,26 +294,7 @@ export function createImportedTool(options: {
       },
     },
   };
-
-  return {
-    tool: validateToolManifest({
-      document,
-      raw: `${JSON.stringify(document, null, 2)}\n`,
-    }),
-    result: {
-      tool_id: `${options.source}/${qualifiedName}`,
-      name: qualifiedName,
-      summary: options.description,
-      source: options.source,
-      source_label: options.sourceLabel,
-      source_type: options.sourceType,
-      namespace: options.namespace,
-      external_name: options.externalName,
-      required_scopes: scopes,
-      tags: options.tags ?? [options.sourceType],
-      catalog_ref: catalogRef,
-    },
-  };
+  return { document, qualifiedName, scopes, catalogRef };
 }
 
 function jsonSchemaToToolInputs(inputSchema: Readonly<Record<string, unknown>> | undefined): Record<string, SkillInput> {

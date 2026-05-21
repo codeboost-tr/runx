@@ -1,6 +1,6 @@
 import { runxLinkForVersion } from "./links.js";
 import { deriveTrustSignals } from "./trust.js";
-import type { SkillSearchResult } from "../marketplaces/index.js";
+import type { SkillSearchResult } from "./search-result.js";
 import type { RegistrySkillVersion, RegistryStore, RegistryTrustTier } from "./store.js";
 
 export type RegistrySearchResult = SkillSearchResult & {

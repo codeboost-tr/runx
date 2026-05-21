@@ -2,7 +2,7 @@
 spec_version: '2.0'
 task_id: runx-post-merge-closure-observer
 created: '2026-05-19T02:08:02Z'
-updated: '2026-05-21T22:05:00+10:00'
+updated: '2026-05-22T00:00:00+10:00'
 status: draft
 harden_status: in_progress
 size: large
@@ -14,18 +14,32 @@ risk_level: high
 ## Current State
 
 Status: draft
-Current phase: live provider observer / publication adapter slice
+Current phase: fixture-backed live provider observer / publication adapter slice
 Next: provider adapter and target-runner integration slice after dependencies
 Reason: issue-to-PR currently has a pure contract/runtime observer slice for
 closure planning, dedupe, sealed harness receipt projection, and local
-publication command projection. The remaining execution-ready gap is live
-provider observation plus live target-runner merge/verification readback.
-Blockers: live GitHub PR observer/webhook/scheduler adapter; remaining live
-target/source readback from `runx-target-repo-runners` including merge SHA and
-runner verification hook/deploy context; policy source configuration from
-`runx-operational-policy-config` for source-thread publication and close mode.
+publication command projection. Runtime now has an abstract observer adapter
+seam plus a fixture-backed GitHub PR observation/readback adapter that returns
+deterministic PR and verification observations without network side effects.
+The remaining execution-ready gap is real live provider observation plus live
+target-runner merge/verification readback.
+Blockers: real GitHub PR observer transport and webhook/scheduler adapter;
+remaining live target/source readback from `runx-target-repo-runners` including
+merge SHA and runner verification hook/deploy context; policy source
+configuration from `runx-operational-policy-config` for source-thread
+publication and close mode; real GitHub/Slack publication transports.
 Allowed follow-up command: `scafld harden runx-post-merge-closure-observer --mark-passed`
-Latest runner update: 2026-05-21T22:05:00+10:00 dogfood audit confirmed this
+Latest runner update: 2026-05-22T00:00:00+10:00 added a fixture-backed GitHub PR
+observation/readback adapter behind the existing `PostMergeObserverAdapter`
+seam in `runx-runtime`. The adapter loads deterministic fixture data, validates
+GitHub source issue/source thread/target PR identity before readback, returns
+the observed PR state plus verification observation, and fails closed on
+fixture/request mismatch without marking publication dedupe. No webhook
+scheduler, source publication transport, target-runner mutation, or network
+GitHub transport was added. The spec must stay draft because real live GitHub
+observer/webhook/scheduler adapters, live source/target readback, and real
+GitHub/Slack publication transports remain unimplemented. Earlier on
+2026-05-21T22:05:00+10:00 dogfood audit confirmed this
 spec must stay draft: local command/readback projection exists, but live
 GitHub observer/webhook/scheduler adapters, live source/target readback, and
 real GitHub/Slack publication transports remain unimplemented. Earlier on
@@ -194,6 +208,10 @@ Required behavior:
 - [x] Webhook and scheduler live observer commands normalize to one source
   issue plus target PR command key, and malformed source/target/webhook context
   fails closed before provider adapter readback.
+- [x] Fixture-backed GitHub PR observation/readback adapter uses the existing
+  runtime observer seam, validates fixture/request identity, returns deterministic
+  PR and verification readback, and fails closed on mismatch without publication
+  dedupe. Real GitHub transport remains pending.
 - [x] Missing source Slack thread fails Slack publish cleanly without posting to
   channel root. Rust contract planning now fails closed before provider-state
   classification when source-thread metadata is missing, and the local runtime
@@ -391,3 +409,12 @@ Issues:
   source issue close, and receipt ref before marking publication dedupe, and
   fails closed without marking dedupe when readback is incomplete. Real
   GitHub/Slack transport remains pending.
+- 2026-05-22: Added the next safe provider-observer slice without widening
+  transport scope. `runx-runtime` now includes a
+  `FixtureBackedGitHubPostMergeObserverAdapter` behind the existing abstract
+  observer seam, backed by
+  `fixtures/contracts/post-merge-observer/github-pr-merged-verified-observation.json`.
+  Focused runtime tests prove deterministic GitHub PR/verification readback and
+  mismatch fail-closed behavior before publication dedupe. Real GitHub
+  transport, webhook/scheduler dispatch, source publication transports, and
+  target-runner readback remain blockers.

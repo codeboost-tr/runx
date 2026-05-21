@@ -222,6 +222,9 @@ pub struct CredentialBindingRequest {
     pub credential: Option<CredentialEnvelope>,
 }
 
+// AuthorityProof is intentionally policy-owned. It is emitted by
+// policy.buildAuthorityProofMetadata, depends on policy admission decisions, and
+// is guarded as a contract by schema validation in runx-contracts.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
 pub struct AuthorityProofMetadata {

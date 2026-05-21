@@ -1,8 +1,8 @@
 import { mkdir, readFile, rename, writeFile } from "node:fs/promises";
 import path from "node:path";
-import { createHash } from "node:crypto";
 import { fileURLToPath, pathToFileURL } from "node:url";
 
+import { canonicalJsonStringify, sha256Hex } from "@runxhq/contracts";
 import {
   artifact,
   defineTool,
@@ -317,11 +317,11 @@ async function runPushOutbox({ inputs, env }) {
   }, pullRequestControlMetadata);
 
   const pushEvent = {
-    entry_id: `entry_${hashStable({
+    entry_id: `entry_${opaqueCanonicalJsonHashFragment({
       thread_locator: threadLocator,
       outbox_entry_id: pushedEntry.entry_id,
       pushed_at: pushedAt,
-    }).slice(0, 24)}`,
+    }, 24)}`,
     entry_kind: "status",
     recorded_at: pushedAt,
     body: `Pushed ${pushedEntry.kind} ${pushedEntry.entry_id}`,
@@ -343,7 +343,7 @@ async function runPushOutbox({ inputs, env }) {
     adapter: {
       ...adapter,
       adapter_ref: adapterRef,
-      cursor: `push:${hashStable({ outbox_entry: pushedEntry.entry_id, pushed_at: pushedAt }).slice(0, 12)}`,
+      cursor: `push:${opaqueCanonicalJsonHashFragment({ outbox_entry: pushedEntry.entry_id, pushed_at: pushedAt }, 12)}`,
     },
     entries: [
       ...(Array.isArray(currentState.entries) ? currentState.entries : []),
@@ -630,19 +630,7 @@ async function writeThreadFile(statePath, state) {
   await rename(tempPath, statePath);
 }
 
-function hashStable(value) {
-  return createHash("sha256").update(stableStringify(value)).digest("hex");
-}
-
-function stableStringify(value) {
-  if (value === null || typeof value !== "object") {
-    return JSON.stringify(value);
-  }
-  if (Array.isArray(value)) {
-    return `[${value.map((item) => stableStringify(item)).join(",")}]`;
-  }
-  const entries = Object.entries(value)
-    .filter(([, nested]) => nested !== undefined)
-    .sort(([left], [right]) => left.localeCompare(right));
-  return `{${entries.map(([key, nested]) => `${JSON.stringify(key)}:${stableStringify(nested)}`).join(",")}}`;
+function opaqueCanonicalJsonHashFragment(value, length) {
+  // Internal truncated ID material only; callers must not treat this as a sha256: commitment.
+  return sha256Hex(canonicalJsonStringify(value)).slice(0, length);
 }

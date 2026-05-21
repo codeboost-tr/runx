@@ -11,25 +11,64 @@ use runx_runtime::{
 #[test]
 fn loads_active_harness_fixtures_without_retired_receipt_fields() -> Result<(), HarnessFixtureError>
 {
-    for path in [
-        "fixtures/harness/echo-skill.yaml",
-        "fixtures/harness/sequential-graph.yaml",
-        "fixtures/harness/payment-approval-graph.yaml",
-        "fixtures/harness/payment-approval-denied.yaml",
-        "fixtures/harness/x402-pay-approval.yaml",
-        "fixtures/harness/x402-pay-approval-denied.yaml",
-        "fixtures/harness/x402-pay-paid-echo.yaml",
-        "fixtures/harness/stripe-spt-payment.yaml",
+    for (path, expected_status, expected_disposition) in [
+        (
+            "fixtures/harness/echo-skill.yaml",
+            HarnessExpectedStatus::Sealed,
+            ClosureDisposition::Closed,
+        ),
+        (
+            "fixtures/harness/sequential-graph.yaml",
+            HarnessExpectedStatus::Sealed,
+            ClosureDisposition::Closed,
+        ),
+        (
+            "fixtures/harness/payment-approval-graph.yaml",
+            HarnessExpectedStatus::Sealed,
+            ClosureDisposition::Closed,
+        ),
+        (
+            "fixtures/harness/payment-approval-denied.yaml",
+            HarnessExpectedStatus::PolicyDenied,
+            ClosureDisposition::Blocked,
+        ),
+        (
+            "fixtures/harness/x402-pay-approval.yaml",
+            HarnessExpectedStatus::Sealed,
+            ClosureDisposition::Closed,
+        ),
+        (
+            "fixtures/harness/x402-pay-approval-denied.yaml",
+            HarnessExpectedStatus::PolicyDenied,
+            ClosureDisposition::Blocked,
+        ),
+        (
+            "fixtures/harness/x402-pay-paid-echo.yaml",
+            HarnessExpectedStatus::Sealed,
+            ClosureDisposition::Closed,
+        ),
+        (
+            "fixtures/harness/x402-pay-idempotency-replay.yaml",
+            HarnessExpectedStatus::Sealed,
+            ClosureDisposition::Closed,
+        ),
+        (
+            "fixtures/harness/x402-pay-idempotency-capability-reuse.yaml",
+            HarnessExpectedStatus::PolicyDenied,
+            ClosureDisposition::Blocked,
+        ),
+        (
+            "fixtures/harness/x402-pay-idempotency-crash-recovery.yaml",
+            HarnessExpectedStatus::Escalated,
+            ClosureDisposition::Deferred,
+        ),
+        (
+            "fixtures/harness/stripe-spt-payment.yaml",
+            HarnessExpectedStatus::Sealed,
+            ClosureDisposition::Closed,
+        ),
     ] {
         let fixture = load_harness_fixture(fixture_path(path))?;
-        let (expected_status, expected_disposition) = if path.ends_with("denied.yaml") {
-            (
-                HarnessExpectedStatus::PolicyDenied,
-                ClosureDisposition::Blocked,
-            )
-        } else {
-            (HarnessExpectedStatus::Sealed, ClosureDisposition::Closed)
-        };
         assert_eq!(fixture.expect.status, Some(expected_status));
         let receipt = fixture
             .expect
@@ -40,6 +79,41 @@ fn loads_active_harness_fixtures_without_retired_receipt_fields() -> Result<(), 
         assert_eq!(receipt.schema, HarnessReceiptSchema::V1);
         assert_eq!(receipt.state, Some(HarnessState::Sealed));
         assert_eq!(receipt.disposition, Some(expected_disposition));
+    }
+    Ok(())
+}
+
+#[test]
+#[cfg(feature = "cli-tool")]
+fn replays_x402_idempotency_sequence_fixtures() -> Result<(), Box<dyn std::error::Error>> {
+    for (path, expected_status, expected_disposition, expected_steps) in [
+        (
+            "fixtures/harness/x402-pay-idempotency-replay.yaml",
+            HarnessExpectedStatus::Sealed,
+            ClosureDisposition::Closed,
+            5,
+        ),
+        (
+            "fixtures/harness/x402-pay-idempotency-capability-reuse.yaml",
+            HarnessExpectedStatus::PolicyDenied,
+            ClosureDisposition::Blocked,
+            5,
+        ),
+        (
+            "fixtures/harness/x402-pay-idempotency-crash-recovery.yaml",
+            HarnessExpectedStatus::Escalated,
+            ClosureDisposition::Deferred,
+            0,
+        ),
+    ] {
+        let output = run_fixture_with_test_adapter(path)?;
+
+        assert_eq!(output.status, expected_status, "{path}");
+        assert_eq!(
+            output.receipt.seal.disposition, expected_disposition,
+            "{path}"
+        );
+        assert_eq!(output.step_receipts.len(), expected_steps, "{path}");
     }
     Ok(())
 }

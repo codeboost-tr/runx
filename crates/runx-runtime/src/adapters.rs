@@ -10,5 +10,8 @@ pub mod agent;
 #[cfg(feature = "catalog")]
 pub mod catalog;
 
+#[cfg(feature = "external-adapter")]
+pub mod external_adapter;
+
 #[cfg(any(feature = "mcp", feature = "mcp-rmcp"))]
 pub mod mcp;

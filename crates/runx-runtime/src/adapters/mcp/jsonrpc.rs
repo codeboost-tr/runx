@@ -1,12 +1,16 @@
 #[cfg(all(feature = "mcp", not(feature = "mcp-rmcp")))]
+use runx_contracts::JsonNumber;
+#[cfg(all(feature = "mcp", not(feature = "mcp-rmcp")))]
 use runx_contracts::JsonObject;
-use runx_contracts::{JsonNumber, JsonValue};
+use runx_contracts::JsonValue;
 
 #[cfg(all(feature = "mcp", not(feature = "mcp-rmcp")))]
 use super::types::McpToolDescriptor;
 
+#[cfg(all(feature = "mcp", not(feature = "mcp-rmcp")))]
 pub(super) const PROTOCOL_VERSION: &str = "2025-06-18";
 
+#[cfg(all(feature = "mcp", not(feature = "mcp-rmcp")))]
 pub(super) fn json_rpc_response(id: JsonValue, result: JsonValue) -> JsonValue {
     JsonValue::Object(
         [
@@ -18,6 +22,7 @@ pub(super) fn json_rpc_response(id: JsonValue, result: JsonValue) -> JsonValue {
     )
 }
 
+#[cfg(all(feature = "mcp", not(feature = "mcp-rmcp")))]
 pub(super) fn json_rpc_error(id: JsonValue, code: i64, message: &str) -> JsonValue {
     JsonValue::Object(
         [

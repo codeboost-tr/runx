@@ -16,7 +16,9 @@ use super::inputs::{
 use crate::RuntimeError;
 use crate::adapter::SkillOutput;
 use crate::payment_state::{
-    PaymentIdempotencyKey, consumed_spend_capability_recorded, lookup_payment_idempotency_entry,
+    PaymentIdempotencyKey, PaymentRecoveryState, RailMutationStatus,
+    consumed_spend_capability_recorded, escalate_payment_rail_mutation,
+    lookup_payment_idempotency_entry, lookup_payment_rail_mutation,
 };
 
 pub(super) fn enforce_step_authority_receipt_before_success(
@@ -77,7 +79,6 @@ pub(super) fn enforce_step_authority_admission(
     })
     .map_err(|source| authority_denied(step, AuthorityVerb::Spend, source.to_string()))?;
     let payment = payment_context(&input);
-    block_unavailable_idempotency_replay(step, env, graph_dir, payment.as_ref())?;
     Ok(decision.verb.map(|verb| {
         let payment = if verb == AuthorityVerb::Spend {
             payment
@@ -86,6 +87,142 @@ pub(super) fn enforce_step_authority_admission(
         };
         StepAuthorityContext { verb, payment }
     }))
+}
+
+pub(super) fn sealed_payment_replay(
+    step: &GraphStep,
+    inputs: &JsonObject,
+    env: &BTreeMap<String, String>,
+    graph_dir: &Path,
+) -> Result<Option<StepPaymentReplay>, RuntimeError> {
+    let Some(input) = step_authority_submission(step, inputs)? else {
+        return Ok(None);
+    };
+    let Some(payment) = payment_context(&input) else {
+        return Ok(None);
+    };
+    let Some(entry) = lookup_payment_idempotency_entry(env, graph_dir, &payment.idempotency_key)
+        .map_err(|source| {
+            RuntimeError::payment_state("reading payment state for replay lookup", source)
+        })?
+    else {
+        return Ok(None);
+    };
+
+    let act_id = format!("act_{}", step.id);
+    let decision = admit_step_authority(StepAuthorityAdmission {
+        parent_authority: &input.parent_authority,
+        child_authority: &input.child_authority,
+        reservation_decision: input.reservation_decision.as_ref(),
+        subset_proof_present: input.subset_proof_present,
+        child_harness_ref: &input.child_harness_ref,
+        act_id: &act_id,
+        idempotency_key: Some(&input.idempotency_key),
+        spend_capability_binding: input.spend_capability_binding.clone(),
+        consumed_spend_capability_refs: &input.consumed_spend_capability_refs,
+        spend_capability_ref: Some(&input.spend_capability_ref),
+    })
+    .map_err(|source| authority_denied(step, AuthorityVerb::Spend, source.to_string()))?;
+    if decision.verb != Some(AuthorityVerb::Spend) {
+        return Ok(None);
+    }
+    if entry.amount_minor != payment.amount_minor || entry.currency != payment.currency {
+        return Err(authority_denied(
+            step,
+            AuthorityVerb::Spend,
+            format!(
+                "payment idempotency key {} was sealed for {} {}, but this spend requested {} {}",
+                payment.idempotency_key.key,
+                entry.amount_minor,
+                entry.currency,
+                payment.amount_minor,
+                payment.currency
+            ),
+        ));
+    }
+
+    Ok(Some(StepPaymentReplay {
+        receipt_ref: entry.receipt_ref,
+        receipt_created_at: entry.receipt_created_at,
+        receipt_digest: entry.receipt_digest,
+        rail_proof_ref: entry.rail_proof_ref,
+        outputs: entry.outputs,
+    }))
+}
+
+pub(super) fn escalate_in_flight_payment_recovery(
+    step: &GraphStep,
+    inputs: &JsonObject,
+    env: &BTreeMap<String, String>,
+    graph_dir: &Path,
+) -> Result<(), RuntimeError> {
+    let Some(input) = step_authority_submission(step, inputs)? else {
+        return Ok(());
+    };
+    let Some(payment) = payment_context(&input) else {
+        return Ok(());
+    };
+    let Some(mutation) = lookup_payment_rail_mutation(env, graph_dir, &payment.idempotency_key)
+        .map_err(|source| {
+            RuntimeError::payment_state("reading payment state for rail recovery", source)
+        })?
+    else {
+        return Ok(());
+    };
+    if mutation.recovery_state != PaymentRecoveryState::InFlight
+        && mutation.status != RailMutationStatus::Partial
+    {
+        return Ok(());
+    }
+
+    let act_id = format!("act_{}", step.id);
+    admit_step_authority(StepAuthorityAdmission {
+        parent_authority: &input.parent_authority,
+        child_authority: &input.child_authority,
+        reservation_decision: input.reservation_decision.as_ref(),
+        subset_proof_present: input.subset_proof_present,
+        child_harness_ref: &input.child_harness_ref,
+        act_id: &act_id,
+        idempotency_key: Some(&input.idempotency_key),
+        spend_capability_binding: input.spend_capability_binding.clone(),
+        consumed_spend_capability_refs: &input.consumed_spend_capability_refs,
+        spend_capability_ref: Some(&input.spend_capability_ref),
+    })
+    .map_err(|source| authority_denied(step, AuthorityVerb::Spend, source.to_string()))?;
+    if mutation.amount_minor != payment.amount_minor
+        || mutation.currency != payment.currency
+        || mutation.rail != payment.rail
+        || mutation.counterparty != payment.counterparty
+    {
+        return Err(authority_denied(
+            step,
+            AuthorityVerb::Spend,
+            format!(
+                "payment idempotency key {} has in-flight rail mutation for {} {} on {} {}, but this spend requested {} {} on {} {}",
+                payment.idempotency_key.key,
+                mutation.amount_minor,
+                mutation.currency,
+                mutation.rail,
+                mutation.counterparty,
+                payment.amount_minor,
+                payment.currency,
+                payment.rail,
+                payment.counterparty
+            ),
+        ));
+    }
+
+    let _ = escalate_payment_rail_mutation(env, graph_dir, &payment.idempotency_key).map_err(
+        |source| RuntimeError::payment_state("escalating payment rail recovery", source),
+    )?;
+    Err(authority_denied(
+        step,
+        AuthorityVerb::Spend,
+        format!(
+            "payment idempotency key {} has an in-flight rail mutation; recovery escalated without issuing a second rail mutation",
+            payment.idempotency_key.key
+        ),
+    ))
 }
 
 fn consumed_spend_capability_refs_for_admission(
@@ -103,32 +240,6 @@ fn consumed_spend_capability_refs_for_admission(
         refs.push(input.spend_capability_ref.clone());
     }
     Ok(refs)
-}
-
-fn block_unavailable_idempotency_replay(
-    step: &GraphStep,
-    env: &BTreeMap<String, String>,
-    graph_dir: &Path,
-    payment: Option<&StepPaymentAuthorityContext>,
-) -> Result<(), RuntimeError> {
-    let Some(payment) = payment else {
-        return Ok(());
-    };
-    let Some(entry) = lookup_payment_idempotency_entry(env, graph_dir, &payment.idempotency_key)
-        .map_err(|source| {
-            RuntimeError::payment_state("reading payment state for replay lookup", source)
-        })?
-    else {
-        return Ok(());
-    };
-    Err(authority_denied(
-        step,
-        AuthorityVerb::Spend,
-        format!(
-            "payment idempotency key {} already sealed as {}; replay short-circuit requires stored step outputs and is not available in the current runner",
-            payment.idempotency_key.key, entry.receipt_ref
-        ),
-    ))
 }
 
 fn payment_context(input: &OwnedStepAuthoritySubmission) -> Option<StepPaymentAuthorityContext> {
@@ -270,6 +381,15 @@ pub(super) struct StepPaymentAuthorityContext {
     pub(super) counterparty: String,
     pub(super) amount_minor: u64,
     pub(super) currency: String,
+}
+
+#[derive(Clone, Debug)]
+pub(super) struct StepPaymentReplay {
+    pub(super) receipt_ref: String,
+    pub(super) receipt_created_at: String,
+    pub(super) receipt_digest: String,
+    pub(super) rail_proof_ref: String,
+    pub(super) outputs: JsonObject,
 }
 
 #[derive(Clone, Debug)]

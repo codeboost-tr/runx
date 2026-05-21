@@ -2,7 +2,7 @@
 spec_version: '2.0'
 task_id: rust-ts-sunset-runtime-local
 created: '2026-05-18T00:00:00Z'
-updated: '2026-05-21T22:00:00+10:00'
+updated: '2026-05-22T00:09:50+10:00'
 status: draft
 harden_status: not_run
 size: large
@@ -34,13 +34,19 @@ oracle scripts, active docs/fixtures, Rust parity/doctor references, and many
 tests still reference `@runxhq/runtime-local`, `@runxhq/adapters`, or their
 package paths. Host-adapters and CLI source no longer import
 runtime-local/adapters in the current tree. All surviving local callers must be
-Rust-routed or explicitly sunset before deletion starts.
+Rust-routed, moved to the correct language-neutral protocol lane under Rust
+supervision, or explicitly sunset before deletion starts. Cloud `agent-runner`
+binding is not settled by this draft while its target boundary remains open.
 Allowed follow-up command: `none`
-Latest runner update: 2026-05-21T22:00:00+10:00 importer census refreshed;
-CLI source package references are zero; contract fixture generation no longer
-imports `packages/runtime-local/src/sdk/act-assignment.js`; deletion remains
-blocked by live non-CLI importers, tests, scripts, and package-resolution
-entries.
+Latest runner update: 2026-05-22T00:09:50+10:00 promoted the extension-surface
+boundary to priority-zero cutover law: `external-adapter-plugin-protocol-v1`
+must be treated as the external execution-adapter protocol, not as the umbrella
+for every extension, integration, source-ingress, catalog, hosted-runtime, or
+outbox queue. Runtime-local deletion remains blocked by live non-CLI importers,
+tests, scripts, package-resolution entries, open cloud binding disposition,
+custom execution-adapter protocol gaps, and any unclassified surviving extension
+surface that would otherwise be forced into Rust or hidden behind a TypeScript
+runtime fallback.
 Review gate: not_started
 
 ## Summary
@@ -53,9 +59,12 @@ for both packages. The package dependency direction is mostly
 runtime-local SDK, sandbox, MCP, harness, and tool-catalog helpers. The
 remaining tests and TS package importers consume both packages together by
 constructing adapters and passing them into runtime-local execution. Both
-retire only after adapter behavior lands and is routed through
-`runx-runtime::adapters::{cli_tool, agent, catalog, a2a, mcp}` and surviving
-callers use stable Rust/contract/CLI boundaries.
+retire only after built-in trusted adapter behavior lands and is routed through
+`runx-runtime::adapters::{cli_tool, agent, catalog, a2a, mcp}`, custom
+execution-adapter authoring has a language-neutral disposition through
+`external-adapter-plugin-protocol-v1` where needed, and every other surviving
+integration surface is classified under its own stable Rust/contract/CLI/cloud
+or protocol boundary.
 
 The replacement execution model is Rust runtime plus the ratified harness
 spine. Skill execution is expressed as a harness run: decisions and acts are
@@ -64,11 +73,23 @@ execution is represented by parent/child harness receipt references. This spec
 does not preserve a TypeScript compatibility bridge, a `runtime-local` shim, or
 legacy receipt/object vocabularies.
 
+Priority-zero architecture rule: this cutover must not collapse all extension
+work into one external adapter protocol. `external-adapter-plugin-protocol-v1`
+is the no-Rust-required external execution-adapter lane for replacing custom
+`SkillAdapter` behavior under Rust supervision. It is not the skill author
+subprocess ABI, not source-event ingress, not hosted embedded runtime binding,
+not the public tool-catalog read model, and not the thread/outbox provider
+adapter protocol. If any surviving runtime-local/adapters consumer belongs to
+one of those other lanes, package deletion stays blocked until that lane is
+classified by a named spec or explicitly ruled out of scope.
+
 This is the last big rip. After it lands, the Rust takeover is complete
-for OSS purposes; cloud-side hosted surfaces (`agent-runner`, `worker`,
-`api`, `auth`) remain TS unless and until separate cloud cutover specs
-target them. The disposition of every remaining TS package is documented
-in `rust-ts-interop-boundary`.
+for OSS trusted local execution; cloud-side hosted surfaces (`agent-runner`,
+`worker`, `api`, `auth`) remain TS unless and until separate cloud cutover specs
+target them. Their Rust binding mode is still open unless a later inspected
+cloud-tree pass records exact paths and a stable boundary. The disposition of
+every remaining TS package is documented in `rust-ts-interop-boundary` and
+refined by `ts-extension-survivorship-boundary`.
 
 Current reality as of this refresh:
 - Completed prerequisites: `rust-harness`, `rust-runtime-skill-execution`,
@@ -85,6 +106,13 @@ Current reality as of this refresh:
   `crates/runx-runtime/src/adapters/{cli_tool,agent,a2a,catalog,mcp}.rs`, but
   feature-gated files alone are not deletion evidence; routing and importer
   removal are required.
+- Those Rust adapter files cover built-in trusted adapters. They do not make
+  custom execution-adapter authoring Rust-only; any surviving custom execution
+  authoring path must use `external-adapter-plugin-protocol-v1` or remain an
+  explicit blocker. Non-execution extension queues must not be stuffed into that
+  protocol to make deletion appear ready.
+- Cloud `agent-runner` is not settled by `rust-aster-runtime-cutover`; that
+  draft defers cloud binding until a checkout with `cloud/**` is inspected.
 - Root package metadata, IDE core, langchain, scripts, Rust parity/doctor
   references, docs/API surface, active fixtures, package path aliases, vitest
   aliases, the runtime-local/adapters packages themselves, and many tests still
@@ -240,9 +268,31 @@ Current importer and blocker inventory:
 
 Invariants:
 - Every importer either re-routed to Rust (via CLI subprocess, in-process
-  binding, or `runx-runtime-service` daemon) or is itself sunset.
-- The cloud `agent-runner` package has a stable boundary against the Rust
-  runtime (settled in `rust-aster-runtime-cutover`).
+  binding, or `runx-runtime-service` daemon), moved to a language-neutral
+  protocol under Rust supervision where the behavior is execution, moved to a
+  separate stable protocol where the behavior is non-execution integration, or
+  is itself sunset. TypeScript helper code over ratified protocols is allowed;
+  trusted TypeScript runtime execution is not.
+- The extension taxonomy is part of the cutover contract, not future cleanup:
+  skill author subprocess ABI (`run.js`/`run.mjs`/CLI-tool input/output),
+  external execution adapter protocol (custom source execution replacing
+  runtime-local `SkillAdapter` behavior), source-event ingress (Slack, Sentry,
+  GitHub, file, API, and webhook signals admitted into harness receipts),
+  hosted or embedded runtime binding (cloud worker, agent-runner, SDK, host
+  bridge, continuation, auth resolver, and resume semantics), tool catalog/read
+  model access (public search, inspect, and registry/catalog views), and
+  thread/outbox provider adapters (source-thread comments, PR updates, outbox
+  pushes, and rendered story consumers).
+- A surviving extension surface is deletion-ready only when it is classified into
+  one taxonomy lane and has either a Rust route, a ratified language-neutral
+  protocol, or an explicit blocker. The deletion PR must not make classification
+  decisions implicitly.
+- The cloud `agent-runner` package does not have a settled Rust runtime boundary
+  in this draft and is not settled by `rust-aster-runtime-cutover`. Before
+  deletion can depend on it, a cloud-tree binding pass must classify the
+  boundary as hosted HTTP, CLI JSON, service/FFI, external execution-adapter
+  protocol, another reviewed stable boundary, or out of scope for this OSS
+  sunset.
 - No compatibility package, shim, alias, or v2 surface remains for
   `@runxhq/runtime-local` or `@runxhq/adapters` inside this workspace.
 - No active runtime-local replacement code, fixture, receipt assertion, schema
@@ -266,7 +316,14 @@ Invariants:
 
 - Enumerate every importer and classify it as Rust-routed, sunset, or surviving
   stable boundary.
+- Classify every remaining runtime-local/adapters behavior by extension lane:
+  skill subprocess ABI, external execution adapter, source-event ingress,
+  hosted/embedded runtime binding, tool catalog/read model, thread/outbox
+  provider adapter, or explicit sunset.
 - Verify migration for each importer without falling back to runtime-local.
+- Distinguish built-in trusted adapters that move into Rust from custom
+  execution-adapter authoring that survives only through language-neutral
+  protocols.
 - Prove real product skill execution through Rust harness runs, not a TS oracle
   or compatibility object.
 - Delete `packages/adapters/`.
@@ -286,8 +343,12 @@ In scope:
 - Removing workspace package members, package references, tsconfig paths,
   exports, tests, scripts, and internal docs that keep runtime-local alive.
 - Re-routing surviving local callers through Rust runtime, Rust CLI JSON, Rust
-  harness execution, or another stable boundary already ratified in
-  `rust-ts-interop-boundary`.
+  harness execution, the language-neutral external execution-adapter protocol
+  under Rust supervision, or another stable boundary already ratified in
+  `rust-ts-interop-boundary` and `ts-extension-survivorship-boundary`.
+- Classifying non-execution integration queues before deletion so source-event
+  ingress, hosted runtime binding, catalog/read-model access, and thread/outbox
+  provider writes do not get mis-modeled as execution adapters.
 - Retiring runtime-local-owned TS fixture generators after their fixture output
   has either moved to durable `fixtures/**` coverage or become obsolete.
 - Enforcing the ratified harness spine as the skill-execution contract.
@@ -295,6 +356,11 @@ In scope:
 Out of scope:
 - Any runtime feature change.
 - Cloud-side TS package deletions (their own specs).
+- Implementing the external execution-adapter process protocol; owned by
+  `external-adapter-plugin-protocol-v1`.
+- Implementing source-event ingress, hosted runtime binding, catalog/read-model,
+  or thread/outbox provider protocols. This spec may require those lanes to be
+  classified or blocked before deletion, but it does not implement them.
 - Creating a new `@runxhq/runtime-local` compatibility package, v2 package,
   import alias, adapter facade, or work-item/object bridge.
 - Preserving legacy pre-cutover execution objects for skill runs, graph runs,
@@ -320,6 +386,26 @@ Out of scope:
   `cli_tool` runtime path is already consumed by skill execution but does not
   cover MCP, agent, A2A, catalog, CLI package source routing, or TS package
   import removal by implication.
+- `ts-extension-survivorship-boundary` remains the TypeScript survivorship
+  guardrail: TypeScript may survive as contracts, clients, cloud/product code,
+  scaffolding, host adapters, and helper SDKs over stable protocols, not as a
+  trusted local runtime.
+- `external-adapter-plugin-protocol-v1` must provide or explicitly block the
+  language-neutral custom execution-adapter authoring path before this sunset can
+  claim custom execution adapters are migrated. It must not be cited as the
+  migration answer for source-event ingress, hosted embedded runtime binding,
+  catalog/read-model access, or thread/outbox provider writes unless those
+  separate behaviors are explicitly modeled by their own accepted protocol
+  sections or sibling specs.
+- `credential-broker-delivery-contract-v1` must provide or explicitly block the
+  shared credential-delivery primitive for any surviving execution adapter,
+  subprocess skill, hosted runtime, or outbox/provider path that needs provider
+  secret material. Credential delivery must not be reinvented per protocol.
+- Missing non-execution extension lanes are deletion blockers, not reasons to
+  broaden the execution-adapter protocol until it recreates runtime-local out of
+  process.
+- `embedded-sdk-migration-story` must classify embedded cloud/runtime-local SDK
+  consumers without assuming a settled cloud `agent-runner` binding.
 - MCP server, dev, journal-local, connect, scaffold, tool-catalogs, doctor,
   registry, receipt path, and every CLI surface that imports runtime-local
   consumed by Rust or explicitly sunset.
@@ -338,9 +424,15 @@ Out of scope:
 3. `rust-runtime-skill-execution` proves checked-in product skills execute as
    Rust harness runs with contained decisions, contained acts, child harness
    receipt refs, proof validation, and unsupported-source fail-closed evidence.
-4. Adapter specs move live adapter behavior into `runx-runtime::adapters::*`.
-   This sunset may not start deleting packages until importer audit shows no
-   runtime-local caller still needs TS adapters for production execution.
+4. Adapter specs move built-in trusted adapter behavior into
+   `runx-runtime::adapters::*`. Custom execution-adapter authoring is not forced
+   into Rust; it must either be covered by
+   `external-adapter-plugin-protocol-v1` or remain a named deletion blocker.
+   Source-event, hosted-runtime, catalog/read-model, and thread/outbox queues
+   must be classified separately and must not be hidden behind the execution
+   adapter protocol. This sunset may not start deleting packages until importer
+   audit shows no runtime-local caller still needs TS adapters for production
+   execution.
 5. Runtime-local deletion removes the TS package only after the above evidence
    is checked in. The deletion PR is not a place to repair Rust parity except
    for narrow import cleanup caused by removing the TS package.
@@ -350,7 +442,9 @@ Out of scope:
 - `@runxhq/runtime-local` and `@runxhq/adapters` are removed from the workspace
   rather than replaced with empty packages.
 - Public external-consumer migration is handled by release notes, deprecation
-  metadata, and the surviving CLI/contracts boundaries. It is not handled by a
+  metadata, surviving CLI/contracts boundaries, the external execution-adapter
+  protocol where custom execution adapter authoring is required, and separately
+  named protocols for non-execution integration lanes. It is not handled by a
   local compatibility bridge.
 - Product skill execution evidence is a Rust harness run. A passing assertion
   must cite canonical harness receipt schema/id, harness id, seal status,
@@ -362,8 +456,9 @@ Out of scope:
   package. Durable end-to-end coverage lives under `fixtures/**`,
   `tests/cli/**`, or Rust crate tests.
 - Any surviving TypeScript package may import stable TS contracts, shell the
-  Rust CLI, or speak cloud HTTP. It may not import deleted runtime-local or
-  adapters package paths.
+  Rust CLI, speak cloud HTTP, or provide helpers over ratified protocol lanes.
+  It may not import deleted runtime-local or adapters package paths or execute
+  skills outside Rust supervision.
 
 ## Deletion Classification
 
@@ -373,6 +468,23 @@ Can be deleted or rerouted now:
   onto `@runxhq/contracts` validation plus `@runxhq/core/util` stable hashing.
 
 Needs a fresh smaller spec before deletion:
+- Custom execution-adapter authoring:
+  `external-adapter-plugin-protocol-v1` must either provide the durable
+  language-neutral replacement for custom execution adapters or leave
+  runtime-local/adapters deletion blocked for those consumers. Built-in Rust
+  adapters alone are not sufficient evidence for third-party/custom authoring.
+- Non-execution extension queue taxonomy:
+  source-event ingress, hosted/embedded runtime binding, tool catalog/read-model
+  access, and thread/outbox provider writes must each have a named stable
+  disposition before this sunset can claim there is no adoption-breaking
+  regression. Do not drag integration code into Rust, and do not preserve
+  runtime-local to avoid classifying the queue.
+- Shared credential broker/delivery:
+  `credential-broker-delivery-contract-v1` must define how admitted credentials
+  become scoped secret delivery for subprocess skills, external execution
+  adapters, hosted runtimes, and outbox/provider side effects. The sunset must
+  not pass by routing secrets through ad hoc env fields, invocation metadata, or
+  provider-specific blobs.
 - Adapter oracle scripts:
   `scripts/generate-a2a-adapter-fixtures.ts`,
   `scripts/generate-agent-adapter-fixtures.ts`,
@@ -402,7 +514,22 @@ work must be narrower than this sunset and should land in separate specs:
      runtime-local/adapters references.
    - Acceptance gate: the zero-count areas above remain zero while the
      remaining package/source/test references are retired by narrower specs.
-2. Oracle and fixture ownership cleanup:
+2. Extension-lane classification:
+   - For every importer that is not plain Rust runtime execution, assign exactly
+     one lane: skill author subprocess ABI, external execution adapter,
+     source-event ingress, hosted/embedded runtime binding, tool catalog/read
+     model, thread/outbox provider adapter, cloud-only out of scope, or sunset.
+   - Create or reference sibling specs for any lane that lacks an accepted stable
+     protocol. At minimum, source ingress, hosted runtime binding, catalog/read
+     model, and thread/outbox provider adapters must not be assumed solved by
+     `external-adapter-plugin-protocol-v1`.
+   - For any lane that requires provider credentials, reference
+     `credential-broker-delivery-contract-v1` or mark credential delivery as a
+     blocker.
+   - Acceptance gate: no remaining importer is justified by
+     `external-adapter-plugin-protocol-v1` unless it is actually an execution
+     adapter.
+3. Oracle and fixture ownership cleanup:
    - For `generate-a2a-adapter-fixtures`, `generate-agent-adapter-fixtures`,
      `generate-runtime-catalog-adapter-oracles`, and
      `generate-runtime-mcp-oracles`, either declare the checked-in Rust
@@ -412,7 +539,7 @@ work must be narrower than this sunset and should land in separate specs:
      cleanup; it has moved off runtime-local SDK helpers.
    - Acceptance gate: every remaining oracle generator has a Rust owner or is
      deleted before package deletion.
-3. Test-suite triage:
+4. Test-suite triage:
    - Classify the 49 `tests/**` reference files as Rust parity coverage, CLI JSON
      coverage, package-internal coverage deleted with runtime-local/adapters,
      or obsolete tests.
@@ -420,12 +547,17 @@ work must be narrower than this sunset and should land in separate specs:
      payment owner explicitly scopes them.
    - Acceptance gate: no root `tests/**` file imports runtime-local/adapters or
      direct package source paths.
-4. Package-boundary deletion cleanup:
+5. Package-boundary deletion cleanup:
    - Remove root devDependencies, TS path aliases, vitest aliases, pnpm lock
      links, docs/API-surface entries, active fixture references, and package
      directories only after the above importer gates are zero.
    - Acceptance gate: the negative import check in this spec passes outside
      archived scafld specs.
+6. Cloud and embedded binding disposition:
+   - Classify `cloud/packages/agent-runner/**`, worker, and embedded SDK callers
+     through `embedded-sdk-migration-story` after inspecting the cloud tree.
+   - Acceptance gate: no deletion claim depends on an unverified cloud binding or
+     a hidden runtime-local fallback.
 
 ## Planned Phases
 
@@ -436,7 +568,13 @@ Phase 1: importer and fixture inventory.
 - Start from the current inventory in this draft and refresh it immediately
   before execution; other workers may have added or removed importers.
 - Classify each importer as Rust-routed, sunset with runtime-local, or
-  surviving stable-boundary package.
+  surviving stable-boundary package, including language-neutral protocol helpers
+  that remain outside trusted local execution.
+- For every surviving boundary package, classify the lane before deciding the
+  migration path. Execution adapters may point at
+  `external-adapter-plugin-protocol-v1`; source ingress, hosted runtime binding,
+  catalog/read-model, and thread/outbox provider adapters require their own
+  stable dispositions.
 - Enumerate runtime-local-only fixture generators and identify the Rust spec or
   durable fixture set that now owns each behavior.
 
@@ -448,6 +586,10 @@ Phase 2: evidence gate.
 - Verify adapter specs cover every source type reachable from surviving
   callers, and unsupported production source types fail closed with receipt
   evidence.
+- Verify custom execution-adapter authoring is covered by
+  `external-adapter-plugin-protocol-v1` only when the behavior is execution
+  adapter behavior; otherwise verify the appropriate sibling lane disposition or
+  keep deletion blocked.
 - Treat MCP adapter/client and MCP server receipt sealing as completed
   prerequisites, then verify no surviving TS caller still reaches the TS MCP
   adapter/runtime-local path in production execution.
@@ -455,9 +597,12 @@ Phase 2: evidence gate.
 Phase 3: route surviving callers.
 - Remove runtime-local/adapters package dependencies from surviving packages.
 - Route local execution through Rust CLI JSON, Rust runtime APIs, or the stable
-  TS contracts boundary.
+  TS contracts/external execution-adapter protocol boundary.
+- Route non-execution integration through its classified stable boundary rather
+  than through runtime-local/adapters or a broadened execution-adapter protocol.
 - Keep cloud-side TS packages on their existing cloud HTTP boundary; do not
-  delete cloud packages here.
+  delete cloud packages here or claim `agent-runner` Rust binding without a
+  cloud-tree pass.
 
 Phase 4: delete packages and scaffolding.
 - Remove `packages/runtime-local/` and `packages/adapters/`.
@@ -495,6 +640,19 @@ Phase 5: validation and review.
 - Runtime-local-only fixture generator scripts are either deleted or retained
   only when another active spec explicitly names them as still required before
   this sunset can complete.
+- Built-in trusted adapters are Rust-routed, and language-neutral external
+  execution-adapter authoring is either implemented through
+  `external-adapter-plugin-protocol-v1` or recorded as a blocker.
+- Source-event ingress, hosted/embedded runtime binding, tool catalog/read-model,
+  and thread/outbox provider adapter surfaces are each classified by a named
+  spec or explicitly out of scope. None is assumed solved by the external
+  execution-adapter protocol.
+- Provider credential delivery for any surviving lane is covered by
+  `credential-broker-delivery-contract-v1` or recorded as a blocker. No surviving
+  lane introduces its own secret material channel.
+- Cloud `agent-runner` is either classified by an inspected cloud binding pass
+  or explicitly out of scope for this OSS package deletion; it is not assumed
+  settled by Aster runtime cutover.
 - The deletion does not change product skill files (`skills/**/SKILL.md` or
   `skills/**/X.yaml`) except through separately approved skill specs.
 
@@ -545,6 +703,18 @@ node scripts/check-rust-core-style.mjs
   package source paths after their behavior has a Rust/CLI owner.
 - Any adapter source type reachable from surviving local execution still lacks
   a Rust adapter or explicit fail-closed receipt evidence.
+- Any custom execution-adapter authoring path still depends on
+  `@runxhq/runtime-local` or `@runxhq/adapters` because the language-neutral
+  external protocol is missing or too narrow.
+- Any source-event, hosted-runtime, catalog/read-model, or thread/outbox provider
+  queue still depends on `@runxhq/runtime-local` or `@runxhq/adapters`, is
+  silently folded into the external execution-adapter protocol, or has no named
+  stable disposition.
+- Any surviving lane requiring provider secrets lacks
+  `credential-broker-delivery-contract-v1` coverage or uses ad hoc env,
+  metadata, receipt, or provider-specific JSON secret delivery.
+- Cloud `agent-runner` binding remains uninspected but deletion depends on it,
+  or any spec claims `rust-aster-runtime-cutover` settled that binding.
 - Any active replacement object model still centered on retired peer terminal
   artifacts, `skill_execution`, or `graph_execution`.
 - Any proposal to keep a workspace shim, v2 package, path alias, or bridge

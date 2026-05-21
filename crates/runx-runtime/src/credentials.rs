@@ -40,6 +40,30 @@ impl CredentialDeliveryProfile {
     pub fn auth_mode(&self) -> &str {
         &self.auth_mode
     }
+
+    pub fn from_contract_profile(
+        profile: &runx_contracts::CredentialDeliveryProfile,
+    ) -> Result<Self, CredentialDeliveryError> {
+        if profile.delivery_mode != runx_contracts::CredentialDeliveryMode::ProcessEnv {
+            return Err(CredentialDeliveryError::UnsupportedDeliveryMode {
+                mode: format!("{:?}", profile.delivery_mode),
+            });
+        }
+        let mut env_bindings = Vec::with_capacity(profile.env_bindings.len());
+        for binding in &profile.env_bindings {
+            let role = CredentialMaterialRole::from_contract_role(binding.role.clone())?;
+            validate_env_name(&binding.env_var)?;
+            env_bindings.push(CredentialEnvBinding {
+                role,
+                env_var: binding.env_var.clone(),
+            });
+        }
+        Ok(Self {
+            provider: profile.provider.clone(),
+            auth_mode: profile.auth_mode.clone(),
+            env_bindings,
+        })
+    }
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -57,6 +81,17 @@ impl CredentialMaterialRole {
     const fn label(self) -> &'static str {
         match self {
             Self::AccessToken => "access_token",
+        }
+    }
+
+    fn from_contract_role(
+        role: runx_contracts::CredentialMaterialRole,
+    ) -> Result<Self, CredentialDeliveryError> {
+        match role {
+            runx_contracts::CredentialMaterialRole::AccessToken => Ok(Self::AccessToken),
+            _ => Err(CredentialDeliveryError::UnsupportedMaterialRole {
+                role: format!("{role:?}"),
+            }),
         }
     }
 }
@@ -216,6 +251,13 @@ impl CredentialDelivery {
         }
         redacted
     }
+
+    #[must_use]
+    pub fn redact_bytes_to_string(&self, bytes: Vec<u8>, limit_bytes: usize) -> String {
+        let mut text = String::from_utf8_lossy(&bytes).into_owned();
+        text = self.redact_text(text);
+        truncate_utf8_string(&text, limit_bytes)
+    }
 }
 
 #[derive(Debug, Error)]
@@ -235,8 +277,14 @@ pub enum CredentialDeliveryError {
     MaterialRefMismatch { expected: String, actual: String },
     #[error("credential material is missing role '{role}'")]
     MissingRole { role: String },
+    #[error("credential material for role '{role}' is empty")]
+    EmptyMaterial { role: String },
     #[error("invalid credential delivery env var '{name}'")]
     InvalidEnvName { name: String },
+    #[error("unsupported credential delivery mode '{mode}'")]
+    UnsupportedDeliveryMode { mode: String },
+    #[error("unsupported credential material role '{role}'")]
+    UnsupportedMaterialRole { role: String },
 }
 
 fn require_allowed_binding(
@@ -263,6 +311,11 @@ fn apply_profile(
                 role: binding.role.label().to_owned(),
             });
         };
+        if secret.expose().trim().is_empty() {
+            return Err(CredentialDeliveryError::EmptyMaterial {
+                role: binding.role.label().to_owned(),
+            });
+        }
         values.insert(binding.env_var.clone(), secret.clone());
     }
     Ok(SecretEnv { values })
@@ -281,4 +334,15 @@ fn validate_env_name(name: &str) -> Result<(), CredentialDeliveryError> {
             name: name.to_owned(),
         })
     }
+}
+
+fn truncate_utf8_string(text: &str, limit_bytes: usize) -> String {
+    if text.len() <= limit_bytes {
+        return text.to_owned();
+    }
+    let mut end = limit_bytes;
+    while !text.is_char_boundary(end) {
+        end -= 1;
+    }
+    text[..end].to_owned()
 }

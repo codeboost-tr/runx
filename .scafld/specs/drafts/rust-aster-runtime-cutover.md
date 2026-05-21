@@ -2,7 +2,7 @@
 spec_version: '2.0'
 task_id: rust-aster-runtime-cutover
 created: '2026-05-18T00:00:00Z'
-updated: '2026-05-21T22:05:00+10:00'
+updated: '2026-05-21T22:52:32+10:00'
 status: draft
 harden_status: not_run
 size: large
@@ -22,17 +22,22 @@ the Aster repo's current Rust bridge scripts, and the live Aster checkout now
 passes its local Rust-binary proving-ground smoke.
 Blockers: cloud package binding is still unverified by this draft because
 `cloud/**` is not part of the OSS crate checkout. The full workspace contains a
-sibling cloud repo, but the cloud binding needs its own inspected pass.
+sibling cloud repo, but the cloud binding needs its own inspected pass; this
+draft does not settle `agent-runner` or choose between hosted HTTP, CLI JSON,
+service/FFI, or external adapter/plugin protocol boundaries.
 Allowed follow-up command: none during this refresh; do not run
 `scafld harden rust-aster-runtime-cutover`.
-Latest runner update: 2026-05-21T22:14:35+10:00 Aster checkout audit and pin
-bump: local Aster repo `/Users/kam/dev/runx/aster` is clean at `e084a31d`
-after pushing `chore(runx): bump dogfood pin`; its dogfood pin now targets
-pushed Runx OSS SHA `19e063666b3a6aa4f390c618dec84f5d59cd558d` from parent
-workspace commit `3476c16`. Aster validation passed `npm run check`, targeted
-bridge/pin tests, `node scripts/runx-checkout-pin.mjs resolve`, and
+Latest runner update: 2026-05-21T22:52:32+10:00 Aster checkout audit and pin
+bump evidence remains: local Aster repo `/Users/kam/dev/runx/aster` is clean at
+`e084a31d` after pushing `chore(runx): bump dogfood pin`; its dogfood pin now
+targets pushed Runx OSS SHA `19e063666b3a6aa4f390c618dec84f5d59cd558d` from
+parent workspace commit `3476c16`. Aster validation passed `npm run check`,
+targeted bridge/pin tests, `node scripts/runx-checkout-pin.mjs resolve`, and
 `git diff --check`. Hosted Aster dogfood now fetches the same pushed Runx SHA
-used for local validation evidence.
+used for local validation evidence. This refresh also aligns cloud-binding
+language with `ts-extension-survivorship-boundary` and
+`external-adapter-plugin-protocol-v1` so this draft cannot be read as settling
+`agent-runner` while the cloud boundary is still open.
 Review gate: not_started
 
 ## Summary
@@ -42,7 +47,9 @@ checkout that is actually available. The OSS crate checkout does not include
 `cloud/**`, so this spec cannot claim verified cloud package paths, UI paths,
 hosted agent adapter files, or cloud DB approval routing. The full workspace
 does include a sibling cloud repo, but those bindings stay deferred until a
-dedicated pass inspects that tree and records exact paths.
+dedicated pass inspects that tree and records exact paths. This draft therefore
+does not settle the cloud `agent-runner` binding for the runtime-local/adapters
+sunset.
 
 Current local facts:
 
@@ -75,8 +82,11 @@ Current local facts:
 
 The cutover remains preservation-oriented: Aster should consume the Rust
 runtime through a documented boundary and canonical contracts, but this draft
-must not invent a cloud binding or claim an agent-step runtime fixture before
-those files exist.
+must not invent a cloud binding, claim an agent-step runtime fixture before
+those files exist, or imply that custom adapter/plugin authors must link into
+Rust. If Aster needs custom userland integration code, that belongs behind the
+language-neutral external adapter/plugin protocol under Rust supervision rather
+than behind `@runxhq/runtime-local`.
 
 ## Context
 
@@ -110,6 +120,10 @@ Surfaces not present in this checkout:
 - Cloud binding is deferred until a checkout with the cloud tree is available.
   This spec may name the required boundary, but it must not assert verified
   cloud implementation paths in the OSS-only checkout.
+- Cloud `agent-runner` binding is an open follow-up, not a settled Aster
+  cutover fact. The later pass must choose an allowed stable boundary such as
+  hosted HTTP, CLI JSON, service/FFI, or the external adapter/plugin protocol,
+  and must not preserve a runtime-local fallback.
 - Aster control objects use the existing `runx-contracts::aster` shapes. Do not
   create parallel Aster JSON shapes for target, opportunity, selection,
   reflection, skill binding, feed entry, or transition records.
@@ -122,6 +136,9 @@ Surfaces not present in this checkout:
   cloud binding should either use this boundary through the public
   connect/registry re-exports or explicitly replace it in a separate reviewed
   change.
+- External adapter/plugin use, if needed by Aster or cloud agent integrations,
+  follows `external-adapter-plugin-protocol-v1`; this spec must not require
+  provider-specific adapter code to become a Rust crate.
 - No legacy/compat outcome, effect, verification proof alias, or Aster-only terminal
   packet is introduced.
 
@@ -170,6 +187,13 @@ Out of scope:
 - `runx-target-repo-runners` for Aster-scheduled source-to-target PR flows.
 - `runx-post-merge-closure-observer` for final closure/proof observation and
   source-thread updates.
+- `ts-extension-survivorship-boundary` for the rule that TypeScript may survive
+  as cloud/product/helper code over stable protocols but not as trusted local
+  runtime execution.
+- `external-adapter-plugin-protocol-v1` for any Aster or cloud custom
+  adapter/plugin boundary that needs no-Rust-required userland code.
+- `embedded-sdk-migration-story` for embedded SDK and cloud runtime-local
+  consumer disposition.
 - A future cloud-tree binding pass that can inspect the real `cloud/**`
   implementation.
 
@@ -187,6 +211,7 @@ Out of scope:
   `crates/runx-runtime/src/runtime_http.rs` or a reviewed replacement.
 - [x] Cloud binding details are marked deferred until `cloud/**` is available
   locally; no acceptance depends on absent cloud paths.
+- [x] Cloud `agent-runner` binding mode is not claimed as settled by this draft.
 - [x] Aster contract and runtime artifacts use harness receipt closure and
   `proof.verification`, not retired peer terminal artifacts or legacy
   outcome/effect packet fields.
@@ -251,6 +276,9 @@ node scripts/summarize-proving-ground.mjs "$ARTIFACT_DIR"
 - If cloud binding assumptions are wrong, repair the cloud binding spec after
   inspecting a checkout that contains `cloud/**`; do not encode guessed cloud
   paths in this OSS-only spec.
+- If cloud or Aster integration needs custom adapter/plugin code, route it
+  through `external-adapter-plugin-protocol-v1` or keep the binding blocked; do
+  not revive `@runxhq/runtime-local` or force provider code into Rust.
 - If the external runtime fixture is missing, keep Aster cutover blocked rather
   than treating the Aster control contract fixture as runtime execution proof.
 - If a future binding bypasses `runtime_http.rs`, require an explicit reviewed
@@ -261,8 +289,11 @@ node scripts/summarize-proving-ground.mjs "$ARTIFACT_DIR"
 ## Open Questions
 
 - Which concrete cloud binding mode wins once the cloud tree is available:
-  hosted HTTP, subprocess JSON over `runx-cli`, or an in-process service/FFI
-  bridge.
+  hosted HTTP, subprocess JSON over `runx-cli`, `runx-runtime-service`/FFI, the
+  external adapter/plugin protocol, or another reviewed stable boundary.
+- Whether `cloud/packages/agent-runner/**` needs the external adapter/plugin
+  protocol for hosted custom adapter behavior or can stay on a hosted HTTP
+  boundary with generated contracts.
 - Where hosted approval routing lives in the cloud tree after the Aster v1 reset
   work is available for inspection.
 - Whether Aster needs a dedicated runtime fixture generator or can share the

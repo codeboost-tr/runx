@@ -2,7 +2,7 @@
 spec_version: '2.0'
 task_id: rust-ts-sunset-parser
 created: '2026-05-18T00:00:00Z'
-updated: '2026-05-21T22:00:00+10:00'
+updated: '2026-05-22T00:26:00+10:00'
 status: draft
 harden_status: not_run
 size: medium
@@ -17,16 +17,18 @@ Status: draft
 Current phase: blocked
 Next: wait for parser importer migration specs to remove live TS consumers.
 Reason: draft created under `plans/rust-takeover.md`. Third TS sunset. On
-2026-05-21 this draft was rechecked again and the deletion objective is not
+2026-05-22 this draft was rechecked again and the deletion objective is not
 currently valid because 54 live files still import `@runxhq/core/parser`,
 relative `packages/core/src/parser` modules, or runtime-local parser type
 surfaces.
 Blockers: parser importers still live after `rust-ts-sunset-policy` completion.
 Allowed follow-up command: none while blocked; do not run `scafld harden`
 for this draft.
-Latest runner update: 2026-05-21T22:00:00+10:00 importer census refreshed;
+Latest runner update: 2026-05-22T00:26:00+10:00 importer census refreshed;
 deletion remains blocked and no harden/build should run for this draft until
-owning importer migration specs clear the census.
+owning importer migration specs clear the census. The deletion parent is split
+into importer-class work below, with `rust-ts-sunset-parser-runtime-local-importers`
+owning the runtime-local parser value/type surface.
 Review gate: blocked
 
 ## Summary
@@ -39,7 +41,7 @@ consumer reads from `@runxhq/core/parser`.
 checkout. Do not approve or execute the deletion phase until the importer census
 below is clean.
 
-2026-05-21 validation update: the importer census still finds 54 files.
+2026-05-22 validation update: the importer census still finds 54 files.
 The largest surviving groups are runtime-local execution/parser-type surfaces,
 CLI command readers, fixture/oracle generators, and tests. This update is
 inspection evidence only; it does not make deletion executable.
@@ -109,11 +111,12 @@ rg -l "(\.\./parser|\.\./\.\./parser|packages/core/src/parser)" packages/core sc
 rg -n "@runxhq/core/parser|\.\./parser|packages/core/src/parser" packages tests scripts --glob '!packages/core/src/parser/**' | wc -l
 ```
 
-Observed results on 2026-05-21:
+Observed results on 2026-05-22:
 
 - 33 files import `@runxhq/core/parser`.
 - 6 files refer to relative or direct `packages/core/src/parser` paths outside
   the parser directory.
+- 21 files import runtime-local `parser-types.js` structural parser surfaces.
 - 62 total import/reference hits remain outside `packages/core/src/parser/**`.
 - 54 union files still reference the parser package or source path.
 
@@ -129,6 +132,23 @@ Representative live production importers:
 - `packages/core/src/config/index.ts`
 - `packages/core/src/registry/ingest.ts`
 - `packages/adapters/src/agent/json-schema.ts`
+
+Importer-class work split:
+
+- `rust-ts-sunset-parser-runtime-local-importers`: runtime-local parser value
+  imports and the local `parser-types.js` structural surface. This is a safe
+  migration slice and must not delete parser code.
+- CLI command readers: `packages/cli/src/commands/{dev/fixture-runner,
+  doctor-structure,doctor,list,tool}.ts`.
+- Core internal consumers: `packages/core/src/config/index.ts`,
+  `packages/core/src/registry/ingest.ts`, and
+  `packages/core/src/registry/tool-catalog-types.ts`.
+- Fixture/oracle generators: `scripts/generate-official-lock.mjs`,
+  `scripts/generate-rust-parser-fixtures.ts`, and
+  `scripts/count-clean-kernel-prs.ts` history classification.
+- Tests: the remaining `tests/**` parser imports should either move to Rust
+  fixture validation or stay as explicit parser parity tests until the final
+  deletion window.
 
 Deletion acceptance, when unblocked:
 

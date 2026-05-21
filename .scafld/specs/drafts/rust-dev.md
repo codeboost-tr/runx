@@ -2,7 +2,7 @@
 spec_version: '2.0'
 task_id: rust-dev
 created: '2026-05-18T00:00:00Z'
-updated: '2026-05-21T04:05:38Z'
+updated: '2026-05-21T14:24:18Z'
 status: draft
 harden_status: in_progress
 size: medium
@@ -14,12 +14,14 @@ risk_level: medium
 ## Current State
 
 Status: draft
-Current phase: native skill/graph fixture execution plus CLI presentation parity slice implemented; CLI watch cutover decision recorded
-Next: keep any long-running CLI watch loop in a separate feature spec if
-product behavior changes
-Reason: a narrow Rust runtime slice now exists for dev fixture discovery,
-deterministic tool fixture execution, executable fixture workspace files,
-polling watch debounce, presentation, and dev-mode receipt metadata tagging.
+Current phase: safe closure candidate for the already-landed narrow dev
+execution and presentation slice
+Next: leave this lifecycle draft in place until an operator either archives it
+as completed evidence or opens a separate watch-loop feature spec
+Reason: the prior implementation evidence and current code inspection show the
+narrow Rust runtime slice exists for dev fixture discovery, deterministic tool
+fixture execution, executable fixture workspace files, polling watch debounce,
+presentation, and dev-mode receipt metadata tagging.
 `target.kind: skill` and `target.kind: graph` fixtures now execute through the
 Rust harness replay path and validate against the dev fixture expectation
 engine. Repo-integration skill fixtures bind workspace cwd through `RUNX_CWD`
@@ -31,14 +33,15 @@ feature spec exists: TS parses `devWatch` in `packages/cli/src/args.ts` but
 does not pass or use it in `packages/cli/src/commands/dev.ts`, and TS help does
 not advertise `--watch`. Exposing a Rust loop now would be a new user-visible
 feature with unspecified terminal, JSON, cancellation, and exit-code behavior.
-This is not complete `runx dev` parity yet.
-Blockers: none for the CLI watch cutover decision. Focused runtime validation
-passed after the unrelated post-merge observer compile drift was resolved. A
-future long-running CLI watch loop remains intentionally deferred to a separate
-feature spec instead of being hidden behind a compatibility shim.
-Allowed follow-up command: do not run
-`scafld harden rust-dev --mark-passed` for this decision-only slice.
-Latest runner update: 2026-05-21T04:05:38Z
+This draft should not be treated as complete `runx dev` parity.
+Blockers: no code blocker for the narrow done slice. Lifecycle closure remains
+blocked by missing durable `rust-dev` session/review evidence: `scafld status
+rust-dev --json` reports `status: draft`, `gate: harden`, and
+`session_ok: false`, and there is no `.scafld/runs/rust-dev/session.json`.
+The product blocker for full parity is the intentionally deferred long-running
+CLI watch loop.
+Allowed follow-up command: `scafld validate rust-dev --json`
+Latest runner update: 2026-05-21T14:24:18Z
 Review gate: not_started
 
 ## Summary
@@ -93,7 +96,23 @@ Out of scope:
 
 ## Open Questions
 
-- File watch library choice (notify, watchexec). Defer to Phase 1.
+- None for the already-landed narrow execution and presentation slice.
+
+## Future Blocker: CLI Watch Loop
+
+`runx dev --watch` remains intentionally fail-closed in Rust. Current launcher
+tests assert `runx dev --watch` returns `unknown dev flag --watch`, matching the
+decision that Rust should not expose a long-running loop until a separate
+feature spec defines:
+
+- terminal rendering across repeated runs;
+- JSON output shape for multi-run streams;
+- cancellation and signal behavior;
+- debounce semantics for real file-system watching;
+- exit-code behavior after one or more failed runs.
+
+This blocker is out of scope for the current closure slice and should be tracked
+by a new spec if product behavior changes.
 
 ## Harden Rounds
 

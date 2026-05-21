@@ -1,6 +1,7 @@
 // rust-style-allow: large-file because local registry ingestion keeps skill
 // parsing, binding metadata, and registry-version projection together for the
 // current TS-sunset parity slice.
+use runx_contracts::maturity::MaturityTier;
 use runx_contracts::{JsonObject, JsonValue, sha256_hex};
 use runx_parser::{
     SkillRunnerManifest, ValidatedSkill, parse_runner_manifest_yaml, parse_skill_markdown,
@@ -45,6 +46,9 @@ pub fn build_registry_skill_version(
         runner_names: binding.runner_names,
         source_type: skill.source.source_type.clone(),
         trust_tier: defaults.trust_tier,
+        // Alpha is the floor at creation; maturity is recomputed from harness
+        // signals at the publish and harness-seal events, never on read.
+        maturity: MaturityTier::Alpha,
         catalog_kind: Some(catalog.kind),
         catalog_audience: Some(catalog.audience),
         catalog_visibility: Some(catalog.visibility),
@@ -204,6 +208,8 @@ pub fn normalize_registry_skill_version(
         runner_names: payload.runner_names.unwrap_or_default(),
         source_type: required_string(payload.source_type, "registry_version.source_type")?,
         trust_tier,
+        // Preserved through re-ingest; defaults to the Alpha floor when absent.
+        maturity: payload.maturity.unwrap_or_default(),
         catalog_kind: Some(catalog.kind),
         catalog_audience: Some(catalog.audience),
         catalog_visibility: Some(catalog.visibility),
@@ -263,6 +269,7 @@ pub struct RegistrySkillVersionPayload {
     runner_names: Option<Vec<String>>,
     source_type: Option<String>,
     trust_tier: Option<TrustTier>,
+    maturity: Option<MaturityTier>,
     catalog_kind: Option<String>,
     catalog_audience: Option<String>,
     catalog_visibility: Option<String>,

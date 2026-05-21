@@ -9,10 +9,6 @@ use std::io::{Read, Write};
 use std::process::Stdio;
 #[cfg(all(feature = "mcp", not(feature = "mcp-rmcp")))]
 use std::process::{Child, ChildStdin, Command};
-#[cfg(feature = "mcp-rmcp")]
-use std::sync::Arc;
-#[cfg(feature = "mcp-rmcp")]
-use std::sync::Mutex;
 #[cfg(all(feature = "mcp", not(feature = "mcp-rmcp")))]
 use std::sync::mpsc::{self, Receiver, RecvTimeoutError, Sender};
 #[cfg(all(feature = "mcp", not(feature = "mcp-rmcp")))]
@@ -30,7 +26,7 @@ use serde_json::{self, Value as JsonWireValue};
 use crate::credentials::SecretEnv;
 use crate::sandbox::SandboxPlan;
 
-#[cfg(any(feature = "mcp", feature = "mcp-rmcp"))]
+#[cfg(feature = "mcp")]
 use super::framing::{content_length, find_header_end};
 use super::jsonrpc::text_content;
 #[cfg(all(feature = "mcp", not(feature = "mcp-rmcp")))]
@@ -38,6 +34,8 @@ use super::jsonrpc::{
     initialize_request, initialized_notification, parse_mcp_tools_list, tool_call_request,
     tools_list_request,
 };
+#[cfg(feature = "mcp-rmcp")]
+use super::rmcp_content_length::{RmcpContentLengthTransport, RmcpTransportErrorState};
 use super::templates::js_string;
 use super::types::{
     McpListToolsRequest, McpToolCallRequest, McpToolDescriptor, McpTransport, McpTransportError,
@@ -236,7 +234,12 @@ async fn serve_rmcp_client(
         .stdin
         .take()
         .ok_or_else(|| McpTransportError::failed("MCP server stdin unavailable."))?;
-    let transport = RmcpContentLengthTransport::new(stdout, stdin, error_state.clone());
+    let transport = RmcpContentLengthTransport::new(
+        stdout,
+        stdin,
+        MAX_CLIENT_RESPONSE_BYTES,
+        error_state.clone(),
+    );
     serve_rmcp_transport(transport, &error_state).await
 }
 
@@ -255,154 +258,6 @@ where
     rmcp::serve_client(rmcp::model::ClientInfo::default(), transport)
         .await
         .map_err(|error| rmcp_initialization_error(error, error_state))
-}
-
-#[cfg(feature = "mcp-rmcp")]
-struct RmcpContentLengthTransport<R, W> {
-    read: R,
-    write: Arc<tokio::sync::Mutex<W>>,
-    buffer: Vec<u8>,
-    error_state: RmcpTransportErrorState,
-}
-
-#[cfg(feature = "mcp-rmcp")]
-#[derive(Clone, Default)]
-struct RmcpTransportErrorState {
-    message: Arc<Mutex<Option<String>>>,
-}
-
-#[cfg(feature = "mcp-rmcp")]
-impl RmcpTransportErrorState {
-    fn record(&self, error: std::io::Error) {
-        if let Ok(mut message) = self.message.lock() {
-            *message = Some(error.to_string());
-        }
-    }
-
-    fn take(&self) -> Option<String> {
-        self.message
-            .lock()
-            .ok()
-            .and_then(|mut message| message.take())
-    }
-}
-
-#[cfg(feature = "mcp-rmcp")]
-impl<R, W> RmcpContentLengthTransport<R, W> {
-    fn new(read: R, write: W, error_state: RmcpTransportErrorState) -> Self {
-        Self {
-            read,
-            write: Arc::new(tokio::sync::Mutex::new(write)),
-            buffer: Vec::new(),
-            error_state,
-        }
-    }
-}
-
-#[cfg(feature = "mcp-rmcp")]
-impl<R, W> rmcp::transport::Transport<rmcp::RoleClient> for RmcpContentLengthTransport<R, W>
-where
-    R: tokio::io::AsyncRead + Send + Unpin + 'static,
-    W: tokio::io::AsyncWrite + Send + Unpin + 'static,
-{
-    type Error = std::io::Error;
-
-    fn send(
-        &mut self,
-        item: rmcp::service::TxJsonRpcMessage<rmcp::RoleClient>,
-    ) -> impl Future<Output = Result<(), Self::Error>> + Send + 'static {
-        let write = Arc::clone(&self.write);
-        async move {
-            let body = serde_json::to_vec(&item).map_err(std::io::Error::other)?;
-            let header = format!("Content-Length: {}\r\n\r\n", body.len());
-            let mut write = write.lock().await;
-            tokio::io::AsyncWriteExt::write_all(&mut *write, header.as_bytes()).await?;
-            tokio::io::AsyncWriteExt::write_all(&mut *write, &body).await?;
-            tokio::io::AsyncWriteExt::flush(&mut *write).await
-        }
-    }
-
-    async fn receive(&mut self) -> Option<rmcp::service::RxJsonRpcMessage<rmcp::RoleClient>> {
-        match next_rmcp_framed_message(&mut self.read, &mut self.buffer).await {
-            Ok(Some(message)) => Some(message),
-            Ok(None) => None,
-            Err(error) => {
-                self.error_state.record(error);
-                None
-            }
-        }
-    }
-
-    async fn close(&mut self) -> Result<(), Self::Error> {
-        let mut write = self.write.lock().await;
-        tokio::io::AsyncWriteExt::shutdown(&mut *write).await
-    }
-}
-
-#[cfg(feature = "mcp-rmcp")]
-async fn next_rmcp_framed_message<R>(
-    read: &mut R,
-    buffer: &mut Vec<u8>,
-) -> Result<Option<rmcp::service::RxJsonRpcMessage<rmcp::RoleClient>>, std::io::Error>
-where
-    R: tokio::io::AsyncRead + Unpin,
-{
-    loop {
-        if let Some(message) = parse_next_rmcp_framed_message(buffer)? {
-            return Ok(Some(message));
-        }
-        if buffer.len() > MAX_CLIENT_RESPONSE_BYTES {
-            return Err(std::io::Error::new(
-                std::io::ErrorKind::InvalidData,
-                "MCP server response exceeded size limit.",
-            ));
-        }
-        let mut chunk = [0_u8; 8192];
-        let read = tokio::io::AsyncReadExt::read(read, &mut chunk).await?;
-        if read == 0 {
-            return Ok(None);
-        }
-        buffer.extend_from_slice(&chunk[..read]);
-    }
-}
-
-#[cfg(feature = "mcp-rmcp")]
-fn parse_next_rmcp_framed_message(
-    buffer: &mut Vec<u8>,
-) -> Result<Option<rmcp::service::RxJsonRpcMessage<rmcp::RoleClient>>, std::io::Error> {
-    let Some(header_end) = find_header_end(buffer) else {
-        return Ok(None);
-    };
-    if header_end > MAX_CLIENT_RESPONSE_BYTES {
-        return Err(std::io::Error::new(
-            std::io::ErrorKind::InvalidData,
-            "MCP server response exceeded size limit.",
-        ));
-    }
-    let header = std::str::from_utf8(&buffer[..header_end])
-        .map_err(|error| std::io::Error::new(std::io::ErrorKind::InvalidData, error))?;
-    let content_length = content_length(header).ok_or_else(|| {
-        std::io::Error::new(
-            std::io::ErrorKind::InvalidData,
-            "MCP server sent a response without Content-Length.",
-        )
-    })?;
-    if content_length > MAX_CLIENT_RESPONSE_BYTES {
-        return Err(std::io::Error::new(
-            std::io::ErrorKind::InvalidData,
-            "MCP server response exceeded size limit.",
-        ));
-    }
-    let body_start = header_end + 4;
-    let body_end = body_start.saturating_add(content_length);
-    if buffer.len() < body_end {
-        return Ok(None);
-    }
-    let body = buffer[body_start..body_end].to_vec();
-    buffer.drain(..body_end);
-    serde_json::from_slice(&body)
-        .map(Some)
-        .map_err(|error| std::io::Error::new(std::io::ErrorKind::InvalidData, error))
 }
 
 #[cfg(feature = "mcp-rmcp")]
@@ -815,7 +670,10 @@ mod rmcp_transport_tests {
     use rmcp::transport::Transport;
     use tokio::io::AsyncWriteExt;
 
-    use super::{RmcpContentLengthTransport, RmcpTransportErrorState, serve_rmcp_transport};
+    use super::{
+        MAX_CLIENT_RESPONSE_BYTES, RmcpContentLengthTransport, RmcpTransportErrorState,
+        serve_rmcp_transport,
+    };
 
     // rust-style-allow: long-function because these adjacent transport
     // regression tests share one in-memory Content-Length fixture.
@@ -837,7 +695,7 @@ mod rmcp_transport_tests {
 
         assert_eq!(
             message.as_deref(),
-            Some("MCP server sent a response without Content-Length.")
+            Some("MCP message missing Content-Length.")
         );
     }
 
@@ -845,10 +703,7 @@ mod rmcp_transport_tests {
     fn rmcp_receive_records_oversized_body_as_transport_error() {
         let message = receive_error_message(b"Content-Length: 1048577\r\n\r\n{}");
 
-        assert_eq!(
-            message.as_deref(),
-            Some("MCP server response exceeded size limit.")
-        );
+        assert_eq!(message.as_deref(), Some("MCP message exceeded size limit."));
     }
 
     #[test]
@@ -874,8 +729,12 @@ mod rmcp_transport_tests {
                 drop(writer);
 
                 let error_state = RmcpTransportErrorState::default();
-                let transport =
-                    RmcpContentLengthTransport::new(reader, tokio::io::sink(), error_state.clone());
+                let transport = RmcpContentLengthTransport::new(
+                    reader,
+                    tokio::io::sink(),
+                    MAX_CLIENT_RESPONSE_BYTES,
+                    error_state.clone(),
+                );
 
                 serve_rmcp_transport(transport, &error_state)
                     .await
@@ -895,8 +754,12 @@ mod rmcp_transport_tests {
                 drop(writer);
 
                 let error_state = RmcpTransportErrorState::default();
-                let mut transport =
-                    RmcpContentLengthTransport::new(reader, tokio::io::sink(), error_state.clone());
+                let mut transport = RmcpContentLengthTransport::new(
+                    reader,
+                    tokio::io::sink(),
+                    MAX_CLIENT_RESPONSE_BYTES,
+                    error_state.clone(),
+                );
 
                 let message = Transport::<rmcp::RoleClient>::receive(&mut transport).await;
                 assert!(message.is_none());

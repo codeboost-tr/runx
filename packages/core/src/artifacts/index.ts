@@ -5,10 +5,12 @@ import { mkdir, open, readFile, rm, type FileHandle } from "node:fs/promises";
 import path from "node:path";
 
 import {
+  canonicalJsonStringify,
   ledgerCanonicalization,
   ledgerChainSchemaVersion,
   ledgerHashAlgorithm,
   ledgerRecordSchemaVersion,
+  sha256Hex,
   validateArtifactEnvelopeContract,
   validateLedgerRecordContract,
 } from "@runxhq/contracts";
@@ -975,12 +977,12 @@ function createLedgerChain(
 }
 
 function hashLedgerChainEntry(index: number, previousHash: string | null, entry: ArtifactEnvelope): string {
-  return hashStable({
+  return sha256Hex(canonicalJsonStringify({
     version: "runx.ledger.chain-payload.v1",
     index,
     previous_hash: previousHash,
     entry,
-  });
+  }));
 }
 
 function hashLedgerRecordPrefix(records: readonly ParsedLedgerRecord[], entryCount: number): string | null {

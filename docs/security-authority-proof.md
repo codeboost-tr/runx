@@ -26,6 +26,20 @@ Credential material is represented by hashed opaque handles such as
 passed through the receipt redactor before signing. Hosted workers and local
 runners use the same `authority_proof` schema name; consuming repos add policy
 for source channels, assignees, and target repositories outside the core proof.
+Runtime secret handoff is owned by `credential-broker-delivery-contract-v1`:
+secret values may cross only the trusted broker/supervisor delivery channel, not
+authority proofs, receipts, invocation metadata, adapter observations, or public
+provider evidence.
+
+## Ownership Boundary
+
+The Rust `AuthorityProof` wire structs are policy-owned in `runx-core`, not
+promoted into `runx-contracts`. The proof is produced only by the policy kernel,
+shares admission support types such as `ScopeAdmission`, `AuthorityKind`, and
+`CredentialGrantReference`, and is validated as a contract through generated
+schema checks in `runx-contracts`. Future contract-spine work should treat this
+as an explicit exception unless it can move the full boundary without changing
+the `runx.authority-proof.v1` JSON shape.
 
 The local kernel resolves authority in this order:
 

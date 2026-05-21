@@ -109,10 +109,34 @@ mod tests {
 
     const SUCCESS_RECEIPT: &str =
         include_str!("../../../fixtures/contracts/harness-spine/harness-receipt-success.json");
+    const ABNORMAL_RECEIPT: &str =
+        include_str!("../../../fixtures/contracts/harness-spine/harness-receipt-abnormal.json");
+    const POST_MERGE_OBSERVER_RECEIPT: &str = include_str!(
+        "../../../fixtures/contracts/harness-spine/post-merge-observer-merged-verified.json"
+    );
+    const HARNESS_RECEIPT_ORACLE: &str = include_str!(
+        "../../../fixtures/contracts/canonical-json/runx-harness-receipt-c14n-v1.oracles.json"
+    );
 
     #[derive(Debug, Deserialize)]
     struct Fixture {
         expected: HarnessReceipt,
+    }
+
+    #[derive(Debug, Deserialize)]
+    struct HarnessReceiptOracleFixture {
+        canonicalization: String,
+        cases: Vec<HarnessReceiptOracleCase>,
+    }
+
+    #[derive(Debug, Deserialize)]
+    struct HarnessReceiptOracleCase {
+        name: String,
+        fixture: String,
+        full_canonical_json: String,
+        full_sha256: String,
+        body_canonical_json: String,
+        body_sha256: String,
     }
 
     #[test]
@@ -130,7 +154,7 @@ mod tests {
         let second = canonical_receipt_json(&receipt)?;
 
         assert_eq!(first, second);
-        assert!(first.starts_with(r#"{"created_at":"#));
+        assert!(first.contains("\"created_at\":\""));
         assert!(canonical_receipt_digest(&receipt)?.starts_with("sha256:"));
         Ok(())
     }
@@ -176,8 +200,64 @@ mod tests {
         Ok(())
     }
 
+    #[test]
+    fn harness_receipt_oracle_matches_rust_canonical_json() -> Result<(), ReceiptError> {
+        let oracle: HarnessReceiptOracleFixture = serde_json::from_str(HARNESS_RECEIPT_ORACLE)
+            .map_err(|source| ReceiptError::Serialization {
+                message: source.to_string(),
+            })?;
+        assert_eq!(oracle.canonicalization, "runx.harness-receipt.c14n.v1");
+
+        for case in oracle.cases {
+            let receipt = fixture_by_path(&case.fixture)?;
+            assert_eq!(
+                canonical_receipt_json(&receipt)?,
+                case.full_canonical_json,
+                "{} full canonical JSON drifted",
+                case.name
+            );
+            assert_eq!(
+                canonical_receipt_digest(&receipt)?,
+                case.full_sha256,
+                "{} full digest drifted",
+                case.name
+            );
+            assert_eq!(
+                canonical_receipt_body_json(&receipt)?,
+                case.body_canonical_json,
+                "{} body canonical JSON drifted",
+                case.name
+            );
+            assert_eq!(
+                canonical_receipt_body_digest(&receipt)?,
+                case.body_sha256,
+                "{} body digest drifted",
+                case.name
+            );
+        }
+        Ok(())
+    }
+
     fn fixture() -> Result<HarnessReceipt, ReceiptError> {
         serde_json::from_str::<Fixture>(SUCCESS_RECEIPT)
+            .map(|fixture| fixture.expected)
+            .map_err(|source| ReceiptError::Serialization {
+                message: source.to_string(),
+            })
+    }
+
+    fn fixture_by_path(path: &str) -> Result<HarnessReceipt, ReceiptError> {
+        let json = match path {
+            "harness-spine/harness-receipt-abnormal.json" => ABNORMAL_RECEIPT,
+            "harness-spine/harness-receipt-success.json" => SUCCESS_RECEIPT,
+            "harness-spine/post-merge-observer-merged-verified.json" => POST_MERGE_OBSERVER_RECEIPT,
+            _ => {
+                return Err(ReceiptError::Serialization {
+                    message: format!("unknown harness receipt oracle fixture: {path}"),
+                });
+            }
+        };
+        serde_json::from_str::<Fixture>(json)
             .map(|fixture| fixture.expected)
             .map_err(|source| ReceiptError::Serialization {
                 message: source.to_string(),

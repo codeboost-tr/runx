@@ -1,6 +1,13 @@
 export const contractsPackage = "@runxhq/contracts";
 
 export {
+  RUNX_STABLE_JSON_V1,
+  canonicalJsonStringify,
+  sha256Hex,
+  sha256Prefixed,
+} from "./canonical-json.js";
+
+export {
   RUNX_SCHEMA_BASE_URL,
   RUNX_CONTRACT_IDS,
   RUNX_LOGICAL_SCHEMAS,
@@ -22,6 +29,30 @@ export {
   type ScopeAdmissionContract,
   type AuthorityProofContract,
 } from "./schemas/credentials.js";
+
+export {
+  credentialDeliveryModeSchema,
+  credentialDeliveryPurposeSchema,
+  credentialMaterialRoleSchema,
+  credentialDeliveryStatusSchema,
+  credentialDeliveryObservationStatusSchema,
+  credentialDeliveryEnvBindingSchema,
+  credentialDeliveryProfileV1Schema,
+  credentialDeliveryRequestV1Schema,
+  credentialDeliveryHandleSchema,
+  credentialDeliveryBrokerResponseV1Schema,
+  credentialDeliveryObservationV1Schema,
+  validateCredentialDeliveryProfileContract,
+  validateCredentialDeliveryRequestContract,
+  validateCredentialDeliveryBrokerResponseContract,
+  validateCredentialDeliveryObservationContract,
+  type CredentialDeliveryEnvBindingContract,
+  type CredentialDeliveryProfileContract,
+  type CredentialDeliveryRequestContract,
+  type CredentialDeliveryHandleContract,
+  type CredentialDeliveryBrokerResponseContract,
+  type CredentialDeliveryObservationContract,
+} from "./schemas/credential-delivery.js";
 
 export {
   outputScalarSchema,
@@ -221,6 +252,44 @@ export {
   type ActAssignmentIdempotencyContract,
   type ActAssignmentContract,
 } from "./schemas/act-assignment.js";
+
+export {
+  externalAdapterProtocolVersion,
+  externalAdapterTransportSchema,
+  externalAdapterCredentialNeedSchema,
+  externalAdapterSandboxIntentSchema,
+  externalAdapterTimeoutsSchema,
+  externalAdapterManifestV1Schema,
+  externalAdapterCredentialRequestV1Schema,
+  externalAdapterCredentialReferenceSchema,
+  externalAdapterInvocationV1Schema,
+  externalAdapterArtifactObservationSchema,
+  externalAdapterErrorObservationSchema,
+  externalAdapterTelemetryObservationSchema,
+  externalAdapterResponseV1Schema,
+  externalAdapterHostResolutionFrameV1Schema,
+  externalAdapterCancellationFrameV1Schema,
+  validateExternalAdapterManifestContract,
+  validateExternalAdapterInvocationContract,
+  validateExternalAdapterResponseContract,
+  validateExternalAdapterHostResolutionFrameContract,
+  validateExternalAdapterCancellationFrameContract,
+  validateExternalAdapterCredentialRequestContract,
+  type ExternalAdapterTransportContract,
+  type ExternalAdapterCredentialNeedContract,
+  type ExternalAdapterSandboxIntentContract,
+  type ExternalAdapterTimeoutsContract,
+  type ExternalAdapterManifestContract,
+  type ExternalAdapterCredentialRequestContract,
+  type ExternalAdapterCredentialReferenceContract,
+  type ExternalAdapterInvocationContract,
+  type ExternalAdapterArtifactObservationContract,
+  type ExternalAdapterErrorObservationContract,
+  type ExternalAdapterTelemetryObservationContract,
+  type ExternalAdapterResponseContract,
+  type ExternalAdapterHostResolutionFrameContract,
+  type ExternalAdapterCancellationFrameContract,
+} from "./schemas/external-adapter.js";
 
 export {
   referenceTypes,
@@ -427,6 +496,12 @@ export {
 import { agentContextEnvelopeSchema } from "./schemas/context.js";
 import { agentActInvocationSchema, approvalGateSchema, questionSchema } from "./schemas/agent-act.js";
 import { credentialEnvelopeSchema, scopeAdmissionSchema, authorityProofSchema } from "./schemas/credentials.js";
+import {
+  credentialDeliveryBrokerResponseV1Schema,
+  credentialDeliveryObservationV1Schema,
+  credentialDeliveryProfileV1Schema,
+  credentialDeliveryRequestV1Schema,
+} from "./schemas/credential-delivery.js";
 import { outputSchema } from "./schemas/output.js";
 import { actReceiptEnvelopeSchema, resolutionRequestSchema, resolutionResponseSchema } from "./schemas/resolution.js";
 import { registryBindingSchema, reviewReceiptOutputSchema } from "./schemas/registry.js";
@@ -438,6 +513,14 @@ import { fixtureV1Schema } from "./schemas/fixture.js";
 import { toolManifestV1Schema } from "./schemas/tool-manifest.js";
 import { packetIndexV1Schema } from "./schemas/packet-index.js";
 import { actAssignmentV1Schema } from "./schemas/act-assignment.js";
+import {
+  externalAdapterCancellationFrameV1Schema,
+  externalAdapterHostResolutionFrameV1Schema,
+  externalAdapterCredentialRequestV1Schema,
+  externalAdapterInvocationV1Schema,
+  externalAdapterManifestV1Schema,
+  externalAdapterResponseV1Schema,
+} from "./schemas/external-adapter.js";
 import {
   actSchema,
   artifactSchema,
@@ -476,6 +559,10 @@ export const runxContractSchemas = {
   credentialEnvelope: credentialEnvelopeSchema,
   scopeAdmission: scopeAdmissionSchema,
   authorityProof: authorityProofSchema,
+  credentialDeliveryProfile: credentialDeliveryProfileV1Schema,
+  credentialDeliveryRequest: credentialDeliveryRequestV1Schema,
+  credentialDeliveryBrokerResponse: credentialDeliveryBrokerResponseV1Schema,
+  credentialDeliveryObservation: credentialDeliveryObservationV1Schema,
   doctor: doctorV1Schema,
   dev: devV1Schema,
   list: listV1Schema,
@@ -484,6 +571,12 @@ export const runxContractSchemas = {
   toolManifest: toolManifestV1Schema,
   packetIndex: packetIndexV1Schema,
   actAssignment: actAssignmentV1Schema,
+  externalAdapterManifest: externalAdapterManifestV1Schema,
+  externalAdapterInvocation: externalAdapterInvocationV1Schema,
+  externalAdapterResponse: externalAdapterResponseV1Schema,
+  externalAdapterHostResolution: externalAdapterHostResolutionFrameV1Schema,
+  externalAdapterCancellation: externalAdapterCancellationFrameV1Schema,
+  externalAdapterCredentialRequest: externalAdapterCredentialRequestV1Schema,
   reference: referenceSchema,
   authority: harnessAuthoritySchema,
   authoritySubsetProof: authoritySubsetProofSchema,
@@ -528,6 +621,10 @@ export const runxGeneratedSchemaArtifacts = {
   "credential-envelope.schema.json": credentialEnvelopeSchema,
   "scope-admission.schema.json": scopeAdmissionSchema,
   "authority-proof.schema.json": authorityProofSchema,
+  "credential-delivery-profile.schema.json": credentialDeliveryProfileV1Schema,
+  "credential-delivery-request.schema.json": credentialDeliveryRequestV1Schema,
+  "credential-delivery-broker-response.schema.json": credentialDeliveryBrokerResponseV1Schema,
+  "credential-delivery-observation.schema.json": credentialDeliveryObservationV1Schema,
   "doctor.schema.json": doctorV1Schema,
   "dev.schema.json": devV1Schema,
   "list.schema.json": listV1Schema,
@@ -536,6 +633,12 @@ export const runxGeneratedSchemaArtifacts = {
   "tool-manifest.schema.json": toolManifestV1Schema,
   "packet-index.schema.json": packetIndexV1Schema,
   "act-assignment.schema.json": actAssignmentV1Schema,
+  "external-adapter-manifest.schema.json": externalAdapterManifestV1Schema,
+  "external-adapter-invocation.schema.json": externalAdapterInvocationV1Schema,
+  "external-adapter-response.schema.json": externalAdapterResponseV1Schema,
+  "external-adapter-host-resolution.schema.json": externalAdapterHostResolutionFrameV1Schema,
+  "external-adapter-cancellation.schema.json": externalAdapterCancellationFrameV1Schema,
+  "external-adapter-credential-request.schema.json": externalAdapterCredentialRequestV1Schema,
   "reference.schema.json": referenceSchema,
   "authority.schema.json": harnessAuthoritySchema,
   "authority-subset-proof.schema.json": authoritySubsetProofSchema,

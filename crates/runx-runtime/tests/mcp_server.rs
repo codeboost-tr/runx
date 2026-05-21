@@ -1,16 +1,23 @@
-#![cfg(feature = "mcp")]
+#![cfg(any(feature = "mcp", feature = "mcp-rmcp"))]
 
 use std::io::Cursor;
+#[cfg(feature = "mcp")]
 use std::path::PathBuf;
 
-use runx_contracts::{HarnessReceiptSchema, HarnessState, JsonObject, JsonValue};
+#[cfg(feature = "mcp")]
+use runx_contracts::{HarnessReceiptSchema, HarnessState};
+use runx_contracts::{JsonObject, JsonValue};
+#[cfg(feature = "mcp")]
+use runx_runtime::adapters::mcp::McpServerExecutionOptions;
 use runx_runtime::adapters::mcp::{
-    McpContent, McpHostRunResult, McpServerExecutionOptions, McpServerOptions, McpServerTool,
-    McpServerToolBehavior, McpToolResult, mcp_tool_result_from_host_result, serve_mcp_json_rpc,
+    McpContent, McpHostRunResult, McpServerOptions, McpServerTool, McpServerToolBehavior,
+    McpToolResult, mcp_tool_result_from_host_result, serve_mcp_json_rpc,
 };
+#[cfg(feature = "mcp")]
 use runx_runtime::receipt_store::LocalReceiptStore;
 
 #[test]
+#[cfg(feature = "mcp")]
 fn mcp_server_initializes_lists_and_calls_tools() -> Result<(), Box<dyn std::error::Error>> {
     let responses = run_server(vec![
         request(1, "initialize", JsonObject::new()),
@@ -43,6 +50,7 @@ fn mcp_server_initializes_lists_and_calls_tools() -> Result<(), Box<dyn std::err
 }
 
 #[test]
+#[cfg(feature = "mcp")]
 fn mcp_server_matches_recorded_stdio_wire_contract() -> Result<(), Box<dyn std::error::Error>> {
     for fixture_name in ["basic-lifecycle", "error-paths"] {
         let input = frame_jsonl_fixture(fixture_name, "requests")?;
@@ -59,6 +67,40 @@ fn mcp_server_matches_recorded_stdio_wire_contract() -> Result<(), Box<dyn std::
 }
 
 #[test]
+#[cfg(feature = "mcp-rmcp")]
+fn mcp_rmcp_server_runs_basic_lifecycle() -> Result<(), Box<dyn std::error::Error>> {
+    let responses = run_server(vec![
+        rmcp_initialize_request(1),
+        initialized_notification(),
+        request(2, "tools/list", JsonObject::new()),
+        request(
+            3,
+            "tools/call",
+            [
+                ("name".to_owned(), JsonValue::String("echo".to_owned())),
+                ("arguments".to_owned(), JsonValue::Object(JsonObject::new())),
+            ]
+            .into(),
+        ),
+    ])?;
+
+    assert_eq!(
+        path(&responses[0], &["result", "protocolVersion"]),
+        Some(&JsonValue::String("2025-06-18".to_owned()))
+    );
+    assert_eq!(
+        path(&responses[1], &["result", "tools", "0", "name"]),
+        Some(&JsonValue::String("echo".to_owned()))
+    );
+    assert_eq!(
+        path(&responses[2], &["result", "content", "0", "text"]),
+        Some(&JsonValue::String("hello from server".to_owned()))
+    );
+    Ok(())
+}
+
+#[test]
+#[cfg(feature = "mcp")]
 fn mcp_server_skill_tool_execution_returns_completed_runx_structured_content()
 -> Result<(), Box<dyn std::error::Error>> {
     let responses = run_server_with_options(
@@ -89,13 +131,16 @@ fn mcp_server_skill_tool_execution_returns_completed_runx_structured_content()
             &responses[0],
             &["result", "structuredContent", "runx", "status"]
         ),
-        Some(&JsonValue::String("completed".to_owned()))
+        Some(&JsonValue::String("completed".to_owned())),
+        "unexpected MCP server skill response: {:#?}",
+        responses[0]
     );
     assert_eq!(path(&responses[0], &["result", "isError"]), None);
     Ok(())
 }
 
 #[test]
+#[cfg(feature = "mcp")]
 fn mcp_server_single_skill_call_writes_sealed_harness_receipt()
 -> Result<(), Box<dyn std::error::Error>> {
     let receipt_root = tempfile::tempdir()?;
@@ -127,7 +172,9 @@ fn mcp_server_single_skill_call_writes_sealed_harness_receipt()
             &responses[0],
             &["result", "structuredContent", "runx", "status"]
         ),
-        Some(&JsonValue::String("completed".to_owned()))
+        Some(&JsonValue::String("completed".to_owned())),
+        "unexpected MCP server skill response: {:#?}",
+        responses[0]
     );
     let JsonValue::String(receipt_id) = path(
         &responses[0],
@@ -147,6 +194,7 @@ fn mcp_server_single_skill_call_writes_sealed_harness_receipt()
 }
 
 #[test]
+#[cfg(feature = "mcp")]
 fn mcp_server_missing_required_skill_input_pauses_with_request()
 -> Result<(), Box<dyn std::error::Error>> {
     let responses = run_server_with_options(
@@ -205,6 +253,7 @@ fn mcp_server_missing_required_skill_input_pauses_with_request()
 }
 
 #[test]
+#[cfg(feature = "mcp")]
 fn mcp_server_graph_approval_pauses_with_request() -> Result<(), Box<dyn std::error::Error>> {
     let responses = run_server_with_options(
         vec![request(
@@ -263,6 +312,7 @@ fn mcp_server_graph_approval_pauses_with_request() -> Result<(), Box<dyn std::er
 }
 
 #[test]
+#[cfg(feature = "mcp")]
 fn mcp_server_reports_duplicate_tool_names() -> Result<(), Box<dyn std::error::Error>> {
     let options = McpServerOptions {
         package_name: "runx-cli".to_owned(),
@@ -283,6 +333,7 @@ fn mcp_server_reports_duplicate_tool_names() -> Result<(), Box<dyn std::error::E
 }
 
 #[test]
+#[cfg(feature = "mcp")]
 fn mcp_server_json_rpc_errors_match_lifecycle_contract() -> Result<(), Box<dyn std::error::Error>> {
     let responses = run_server(vec![
         request(1, "unknown/method", JsonObject::new()),
@@ -318,6 +369,7 @@ fn mcp_server_json_rpc_errors_match_lifecycle_contract() -> Result<(), Box<dyn s
 }
 
 #[test]
+#[cfg(feature = "mcp")]
 fn mcp_server_rejects_oversized_requests() -> Result<(), Box<dyn std::error::Error>> {
     let mut input = b"Content-Length: 4194305\r\n\r\n".to_vec();
     input.extend(std::iter::repeat_n(b' ', 4_194_305));
@@ -334,6 +386,7 @@ fn mcp_server_rejects_oversized_requests() -> Result<(), Box<dyn std::error::Err
 }
 
 #[test]
+#[cfg(feature = "mcp")]
 fn mcp_server_parse_error_is_json_rpc_error() -> Result<(), Box<dyn std::error::Error>> {
     let responses = run_raw(b"Content-Length: 1\r\n\r\n{".to_vec())?;
 
@@ -406,6 +459,7 @@ fn run_server_with_options(
     run_raw_with_options(input, options)
 }
 
+#[cfg(feature = "mcp")]
 fn run_raw(input: Vec<u8>) -> Result<Vec<JsonValue>, Box<dyn std::error::Error>> {
     run_raw_with_options(input, server_options())
 }
@@ -426,14 +480,17 @@ fn run_raw_output_with_options(
     Ok(output)
 }
 
+#[cfg(feature = "mcp")]
 fn skill_server_options() -> Result<McpServerOptions, Box<dyn std::error::Error>> {
-    Ok(McpServerOptions::from_skill_paths(
+    Ok(McpServerOptions::from_skill_paths_with_execution(
         &[repo_root()?.join("fixtures/skills/mcp-echo")],
         "runx-cli",
         "0.0.0",
+        mcp_server_execution_options(None)?,
     )?)
 }
 
+#[cfg(feature = "mcp")]
 fn skill_server_options_with_receipt_dir(
     receipt_dir: PathBuf,
 ) -> Result<McpServerOptions, Box<dyn std::error::Error>> {
@@ -441,22 +498,37 @@ fn skill_server_options_with_receipt_dir(
         &[repo_root()?.join("fixtures/skills/mcp-echo")],
         "runx-cli",
         "0.0.0",
-        McpServerExecutionOptions {
-            runner: None,
-            receipt_dir: Some(receipt_dir),
-            env: std::env::vars().collect(),
-        },
+        mcp_server_execution_options(Some(receipt_dir))?,
     )?)
 }
 
+#[cfg(feature = "mcp")]
 fn approval_graph_server_options() -> Result<McpServerOptions, Box<dyn std::error::Error>> {
-    Ok(McpServerOptions::from_skill_paths(
+    Ok(McpServerOptions::from_skill_paths_with_execution(
         &[repo_root()?.join("fixtures/skills/mcp-approval-graph")],
         "runx-cli",
         "0.0.0",
+        mcp_server_execution_options(None)?,
     )?)
 }
 
+#[cfg(feature = "mcp")]
+fn mcp_server_execution_options(
+    receipt_dir: Option<PathBuf>,
+) -> Result<McpServerExecutionOptions, Box<dyn std::error::Error>> {
+    let mut env = std::env::vars().collect::<std::collections::BTreeMap<_, _>>();
+    env.insert(
+        "RUNX_CWD".to_owned(),
+        repo_root()?.to_string_lossy().into_owned(),
+    );
+    Ok(McpServerExecutionOptions {
+        runner: None,
+        receipt_dir,
+        env,
+    })
+}
+
+#[cfg(feature = "mcp")]
 fn repo_root() -> Result<PathBuf, Box<dyn std::error::Error>> {
     Ok(PathBuf::from(env!("CARGO_MANIFEST_DIR"))
         .join("../..")
@@ -510,6 +582,50 @@ fn request(id: i64, method: &str, params: JsonObject) -> JsonValue {
     )
 }
 
+#[cfg(feature = "mcp-rmcp")]
+fn rmcp_initialize_request(id: i64) -> JsonValue {
+    request(
+        id,
+        "initialize",
+        [
+            (
+                "protocolVersion".to_owned(),
+                JsonValue::String("2025-06-18".to_owned()),
+            ),
+            (
+                "capabilities".to_owned(),
+                JsonValue::Object(JsonObject::new()),
+            ),
+            (
+                "clientInfo".to_owned(),
+                JsonValue::Object(
+                    [
+                        ("name".to_owned(), JsonValue::String("runx-test".to_owned())),
+                        ("version".to_owned(), JsonValue::String("0.0.0".to_owned())),
+                    ]
+                    .into(),
+                ),
+            ),
+        ]
+        .into(),
+    )
+}
+
+#[cfg(feature = "mcp-rmcp")]
+fn initialized_notification() -> JsonValue {
+    JsonValue::Object(
+        [
+            ("jsonrpc".to_owned(), JsonValue::String("2.0".to_owned())),
+            (
+                "method".to_owned(),
+                JsonValue::String("notifications/initialized".to_owned()),
+            ),
+            ("params".to_owned(), JsonValue::Object(JsonObject::new())),
+        ]
+        .into(),
+    )
+}
+
 fn frame(message: &JsonValue) -> Result<Vec<u8>, serde_json::Error> {
     let body = serde_json::to_vec(message)?;
     let mut framed = format!("Content-Length: {}\r\n\r\n", body.len()).into_bytes();
@@ -517,6 +633,7 @@ fn frame(message: &JsonValue) -> Result<Vec<u8>, serde_json::Error> {
     Ok(framed)
 }
 
+#[cfg(feature = "mcp")]
 fn frame_jsonl_fixture(
     fixture_name: &str,
     kind: &str,
@@ -569,6 +686,7 @@ fn path<'a>(value: &'a JsonValue, path: &[&str]) -> Option<&'a JsonValue> {
     Some(current)
 }
 
+#[cfg(feature = "mcp")]
 fn assert_error(message: &JsonValue, code: i64, text: &str) {
     assert_eq!(
         path(message, &["error", "code"]),
@@ -580,6 +698,7 @@ fn assert_error(message: &JsonValue, code: i64, text: &str) {
     );
 }
 
+#[cfg(feature = "mcp")]
 fn assert_no_json_rpc_error(message: &JsonValue) {
     assert_eq!(
         path(message, &["error"]),

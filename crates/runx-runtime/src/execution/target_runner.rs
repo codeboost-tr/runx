@@ -3,7 +3,7 @@
 // projection in one Rust cutover slice; split after live provider wiring lands.
 //! Runtime support for target-repo runner execution.
 
-use std::fmt;
+use std::fmt::{self, Write as _};
 
 use serde::Deserialize;
 use serde::Serialize;
@@ -65,6 +65,8 @@ pub struct TargetRepoRunnerLiveExecution {
     pub provider_lookup_command: TargetRepoRunnerProviderDedupeLookupCommand,
     pub dedupe_observation: TargetRepoRunnerDedupeLookupObservation,
     pub runner_observation: Option<TargetRepoRunnerGovernedRunnerObservation>,
+    pub git_mutation_command: Option<TargetRepoRunnerGitMutationCommand>,
+    pub git_mutation_observation: Option<TargetRepoRunnerGitMutationObservation>,
     pub pull_request_request: TargetRepoRunnerPullRequestObservationRequest,
     pub execution: TargetRepoRunnerFixtureExecution,
     pub revision_receipt: HarnessReceipt,
@@ -89,6 +91,37 @@ pub struct TargetRepoRunnerGovernedRunnerObservation {
     pub summary: String,
     pub revision_refs: Vec<Reference>,
     pub artifact_refs: Vec<Reference>,
+    pub verification_refs: Vec<Reference>,
+}
+
+#[derive(Clone, Debug, PartialEq, Serialize)]
+pub struct TargetRepoRunnerGitMutationCommand {
+    pub provider: TargetRepoRunnerProvider,
+    pub target_repo: String,
+    pub repository: TargetRepoRunnerGithubRepository,
+    pub target_repo_ref: Reference,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub base_branch: Option<String>,
+    pub branch: String,
+    pub dedupe_key: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub source_issue_ref: Option<Reference>,
+    pub source_thread_ref: Reference,
+    pub runner_id: String,
+    pub runner_summary: String,
+    pub runner_revision_refs: Vec<Reference>,
+    pub artifact_refs: Vec<Reference>,
+    pub verification_refs: Vec<Reference>,
+    pub human_merge_gate_required: bool,
+    pub local_path_hidden: bool,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq, Serialize)]
+pub struct TargetRepoRunnerGitMutationObservation {
+    pub target_repo: String,
+    pub branch: String,
+    pub head_sha: String,
+    pub revision_refs: Vec<Reference>,
     pub verification_refs: Vec<Reference>,
 }
 
@@ -587,6 +620,16 @@ pub trait TargetRepoRunnerAdapter {
         invocation: &TargetRepoRunnerGovernedRunnerInvocation,
     ) -> Result<TargetRepoRunnerGovernedRunnerObservation, TargetRepoRunnerAdapterError>;
 
+    fn apply_git_mutation(
+        &mut self,
+        _command: &TargetRepoRunnerGitMutationCommand,
+    ) -> Result<TargetRepoRunnerGitMutationObservation, TargetRepoRunnerAdapterError> {
+        Err(TargetRepoRunnerAdapterError::new(
+            "git_mutation",
+            "adapter does not implement target git mutation readback",
+        ))
+    }
+
     fn observe_pull_request(
         &mut self,
         request: &TargetRepoRunnerPullRequestObservationRequest,
@@ -726,6 +769,20 @@ pub fn execute_target_repo_runner_with_adapter<A: TargetRepoRunnerAdapter>(
     } else {
         None
     };
+    let git_mutation_command = runner_observation
+        .as_ref()
+        .map(|observation| {
+            target_repo_runner_git_mutation_command(&execution_plan, &dedupe_execution, observation)
+        })
+        .transpose()?;
+    let git_mutation_observation = git_mutation_command
+        .as_ref()
+        .map(|command| -> Result<_, TargetRepoRunnerRuntimeError> {
+            let observation = adapter.apply_git_mutation(command)?;
+            validate_git_mutation_readback(command, &observation)?;
+            Ok(observation)
+        })
+        .transpose()?;
     let pull_request_request = target_repo_runner_pull_request_observation_request(
         &execution_plan,
         &dedupe_execution,
@@ -766,6 +823,8 @@ pub fn execute_target_repo_runner_with_adapter<A: TargetRepoRunnerAdapter>(
         provider_lookup_command,
         dedupe_observation,
         runner_observation,
+        git_mutation_command,
+        git_mutation_observation,
         pull_request_request,
         execution,
         revision_receipt,
@@ -848,6 +907,91 @@ pub fn execute_target_repo_runner_execution_fixture(
         pull_request_receipt,
         source_publication_receipt,
     })
+}
+
+fn target_repo_runner_git_mutation_command(
+    execution_plan: &TargetRepoRunnerExecutionPlan,
+    dedupe_execution: &TargetRepoRunnerDedupeLookupExecution,
+    runner_observation: &TargetRepoRunnerGovernedRunnerObservation,
+) -> Result<TargetRepoRunnerGitMutationCommand, TargetRepoRunnerRuntimeError> {
+    if runner_observation.target_repo != execution_plan.checkout.target_repo {
+        return Err(TargetRepoRunnerRuntimeError::CommandValidation {
+            operation: "git_mutation",
+            message: "runner observation target repo does not match execution target".to_owned(),
+        });
+    }
+    let repository = github_repository(&execution_plan.checkout.target_repo, "git_mutation")?;
+    let branch = target_repo_runner_branch_name(execution_plan, dedupe_execution);
+    validate_branch_for_operation(&branch, "git_mutation")?;
+    Ok(TargetRepoRunnerGitMutationCommand {
+        provider: execution_plan.provider_lookup.provider,
+        target_repo: execution_plan.checkout.target_repo.clone(),
+        repository,
+        target_repo_ref: execution_plan.target_repo_ref.clone(),
+        base_branch: execution_plan.checkout.base_branch.clone(),
+        branch,
+        dedupe_key: execution_plan.provider_lookup.key.clone(),
+        source_issue_ref: execution_plan.source_issue_ref.clone(),
+        source_thread_ref: execution_plan.source_thread_ref.clone(),
+        runner_id: runner_observation.runner_id.clone(),
+        runner_summary: runner_observation.summary.clone(),
+        runner_revision_refs: runner_observation.revision_refs.clone(),
+        artifact_refs: runner_observation.artifact_refs.clone(),
+        verification_refs: runner_observation.verification_refs.clone(),
+        human_merge_gate_required: true,
+        local_path_hidden: true,
+    })
+}
+
+fn target_repo_runner_branch_name(
+    execution_plan: &TargetRepoRunnerExecutionPlan,
+    dedupe_execution: &TargetRepoRunnerDedupeLookupExecution,
+) -> String {
+    format!(
+        "runx/{}/{}",
+        safe_id(&execution_plan.checkout.target_repo),
+        short_key_hash(&dedupe_execution.key)
+    )
+}
+
+fn short_key_hash(value: &str) -> String {
+    let digest = Sha256::digest(value.as_bytes());
+    let mut hex = String::with_capacity(12);
+    for byte in digest.iter().take(6) {
+        let _ = write!(&mut hex, "{byte:02x}");
+    }
+    hex
+}
+
+fn validate_git_mutation_readback(
+    command: &TargetRepoRunnerGitMutationCommand,
+    observation: &TargetRepoRunnerGitMutationObservation,
+) -> Result<(), TargetRepoRunnerRuntimeError> {
+    if observation.target_repo != command.target_repo {
+        return Err(TargetRepoRunnerRuntimeError::CommandValidation {
+            operation: "git_mutation",
+            message: "git mutation readback target repo does not match command".to_owned(),
+        });
+    }
+    if observation.branch != command.branch {
+        return Err(TargetRepoRunnerRuntimeError::CommandValidation {
+            operation: "git_mutation",
+            message: "git mutation readback branch does not match command".to_owned(),
+        });
+    }
+    validate_branch_for_operation(&observation.branch, "git_mutation")?;
+    if observation.head_sha.len() != 40
+        || !observation
+            .head_sha
+            .chars()
+            .all(|character| character.is_ascii_hexdigit())
+    {
+        return Err(TargetRepoRunnerRuntimeError::CommandValidation {
+            operation: "git_mutation",
+            message: "git mutation readback head sha must be a 40 character hex commit".to_owned(),
+        });
+    }
+    Ok(())
 }
 
 fn validate_readiness_boundary(
@@ -1096,6 +1240,13 @@ fn github_pull_request_number(repo: &str, url: &str) -> Result<u64, TargetRepoRu
 }
 
 fn validate_pull_request_branch(branch: &str) -> Result<(), TargetRepoRunnerRuntimeError> {
+    validate_branch_for_operation(branch, "pull_request")
+}
+
+fn validate_branch_for_operation(
+    branch: &str,
+    operation: &'static str,
+) -> Result<(), TargetRepoRunnerRuntimeError> {
     if branch.trim().is_empty()
         || branch.starts_with('/')
         || branch.ends_with('/')
@@ -1105,8 +1256,8 @@ fn validate_pull_request_branch(branch: &str) -> Result<(), TargetRepoRunnerRunt
         })
     {
         return Err(TargetRepoRunnerRuntimeError::CommandValidation {
-            operation: "pull_request",
-            message: "pull request readback branch is not a safe branch name".to_owned(),
+            operation,
+            message: "git branch is not a safe branch name".to_owned(),
         });
     }
     Ok(())

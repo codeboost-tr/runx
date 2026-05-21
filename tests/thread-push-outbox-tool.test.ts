@@ -159,6 +159,9 @@ describe("thread.push_outbox tool", () => {
           },
         },
       });
+      expect(result.thread.entries.at(-1).entry_id).toMatch(/^entry_[a-f0-9]{24}$/);
+      expect(result.thread.adapter.cursor).toMatch(/^push:[a-f0-9]{12}$/);
+      expect(result.thread.adapter.cursor).not.toContain("sha256:");
 
       expect(JSON.parse(await readFile(statePath, "utf8"))).toMatchObject({
         outbox: [

@@ -3,6 +3,7 @@ mod connected_auth;
 mod graph_scope;
 mod interpreter;
 mod local;
+mod maturity;
 mod payment_authority;
 pub(crate) mod posix_basename;
 pub mod public_work;
@@ -17,6 +18,7 @@ pub use authority_proof::{
 };
 pub use graph_scope::admit_graph_step_scopes;
 pub use local::admit_local_skill;
+pub use maturity::compute_maturity;
 pub use payment_authority::{
     PaymentAuthorityError, PaymentSpendCapabilityBinding, StepAuthorityAdmission,
     StepAuthorityAdmissionDecision, admit_step_authority, authority_term_has_verb,

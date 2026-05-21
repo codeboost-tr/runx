@@ -45,6 +45,7 @@
     "fixtures:harness:generate": "tsx scripts/generate-rust-harness-fixtures.ts --write",
     "fixtures:adapters:a2a:check": "tsx scripts/generate-a2a-adapter-fixtures.ts --check",
     "fixtures:adapters:agent:check": "tsx scripts/generate-agent-adapter-fixtures.ts --check",
+    "fixtures:skill-author-runtime:check": "pnpm vitest run packages/adapters/src/cli-tool/skill-author-runtime-fixtures.test.ts && cargo test --manifest-path crates/Cargo.toml -p runx-runtime --features cli-tool --test skill_author_runtime_fixtures -- --nocapture",
     "fixtures:cli-parity:check": "tsx scripts/generate-cli-feature-parity.ts --check --canonical-only",
     "fixtures:cli-help:check": "tsx scripts/generate-cli-feature-parity.ts --check-help-coverage --canonical-only",
     "rust:check": "node scripts/check-rust-kernel-parity.mjs",

@@ -2,7 +2,9 @@ import { mkdir, readFile, rename, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 
-import { hashStable, type ThreadAdapterDescriptor } from "./internal-validators.js";
+import { canonicalJsonStringify, sha256Hex } from "@runxhq/contracts";
+
+import type { ThreadAdapterDescriptor } from "./internal-validators.js";
 import {
   validateOutboxEntry,
   type OutboxEntry,
@@ -94,11 +96,11 @@ async function pushFileThread(request: PushOutboxEntryRequest): Promise<OutboxEn
     adapterUri,
   });
   const eventEntry: ThreadEntry = {
-    entry_id: `entry_${hashStable({
+    entry_id: `entry_${opaqueCanonicalJsonHashFragment({
       thread: current.thread_locator,
       outbox_entry: outboxEntry.entry_id,
       pushed_at: pushedAt,
-    }).slice(0, 24)}`,
+    }, 24)}`,
     entry_kind: "status",
     recorded_at: pushedAt,
     body: `Pushed ${outboxEntry.kind} ${outboxEntry.entry_id}`,
@@ -121,7 +123,7 @@ async function pushFileThread(request: PushOutboxEntryRequest): Promise<OutboxEn
     adapter: {
       ...current.adapter,
       adapter_ref: current.adapter.adapter_ref ?? adapterUri,
-      cursor: `push:${hashStable({ outbox_entry: outboxEntry.entry_id, pushed_at: pushedAt }).slice(0, 12)}`,
+      cursor: `push:${opaqueCanonicalJsonHashFragment({ outbox_entry: outboxEntry.entry_id, pushed_at: pushedAt }, 12)}`,
     },
     entries: [...current.entries, eventEntry],
     outbox: outboxEntries,
@@ -184,4 +186,9 @@ async function writeThreadFile(statePath: string, state: Thread): Promise<void> 
   const tempPath = `${statePath}.${process.pid}.${Date.now()}.${Math.random().toString(36).slice(2)}.tmp`;
   await writeFile(tempPath, `${JSON.stringify(state, null, 2)}\n`, { mode: 0o600 });
   await rename(tempPath, statePath);
+}
+
+function opaqueCanonicalJsonHashFragment(value: unknown, length: number): string {
+  // Internal truncated ID material only; callers must not treat this as a sha256: commitment.
+  return sha256Hex(canonicalJsonStringify(value)).slice(0, length);
 }

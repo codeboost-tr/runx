@@ -6,14 +6,17 @@ pub mod artifact;
 pub mod aster;
 pub mod authority;
 pub mod cli;
+pub mod credential_delivery;
 pub mod decision;
 pub mod doctor;
 pub mod execution;
+pub mod external_adapter;
 pub mod fingerprint;
 pub mod harness;
 pub mod host_protocol;
 pub mod json;
 pub mod links;
+pub mod maturity;
 pub mod operational_policy;
 pub mod post_merge_observer;
 pub mod receipts;
@@ -49,6 +52,12 @@ pub use authority::{
     AuthoritySubsetResult, AuthorityTerm, AuthorityVerb, PaymentAuthorityBounds,
     PaymentCredentialForm,
 };
+pub use credential_delivery::{
+    CredentialDeliveryBrokerResponse, CredentialDeliveryEnvBinding, CredentialDeliveryHandle,
+    CredentialDeliveryMode, CredentialDeliveryObservation, CredentialDeliveryObservationStatus,
+    CredentialDeliveryProfile, CredentialDeliveryPurpose, CredentialDeliveryRequest,
+    CredentialDeliveryStatus, CredentialMaterialRole,
+};
 pub use decision::{
     Closure, ClosureDisposition, Decision, DecisionChoice, DecisionInputs, DecisionJustification,
 };
@@ -60,6 +69,16 @@ pub use doctor::{
 pub use execution::{
     ExecutionSemantics, GovernedDisposition, InputContextCapture, OutcomeState, ReceiptOutcome,
     ReceiptSurfaceRef,
+};
+pub use external_adapter::{
+    EXTERNAL_ADAPTER_PROTOCOL_VERSION, ExternalAdapterArtifactObservation,
+    ExternalAdapterCancellationFrame, ExternalAdapterCredentialNeed,
+    ExternalAdapterCredentialPurpose, ExternalAdapterCredentialReference,
+    ExternalAdapterCredentialRequest, ExternalAdapterErrorObservation,
+    ExternalAdapterHostResolutionFrame, ExternalAdapterInvocation, ExternalAdapterManifest,
+    ExternalAdapterResponse, ExternalAdapterSandboxIntent, ExternalAdapterStatus,
+    ExternalAdapterTelemetryObservation, ExternalAdapterTelemetryValue, ExternalAdapterTimeouts,
+    ExternalAdapterTransport, ExternalAdapterTransportKind,
 };
 pub use fingerprint::{Fingerprint, FingerprintAlgorithm, hex_lower, sha256_hex, sha256_prefixed};
 pub use harness::{

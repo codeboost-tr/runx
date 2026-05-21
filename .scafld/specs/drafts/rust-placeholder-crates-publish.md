@@ -2,9 +2,9 @@
 spec_version: '2.0'
 task_id: rust-placeholder-crates-publish
 created: '2026-05-17T02:30:00Z'
-updated: '2026-05-19T12:11:22Z'
+updated: '2026-05-22T00:33:00+10:00'
 status: draft
-harden_status: blocked
+harden_status: not_run
 size: small
 risk_level: high
 ---
@@ -26,6 +26,9 @@ Latest runner update: 2026-05-19T13:55:00Z - staged API-bearing dependency
 versions, crate graph/style gates pass, `cargo package -p runx-contracts`
 passes; dependent package checks are blocked until crates.io sees
 `runx-contracts` `0.0.2`.
+Follow-up: 2026-05-22T00:33:00+10:00 corrected scafld metadata only:
+`harden_status: blocked` is not a valid spec value in this repo. The publish
+blocker remains in `Blockers` and `Review gate`; no publish work was executed.
 Review gate: blocked_on_publish_order
 
 ## Summary

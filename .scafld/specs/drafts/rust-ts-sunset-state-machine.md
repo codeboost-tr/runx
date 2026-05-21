@@ -2,7 +2,7 @@
 spec_version: '2.0'
 task_id: rust-ts-sunset-state-machine
 created: '2026-05-18T00:00:00Z'
-updated: '2026-05-21T22:00:00+10:00'
+updated: '2026-05-22T00:58:00+10:00'
 status: draft
 harden_status: not_run
 size: medium
@@ -17,12 +17,15 @@ Status: draft, blocked
 Current phase: prerequisite slice landed; deletion remains blocked
 Next: unblock ownership and reroute the remaining runtime-local graph
 orchestration transition/planning consumers before approval.
-Reason: the deletion remains blocked, but a prerequisite slice is executable
-against the current tree and is already present: runtime-local sequential graph
-state creation now goes through the existing Rust kernel bridge. A fresh
-2026-05-21 source scan still finds 19 files and 26 hits with live imports of
-`@runxhq/core/state-machine` or state-machine surfaces, fixture generators
-still use the TS source as the oracle, and
+Reason: the deletion remains blocked, but a prerequisite slice is already
+present: runtime-local sequential graph state creation now goes through the
+existing Rust kernel bridge. A fresh 2026-05-22 importer scan still finds
+13 live importer files across runtime-local, tests, and scripts:
+10 runtime-local files import `@runxhq/core/state-machine`, one root test still
+imports that public export, and two fixture generators still import
+`packages/core/src/state-machine/index.js` as the TypeScript oracle.
+Public surface references also remain in `docs/api-surface.md`,
+`scripts/gen-api-index.ts`, `docs/trusted-kernel-package-truth.md`, and
 `packages/core/package.json` still exposes `./state-machine`.
 `crates/runx-core` has state-machine fixture parity, but TypeScript remains the
 source of truth for the remaining synchronous transition/planning consumers
@@ -41,12 +44,15 @@ Blockers:
 - Deletion stays blocked until runtime-local graph orchestration is rerouted to
   Rust runtime ownership or retired. Do not add legacy or compatibility shapes
   to keep the TS import path alive.
-Allowed follow-up command: none while blocked; do not run `scafld harden` for
-this draft.
-Latest runner update: 2026-05-21T22:00:00+10:00 - importer census refreshed:
-19 files and 26 hits still reference state-machine surfaces. The completed
-kernel bridge slice remains useful, but deletion remains blocked by
-transition/planning consumers and fixture-oracle ownership.
+Allowed follow-up command: `scafld validate rust-ts-sunset-state-machine --json`
+while blocked; do not run `scafld harden` for this draft.
+Latest runner update: 2026-05-22T00:58:00+10:00 - importer census refreshed:
+13 live importer files still reference state-machine import paths. The
+completed kernel bridge slice remains useful, but deletion remains blocked by
+runtime-local transition/planning consumers, one graph hydration test, public
+export/docs surfaces, and fixture-oracle ownership. Child draft
+`rust-ts-sunset-state-machine-runtime-local-importers` now owns planning for
+the runtime-local transition/planning migration.
 Review gate: not_started
 
 ## Summary
@@ -116,7 +122,7 @@ Current TypeScript deletion targets:
   deleted and add/keep a boundary assertion that `./state-machine` is no longer
   exported.
 
-Current live importers found in source by the 2026-05-21 scan after the
+Current live importers found in source by the 2026-05-22 scan after the
 prerequisite slice:
 - `packages/runtime-local/src/runner-local/orchestrator.ts`
 - `packages/runtime-local/src/runner-local/index.ts`
@@ -128,6 +134,31 @@ prerequisite slice:
 - `packages/runtime-local/src/runner-local/orchestrator/handle-run-fanout.ts`
 - `packages/runtime-local/src/runner-local/orchestrator/handle-terminal.ts`
 - `packages/runtime-local/src/runner-local/orchestrator/handle-paused.ts`
+- `tests/graph-hydration-orphan-start.test.ts`
+- `scripts/generate-kernel-parity-fixtures.ts`
+- `scripts/generate-rust-fanout-fixtures.ts`
+
+Importer census command:
+
+```bash
+rg -n "from ['\"]@runxhq/core/state-machine['\"]|from ['\"].*state-machine/index\.js['\"]" packages/runtime-local/src tests scripts --glob '!**/dist/**' --glob '!node_modules' --glob '!target'
+```
+
+Observed result: 13 files and 13 import statements.
+
+Runtime-local direct public-export importers:
+- `packages/runtime-local/src/runner-local/orchestrator.ts`
+- `packages/runtime-local/src/runner-local/index.ts`
+- `packages/runtime-local/src/runner-local/graph-hydration.ts`
+- `packages/runtime-local/src/runner-local/graph-fanout-gates.ts`
+- `packages/runtime-local/src/runner-local/graph-governance.ts`
+- `packages/runtime-local/src/runner-local/orchestrator/hydrate-resume.ts`
+- `packages/runtime-local/src/runner-local/orchestrator/handle-run-step.ts`
+- `packages/runtime-local/src/runner-local/orchestrator/handle-run-fanout.ts`
+- `packages/runtime-local/src/runner-local/orchestrator/handle-terminal.ts`
+- `packages/runtime-local/src/runner-local/orchestrator/handle-paused.ts`
+
+Non-runtime-local live importers:
 - `tests/graph-hydration-orphan-start.test.ts`
 - `scripts/generate-kernel-parity-fixtures.ts`
 - `scripts/generate-rust-fanout-fixtures.ts`
@@ -184,6 +215,8 @@ Out of scope:
 
 - A Rust runtime cutover or retirement path for runtime-local graph
   orchestration.
+- `rust-ts-sunset-state-machine-runtime-local-importers` for the runtime-local
+  transition/planning importer migration plan.
 - A fixture-generator ownership decision: keep TS oracle until final deletion,
   move generation to a new owner, or retire the generator with an explicit
   fixture-freeze policy.
@@ -193,8 +226,10 @@ Out of scope:
 
 ## Open Questions
 
-- Which spec owns rerouting runtime-local graph orchestration from the TS
-  state-machine to Rust runtime-owned transitions?
+- Which implementation spec, after
+  `rust-ts-sunset-state-machine-runtime-local-importers`, owns actual
+  rerouting of runtime-local graph orchestration from the TS state-machine to
+  Rust runtime-owned transitions?
 - Which spec owns fixture generation after the TS oracle is deleted?
 - Should `scripts/check-boundaries.mjs` gain a generic removed-export list so
   `./state-machine` removal is enforced the same way removed runtime-local

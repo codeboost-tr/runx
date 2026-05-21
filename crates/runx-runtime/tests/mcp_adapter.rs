@@ -410,6 +410,10 @@ fn fixture_invocation(
     request.source.server = Some(fixture_server()?);
     request.skill_directory = repo_root()?;
     request.env = process_env();
+    request.env.insert(
+        "RUNX_CWD".to_owned(),
+        repo_root()?.to_string_lossy().into_owned(),
+    );
     Ok(request)
 }
 

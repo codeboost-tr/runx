@@ -1,4 +1,4 @@
-use runx_contracts::{HarnessReceipt, JsonObject};
+use runx_contracts::{ClosureDisposition, HarnessReceipt, JsonObject};
 use runx_runtime::payment_ledger::{
     PaidToolEvidence, PaymentLedgerEvidence, PaymentLedgerEvidencePacket,
     PaymentLedgerProjectedEventPayload, PaymentLedgerProjection, PaymentLedgerProjectionInput,
@@ -227,6 +227,55 @@ fn x402_projection_event_persists_after_sealed_graph_receipt()
         std::fs::read_to_string(&event.ledger_path)?.lines().count(),
         1
     );
+    Ok(())
+}
+
+#[test]
+fn x402_projection_event_persists_refusal_for_blocked_graph_receipt()
+-> Result<(), Box<dyn std::error::Error>> {
+    let temp = tempfile::tempdir()?;
+    let reserve = step_run(
+        "x402-pay-ledger-governed-refusal",
+        "reserve",
+        r#"{"payment_reservation_packet":{"data":{"reserved_payment_authority":{"child_authority":{"bounds":{"payment":{"operation":"paid.echo"}}}},"spend_capability_binding":{"idempotency_key":"payment:paid-echo-cap-exceeded-001","amount_minor":125,"currency":"USD","counterparty":"merchant:paid-echo","rail":"mock"},"spend_capability_ref":{"type":"credential","uri":"runx:payment-capability:paid-echo-cap-exceeded-spend"},"payment_refusal_packet":{"scenario_id":"P1.3","status":"refused","reason_code":"cap_exceeded","rail_call_performed":false,"ledger_spend_recorded":false}}}}"#,
+    )?;
+    let mut graph = graph(
+        "x402-pay-ledger-governed-refusal_graph",
+        std::slice::from_ref(&reserve),
+    )?;
+    graph.seal.disposition = ClosureDisposition::Blocked;
+    graph.seal.reason_code = "graph_blocked".to_owned();
+
+    let event = persist_x402_payment_ledger_projection_event(
+        temp.path(),
+        "gx_x402-pay-ledger-governed-refusal",
+        CREATED_AT,
+        &graph,
+        &[reserve],
+        "P1.3",
+    )?
+    .ok_or("missing x402 refusal payment ledger event")?;
+
+    let projection: Value = serde_json::from_str(&std::fs::read_to_string(&event.artifact.path)?)?;
+    assert_eq!(projection["disposition"], "refused");
+    assert_eq!(projection["accrual"]["amount_minor"], 0);
+    assert_eq!(
+        projection["accrual"]["rail_proof_refs"]
+            .as_array()
+            .map(Vec::len),
+        Some(0)
+    );
+    assert_eq!(projection["refusal"]["reason_code"], "cap_exceeded");
+    assert_eq!(projection["refusal"]["ledger_spend_recorded"], false);
+
+    let lines = std::fs::read_to_string(&event.ledger_path)?
+        .lines()
+        .map(str::to_owned)
+        .collect::<Vec<_>>();
+    assert_eq!(lines.len(), 1);
+    let record: Value = serde_json::from_str(&lines[0])?;
+    assert_eq!(record["entry"]["data"]["kind"], "payment_ledger_projected");
+    assert_eq!(record["entry"]["data"]["detail"]["disposition"], "refused");
     Ok(())
 }
 

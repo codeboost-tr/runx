@@ -1,7 +1,10 @@
 // rust-style-allow: large-file because sandbox planning owns both process and
 // MCP environment/cwd policy plus the audit metadata emitted with each plan.
 use std::collections::BTreeMap;
-use std::path::{Path, PathBuf};
+use std::fs;
+use std::io::Write;
+use std::path::{Component, Path, PathBuf};
+use std::time::{SystemTime, UNIX_EPOCH};
 
 use runx_contracts::{JsonObject, JsonValue};
 use runx_parser::{SkillMcpServer, SkillSandbox, SkillSource};
@@ -20,6 +23,8 @@ const DEFAULT_ENV_ALLOWLIST: [&str; 9] = [
     "COMSPEC",
     "PATHEXT",
 ];
+const MAX_INLINE_INPUTS_BYTES: usize = 48 * 1024;
+const MAX_INLINE_INPUT_VALUE_BYTES: usize = 8 * 1024;
 
 #[derive(Clone, Debug, PartialEq)]
 pub struct SandboxPlan {
@@ -71,7 +76,7 @@ pub fn prepare_mcp_process_sandbox(
         skill_directory,
         workspace_cwd.as_deref(),
     )?;
-    let env = allowed_base_env(sandbox, base_env);
+    let env = child_base_env(sandbox, base_env)?;
     Ok(SandboxPlan {
         command: server.command.clone(),
         args: server.args.clone(),
@@ -104,9 +109,12 @@ fn resolve_cwd_value(
     let policy = sandbox
         .and_then(|sandbox| sandbox.cwd_policy.as_deref())
         .unwrap_or("skill-directory");
-    match (policy, source_cwd) {
+    let profile = sandbox
+        .map(|sandbox| sandbox.profile.as_str())
+        .unwrap_or("readonly");
+    let cwd = match (policy, source_cwd) {
         ("custom", Some(cwd)) => Ok(resolve_path(skill_directory, cwd)),
-        ("workspace", Some(cwd)) => Ok(resolve_path(workspace_cwd.unwrap_or(skill_directory), cwd)),
+        ("workspace", Some(cwd)) => Ok(resolve_path(skill_directory, cwd)),
         ("workspace", None) => workspace_cwd.map(Path::to_path_buf).map_or_else(
             || {
                 std::env::current_dir()
@@ -116,7 +124,9 @@ fn resolve_cwd_value(
         ),
         (_, Some(cwd)) => Ok(resolve_path(skill_directory, cwd)),
         _ => Ok(skill_directory.to_path_buf()),
-    }
+    }?;
+    validate_cwd_policy(policy, profile, &cwd, skill_directory, workspace_cwd)?;
+    Ok(normalize_path(&cwd))
 }
 
 fn workspace_cwd(env: &BTreeMap<String, String>) -> Result<Option<PathBuf>, RuntimeError> {
@@ -142,19 +152,151 @@ fn resolve_path(base: &Path, path: &str) -> PathBuf {
     }
 }
 
+fn validate_cwd_policy(
+    policy: &str,
+    profile: &str,
+    cwd: &Path,
+    skill_directory: &Path,
+    workspace_cwd: Option<&Path>,
+) -> Result<(), RuntimeError> {
+    if profile == "unrestricted-local-dev" {
+        return Ok(());
+    }
+    let cwd = normalize_path(cwd);
+    let skill_directory = normalize_path(skill_directory);
+    let workspace_root = match workspace_cwd {
+        Some(workspace_cwd) => normalize_path(workspace_cwd),
+        None => normalize_path(&std::env::current_dir().map_err(|source| {
+            RuntimeError::io("resolving workspace cwd for sandbox policy", source)
+        })?),
+    };
+    match policy {
+        "unrestricted-local-dev" => Ok(()),
+        "custom"
+            if is_within_path(&cwd, &skill_directory) || is_within_path(&cwd, &workspace_root) =>
+        {
+            Ok(())
+        }
+        "custom" => Err(sandbox_violation(format!(
+            "sandbox custom cwd '{}' is outside skill directory '{}' and workspace '{}'",
+            cwd.display(),
+            skill_directory.display(),
+            workspace_root.display()
+        ))),
+        "skill-directory" if is_within_path(&cwd, &skill_directory) => Ok(()),
+        "skill-directory" => Err(sandbox_violation(format!(
+            "sandbox cwd '{}' is outside skill directory '{}'",
+            cwd.display(),
+            skill_directory.display()
+        ))),
+        "workspace" if is_within_path(&cwd, &workspace_root) => Ok(()),
+        "workspace" => Err(sandbox_violation(format!(
+            "sandbox cwd '{}' is outside workspace '{}'",
+            cwd.display(),
+            workspace_root.display()
+        ))),
+        _ => Ok(()),
+    }
+}
+
+fn is_within_path(candidate: &Path, root: &Path) -> bool {
+    candidate == root || candidate.starts_with(root)
+}
+
+fn normalize_path(path: &Path) -> PathBuf {
+    let mut normalized = PathBuf::new();
+    for component in path.components() {
+        match component {
+            Component::Prefix(prefix) => normalized.push(prefix.as_os_str()),
+            Component::RootDir => normalized.push(component.as_os_str()),
+            Component::CurDir => {}
+            Component::Normal(part) => normalized.push(part),
+            Component::ParentDir => {
+                if normalized.as_os_str().is_empty()
+                    || normalized
+                        .components()
+                        .next_back()
+                        .is_some_and(|component| component == Component::ParentDir)
+                {
+                    normalized.push("..");
+                } else {
+                    normalized.pop();
+                }
+            }
+        }
+    }
+    normalized
+}
+
 fn child_env(
     sandbox: Option<&SkillSandbox>,
     base_env: &BTreeMap<String, String>,
     inputs: &JsonObject,
 ) -> Result<BTreeMap<String, String>, RuntimeError> {
-    let mut env = allowed_base_env(sandbox, base_env);
+    let mut env = child_base_env(sandbox, base_env)?;
     let serialized = serde_json::to_string(inputs)
         .map_err(|source| RuntimeError::json("serializing runtime inputs", source))?;
-    env.insert("RUNX_INPUTS_JSON".to_owned(), serialized);
+    if serialized.len() > MAX_INLINE_INPUTS_BYTES {
+        env.insert(
+            "RUNX_INPUTS_PATH".to_owned(),
+            write_inputs_file(base_env, &serialized)?,
+        );
+    } else {
+        env.insert("RUNX_INPUTS_JSON".to_owned(), serialized);
+    }
     for (key, value) in inputs {
-        env.insert(input_env_name(key), json_value_env(value)?);
+        let serialized = json_value_env(value)?;
+        if serialized.len() <= MAX_INLINE_INPUT_VALUE_BYTES {
+            env.insert(input_env_name(key), serialized);
+        }
     }
     Ok(env)
+}
+
+fn child_base_env(
+    sandbox: Option<&SkillSandbox>,
+    base_env: &BTreeMap<String, String>,
+) -> Result<BTreeMap<String, String>, RuntimeError> {
+    let mut env = allowed_base_env(sandbox, base_env);
+    env.insert(
+        RUNX_CWD_ENV.to_owned(),
+        workspace_root(base_env)?.to_string_lossy().into_owned(),
+    );
+    Ok(env)
+}
+
+fn workspace_root(base_env: &BTreeMap<String, String>) -> Result<PathBuf, RuntimeError> {
+    workspace_cwd(base_env)?.map_or_else(
+        || {
+            std::env::current_dir()
+                .map_err(|source| RuntimeError::io("resolving workspace cwd", source))
+        },
+        Ok,
+    )
+}
+
+fn write_inputs_file(
+    base_env: &BTreeMap<String, String>,
+    serialized: &str,
+) -> Result<String, RuntimeError> {
+    let temp_root = base_env
+        .get("TMPDIR")
+        .or_else(|| base_env.get("TMP"))
+        .or_else(|| base_env.get("TEMP"))
+        .map(PathBuf::from)
+        .unwrap_or_else(std::env::temp_dir);
+    let nanos = SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .map_or(0, |duration| duration.as_nanos());
+    let dir = temp_root.join(format!("runx-cli-inputs-{}-{nanos}", std::process::id()));
+    fs::create_dir_all(&dir)
+        .map_err(|source| RuntimeError::io("creating inputs temp dir", source))?;
+    let path = dir.join("inputs.json");
+    let mut file = fs::File::create(&path)
+        .map_err(|source| RuntimeError::io("creating inputs temp file", source))?;
+    file.write_all(serialized.as_bytes())
+        .map_err(|source| RuntimeError::io("writing inputs temp file", source))?;
+    Ok(path.to_string_lossy().into_owned())
 }
 
 fn allowed_base_env(
@@ -228,16 +370,19 @@ fn sandbox_violation(message: impl Into<String>) -> RuntimeError {
 }
 
 fn input_env_name(key: &str) -> String {
-    let suffix = key
-        .chars()
-        .map(|ch| {
-            if ch.is_ascii_alphanumeric() {
-                ch.to_ascii_uppercase()
-            } else {
-                '_'
+    let mut suffix = String::new();
+    let mut pending_separator = false;
+    for ch in key.chars() {
+        if ch.is_ascii_alphanumeric() {
+            if pending_separator && !suffix.is_empty() {
+                suffix.push('_');
             }
-        })
-        .collect::<String>();
+            suffix.push(ch.to_ascii_uppercase());
+            pending_separator = false;
+        } else {
+            pending_separator = true;
+        }
+    }
     format!("RUNX_INPUT_{suffix}")
 }
 

@@ -44,7 +44,8 @@ pub use receipts::tree as receipt_tree;
     feature = "mcp",
     feature = "mcp-rmcp",
     feature = "a2a",
-    feature = "agent"
+    feature = "agent",
+    feature = "external-adapter"
 ))]
 pub mod adapters;
 

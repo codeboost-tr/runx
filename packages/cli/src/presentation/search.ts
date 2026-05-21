@@ -1,4 +1,4 @@
-import type { SkillSearchResult } from "@runxhq/core/marketplaces";
+import type { SkillSearchResult } from "@runxhq/core/registry";
 
 import { theme } from "../ui.js";
 

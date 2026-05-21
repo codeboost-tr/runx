@@ -3,12 +3,16 @@
 // state persistence in one runtime boundary until the runner module split.
 use std::path::Path;
 
-use runx_contracts::{ApprovalGate, JsonObject, JsonValue, ResolutionResponseActor};
+use runx_contracts::{
+    ApprovalGate, AuthorityVerb, JsonObject, JsonValue, ProofKind, ResolutionResponseActor,
+};
 use runx_parser::GraphStep;
 
 use super::super::graph::{load_skill, output_object, resolve_inputs, skill_dir};
 use super::authority::{
-    enforce_step_authority_admission, enforce_step_authority_receipt_before_success,
+    StepPaymentReplay, authority_denied, enforce_step_authority_admission,
+    enforce_step_authority_receipt_before_success, escalate_in_flight_payment_recovery,
+    sealed_payment_replay,
 };
 use super::inputs::{optional_input_string, required_input_string, string_value, string_value_ref};
 use super::{Runtime, StepRun};
@@ -40,6 +44,10 @@ where
     A: SkillAdapter,
 {
     let inputs = resolve_inputs(step, prior_runs)?;
+    if let Some(replay) = sealed_payment_replay(step, &inputs, &runtime.options.env, graph_dir)? {
+        return run_replayed_payment_step(graph_dir, graph_name, step, attempt, replay);
+    }
+    escalate_in_flight_payment_recovery(step, &inputs, &runtime.options.env, graph_dir)?;
     let authority =
         enforce_step_authority_admission(step, &inputs, &runtime.options.env, graph_dir)?;
     if step.run.is_some() {
@@ -105,9 +113,152 @@ where
             currency: payment.currency.clone(),
         },
         outputs,
-        &receipt.id,
+        receipt,
     )
     .map_err(|source| RuntimeError::payment_state("persisting payment step state", source))
+}
+
+fn run_replayed_payment_step(
+    graph_dir: &Path,
+    graph_name: &str,
+    step: &GraphStep,
+    attempt: u32,
+    replay: StepPaymentReplay,
+) -> Result<StepRun, RuntimeError> {
+    let skill_dir = skill_dir(graph_dir, step)?;
+    let skill = load_skill(&skill_dir)?;
+    let skill_name = skill.name.clone();
+    let output = replay_skill_output(step, &replay.outputs)?;
+    if !output.succeeded() {
+        return Err(authority_denied(
+            step,
+            AuthorityVerb::Spend,
+            "sealed payment replay requires a successful stored rail output".to_owned(),
+        ));
+    }
+    let receipt = step_receipt(
+        graph_name,
+        &step.id,
+        attempt,
+        &output,
+        &replay.receipt_created_at,
+    )?;
+    if receipt.id != replay.receipt_ref {
+        return Err(authority_denied(
+            step,
+            AuthorityVerb::Spend,
+            format!(
+                "sealed payment replay rebuilt receipt {}, expected {}",
+                receipt.id, replay.receipt_ref
+            ),
+        ));
+    }
+    if receipt.seal.digest != replay.receipt_digest {
+        return Err(authority_denied(
+            step,
+            AuthorityVerb::Spend,
+            format!(
+                "sealed payment replay rebuilt receipt digest {}, expected {}",
+                receipt.seal.digest, replay.receipt_digest
+            ),
+        ));
+    }
+    if !receipt_has_payment_rail_proof(&receipt, &replay.rail_proof_ref) {
+        return Err(authority_denied(
+            step,
+            AuthorityVerb::Spend,
+            format!(
+                "sealed payment replay rebuilt receipt without rail proof {}",
+                replay.rail_proof_ref
+            ),
+        ));
+    }
+    Ok(StepRun {
+        step_id: step.id.clone(),
+        attempt,
+        skill: skill_name,
+        runner: step.runner.clone(),
+        fanout_group: step.fanout_group.clone(),
+        output,
+        outputs: replay.outputs,
+        receipt,
+    })
+}
+
+fn replay_skill_output(
+    step: &GraphStep,
+    outputs: &JsonObject,
+) -> Result<SkillOutput, RuntimeError> {
+    let status = match outputs.get("status") {
+        Some(JsonValue::String(value)) if value == "success" => InvocationStatus::Success,
+        Some(JsonValue::String(value)) if value == "failure" => InvocationStatus::Failure,
+        Some(JsonValue::String(value)) => {
+            return Err(RuntimeError::InvalidRunStep {
+                step_id: step.id.clone(),
+                reason: format!("payment replay output status {value:?} is not supported"),
+            });
+        }
+        Some(_) => {
+            return Err(RuntimeError::InvalidRunStep {
+                step_id: step.id.clone(),
+                reason: "payment replay output status must be a string".to_owned(),
+            });
+        }
+        None => InvocationStatus::Success,
+    };
+    let stdout = match outputs.get("stdout") {
+        Some(JsonValue::String(value)) => value.clone(),
+        Some(_) => {
+            return Err(RuntimeError::InvalidRunStep {
+                step_id: step.id.clone(),
+                reason: "payment replay output stdout must be a string".to_owned(),
+            });
+        }
+        None => serde_json::to_string(&JsonValue::Object(replay_stdout_payload(outputs)))
+            .map_err(|source| RuntimeError::json("serializing payment replay stdout", source))?,
+    };
+    let stderr = match outputs.get("stderr") {
+        Some(JsonValue::String(value)) => value.clone(),
+        Some(_) => {
+            return Err(RuntimeError::InvalidRunStep {
+                step_id: step.id.clone(),
+                reason: "payment replay output stderr must be a string".to_owned(),
+            });
+        }
+        None => String::new(),
+    };
+    Ok(SkillOutput {
+        exit_code: Some(if status == InvocationStatus::Success {
+            0
+        } else {
+            1
+        }),
+        status,
+        stdout,
+        stderr,
+        duration_ms: 0,
+        metadata: JsonObject::new(),
+    })
+}
+
+fn replay_stdout_payload(outputs: &JsonObject) -> JsonObject {
+    let mut payload = outputs.clone();
+    payload.remove("stdout");
+    payload.remove("stderr");
+    payload.remove("status");
+    payload
+}
+
+fn receipt_has_payment_rail_proof(
+    receipt: &runx_contracts::HarnessReceipt,
+    rail_proof_ref: &str,
+) -> bool {
+    receipt.harness.acts.iter().any(|act| {
+        act.verification_refs.iter().any(|reference| {
+            reference.uri == rail_proof_ref
+                && reference.proof_kind.as_ref() == Some(&ProofKind::PaymentRail)
+        })
+    })
 }
 
 pub(super) fn run_native_step<A>(

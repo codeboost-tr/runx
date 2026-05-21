@@ -7,13 +7,13 @@ use std::io::Write;
 use std::path::{Path, PathBuf};
 use std::time::{SystemTime, UNIX_EPOCH};
 
-use runx_contracts::JsonObject;
+use runx_contracts::{JsonObject, JsonValue};
 use serde::{Deserialize, Serialize};
 use thiserror::Error;
 
 use crate::payment_packets::{PaymentPacketError, PaymentRailPacket, read_payment_rail_packet};
 
-pub const PAYMENT_STATE_SCHEMA_VERSION: &str = "runx.payment_state.v2";
+pub const PAYMENT_STATE_SCHEMA_VERSION: &str = "runx.payment_state.v3";
 pub const RUNX_PAYMENT_STATE_PATH_ENV: &str = "RUNX_PAYMENT_STATE_PATH";
 
 #[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
@@ -44,14 +44,17 @@ impl PaymentIdempotencyKey {
     }
 }
 
-#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct PaymentIdempotencyEntry {
     pub idempotency_key: PaymentIdempotencyKey,
     pub receipt_ref: String,
+    pub receipt_created_at: String,
+    pub receipt_digest: String,
     pub rail_proof_ref: String,
     pub amount_minor: u64,
     pub currency: String,
+    pub outputs: JsonObject,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
@@ -108,7 +111,7 @@ pub struct FileBackedPaymentStateStore {
     state: PaymentStateDocument,
 }
 
-#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 struct PaymentStateDocument {
     schema_version: String,
@@ -170,6 +173,11 @@ pub enum PaymentStateError {
     RailMutationAlreadyRecorded { idempotency_key: String },
     #[error("spend capability {capability_ref} was already consumed")]
     SpendCapabilityAlreadyConsumed { capability_ref: String },
+    #[error("failed to serialize replay-safe payment outputs: {source}")]
+    ReplayOutputSerialize {
+        #[source]
+        source: serde_json::Error,
+    },
     #[error(transparent)]
     PaymentPacket(#[from] PaymentPacketError),
 }
@@ -179,17 +187,34 @@ impl FileBackedPaymentStateStore {
         let path = path.into();
         let state = match fs::read_to_string(&path) {
             Ok(contents) => {
-                let state: PaymentStateDocument =
+                let version: PaymentStateVersion =
                     serde_json::from_str(&contents).map_err(|source| PaymentStateError::Parse {
                         path: path.clone(),
                         source,
                     })?;
-                if state.schema_version != PAYMENT_STATE_SCHEMA_VERSION {
-                    return Err(PaymentStateError::UnsupportedSchemaVersion {
-                        schema_version: state.schema_version,
-                    });
+                match version.schema_version.as_str() {
+                    PAYMENT_STATE_SCHEMA_VERSION => {
+                        serde_json::from_str(&contents).map_err(|source| {
+                            PaymentStateError::Parse {
+                                path: path.clone(),
+                                source,
+                            }
+                        })?
+                    }
+                    "runx.payment_state.v2" => {
+                        let legacy: PaymentStateDocumentV2 = serde_json::from_str(&contents)
+                            .map_err(|source| PaymentStateError::Parse {
+                                path: path.clone(),
+                                source,
+                            })?;
+                        legacy.into_current()
+                    }
+                    schema_version => {
+                        return Err(PaymentStateError::UnsupportedSchemaVersion {
+                            schema_version: schema_version.to_owned(),
+                        });
+                    }
                 }
-                state
             }
             Err(source) if source.kind() == std::io::ErrorKind::NotFound => {
                 PaymentStateDocument::default()
@@ -255,6 +280,20 @@ impl FileBackedPaymentStateStore {
         self.state.rail_mutations.get(&key.index_key())
     }
 
+    pub fn escalate_rail_mutation(
+        &mut self,
+        key: &PaymentIdempotencyKey,
+    ) -> Result<Option<RailMutation>, PaymentStateError> {
+        let Some(mutation) = self.state.rail_mutations.get_mut(&key.index_key()) else {
+            return Ok(None);
+        };
+        mutation.status = RailMutationStatus::Escalated;
+        mutation.recovery_state = PaymentRecoveryState::Escalated;
+        let mutation = mutation.clone();
+        self.persist()?;
+        Ok(Some(mutation))
+    }
+
     pub fn record_rail_mutation(
         &mut self,
         mutation: RailMutation,
@@ -284,6 +323,33 @@ impl FileBackedPaymentStateStore {
     }
 }
 
+#[derive(Clone, Debug, Deserialize)]
+struct PaymentStateVersion {
+    schema_version: String,
+}
+
+#[derive(Clone, Debug, Deserialize)]
+#[serde(deny_unknown_fields)]
+struct PaymentStateDocumentV2 {
+    schema_version: String,
+    idempotency_entries: BTreeMap<String, serde_json::Value>,
+    consumed_spend_capabilities: BTreeMap<String, SpendCapabilityConsumption>,
+    rail_mutations: BTreeMap<String, RailMutation>,
+}
+
+impl PaymentStateDocumentV2 {
+    fn into_current(self) -> PaymentStateDocument {
+        let _ = self.schema_version;
+        let _ = self.idempotency_entries;
+        PaymentStateDocument {
+            schema_version: PAYMENT_STATE_SCHEMA_VERSION.to_owned(),
+            idempotency_entries: BTreeMap::new(),
+            consumed_spend_capabilities: self.consumed_spend_capabilities,
+            rail_mutations: self.rail_mutations,
+        }
+    }
+}
+
 pub fn consumed_spend_capability_recorded(
     env: &BTreeMap<String, String>,
     cwd: &Path,
@@ -310,6 +376,30 @@ pub fn lookup_payment_idempotency_entry(
     Ok(store.lookup_idempotency(key).cloned())
 }
 
+pub fn lookup_payment_rail_mutation(
+    env: &BTreeMap<String, String>,
+    cwd: &Path,
+    key: &PaymentIdempotencyKey,
+) -> Result<Option<RailMutation>, PaymentStateError> {
+    let Some(path) = resolve_payment_state_path(env, cwd) else {
+        return Ok(None);
+    };
+    let store = FileBackedPaymentStateStore::open(&path)?;
+    Ok(store.lookup_rail_mutation(key).cloned())
+}
+
+pub fn escalate_payment_rail_mutation(
+    env: &BTreeMap<String, String>,
+    cwd: &Path,
+    key: &PaymentIdempotencyKey,
+) -> Result<Option<RailMutation>, PaymentStateError> {
+    let Some(path) = resolve_payment_state_path(env, cwd) else {
+        return Ok(None);
+    };
+    let mut store = FileBackedPaymentStateStore::open(&path)?;
+    store.escalate_rail_mutation(key)
+}
+
 // rust-style-allow: long-function because payment state persistence binds
 // authority, output, receipt, and recovery-state invariants in one transaction.
 pub fn persist_payment_step_state(
@@ -317,7 +407,7 @@ pub fn persist_payment_step_state(
     cwd: &Path,
     input: &PaymentStepStateInput,
     outputs: &JsonObject,
-    receipt_id: &str,
+    receipt: &runx_contracts::HarnessReceipt,
 ) -> Result<(), PaymentStateError> {
     let Some(path) = resolve_payment_state_path(env, cwd) else {
         return Ok(());
@@ -339,7 +429,7 @@ pub fn persist_payment_step_state(
         store.consume_spend_capability(SpendCapabilityConsumption {
             capability_ref: input.spend_capability_ref.clone(),
             idempotency_key: input.idempotency_key.clone(),
-            receipt_ref: Some(receipt_id.to_owned()),
+            receipt_ref: Some(receipt.id.clone()),
             recovery_state: Some(recovery_state.clone()),
         })?;
     }
@@ -356,7 +446,9 @@ pub fn persist_payment_step_state(
             .and_then(|packet| packet.result.as_ref());
         store.record_idempotency(PaymentIdempotencyEntry {
             idempotency_key: input.idempotency_key.clone(),
-            receipt_ref: receipt_id.to_owned(),
+            receipt_ref: receipt.id.clone(),
+            receipt_created_at: receipt.created_at.clone(),
+            receipt_digest: receipt.seal.digest.clone(),
             rail_proof_ref: proof_ref.to_owned(),
             amount_minor: result
                 .and_then(|result| result.amount_minor)
@@ -365,6 +457,7 @@ pub fn persist_payment_step_state(
                 .and_then(|result| result.currency.as_deref())
                 .unwrap_or(&input.currency)
                 .to_owned(),
+            outputs: replay_safe_outputs(outputs)?,
         })?;
     }
 
@@ -396,6 +489,40 @@ pub fn persist_payment_step_state(
     }
 
     Ok(())
+}
+
+fn replay_safe_outputs(outputs: &JsonObject) -> Result<JsonObject, PaymentStateError> {
+    let mut safe_outputs = outputs.clone();
+    sanitize_replay_payload(&mut safe_outputs);
+
+    let mut stdout_payload = safe_outputs.clone();
+    stdout_payload.remove("stdout");
+    stdout_payload.remove("stderr");
+    stdout_payload.remove("status");
+    sanitize_replay_payload(&mut stdout_payload);
+
+    let stdout = serde_json::to_string(&JsonValue::Object(stdout_payload))
+        .map_err(|source| PaymentStateError::ReplayOutputSerialize { source })?;
+    safe_outputs.insert("stdout".to_owned(), JsonValue::String(stdout));
+    safe_outputs
+        .entry("stderr".to_owned())
+        .or_insert_with(|| JsonValue::String(String::new()));
+    safe_outputs
+        .entry("status".to_owned())
+        .or_insert_with(|| JsonValue::String("success".to_owned()));
+    Ok(safe_outputs)
+}
+
+fn sanitize_replay_payload(payload: &mut JsonObject) {
+    let Some(JsonValue::Object(packet)) = payload.get_mut("payment_rail_packet") else {
+        return;
+    };
+    let Some(JsonValue::Object(data)) = packet.get_mut("data") else {
+        return;
+    };
+    if let Some(JsonValue::Object(proof)) = data.get_mut("rail_proof") {
+        proof.remove("rail_session_material_ref");
+    }
 }
 
 fn payment_recovery_state(packet: Option<&PaymentRailPacket>) -> PaymentRecoveryState {

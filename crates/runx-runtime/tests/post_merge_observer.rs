@@ -6,18 +6,22 @@ use runx_contracts::{
     Reference, ReferenceType,
 };
 use runx_runtime::post_merge_observer::{
-    PostMergeObserverAdapter, PostMergeObserverAdapterError,
-    PostMergeObserverLivePublicationRequest, PostMergeObserverPublicationAdapter,
-    PostMergeObserverPublicationCommand, PostMergeObserverPublicationLedger,
-    PostMergeObserverPublicationRuntimeDecision, PostMergeObserverPullRequestObservationRequest,
-    PostMergeObserverRuntimeError, PostMergeObserverSourcePublicationObservation,
-    PostMergeObserverSourcePublicationRequest, PostMergeObserverVerificationObservationRequest,
-    execute_post_merge_observer_with_adapter, execute_post_merge_observer_with_publication_adapter,
+    FixtureBackedGitHubPostMergeObserverAdapter, PostMergeObserverAdapter,
+    PostMergeObserverAdapterError, PostMergeObserverLivePublicationRequest,
+    PostMergeObserverPublicationAdapter, PostMergeObserverPublicationCommand,
+    PostMergeObserverPublicationLedger, PostMergeObserverPublicationRuntimeDecision,
+    PostMergeObserverPullRequestObservationRequest, PostMergeObserverRuntimeError,
+    PostMergeObserverSourcePublicationObservation, PostMergeObserverSourcePublicationRequest,
+    PostMergeObserverVerificationObservationRequest, execute_post_merge_observer_with_adapter,
+    execute_post_merge_observer_with_publication_adapter,
     project_post_merge_observer_publication_commands,
 };
 
 const POST_MERGE_OBSERVER_FIXTURE: &str = include_str!(
     "../../../fixtures/contracts/harness-spine/post-merge-observer-merged-verified.json"
+);
+const GITHUB_PR_OBSERVATION_FIXTURE: &str = include_str!(
+    "../../../fixtures/contracts/post-merge-observer/github-pr-merged-verified-observation.json"
 );
 const NITROSEND_LIKE: &str =
     include_str!("../../../fixtures/operational-policy/nitrosend-like.json");
@@ -443,6 +447,75 @@ fn live_adapter_command_validation_fails_before_provider_observation()
         )
     ));
     assert!(adapter.events.is_empty());
+    Ok(())
+}
+
+#[test]
+fn fixture_backed_github_pr_adapter_observes_readback_without_network()
+-> Result<(), Box<dyn std::error::Error>> {
+    let policy: runx_contracts::OperationalPolicy = serde_json::from_str(NITROSEND_LIKE)?;
+    let receipt = post_merge_observer_receipt()?;
+    let mut adapter =
+        FixtureBackedGitHubPostMergeObserverAdapter::from_json_str(GITHUB_PR_OBSERVATION_FIXTURE)?;
+    let mut ledger = PostMergeObserverPublicationLedger::new();
+
+    let live = execute_post_merge_observer_with_adapter(
+        &policy,
+        &live_publication_request(),
+        &receipt,
+        &mut adapter,
+        &mut ledger,
+    )?;
+
+    assert_eq!(live.pull_request.provider, PostMergeProvider::Github);
+    assert_eq!(live.pull_request.repo, "runxhq/nitrosend");
+    assert_eq!(live.pull_request.number, 188);
+    assert_eq!(
+        live.pull_request.merge_sha.as_deref(),
+        Some("9f14c0ffee1234567890abcdef1234567890abcd")
+    );
+    assert_eq!(
+        live.verification.status,
+        PostMergeVerificationStatus::Passed
+    );
+    assert_eq!(live.closure_plan.reason_code, "merged_verified");
+    assert_eq!(live.publication.commands.len(), 3);
+    assert!(ledger.contains(&live.dedupe.publication_key));
+    Ok(())
+}
+
+#[test]
+fn fixture_backed_github_pr_adapter_rejects_mismatched_pull_request_readback()
+-> Result<(), Box<dyn std::error::Error>> {
+    let policy: runx_contracts::OperationalPolicy = serde_json::from_str(NITROSEND_LIKE)?;
+    let receipt = post_merge_observer_receipt()?;
+    let expected_publication_key = dedupe_plan(&receipt, PostMergeObserverSignalSource::Webhook)
+        .publication_key
+        .clone();
+    let mut adapter =
+        FixtureBackedGitHubPostMergeObserverAdapter::from_json_str(GITHUB_PR_OBSERVATION_FIXTURE)?;
+    let mut ledger = PostMergeObserverPublicationLedger::new();
+    let mut request = live_publication_request();
+    request.pull_request_ref.locator = Some("runxhq/nitrosend#189".to_owned());
+
+    let error = execute_post_merge_observer_with_adapter(
+        &policy,
+        &request,
+        &receipt,
+        &mut adapter,
+        &mut ledger,
+    )
+    .err()
+    .ok_or("expected fixture readback mismatch")?;
+
+    assert!(matches!(
+        error,
+        PostMergeObserverRuntimeError::Adapter(PostMergeObserverAdapterError {
+            operation: "observe_pull_request_fixture",
+            message
+        }) if message == "pull request ref does not match fixture readback"
+    ));
+    assert!(!ledger.contains(&expected_publication_key));
     Ok(())
 }
 

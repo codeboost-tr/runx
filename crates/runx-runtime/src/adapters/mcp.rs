@@ -15,6 +15,8 @@ compile_error!("features `mcp` and `mcp-rmcp` are mutually exclusive");
 mod adapter;
 mod framing;
 mod jsonrpc;
+#[cfg(feature = "mcp-rmcp")]
+mod rmcp_content_length;
 mod sandbox_metadata;
 mod server;
 mod server_skill;

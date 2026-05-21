@@ -20,10 +20,11 @@ default = []
 async-http = ["dep:reqwest", "dep:tokio"]
 cli-tool = ["async-http"]
 mcp = []
-mcp-rmcp = ["dep:rmcp", "async-http", "tokio/process", "tokio/io-util"]
+mcp-rmcp = ["dep:rmcp", "async-http", "tokio/process", "tokio/io-util", "tokio/sync"]
 a2a = []
 agent = []
 catalog = ["cli-tool"]
+external-adapter = []
 
 [dependencies]
 aes-gcm = "0.10.3"
@@ -33,7 +34,7 @@ runx-core.workspace = true
 runx-parser.workspace = true
 runx-receipts.workspace = true
 reqwest = { version = "=0.13.3", default-features = false, features = ["rustls", "json"], optional = true }
-rmcp = { version = "=1.7.0", default-features = false, features = ["client"], optional = true }
+rmcp = { version = "=1.7.0", default-features = false, features = ["client", "server"], optional = true }
 serde.workspace = true
 serde_json.workspace = true
 serde_norway.workspace = true

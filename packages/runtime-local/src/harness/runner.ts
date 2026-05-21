@@ -8,7 +8,6 @@ import { resolveLocalSkillProfile } from "@runxhq/core/config";
 import { isRecord } from "@runxhq/core/util";
 import {
   parseGraphYaml,
-  parseSkillMarkdown,
   parseRunnerManifestYaml,
   validateGraph,
   validateRunnerManifest,
@@ -35,6 +34,7 @@ import type {
   HarnessReceiptExpectation,
   RunnerHarnessCase,
 } from "../parser-types.js";
+import { parseSkillFrontmatter } from "./skill-frontmatter.js";
 
 const harnessReceiptSchema = "runx.harness_receipt.v1";
 
@@ -343,7 +343,7 @@ async function deterministicHarnessReceiptIds(
 
 async function targetSkillName(skillPath: string): Promise<string> {
   const resolved = await resolveSkillFilePath(skillPath);
-  const raw = parseSkillMarkdown(await readFile(resolved, "utf8"));
+  const raw = parseSkillFrontmatter(await readFile(resolved, "utf8"));
   const name = raw.frontmatter.name;
   return typeof name === "string" && name.trim().length > 0
     ? name.trim()
@@ -390,7 +390,7 @@ async function resolveInlineHarnessTarget(targetPath: string): Promise<ResolvedI
   }
 
   const markdown = await readFile(skillPath, "utf8");
-  const raw = parseSkillMarkdown(markdown);
+  const raw = parseSkillFrontmatter(markdown);
   const skillName = requiredString(raw.frontmatter.name, "frontmatter.name");
   const profile = await resolveLocalSkillProfile(skillPath, skillName);
   if (!profile.profileDocument || !profile.profileSourcePath) {
