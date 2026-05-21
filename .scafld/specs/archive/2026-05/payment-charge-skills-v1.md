@@ -2,7 +2,7 @@
 spec_version: '2.0'
 task_id: payment-charge-skills-v1
 created: '2026-05-21T00:00:00Z'
-updated: '2026-05-20T16:35:47Z'
+updated: '2026-05-21T11:18:50Z'
 status: completed
 harden_status: passed
 size: medium
@@ -16,42 +16,51 @@ risk_level: high
 Status: completed
 Current phase: final
 Next: done
-Reason: task completed
+Reason: task completed; post x402-pay cutover naming clarified
 Blockers: none
 Allowed follow-up command: `none`
-Latest runner update: 2026-05-20T16:35:47Z
+Latest runner update: 2026-05-21T11:18:50Z
 Review gate: pass
 
 ## Summary
 
-Provider-side payment in runx is a proposed governed graph profile that prices
+Provider-side payment in runx is a governed graph-profile family that prices
 an inbound tool call, issues a payment challenge, verifies the returned
 credential, and models the requirement that a receipt seal before the upstream
 tool runs. This v1 is intentionally registry/profile-only. The first-party
-skills created by this spec make the flow legible to humans and registry
+skills completed by this spec make the flow legible to humans and registry
 tooling, but they do not add runtime charge execution, new CLI commands, new
 contract enums, or live-money behavior.
 
-The future runtime owner of this flow is still core: core must own pricing
-bounds, challenge issuance, credential verification gates, the
-receipt-before-forward invariant, and authority subset proof on the provider
-charge side before any profile here is treated as executable money movement.
+After the `x402-pay` cutover, x402 stays a consumer payment surface. There is
+no public `x402-charge` skill, registry id, CLI command, runtime alias, or
+profile alias. Provider-charge examples are represented by the generic
+`charge-*` primitives plus settlement-pinned marquees (`mock-charge`,
+`stripe-charge`, and `mpp-charge`) only.
+
+The future executable owner of this flow is the Rust local runtime and contract
+surface: `runx-contracts` must expose any new authority shape, and
+`runx-runtime` must own pricing bounds, challenge issuance, credential
+verification gates, the receipt-before-forward invariant, and authority subset
+proof on the provider-charge side before any profile here is treated as
+executable money movement. TypeScript tests may validate catalog and wrapper
+coverage, but they are not the runtime source of truth after cutover.
 Settlement marquees adapt one protocol or provider family.
 
 ## Current Codebase Alignment
 
-- Current implemented payment skill directories are consumer-side:
-  `payment-execute`, `payment-quote`, `payment-reserve`,
-  `payment-rail-mock`, `payment-fulfill-rail`, and `payment-recover`.
-- There are no concrete `stripe-charge`, `mpp-charge`, or `mock-charge` skill
-  directories yet. This spec creates those provider-side packages if accepted.
-  It does not create a public x402-specific charge skill; x402 remains
-  canonicalized through `x402-pay`.
+- Current implemented consumer payment skill directories use the clean cutover
+  names: `pay-quote`, `pay-reserve`, `pay-fulfill-rail`, `pay-recover`,
+  `mock-pay`, `stripe-pay`, `mpp-pay`, and `x402-pay`.
+- The completed provider-charge profile directories are `charge-price`,
+  `charge-challenge`, `charge-verify`, `mock-charge`, `stripe-charge`, and
+  `mpp-charge`. There is intentionally no `x402-charge` directory or registry
+  entry; x402 remains canonicalized through `x402-pay`.
 - Current native CLI entrypoints are `runx skill`, `runx harness`, and
   `runx history`. No charge-specific native CLI surface is assumed.
-- `payment-fulfill-rail` uses rail ids `mock`, `x402`, `mpp`, and
-  `stripe-spt`; charge-side settlement family names in this spec are proposed
-  skill package names, not current rail ids.
+- `pay-fulfill-rail` uses rail ids `mock`, `x402`, `mpp`, and `stripe-spt`;
+  charge-side settlement family names in this spec are skill package names,
+  not public x402 rail aliases.
 
 ## Product Rationale
 
@@ -65,21 +74,23 @@ step.
 
 ## Scope And Touchpoints
 
-In scope for this v1:
+Completed scope for this v1:
 
-- Add `skills/charge-price/SKILL.md` and `skills/charge-price/X.yaml`.
-- Add `skills/charge-challenge/SKILL.md` and
+- `skills/charge-price/SKILL.md` and `skills/charge-price/X.yaml`.
+- `skills/charge-challenge/SKILL.md` and
   `skills/charge-challenge/X.yaml`.
-- Add `skills/charge-verify/SKILL.md` and `skills/charge-verify/X.yaml`.
-- Add `skills/mock-charge/SKILL.md` and `skills/mock-charge/X.yaml`.
-- Add `skills/stripe-charge/SKILL.md` and `skills/stripe-charge/X.yaml`.
-- Add `skills/mpp-charge/SKILL.md` and `skills/mpp-charge/X.yaml`.
-- Do not add any public x402-specific charge skill directory, registry lock
-  entry, or runtime alias.
-- Update `tests/payment-skill-profile-validation.test.ts` only as needed so
-  the explicit charge skill names above are parsed, package-ingested,
-  graph-reference checked, and raw merchant secret fields are rejected.
-- Regenerate `packages/cli/src/official-skills.lock.json` with
+- `skills/charge-verify/SKILL.md` and `skills/charge-verify/X.yaml`.
+- `skills/mock-charge/SKILL.md` and `skills/mock-charge/X.yaml`.
+- `skills/stripe-charge/SKILL.md` and `skills/stripe-charge/X.yaml`.
+- `skills/mpp-charge/SKILL.md` and `skills/mpp-charge/X.yaml`.
+- No public x402-specific charge skill directory, registry lock entry, or
+  runtime alias.
+- `tests/payment-skill-profile-validation.test.ts` discovers the declared
+  charge skill names explicitly and validates parsing, package ingestion,
+  graph references, and raw merchant secret rejection.
+- `tests/official-skill-catalog.test.ts` and registry coverage keep
+  `runx/x402-charge` retired while preserving `runx/x402-pay`.
+- Regenerated `packages/cli/src/official-skills.lock.json` with
   `node scripts/generate-official-lock.mjs` after adding the first-party skill
   directories.
 
@@ -108,19 +119,20 @@ valid `resource_family: payment` terms using existing payment verbs and
 `bounds.payment` fields. New schema fields are deferred to a runtime contract
 spec if provider-side charge enforcement needs first-class contract support.
 
-## Planned Phases
+## Completed Phases
 
 1. Scaffold charge skill profiles:
-   create the seven non-crypto skill directories and author human-readable
+   created the six non-crypto public skill directories and authored
    `SKILL.md` files plus `X.yaml` profiles with concrete inputs, outputs,
    artifacts, and harness cases. Graph profiles must show
    price -> challenge -> verify -> seal -> forward as declared steps while
    making clear that forward is modeled, not runtime-enabled.
 2. Validate profile coverage:
-   update the payment profile validation test to discover the declared charge
-   skill names explicitly and run
+   updated the payment profile validation test to discover the declared charge
+   skill names explicitly, then ran
    `pnpm exec vitest run tests/payment-skill-profile-validation.test.ts`.
-   Then run `node scripts/generate-official-lock.mjs` and include the
+   Regenerated `packages/cli/src/official-skills.lock.json` with
+   `node scripts/generate-official-lock.mjs` and included the
    refreshed `packages/cli/src/official-skills.lock.json`. No runtime, CLI,
    contract, or packet-schema changes are part of this phase.
 
@@ -131,10 +143,24 @@ this v1. They may show the desired charge sequence and the
 receipt-before-forward invariant, but they must not claim that `runx` can
 execute a paid provider call, forward the upstream operation, or repair a
 sealed-charge/no-forward split state. The x402 provider-charge flow remains a
-non-public pattern under canonical `x402-pay`, not a skill directory or alias.
+non-public pattern under canonical `x402-pay`, not a skill directory, registry
+id, CLI command, graph profile, or runtime alias.
 A later runtime spec must own price-before-challenge, verify-before-seal,
 receipt-before-forward, and provider-side recovery before those profiles become
 operational behavior.
+
+## Rust/TypeScript Cutover Boundary
+
+- Rust owns local execution after the cutover. Any executable provider-charge
+  behavior must land through `runx-contracts` and `runx-runtime`, with Rust
+  tests or TS-free Rust CLI fixtures as proof.
+- TypeScript may continue to host package, catalog, and wrapper tests. Those
+  tests can assert that official and seeded catalogs include `runx/x402-pay`
+  and exclude retired `runx/x402-charge`, but they must not become a fallback
+  runtime for charge behavior.
+- This spec intentionally does not edit `payment_state`, `payment_ledger`,
+  rmcp adapter code, or x402-pay dogfood fixtures. Those are separate runtime
+  and fixture ownership lanes.
 
 ## Skill Set
 
@@ -167,13 +193,12 @@ executes.
 naming continuity. Not exposed in the registry; no SKILL.md, no X.yaml
 profile, and no harness case in this iteration.
 
-`x402 provider-charge flow`
-: Non-public flow pattern. Same composition as the
-settlement-pinned marquees, but the verifier is selected from the inbound
-credential family and provider policy in the future runtime contract. In this
-v1 it makes the intended "tool-provider charges agent" authority sequence
-visible without adding a public skill package or claiming executable
-forwarding.
+`x402 provider-charge pattern`
+: Non-public pattern under `x402-pay`. Same conceptual composition as the
+settlement-pinned marquees, but no `x402-charge` package, graph profile,
+registry id, CLI command, or runtime alias exists in v1. Future executable
+provider-side x402 charge behavior must be specified under a Rust runtime
+follow-up, not by adding a parallel x402 skill name.
 
 ## Spine Mapping
 
@@ -226,9 +251,10 @@ charge flow. They are not implemented by this profile-only v1.
 - `crypto-charge`: on-chain credential verification. Reserved placeholder,
   not exposed or harnessed in this iteration.
 
-`x402 charge flow` is the proposed unpinned graph profile that records how the
-future runtime should select one of the above from the inbound credential and
-provider policy.
+The x402 provider-charge pattern is intentionally not an unpinned public graph
+profile. `x402-pay` remains the only x402 payment skill name, and future
+runtime selection from inbound credential and provider policy belongs in a
+Rust runtime spec.
 
 These names are first-party skill packages, not hardcoded core concepts. Core
 only sees charge authority terms, idempotency keys, child harnesses, and
@@ -262,13 +288,14 @@ receipt proof refs.
 - Each first-party charge skill except the `crypto-charge` placeholder has
   an `X.yaml` profile with concrete inputs, outputs, artifacts, and harness
   cases.
-- Graph profiles (`x402 charge flow`, `stripe-charge`, `mpp-charge`,
-  `mock-charge`) make the authority transition visible:
+- Graph profiles (`stripe-charge`, `mpp-charge`, `mock-charge`) make the
+  authority transition visible:
   price -> challenge -> verify -> seal -> forward.
 - Settlement profiles declare charge authority metadata under `runx` and
   never declare raw merchant secrets as inputs.
 - `tests/payment-skill-profile-validation.test.ts` explicitly discovers and
-  validates all seven non-crypto charge X.yaml files.
+  validates all six non-crypto charge X.yaml files.
+- Catalog coverage preserves `runx/x402-pay` and rejects `runx/x402-charge`.
 - `pnpm exec vitest run tests/payment-skill-profile-validation.test.ts` passes.
 - `node scripts/generate-official-lock.mjs` refreshes
   `packages/cli/src/official-skills.lock.json`, and a second run leaves the
@@ -283,7 +310,7 @@ receipt proof refs.
 
 ## Acceptance And Rollback
 
-Build rollback is mechanical: remove the seven non-crypto charge skill
+Build rollback is mechanical: remove the six non-crypto charge skill
 directories, revert any changes to
 `tests/payment-skill-profile-validation.test.ts`, and regenerate or revert
 `packages/cli/src/official-skills.lock.json` back to the pre-charge skill set.

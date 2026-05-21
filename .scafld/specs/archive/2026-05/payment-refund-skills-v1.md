@@ -2,7 +2,7 @@
 spec_version: '2.0'
 task_id: payment-refund-skills-v1
 created: '2026-05-21T00:00:00Z'
-updated: '2026-05-20T16:29:47Z'
+updated: '2026-05-21T11:18:50Z'
 status: completed
 harden_status: passed
 size: medium
@@ -16,42 +16,52 @@ risk_level: high
 Status: completed
 Current phase: final
 Next: done
-Reason: task completed
+Reason: task completed; post x402-pay cutover naming clarified
 Blockers: none
 Allowed follow-up command: `none`
-Latest runner update: 2026-05-20T16:29:47Z
+Latest runner update: 2026-05-21T11:18:50Z
 Review gate: pass
 
 ## Summary
 
 Refund execution in runx is a proposed governed graph profile that operates
 over an existing sealed payment receipt. This v1 is intentionally
-registry/profile-only. The first-party skills created by this spec make
+registry/profile-only. The first-party skills completed by this spec make
 after-the-fact money movement legible to humans and registry tooling, but they
 do not add runtime refund execution, new CLI commands, new contract enums, or
 live-money behavior.
 
-The future runtime owner of this flow is still core: core must own the link to
-the original receipt, refundable amount bounds, idempotency across reattempts,
-the receipt-before-success invariant for the refund act itself, same-family
-refund checks, open-dispute refusal, and authority subset proof against the
-original charge before any profile here is treated as executable refund
-movement.
+After the `x402-pay` cutover, x402 stays a consumer payment surface. There is
+no public `x402-refund` skill, registry id, CLI command, runtime alias, or
+profile alias. Refund examples are represented by the generic `refund-*`
+primitives plus settlement-pinned marquees (`mock-refund`, `stripe-refund`,
+and `mpp-refund`) only.
+
+The future executable owner of this flow is the Rust local runtime and contract
+surface: `runx-contracts` must expose any new authority shape, and
+`runx-runtime` must own the link to the original receipt, refundable amount
+bounds, idempotency across reattempts, the receipt-before-success invariant for
+the refund act itself, same-family refund checks, open-dispute refusal, and
+authority subset proof against the original charge before any profile here is
+treated as executable refund movement. TypeScript tests may validate catalog
+and wrapper coverage, but they are not the runtime source of truth after
+cutover.
 
 ## Current Codebase Alignment
 
-- Current implemented payment skill directories are consumer-side:
-  `payment-execute`, `payment-quote`, `payment-reserve`,
-  `payment-rail-mock`, `payment-fulfill-rail`, and `payment-recover`.
-- There are no concrete `stripe-refund`, `mpp-refund`, `mock-refund`, or
-  `dispute-respond` skill directories yet. This spec creates those refund-side
-  packages if accepted. It does not create a public x402-specific refund skill;
-  x402 remains canonicalized through `x402-pay`.
+- Current implemented consumer payment skill directories use the clean cutover
+  names: `pay-quote`, `pay-reserve`, `pay-fulfill-rail`, `pay-recover`,
+  `mock-pay`, `stripe-pay`, `mpp-pay`, and `x402-pay`.
+- The completed refund-side profile directories are `refund-quote`,
+  `refund-reserve`, `refund-recover`, `mock-refund`, `stripe-refund`,
+  `mpp-refund`, and `dispute-respond`. There is intentionally no
+  `x402-refund` directory or registry entry; x402 remains canonicalized
+  through `x402-pay`.
 - Current native CLI entrypoints are `runx skill`, `runx harness`, and
   `runx history`. No refund-specific native CLI surface is assumed.
-- `payment-fulfill-rail` uses rail ids `mock`, `x402`, `mpp`, and
-  `stripe-spt`; refund-side settlement family names in this spec are
-  proposed skill package names, not current rail ids.
+- `pay-fulfill-rail` uses rail ids `mock`, `x402`, `mpp`, and `stripe-spt`;
+  refund-side settlement family names in this spec are skill package names,
+  not public x402 rail aliases.
 
 ## Product Rationale
 
@@ -65,23 +75,24 @@ normal spend or charge graph.
 
 ## Scope And Touchpoints
 
-In scope for this v1:
+Completed scope for this v1:
 
-- Add `skills/refund-quote/SKILL.md` and `skills/refund-quote/X.yaml`.
-- Add `skills/refund-reserve/SKILL.md` and `skills/refund-reserve/X.yaml`.
-- Add `skills/refund-recover/SKILL.md` and `skills/refund-recover/X.yaml`.
-- Add `skills/mock-refund/SKILL.md` and `skills/mock-refund/X.yaml`.
-- Add `skills/stripe-refund/SKILL.md` and `skills/stripe-refund/X.yaml`.
-- Add `skills/mpp-refund/SKILL.md` and `skills/mpp-refund/X.yaml`.
-- Do not add any public x402-specific refund skill directory, registry lock
-  entry, or runtime alias.
-- Add `skills/dispute-respond/SKILL.md` and
+- `skills/refund-quote/SKILL.md` and `skills/refund-quote/X.yaml`.
+- `skills/refund-reserve/SKILL.md` and `skills/refund-reserve/X.yaml`.
+- `skills/refund-recover/SKILL.md` and `skills/refund-recover/X.yaml`.
+- `skills/mock-refund/SKILL.md` and `skills/mock-refund/X.yaml`.
+- `skills/stripe-refund/SKILL.md` and `skills/stripe-refund/X.yaml`.
+- `skills/mpp-refund/SKILL.md` and `skills/mpp-refund/X.yaml`.
+- No public x402-specific refund skill directory, registry lock entry, or
+  runtime alias.
+- `skills/dispute-respond/SKILL.md` and
   `skills/dispute-respond/X.yaml`.
-- Update `tests/payment-skill-profile-validation.test.ts` only as needed so
-  the explicit refund and dispute skill names above are parsed,
-  package-ingested, graph-reference checked, and raw merchant secret fields are
-  rejected.
-- Regenerate `packages/cli/src/official-skills.lock.json` with
+- `tests/payment-skill-profile-validation.test.ts` discovers the declared
+  refund and dispute skill names explicitly and validates parsing, package
+  ingestion, graph references, and raw merchant secret rejection.
+- `tests/official-skill-catalog.test.ts` and registry coverage keep
+  `runx/x402-refund` retired while preserving `runx/x402-pay`.
+- Regenerated `packages/cli/src/official-skills.lock.json` with
   `node scripts/generate-official-lock.mjs` after adding the first-party skill
   directories.
 
@@ -134,24 +145,25 @@ payment packet ids only where the packet semantics are already correct:
 The refund profiles must not reference new ids such as
 `runx.payment.refund.*` or `runx.payment.dispute.*` in this iteration.
 
-## Planned Phases
+## Completed Phases
 
 1. Scaffold non-settlement refund and dispute profiles:
-   create `refund-quote`, `refund-reserve`, `refund-recover`, and
+   created `refund-quote`, `refund-reserve`, `refund-recover`, and
    `dispute-respond` with human-readable `SKILL.md` files plus `X.yaml`
    profiles. These profiles may rely on profile payload fields for original
    receipt links, refundable bounds, recovery closure states, and dispute posture.
 2. Scaffold settlement marquees after charge approval:
-   create `mock-refund`, `stripe-refund`, and `mpp-refund` only after
-   `payment-charge-skills-v1` is approved. Graph profiles must show quote ->
-   reserve -> optional approval -> settlement while carrying the original
-   receipt link at every stage. The x402 refund flow remains non-public
-   metadata under canonical `x402-pay`; no dynamic dispatch is introduced.
+   created `mock-refund`, `stripe-refund`, and `mpp-refund` after
+   `payment-charge-skills-v1` approval. Graph profiles show quote -> reserve
+   -> optional approval -> settlement while carrying the original receipt link
+   at every stage. The x402 refund pattern remains non-public metadata under
+   canonical `x402-pay`; no dynamic dispatch is introduced.
 3. Validate profile coverage:
-   update the payment profile validation test to discover the declared refund
-   and dispute skill names explicitly and run
+   updated the payment profile validation test to discover the declared refund
+   and dispute skill names explicitly, then ran
    `pnpm exec vitest run tests/payment-skill-profile-validation.test.ts`.
-   Then run `node scripts/generate-official-lock.mjs` and include the
+   Regenerated `packages/cli/src/official-skills.lock.json` with
+   `node scripts/generate-official-lock.mjs` and included the
    refreshed `packages/cli/src/official-skills.lock.json`. No runtime, CLI,
    contract, durable index, or packet-schema changes are part of this phase.
 
@@ -162,10 +174,24 @@ this v1. They may show the desired refund sequence, same-family refusal,
 open-dispute refusal, receipt-before-success invariant, and recovery closure
 states, but they must not claim that `runx` can execute a refund rail mutation,
 repair an ambiguous refund, or enforce refund admission at runtime. The x402
-refund flow remains a non-public pattern under canonical `x402-pay`, not a
-skill directory or alias. A later runtime spec must own link-before-quote,
-receipt-before-success for `payment:refund`, same-family enforcement, and
-crash-safe recovery before these profiles become operational behavior.
+refund pattern remains non-public under canonical `x402-pay`, not a skill
+directory, registry id, CLI command, graph profile, or runtime alias. A later
+runtime spec must own link-before-quote, receipt-before-success for
+`payment:refund`, same-family enforcement, and crash-safe recovery before
+these profiles become operational behavior.
+
+## Rust/TypeScript Cutover Boundary
+
+- Rust owns local execution after the cutover. Any executable refund behavior
+  must land through `runx-contracts` and `runx-runtime`, with Rust tests or
+  TS-free Rust CLI fixtures as proof.
+- TypeScript may continue to host package, catalog, and wrapper tests. Those
+  tests can assert that official and seeded catalogs include `runx/x402-pay`
+  and exclude retired `runx/x402-refund`, but they must not become a fallback
+  runtime for refund behavior.
+- This spec intentionally does not edit `payment_state`, `payment_ledger`,
+  rmcp adapter code, or x402-pay dogfood fixtures. Those are separate runtime
+  and fixture ownership lanes.
 
 ## Lifecycle Command Note
 
@@ -214,14 +240,12 @@ original receipt.
 continuity. Not exposed in the registry; no SKILL.md, no X.yaml profile, and
 no harness case in this iteration.
 
-`x402 refund flow`
-: The proposed unpinned graph marquee. Same composition as the
-settlement-pinned marquees, but the settlement family is selected from the
-linked original receipt in the future runtime contract rather than baked into
-the skill. In this v1 it is a static profile that carries desired dispatch
-metadata and refusal examples; dynamic runtime dispatch is deferred. The
-graph's authority is bounded by the original receipt's settlement family;
-cross-family refunds are refused in profile examples.
+`x402 refund pattern`
+: Non-public pattern under `x402-pay`. Same conceptual composition as the
+settlement-pinned marquees, but no `x402-refund` package, graph profile,
+registry id, CLI command, or runtime alias exists in v1. Future executable
+x402 refund behavior must be specified under a Rust runtime follow-up, not by
+adding a parallel x402 skill name.
 
 `dispute-respond`
 : Receives a provider-initiated dispute event (e.g. Stripe chargeback),
@@ -233,7 +257,7 @@ rail.
 ## Concept Boundaries
 
 - A refund is always linked to exactly one prior sealed charge receipt.
-- A reversal is not its own skill; it is what `payment-recover` and
+- A reversal is not its own skill; it is what `pay-recover` and
   `charge-verify` produce together when a charge sealed but the upstream
   operation could not be forwarded. The reversal manifests as a refund
   receipt with `reason: reversal` and a system-derived authority term.
@@ -298,21 +322,18 @@ flow. They are not implemented by this profile-only v1.
 - `crypto-refund`: on-chain refund. Reserved placeholder, not exposed or
   harnessed in this iteration.
 
-`x402 refund flow` is the proposed unpinned graph profile that documents how the
-future runtime should resolve to one of the above based on the linked original
-receipt's settlement family.
+The x402 refund pattern is intentionally not an unpinned public graph profile.
+`x402-pay` remains the only x402 payment skill name, and future runtime
+resolution based on the linked original receipt's settlement family belongs in
+a Rust runtime spec.
 
 ## Dependencies
 
 - `payment-execution-skills-v1` supplies the consumer-side credential,
   idempotency, and authority-term wire shape.
 - `payment-charge-skills-v1` supplies the provider-side charge receipt and
-  settlement-family vocabulary this spec references. Phase 2 settlement
-  marquee work (`mock-refund`, `stripe-refund`, `mpp-refund`, and
-  `x402 refund flow`) must not start until `payment-charge-skills-v1` is approved.
-  Phase 1 non-settlement refund/dispute profiles may be drafted before charge
-  approval because they carry receipt linkage as profile payload conventions,
-  not executable settlement-family behavior.
+  settlement-family vocabulary this spec references. It is completed before
+  the refund settlement marquees are treated as accepted profile contracts.
 - `payment-authority-term-v1` supplies the existing `payment` authority
   contract reused by refund profile examples.
 - `x402-pay-dogfood-v1` is not a prerequisite for profile scaffolding in this
@@ -341,14 +362,15 @@ receipt's settlement family.
 - Each first-party refund skill except the `crypto-refund` placeholder has
   an `X.yaml` profile with concrete inputs, outputs, artifacts, and harness
   cases.
-- Graph profiles (`x402 refund flow`, `stripe-refund`, `mpp-refund`,
-  `mock-refund`) make the authority transition visible: quote -> reserve ->
+- Graph profiles (`stripe-refund`, `mpp-refund`, `mock-refund`) make the
+  authority transition visible: quote -> reserve ->
   optional approval -> settlement, with the link to the original receipt
   visible at every stage.
 - Settlement profiles declare refund authority metadata under `runx` and
   never declare raw merchant secrets as inputs.
 - `tests/payment-skill-profile-validation.test.ts` explicitly discovers and
   validates all eight non-crypto refund/dispute X.yaml files.
+- Catalog coverage preserves `runx/x402-pay` and rejects `runx/x402-refund`.
 - `pnpm exec vitest run tests/payment-skill-profile-validation.test.ts` passes.
 - `node scripts/generate-official-lock.mjs` refreshes
   `packages/cli/src/official-skills.lock.json`, and a second run leaves the
