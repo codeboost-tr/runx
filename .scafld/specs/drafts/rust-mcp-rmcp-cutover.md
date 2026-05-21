@@ -27,8 +27,7 @@ gate, then handed the actual migration to this spec. Its one hard blocker,
 sequencing constraint from `plans/rust-takeover.md` §9 ("MCP is last") is the
 remaining reason this had not started; the customer-surface parity matrix work
 ahead of it does not block authoring or Stage 1.
-Blockers: none for authoring. Stage 1 needs the exact `rmcp` version pinned
-(see Open Questions).
+Blockers: none. The `rmcp` version is pinned (see Dependency pin).
 Review gate: not_started
 
 ## Why this exists
@@ -130,8 +129,9 @@ Out of scope:
 Stages and their per-stage acceptance gates are defined in
 `rust-mcp-rmcp-adoption` and not restated here. Execution order:
 
-1. Pull `rmcp` behind `mcp-rmcp = ["dep:rmcp", "async-http"]` (no `"mcp"` in the
-   list) with a `compile_error!` if both features are set. No behavior change.
+1. Pull `rmcp = "=1.7.0"` behind `mcp-rmcp = ["dep:rmcp", "async-http"]` (no
+   `"mcp"` in the list) with a `compile_error!` if both features are set. No
+   behavior change.
 2. Behind `#[cfg(feature = "mcp-rmcp")]`, swap `ProcessMcpTransport::call_tool`
    to the rmcp client. `FixtureMcpTransport` unchanged.
 3. Behind `mcp-rmcp`, swap the `serve_mcp_json_rpc` stdio loop for the rmcp
@@ -151,13 +151,20 @@ Stages and their per-stage acceptance gates are defined in
 - `rust-async-http-layer` (archived, landed; supplies the adapter-tier
   tokio/reqwest exception this spec consumes).
 
+## Dependency pin
+
+`rmcp = "=1.7.0"` (exact pin). Verified as the latest stable release on
+crates.io on 2026-05-21 (`max_stable_version` 1.7.0). The predecessor was
+written against a pre-1.0 `rmcp` and listed "pre-1.0 churn" as a risk; rmcp has
+since reached a stable 1.x line, which removes that risk. Use `default-features
+= false` with only the `transport-io` (and `macros` if needed) features to keep
+the tokio surface narrow and `cargo deny check licenses` clean. At Stage 1, run
+`cargo update -p rmcp`, confirm the resolved version is still 1.7.0 (or bump the
+pin to the then-current latest and re-review), and commit the `Cargo.lock` diff
+with the dependency review.
+
 ## Open Questions
 
-- Exact `rmcp` version. The predecessor forbids fake literals and ranges and
-  requires an exact pin verified against crates.io at authoring time. This must
-  be filled with the current stable `rmcp` release as `=x.y.z` before Stage 1
-  lands; it is intentionally not guessed here. Run `cargo update -p rmcp` and
-  commit the `Cargo.lock` diff with the dependency review.
 - Deletion-gate signal. The predecessor replaced the unverifiable external-soak
   gate with an in-repo attestation under
   `fixtures/runtime/adapters/mcp/rmcp-cutover/` OR an owner override OR
