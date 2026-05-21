@@ -2,8 +2,8 @@
 spec_version: '2.0'
 task_id: rust-ts-sunset-marketplaces-registry-search-result-ownership
 created: '2026-05-22T00:00:00+10:00'
-updated: '2026-05-22T03:22:00+10:00'
-status: active
+updated: '2026-05-21T17:33:23Z'
+status: completed
 harden_status: not_run
 size: small
 risk_level: medium
@@ -13,31 +13,14 @@ risk_level: medium
 
 ## Current State
 
-Status: active
-Current phase: safe import migration completed
-Next: parent marketplaces deletion remains blocked on marketplace adapter,
-fixture adapter, marketplace ref, runtime-local SDK/install, and test fixture
-consumers.
-Reason: `SkillSearchResult` ownership is now registry-owned in
-`packages/core/src/registry/search-result.ts` and exported from
-`@runxhq/core/registry`. Registry search and CLI registry search presentation
-import that registry-owned model. `@runxhq/core/marketplaces` re-exports the
-type only to preserve existing marketplace adapter API compatibility until the
-adapter/ref deletion work is owned by a separate slice.
-Blockers: marketplace adapter behavior still has live consumers in CLI
-fixture marketplace search, runtime-local install/SDK surfaces, and focused
-marketplace fixture tests. Parent marketplace deletion must stay blocked.
-Allowed follow-up command: `scafld validate rust-ts-sunset-marketplaces-registry-search-result-ownership --json`
-Latest runner update: 2026-05-22T03:22:00+10:00 revalidated the active child
-spec, refreshed the result-shape importer census, and reran the focused CLI
-search rendering test. Registry-owned `SkillSearchResult` remains in place and
-narrow registry/CLI result-shape imports remain moved. Marketplace adapter
-behavior was intentionally left in place.
-Review gate: result_shape_migrated; adapter_behavior_blocked
-Lifecycle note: `scafld complete
-rust-ts-sunset-marketplaces-registry-search-result-ownership --json` is blocked
-because this promoted active spec has no session review ledger; next remains the
-allowed validation command above.
+Status: completed
+Current phase: final
+Next: done
+Reason: task completed
+Blockers: none
+Allowed follow-up command: `none`
+Latest runner update: 2026-05-21T17:33:23Z
+Review gate: pass
 
 ## Summary
 
@@ -224,3 +207,22 @@ Acceptance:
 ## Metadata
 
 - created_by: codex
+
+## Review
+
+Status: completed
+Verdict: pass
+Mode: verify
+Provider: command
+Output: command.stdout
+Summary: Command-provider verification pass. Rechecked marketplace search-result ownership slice: SkillSearchResult is registry-owned, registry and CLI result-shape imports no longer depend on @runxhq/core/marketplaces except where marketplace adapter behavior remains intentionally live, focused CLI rendering and typecheck evidence are recorded, and parent marketplace deletion remains explicitly blocked for non-result adapter/ref consumers. No completion blockers for this child slice.
+
+Attack log:
+- `result ownership`: verify registry-owned SkillSearchResult and imports from @runxhq/core/registry -> clean
+- `marketplace deletion boundary`: confirm packages/core/src/marketplaces remains present and parent deletion stays blocked -> clean
+- `CLI rendering`: run focused CLI search rendering test -> clean
+- `typecheck`: run pnpm typecheck evidence -> clean
+
+Findings:
+- none
+
