@@ -669,23 +669,23 @@ where
 {
     options.env.extend(fixture.env.clone());
     let runtime = Runtime::new(adapter, options);
-    let mut host = FixtureCaller::new(fixture);
+    let mut host = FixtureHost::new(fixture);
     let graph_run = runtime.run_graph_file_for_harness(graph_path, &mut host)?;
     let output = replay_output_from_graph(fixture, graph_run);
     Ok(output)
 }
 
-struct FixtureCaller<'a> {
+struct FixtureHost<'a> {
     fixture: &'a HarnessFixture,
 }
 
-impl<'a> FixtureCaller<'a> {
+impl<'a> FixtureHost<'a> {
     fn new(fixture: &'a HarnessFixture) -> Self {
         Self { fixture }
     }
 }
 
-impl Host for FixtureCaller<'_> {
+impl Host for FixtureHost<'_> {
     fn report(&mut self, _event: ExecutionEvent) -> Result<(), RuntimeError> {
         Ok(())
     }

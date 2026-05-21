@@ -191,8 +191,8 @@ fn execute_mcp_server_graph(
             env: execution.env.clone(),
         },
     );
-    let mut host = McpServerCaller::default();
-    let checkpoint = runtime.run_graph_until_steps_with_caller(&graph_dir, &graph, 1, &mut host)?;
+    let mut host = McpServerHost::default();
+    let checkpoint = runtime.run_graph_until_steps_with_host(&graph_dir, &graph, 1, &mut host)?;
     if let Some(request) = host.requests.first().cloned() {
         return Ok(mcp_tool_result_from_host_result(
             McpHostRunResult::NeedsAgent {
@@ -203,7 +203,7 @@ fn execute_mcp_server_graph(
             },
         ));
     }
-    let run = runtime.resume_graph_with_caller(&graph_dir, graph, checkpoint, &mut host)?;
+    let run = runtime.resume_graph_with_host(&graph_dir, graph, checkpoint, &mut host)?;
     graph_run_mcp_result(&execution.skill.name, run_id, run)
 }
 
@@ -333,11 +333,11 @@ impl SkillAdapter for McpServerGraphAdapter {
 }
 
 #[derive(Default)]
-struct McpServerCaller {
+struct McpServerHost {
     requests: Vec<ResolutionRequest>,
 }
 
-impl Host for McpServerCaller {
+impl Host for McpServerHost {
     fn report(&mut self, _event: ExecutionEvent) -> Result<(), RuntimeError> {
         Ok(())
     }

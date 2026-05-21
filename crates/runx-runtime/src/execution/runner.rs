@@ -104,17 +104,17 @@ where
 
     pub fn run_graph_file(&self, graph_path: &Path) -> Result<GraphRun, RuntimeError> {
         let mut host = NoopHost;
-        self.run_graph_file_with_caller(graph_path, &mut host)
+        self.run_graph_file_with_host(graph_path, &mut host)
     }
 
-    pub fn run_graph_file_with_caller(
+    pub fn run_graph_file_with_host(
         &self,
         graph_path: &Path,
         host: &mut dyn Host,
     ) -> Result<GraphRun, RuntimeError> {
         let graph = load_graph(graph_path)?;
         let graph_dir = graph_path.parent().unwrap_or_else(|| Path::new("."));
-        self.run_graph_with_caller_outcome(graph_dir, graph, host, BlockedGraphOutcome::Error)
+        self.run_graph_with_host_outcome(graph_dir, graph, host, BlockedGraphOutcome::Error)
     }
 
     pub(crate) fn run_graph_file_for_harness(
@@ -124,19 +124,19 @@ where
     ) -> Result<GraphRun, RuntimeError> {
         let graph = load_graph(graph_path)?;
         let graph_dir = graph_path.parent().unwrap_or_else(|| Path::new("."));
-        self.run_graph_with_caller_outcome(graph_dir, graph, host, BlockedGraphOutcome::Receipt)
+        self.run_graph_with_host_outcome(graph_dir, graph, host, BlockedGraphOutcome::Receipt)
     }
 
-    pub fn run_graph_with_caller(
+    pub fn run_graph_with_host(
         &self,
         graph_dir: &Path,
         graph: ExecutionGraph,
         host: &mut dyn Host,
     ) -> Result<GraphRun, RuntimeError> {
-        self.run_graph_with_caller_outcome(graph_dir, graph, host, BlockedGraphOutcome::Error)
+        self.run_graph_with_host_outcome(graph_dir, graph, host, BlockedGraphOutcome::Error)
     }
 
-    fn run_graph_with_caller_outcome(
+    fn run_graph_with_host_outcome(
         &self,
         graph_dir: &Path,
         graph: ExecutionGraph,
@@ -192,10 +192,10 @@ where
         max_steps: usize,
     ) -> Result<GraphCheckpoint, RuntimeError> {
         let mut host = NoopHost;
-        self.run_graph_file_until_steps_with_caller(graph_path, max_steps, &mut host)
+        self.run_graph_file_until_steps_with_host(graph_path, max_steps, &mut host)
     }
 
-    pub fn run_graph_file_until_steps_with_caller(
+    pub fn run_graph_file_until_steps_with_host(
         &self,
         graph_path: &Path,
         max_steps: usize,
@@ -203,10 +203,10 @@ where
     ) -> Result<GraphCheckpoint, RuntimeError> {
         let graph = load_graph(graph_path)?;
         let graph_dir = graph_path.parent().unwrap_or_else(|| Path::new("."));
-        self.run_graph_until_steps_with_caller(graph_dir, &graph, max_steps, host)
+        self.run_graph_until_steps_with_host(graph_dir, &graph, max_steps, host)
     }
 
-    pub fn run_graph_until_steps_with_caller(
+    pub fn run_graph_until_steps_with_host(
         &self,
         graph_dir: &Path,
         graph: &ExecutionGraph,
@@ -224,10 +224,10 @@ where
         checkpoint: GraphCheckpoint,
     ) -> Result<GraphRun, RuntimeError> {
         let mut host = NoopHost;
-        self.resume_graph_file_with_caller(graph_path, checkpoint, &mut host)
+        self.resume_graph_file_with_host(graph_path, checkpoint, &mut host)
     }
 
-    pub fn resume_graph_file_with_caller(
+    pub fn resume_graph_file_with_host(
         &self,
         graph_path: &Path,
         checkpoint: GraphCheckpoint,
@@ -235,10 +235,10 @@ where
     ) -> Result<GraphRun, RuntimeError> {
         let graph = load_graph(graph_path)?;
         let graph_dir = graph_path.parent().unwrap_or_else(|| Path::new("."));
-        self.resume_graph_with_caller(graph_dir, graph, checkpoint, host)
+        self.resume_graph_with_host(graph_dir, graph, checkpoint, host)
     }
 
-    pub fn resume_graph_with_caller(
+    pub fn resume_graph_with_host(
         &self,
         graph_dir: &Path,
         graph: ExecutionGraph,
@@ -263,7 +263,7 @@ where
         Ok(execution.finish(graph, receipt))
     }
 
-    pub fn resume_graph_until_steps_with_caller(
+    pub fn resume_graph_until_steps_with_host(
         &self,
         graph_dir: &Path,
         graph: &ExecutionGraph,
