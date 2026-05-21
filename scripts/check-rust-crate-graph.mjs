@@ -50,16 +50,61 @@ const requiredRunxDeps = new Map([
   ["runx-sdk", new Set(["runx-contracts"])],
 ]);
 
-const nonCliDisallowedDeps = [
-  "tokio",
-  "rmcp",
-  "clap",
-];
+const pureCrateNames = new Set([
+  "runx-contracts",
+  "runx-core",
+  "runx-parser",
+  "runx-receipts",
+  "runx-sdk",
+]);
 
 const workspaceDisallowedDeps = [
-  "reqwest",
+  "async-std",
+  "axum",
+  "clap",
   "hyper",
+  "reqwest",
+  "rmcp",
+  "serde_yaml",
   "serde_yml",
+  "tokio",
+  "ureq",
+];
+
+const pureCrateDisallowedDeps = [
+  "async-std",
+  "axum",
+  "clap",
+  "hyper",
+  "reqwest",
+  "rmcp",
+  "serde_yaml",
+  "serde_yml",
+  "tokio",
+  "ureq",
+];
+
+const runtimeDisallowedDeps = [
+  "async-std",
+  "axum",
+  "clap",
+  "hyper",
+  "rmcp",
+  "serde_yaml",
+  "serde_yml",
+  "ureq",
+];
+
+const cliDisallowedDeps = [
+  "async-std",
+  "axum",
+  "hyper",
+  "reqwest",
+  "rmcp",
+  "serde_yaml",
+  "serde_yml",
+  "tokio",
+  "ureq",
 ];
 
 const findings = [];
@@ -80,8 +125,8 @@ for (const crateName of expectedMembers) {
   checkPublishingReadiness(crateName, manifest);
   checkRunxDependencies(crateName, manifest);
   await checkRunxDependencyUsage(crateName, manifest);
-  checkPrematureRuntimeDependencies(crateName, manifest);
   checkDisallowedDependencies(crateName, manifest);
+  checkRuntimeAsyncHttpContract(crateName, manifest);
 }
 
 if (findings.length > 0) {
@@ -229,25 +274,110 @@ async function collectRustFiles(directory) {
   return files.sort();
 }
 
-function checkPrematureRuntimeDependencies(crateName, manifest) {
-  if (crateName === "runx-cli") {
-    return;
-  }
-  const dependencyNames = parseDependencyNames(manifest);
-  for (const dep of nonCliDisallowedDeps) {
-    if (dependencyNames.includes(dep)) {
-      findings.push(`${crateName} must not depend on ${dep} before its implementation spec allows it`);
-    }
-  }
-}
-
 function checkDisallowedDependencies(crateName, manifest) {
   const dependencyNames = parseDependencyNames(manifest);
-  for (const dep of workspaceDisallowedDeps) {
+  const disallowedDeps = disallowedDependenciesFor(crateName);
+  for (const dep of disallowedDeps) {
     if (dependencyNames.includes(dep)) {
       findings.push(`${crateName} must not depend on ${dep}`);
     }
   }
+}
+
+function disallowedDependenciesFor(crateName) {
+  if (crateName === "workspace") {
+    return workspaceDisallowedDeps;
+  }
+  if (pureCrateNames.has(crateName)) {
+    return pureCrateDisallowedDeps;
+  }
+  if (crateName === "runx-runtime") {
+    return runtimeDisallowedDeps;
+  }
+  if (crateName === "runx-cli") {
+    return cliDisallowedDeps;
+  }
+  return pureCrateDisallowedDeps;
+}
+
+function checkRuntimeAsyncHttpContract(crateName, manifest) {
+  if (crateName !== "runx-runtime") {
+    return;
+  }
+
+  const featuresBody = sectionBody(manifest, "features");
+  if (!/^async-http\s*=\s*\["dep:reqwest", "dep:tokio"\]\s*$/mu.test(featuresBody)) {
+    findings.push("runx-runtime async-http feature must be exactly [\"dep:reqwest\", \"dep:tokio\"]");
+  }
+  if (!/^cli-tool\s*=\s*\["async-http"\]\s*$/mu.test(featuresBody)) {
+    findings.push("runx-runtime cli-tool feature must imply async-http so the cargo CLI exercises reviewed HTTP");
+  }
+
+  const reqwest = dependencyInlineSpec(manifest, "dependencies", "reqwest");
+  if (!reqwest) {
+    findings.push("runx-runtime must declare optional reqwest for the approved async-http edge");
+  } else {
+    if (!/version\s*=\s*"=[^"]+"/u.test(reqwest)) {
+      findings.push("runx-runtime reqwest dependency must use an exact version pin");
+    }
+    if (!/default-features\s*=\s*false/u.test(reqwest)) {
+      findings.push("runx-runtime reqwest dependency must disable default features");
+    }
+    if (!/optional\s*=\s*true/u.test(reqwest)) {
+      findings.push("runx-runtime reqwest dependency must stay optional");
+    }
+    for (const feature of ["rustls", "json"]) {
+      if (!dependencyInlineFeatures(reqwest).includes(feature)) {
+        findings.push(`runx-runtime reqwest dependency must enable the ${feature} feature`);
+      }
+    }
+    for (const forbiddenFeature of ["blocking", "cookies", "stream", "native-tls", "default-tls"]) {
+      if (dependencyInlineFeatures(reqwest).includes(forbiddenFeature)) {
+        findings.push(`runx-runtime reqwest dependency must not enable the ${forbiddenFeature} feature`);
+      }
+    }
+  }
+
+  const tokio = dependencyInlineSpec(manifest, "dependencies", "tokio");
+  if (!tokio) {
+    findings.push("runx-runtime must declare optional tokio for the approved async-http edge");
+  } else {
+    if (!/version\s*=\s*"=[^"]+"/u.test(tokio)) {
+      findings.push("runx-runtime tokio dependency must use an exact version pin");
+    }
+    if (!/default-features\s*=\s*false/u.test(tokio)) {
+      findings.push("runx-runtime tokio dependency must disable default features");
+    }
+    if (!/optional\s*=\s*true/u.test(tokio)) {
+      findings.push("runx-runtime tokio dependency must stay optional");
+    }
+    const tokioFeatures = dependencyInlineFeatures(tokio);
+    for (const feature of ["rt", "net", "time"]) {
+      if (!tokioFeatures.includes(feature)) {
+        findings.push(`runx-runtime tokio dependency must enable the ${feature} feature`);
+      }
+    }
+    for (const forbiddenFeature of ["full", "macros", "process"]) {
+      if (tokioFeatures.includes(forbiddenFeature)) {
+        findings.push(`runx-runtime tokio dependency must not enable the ${forbiddenFeature} feature`);
+      }
+    }
+  }
+}
+
+function dependencyInlineSpec(manifest, sectionName, dependencyName) {
+  const body = sectionBody(manifest, sectionName);
+  const pattern = new RegExp(`^${escapeRegExp(dependencyName)}\\s*=\\s*(?<spec>.*)$`, "mu");
+  const match = pattern.exec(body);
+  return match?.groups?.spec.trim() ?? null;
+}
+
+function dependencyInlineFeatures(spec) {
+  const match = /features\s*=\s*\[(?<features>[^\]]*)\]/u.exec(spec);
+  if (!match?.groups) {
+    return [];
+  }
+  return [...match.groups.features.matchAll(/"([^"]+)"/gu)].map((entry) => entry[1]).sort();
 }
 
 function parseDependencyNames(manifest) {

@@ -1,3 +1,6 @@
+// rust-style-allow: large-file because local registry ingestion keeps skill
+// parsing, binding metadata, and registry-version projection together for the
+// current TS-sunset parity slice.
 use runx_contracts::{JsonObject, JsonValue};
 use runx_parser::{
     SkillRunnerManifest, ValidatedSkill, parse_runner_manifest_yaml, parse_skill_markdown,

@@ -1,3 +1,6 @@
+// rust-style-allow: large-file because target-runner execution currently keeps
+// provider dedupe, governed runner observation, PR receipt sealing, and public
+// projection in one Rust cutover slice; split after live provider wiring lands.
 //! Runtime support for target-repo runner execution.
 
 use std::fmt;
@@ -361,6 +364,8 @@ fn validate_readiness_boundary(
     Ok(())
 }
 
+// rust-style-allow: long-function because revision receipt assembly must keep
+// the act, seal, metadata, and signature hash in one auditable construction.
 fn target_repo_runner_revision_receipt(
     execution: &TargetRepoRunnerFixtureExecution,
     runner_observation: Option<&TargetRepoRunnerGovernedRunnerObservation>,
@@ -465,6 +470,8 @@ struct RevisionActInput<'a> {
     runner_observation: Option<&'a TargetRepoRunnerGovernedRunnerObservation>,
 }
 
+// rust-style-allow: long-function because the act payload binds intent,
+// closure, revision details, and reference roles as one governed shape.
 fn revision_act(input: RevisionActInput<'_>) -> Act {
     let RevisionActInput {
         act_id,
@@ -539,6 +546,8 @@ fn revision_act(input: RevisionActInput<'_>) -> Act {
     }
 }
 
+// rust-style-allow: long-function because revision details preserve target
+// surfaces, output bindings, and runner observations without lossy helpers.
 fn revision_details(
     disposition: TargetRepoRunnerPullRequestDisposition,
     success_criterion: &SuccessCriterion,
@@ -618,6 +627,8 @@ fn revision_details(
     }
 }
 
+// rust-style-allow: long-function because the harness payload is the sealed
+// authority boundary that must visibly contain decision, act, and enforcement.
 fn receipt_harness(
     execution: &TargetRepoRunnerFixtureExecution,
     receipt_id: &str,
@@ -770,6 +781,8 @@ fn seal_revision_receipt(receipt: &mut HarnessReceipt) -> Result<(), TargetRepoR
         .map_err(|verification| TargetRepoRunnerRuntimeError::Receipt(format!("{verification:?}")))
 }
 
+// rust-style-allow: long-function because projection validates a sealed receipt
+// and reconstructs the public target-runner view without partial helpers.
 pub fn project_target_repo_runner_revision_receipt(
     receipt: &HarnessReceipt,
 ) -> Result<TargetRepoRunnerRevisionReceiptProjection, TargetRepoRunnerRuntimeError> {

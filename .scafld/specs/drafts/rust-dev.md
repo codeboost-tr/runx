@@ -2,7 +2,7 @@
 spec_version: '2.0'
 task_id: rust-dev
 created: '2026-05-18T00:00:00Z'
-updated: '2026-05-21T01:13:58Z'
+updated: '2026-05-21T03:22:18Z'
 status: draft
 harden_status: in_progress
 size: medium
@@ -17,14 +17,15 @@ Status: draft
 Current phase: native skill/graph fixture execution plus CLI presentation parity slice implemented
 Next: CLI watch cutover decision
 Reason: a narrow Rust runtime slice now exists for dev fixture discovery,
-deterministic tool fixture execution, polling watch debounce, presentation, and
-dev-mode receipt metadata tagging. `target.kind: skill` and `target.kind:
-graph` fixtures now execute through the Rust harness replay path and validate
-against the dev fixture expectation engine. Repo-integration skill fixtures bind
-workspace cwd through `RUNX_CWD` instead of process-global cwd mutation. The
-Rust CLI dev JSON path now pretty-prints like the TS CLI, and the native dev
-terminal presentation uses the same no-color status glyphs as the TS
-presentation. This is not complete `runx dev` parity yet.
+deterministic tool fixture execution, executable fixture workspace files,
+polling watch debounce, presentation, and dev-mode receipt metadata tagging.
+`target.kind: skill` and `target.kind: graph` fixtures now execute through the
+Rust harness replay path and validate against the dev fixture expectation
+engine. Repo-integration skill fixtures bind workspace cwd through `RUNX_CWD`
+instead of process-global cwd mutation. The Rust CLI dev JSON path now
+pretty-prints like the TS CLI, and the native dev terminal presentation uses
+the same no-color status glyphs as the TS presentation. This is not complete
+`runx dev` parity yet.
 Blockers: the Rust CLI dev command is owned by the CLI cutover worker; the TS
 command currently parses `--watch` but does not run a watch loop, so CLI-level
 watch parity still needs an owning cutover decision before Rust should expose a
@@ -32,7 +33,7 @@ long-running watch loop.
 Allowed follow-up command: make the explicit CLI watch decision, then wire the
 chosen Rust behavior and rerun runtime and CLI dev validation; do not mark
 passed until the remaining blockers are closed.
-Latest runner update: 2026-05-21T01:13:58Z
+Latest runner update: 2026-05-21T03:22:18Z
 Review gate: not_started
 
 ## Summary
@@ -136,10 +137,29 @@ Checks:
 - Earlier broad filtered check `cargo test -p runx-runtime dev -- --nocapture`
   passed the new 5 dev tests and filtered the rest; initial invocation from repo
   root failed because the Cargo workspace lives under `crates/`.
+- `cargo test --manifest-path crates/Cargo.toml -p runx-runtime --test dev -- --nocapture`:
+  passed with 6 tests after adding executable workspace-file coverage.
+- `cargo test --manifest-path crates/Cargo.toml -p runx-runtime --features cli-tool --test dev -- --nocapture`:
+  passed with 8 tests after adding executable workspace-file coverage.
+- `cargo fmt --manifest-path crates/Cargo.toml --package runx-runtime`:
+  passed.
+- `cargo check --manifest-path crates/Cargo.toml -p runx-runtime`: passed.
+- `cargo clippy --manifest-path crates/Cargo.toml -p runx-runtime --all-targets`:
+  passed.
+- `cargo clippy --manifest-path crates/Cargo.toml -p runx-runtime --features cli-tool --all-targets`:
+  passed.
+- `git diff --check -- crates/runx-runtime/src/dev/loop.rs crates/runx-runtime/tests/dev.rs fixtures/dev/simple/tools/acme/executable/manifest.json fixtures/dev/simple/tools/acme/executable/fixtures/executable.yaml .scafld/specs/drafts/rust-dev.md`:
+  passed.
+- `scafld validate rust-dev`: passed.
+- `scafld status rust-dev`: reported draft status with next step still the CLI
+  watch decision.
 
 Issues:
 - Runtime slice implemented under `crates/runx-runtime/src/dev/**` with
   deterministic tool fixture execution only.
+- Rust dev fixture workspace materialization now applies executable permissions
+  to `workspace.executable_files`, matching the existing TS fixture-workspace
+  contract.
 - Deterministic native skill/graph dev fixture execution is implemented through
   the Rust harness replay path with stable fixture output projection.
 - Native skill/graph repo-integration fixtures bind workspace cwd through

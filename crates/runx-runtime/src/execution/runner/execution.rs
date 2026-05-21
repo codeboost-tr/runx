@@ -1,3 +1,6 @@
+// rust-style-allow: large-file because graph execution keeps step planning,
+// fanout synchronization, and checkpoint emission together while Rust remains
+// the parity implementation for the existing execution contract.
 use std::collections::BTreeMap;
 use std::path::Path;
 

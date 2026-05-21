@@ -97,7 +97,7 @@ mod tests {
     use super::render_dev_stdout;
 
     #[test]
-    fn dev_json_stdout_is_pretty_printed_like_ts_cli() -> Result<(), Box<dyn std::error::Error>> {
+    fn dev_json_stdout_is_pretty_printed_like_ts_cli() -> Result<(), serde_json::Error> {
         let report = DevReport {
             schema: "runx.dev.v1".to_owned(),
             status: DevReportStatus::Skipped,

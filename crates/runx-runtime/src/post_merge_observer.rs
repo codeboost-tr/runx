@@ -1,3 +1,6 @@
+// rust-style-allow: large-file because post-merge closure projection keeps the
+// local publication ledger, live adapter boundary, and receipt projection in
+// one slice until the live webhook/scheduler adapter lands.
 //! Runtime support for post-merge observer publication.
 
 use std::collections::BTreeSet;

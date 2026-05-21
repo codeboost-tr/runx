@@ -1,3 +1,6 @@
+// rust-style-allow: large-file because native dev skill/graph replay keeps
+// fixture preparation, expectation projection, and harness invocation together
+// until the CLI watch cutover creates a stable module boundary.
 use std::collections::BTreeMap;
 use std::fs;
 use std::path::{Path, PathBuf};
