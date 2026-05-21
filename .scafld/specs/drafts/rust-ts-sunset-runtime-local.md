@@ -2,7 +2,7 @@
 spec_version: '2.0'
 task_id: rust-ts-sunset-runtime-local
 created: '2026-05-18T00:00:00Z'
-updated: '2026-05-20T05:28:35Z'
+updated: '2026-05-21T03:37:32Z'
 status: draft
 harden_status: not_run
 size: large
@@ -15,26 +15,28 @@ risk_level: very_high
 
 Status: draft
 Current phase: none
-Next: approve
-Reason: refreshed against the current spec archive. This is a deletion/cutover
-spec, not a compatibility-bridge spec. A 2026-05-20 importer census still finds
-127 files with runtime-local/adapters package references, imports, direct
-source imports, or docs/API-surface entries.
+Next: none
+Reason: refreshed after the MCP receipt-seal completion. This remains a
+deletion/cutover spec, not a compatibility-bridge spec. A 2026-05-21 importer
+census finds 135 active files outside `.scafld/specs/**` and `dist/**` with
+runtime-local/adapters package references, imports, direct source paths, docs,
+fixtures, or package-resolution entries. Of those, 111 are outside the two
+packages being deleted and 81 are actual import files outside those packages.
 Blockers: not currently executable. `rust-harness`,
 `rust-runtime-skill-execution`, `rust-runtime-adapters-agent`,
-`rust-runtime-adapters-a2a`, `rust-runtime-adapters-catalog`, and
-`rust-runtime-adapters-mcp` are completed or archived completed, but the MCP
-adapter review left a focused receipt-proof gap now tracked by
-`rust-mcp-server-harness-receipt-seal`: single-skill `runx mcp serve` calls
-must prove they emit sealed `runx.harness_receipt.v1` nodes. Remaining TS
-importers still include CLI, IDE core, host-adapters, langchain, package
-manifests, path aliases, and many tests. MCP server receipt proof, dev,
-journal-local, connect, scaffold, tool-catalogs, doctor, registry, receipt
-path, package boundary retargeting, and all surviving local callers must be
-Rust-routed or explicitly sunset before deletion starts.
+`rust-runtime-adapters-a2a`, `rust-runtime-adapters-catalog`,
+`rust-runtime-adapters-mcp`, and `rust-mcp-server-harness-receipt-seal` are
+completed or archived completed. The remaining blockers are importer/routing
+blockers: CLI source, IDE core, langchain, package manifests, path aliases,
+vitest aliases, scripts, active docs/fixtures, Rust parity/doctor references,
+and many tests still reference `@runxhq/runtime-local`, `@runxhq/adapters`, or
+their package paths. Host-adapters no longer imports runtime-local/adapters in
+the current tree. All surviving local callers must be Rust-routed or explicitly
+sunset before deletion starts.
 Allowed follow-up command: `none`
-Latest runner update: 2026-05-20T22:55:00+10:00 importer census refreshed; the
-deletion remains blocked, not merely unhardened.
+Latest runner update: 2026-05-21T13:37:32+10:00 importer census refreshed; MCP
+receipt sealing is no longer a blocker, but deletion remains blocked by live
+importers and package-resolution entries.
 Review gate: not_started
 
 ## Summary
@@ -65,21 +67,29 @@ in `rust-ts-interop-boundary`.
 
 Current reality as of this refresh:
 - Completed prerequisites: `rust-harness`, `rust-runtime-skill-execution`,
-  `rust-runtime-adapters-agent`, `rust-runtime-adapters-a2a`, and archived
-  `rust-runtime-adapters-catalog` and `rust-runtime-adapters-mcp`.
-- Hard blocker: the archived `rust-runtime-adapters-mcp` review recorded
-  `mcp-server-skill-may-skip-harness-receipt-seal`. The deletion cannot start
-  until `rust-mcp-server-harness-receipt-seal` proves MCP server single-skill
-  calls emit sealed harness receipts without TS runtime-local dispatch.
+  `rust-runtime-adapters-agent`, `rust-runtime-adapters-a2a`, archived
+  `rust-runtime-adapters-catalog`, archived `rust-runtime-adapters-mcp`, and
+  archived `rust-mcp-server-harness-receipt-seal`.
+- The former MCP blocker is closed: `rust-mcp-server-harness-receipt-seal`
+  is archived completed with review gate pass and acceptance evidence for
+  `cargo test --manifest-path crates/Cargo.toml -p runx-runtime mcp_server
+  --features mcp -- --nocapture`, harness tests, receipt proof tests, and MCP
+  clippy. Runtime-local deletion is now blocked by importer/routing work, not
+  by the MCP server single-skill receipt proof.
 - Rust adapter files exist behind feature gates under
   `crates/runx-runtime/src/adapters/{cli_tool,agent,a2a,catalog,mcp}.rs`, but
   feature-gated files alone are not deletion evidence; routing and importer
   removal are required.
-- Root, CLI, IDE core, host-adapters, langchain, and many tests still import or
-  depend on `@runxhq/runtime-local`, `@runxhq/adapters`, or their subpaths.
-- The 2026-05-20 importer census finds 127 files with runtime-local/adapters
-  references across manifests, tsconfig paths, docs/API surface, CLI,
-  runtime-local/adapters source, scripts, plugins, and tests.
+- Root package metadata, CLI source, IDE core, langchain, scripts, Rust
+  parity/doctor references, docs/API surface, active fixtures, package path
+  aliases, vitest aliases, the runtime-local/adapters packages themselves, and
+  many tests still import or refer to `@runxhq/runtime-local`,
+  `@runxhq/adapters`, or their package paths.
+- `packages/host-adapters/**` no longer has a runtime-local/adapters
+  dependency or import in the current tree.
+- The 2026-05-21 importer census finds 135 active files outside
+  `.scafld/specs/**` and `dist/**` with runtime-local/adapters references; 111
+  of those are outside `packages/runtime-local/**` and `packages/adapters/**`.
 - Existing TS oracle generators remain useful before deletion. They are not
   a post-sunset execution path.
 
@@ -110,38 +120,110 @@ Files impacted:
   approval/harness oracle scripts that have no surviving Rust consumer
 
 Current importer and blocker inventory:
+- Census command used for this refresh, from repo root:
+
+  ```sh
+  rg -l "@runxhq/(runtime-local|adapters)|@runxhq/runtime-local|@runxhq/adapters|packages/(runtime-local|adapters)" --glob '!node_modules/**' --glob '!dist/**' --glob '!.scafld/specs/**' | sort
+  ```
+
+- 2026-05-21 active reference totals:
+  - 135 active files outside `.scafld/specs/**` and `dist/**`.
+  - 111 active files outside the two packages being deleted.
+  - 96 files with actual package import statements under
+    `packages/**`, `plugins/**`, `tests/**`, and `scripts/**`.
+  - 81 actual package import files outside `packages/runtime-local/**` and
+    `packages/adapters/**`.
+- 2026-05-21 prefix census:
+  - `README.md`: 1 file.
+  - `crates/runx-runtime`: 2 files.
+  - `docs`: 3 files.
+  - `fixtures/cli-parity`: 1 file.
+  - `fixtures/rust-cli-cutover-negative`: 1 file.
+  - `fixtures/skills`: 1 file.
+  - root `package.json`: 1 file.
+  - `packages/adapters`: 12 files.
+  - `packages/cli`: 16 files.
+  - `packages/langchain`: 3 files.
+  - `packages/runtime-local`: 12 files.
+  - `plugins/ide-core`: 2 files.
+  - `pnpm-lock.yaml`: 1 file.
+  - `scripts`: 10 files.
+  - `skills/write-harness`: 1 file.
+  - `tests`: 66 files.
+  - `tsconfig.base.json`: 1 file.
+  - `vitest.workspace-aliases.ts`: 1 file.
 - Package manifests and path aliases:
   - Root `package.json` devDependencies on `@runxhq/adapters` and
     `@runxhq/runtime-local`.
-  - `packages/cli/package.json` depends on both packages.
+  - `packages/cli/package.json` no longer declares either dependency, but
+    `packages/cli/src/**` still imports both packages through workspace aliases
+    supplied by the root devDependencies.
   - `plugins/ide-core/package.json` depends on `@runxhq/adapters`.
-  - `packages/host-adapters/package.json` and `packages/langchain/package.json`
-    depend on `@runxhq/runtime-local`.
+  - `packages/langchain/package.json` depends on `@runxhq/runtime-local`.
+  - `packages/host-adapters/package.json` no longer references either package.
   - `packages/adapters/package.json` depends on `@runxhq/runtime-local`.
   - `tsconfig.base.json` aliases `@runxhq/adapters`, subpaths,
     `@runxhq/runtime-local`, and subpaths.
+  - `vitest.workspace-aliases.ts` mirrors the same aliases for tests.
+  - `pnpm-lock.yaml` still records the root, adapters, langchain, runtime-local,
+    and ide-core links.
+  - `pnpm-workspace.yaml` does not name the packages directly, but
+    `packages/*` still includes both package directories until deletion.
 - Surviving package source imports:
-  - `packages/cli/src/**` imports runtime-local execution, SDK, harness,
-    tool-catalogs, history, and adapters.
+  - `packages/cli/src/dispatch.ts`,
+    `packages/cli/src/commands/mcp.ts`,
+    `packages/cli/src/commands/dev.ts`,
+    `packages/cli/src/commands/dev/skill-fixture.ts`,
+    `packages/cli/src/commands/dev/fixture-execution.ts`,
+    `packages/cli/src/commands/history.ts`,
+    `packages/cli/src/commands/history.test.ts`,
+    `packages/cli/src/agent-runtime.ts`,
+    `packages/cli/src/callers.ts`,
+    `packages/cli/src/cli-presentation.ts`,
+    `packages/cli/src/presentation/run-result.ts`,
+    `packages/cli/src/presentation/search.ts`,
+    `packages/cli/src/registry-fallback.ts`,
+    `packages/cli/src/runx-state.ts`, and
+    `packages/cli/src/skill-refs.ts` import runtime-local execution, SDK,
+    harness, tool-catalogs, history, or adapters.
+  - `packages/cli/src/commands/doctor-structure.ts` still contains a
+    runtime-local package path as a doctor structure expectation.
   - `plugins/ide-core/src/actions.ts` imports adapters and runtime-local
     harness/SDK surfaces.
-  - `packages/host-adapters/src/**` imports runtime-local SDK types and must
-    retarget to `@runxhq/contracts`.
   - `packages/langchain/src/**` imports runtime-local SDK, tool-catalogs, and
     result types and must move to CLI JSON or another boundary ratified by
     `rust-ts-interop-boundary`.
   - `packages/adapters/src/**` imports runtime-local MCP, sandbox, harness,
     SDK, and tool-catalog helpers; these imports confirm adapters depend on
     runtime-local rather than runtime-local depending on adapters.
+  - `packages/runtime-local/src/**` still has self-referential public package
+    exports and subpath imports; these are deleted with the package, not routed.
+- Rust-side direct package-path references:
+  - `crates/runx-runtime/src/adapters/catalog.rs` pins the hash of
+    `packages/runtime-local/src/harness/mcp-fixture.ts` for catalog/MCP oracle
+    metadata.
+  - `crates/runx-runtime/src/doctor.rs` has a file-budget probe for
+    `packages/runtime-local/src/runner-local/index.ts`.
 - Test importers:
-  - Runtime-local execution tests include graph runner, graph fanout, graph
-    governance, graph registry refs, local skill runner, sourcey, scafld,
-    issue-to-pr, issue-intake, MCP, A2A, approval, auth, history, receipt
-    inspection, package resolution/profile, and CLI tool policy/sandbox tests.
+  - 66 files under `tests/**` still import package APIs or direct package
+    source paths. They cover graph runner/fanout/governance/registry refs,
+    local skill runner, sourcey, scafld, issue-to-pr, issue-intake, MCP, A2A,
+    approval, auth, history, receipt inspection, package resolution/profile,
+    CLI tool policy/sandbox, host protocol, SDK imported tools, and framework
+    bridge coverage.
   - SDK/host tests include host protocol, imported tools, framework bridge,
     caller approval boundary, and IDE action coverage.
   - Adapter tests under `packages/adapters/**` remain with the package until
     deleted or converted to durable Rust fixture coverage.
+- Active docs, fixtures, and skills references:
+  - `README.md`, `docs/api-surface.md`, `docs/how-we-test.md`, and
+    `docs/ts-interop-boundary.md` still describe or expose runtime-local or
+    adapters surfaces.
+  - `fixtures/cli-parity/runtime-surfaces.json`,
+    `fixtures/rust-cli-cutover-negative/legacy-v2-package-candidate/package.json`,
+    `fixtures/skills/mcp-echo/SKILL.md`, and
+    `skills/write-harness/SKILL.md` still name package paths or package
+    dependencies.
 - Fixture/oracle scripts currently present:
   - `scripts/generate-rust-harness-fixtures.ts` has a surviving Rust harness
     consumer and is not automatically deleted by this sunset.
@@ -152,8 +234,19 @@ Current importer and blocker inventory:
     `scripts/generate-agent-adapter-fixtures.ts`, and
     `scripts/generate-runtime-catalog-adapter-oracles.ts` are retained until
     their completed adapter specs declare the checked-in Rust fixtures durable.
-  - Any future MCP oracle generator remains blocked on the MCP adapter spec and
-    must complete before runtime-local deletion.
+  - `scripts/generate-runtime-mcp-oracles.ts` exists and imports the TS MCP
+    adapter; after the MCP receipt-seal completion it remains an oracle
+    ownership decision, not a receipt-proof blocker.
+  - `scripts/generate-rust-contract-fixtures.ts` still imports the
+    runtime-local act-assignment SDK helper and must either move to contracts
+    or be retired by the contract fixture owner.
+  - `scripts/dogfood-github-issue-to-pr.mjs` still imports adapters and
+    runtime-local directly and must route through the Rust CLI or be sunset.
+  - `scripts/generate-cli-feature-parity.ts`, `scripts/check-boundaries.mjs`,
+    `scripts/check-rust-cli-cutover-negative.mjs`, and
+    `scripts/check-rust-cli-release-artifacts.ts` still encode package names or
+    direct package path expectations and must be updated as part of the final
+    package-boundary cleanup.
 
 Invariants:
 - Every importer either re-routed to Rust (via CLI subprocess, in-process
@@ -232,11 +325,11 @@ Out of scope:
 - Every runtime adapter path complete and routed:
   `rust-runtime-adapters-agent`, `rust-runtime-adapters-a2a`, and archived
   `rust-runtime-adapters-catalog` and `rust-runtime-adapters-mcp` are
-  completed; `rust-mcp-server-harness-receipt-seal` remains a hard blocker
-  until MCP server single-skill receipt sealing is proven and no longer depends
-  on TS runtime-local dispatch. The `cli_tool` runtime path is already consumed
-  by skill execution but does not cover MCP, agent, A2A, or catalog by
-  implication.
+  completed; `rust-mcp-server-harness-receipt-seal` is also archived completed
+  and closes the former MCP server single-skill receipt proof gap. The
+  `cli_tool` runtime path is already consumed by skill execution but does not
+  cover MCP, agent, A2A, catalog, CLI package source routing, or TS package
+  import removal by implication.
 - MCP server, dev, journal-local, connect, scaffold, tool-catalogs, doctor,
   registry, receipt path, and every CLI surface that imports runtime-local
   consumed by Rust or explicitly sunset.
@@ -282,6 +375,51 @@ Out of scope:
   Rust CLI, or speak cloud HTTP. It may not import deleted runtime-local or
   adapters package paths.
 
+## Next Executable Slices
+
+This draft is still not executable as a package deletion. The next executable
+work must be narrower than this sunset and should land in separate specs:
+
+1. CLI runtime-local importer routing:
+   - Route `packages/cli/src/dispatch.ts`,
+     `packages/cli/src/commands/mcp.ts`, dev/history/harness presentation,
+     registry fallback, runx-state, skill refs, and tool-catalog search through
+     Rust CLI JSON, Rust runtime APIs, or stable contracts.
+   - Remove the `packages/cli/src/commands/doctor-structure.ts` path
+     expectation or replace it with a Rust-owned doctor invariant.
+   - Acceptance gate: zero runtime-local/adapters imports under
+     `packages/cli/src/**`, while supported CLI commands still pass focused
+     Rust/TS parity tests.
+2. Non-CLI package boundary routing:
+   - Decide whether `plugins/ide-core` is sunset or routed to Rust harness/SDK
+     contracts.
+   - Route or sunset `packages/langchain` so it no longer depends on
+     runtime-local SDK/tool-catalog/result types.
+   - Acceptance gate: no runtime-local/adapters package imports or manifest
+     deps under `plugins/ide-core/**` or `packages/langchain/**`.
+3. Oracle and fixture ownership cleanup:
+   - For `generate-a2a-adapter-fixtures`, `generate-agent-adapter-fixtures`,
+     `generate-runtime-catalog-adapter-oracles`, and
+     `generate-runtime-mcp-oracles`, either declare the checked-in Rust
+     fixtures durable and retire the TS generator, or keep a named pre-sunset
+     owner that still runs before deletion.
+   - Move `generate-rust-contract-fixtures.ts` off runtime-local SDK helpers or
+     retire that import through a contracts-owned helper.
+   - Acceptance gate: every remaining oracle generator has a Rust owner or is
+     deleted before package deletion.
+4. Test-suite triage:
+   - Classify the 66 `tests/**` importers as Rust parity coverage, CLI JSON
+     coverage, package-internal coverage deleted with runtime-local/adapters,
+     or obsolete tests.
+   - Acceptance gate: no root `tests/**` file imports runtime-local/adapters or
+     direct package source paths.
+5. Package-boundary deletion cleanup:
+   - Remove root devDependencies, TS path aliases, vitest aliases, pnpm lock
+     links, docs/API-surface entries, active fixture references, and package
+     directories only after the above importer gates are zero.
+   - Acceptance gate: the negative import check in this spec passes outside
+     archived scafld specs.
+
 ## Planned Phases
 
 Phase 1: importer and fixture inventory.
@@ -303,10 +441,9 @@ Phase 2: evidence gate.
 - Verify adapter specs cover every source type reachable from surviving
   callers, and unsupported production source types fail closed with receipt
   evidence.
-- Verify MCP adapter/client and MCP server routing are complete, then verify
-  `rust-mcp-server-harness-receipt-seal` has closed the single-skill sealed
-  harness receipt proof gap. This is a hard blocker, not a nice-to-have
-  coverage item.
+- Treat MCP adapter/client and MCP server receipt sealing as completed
+  prerequisites, then verify no surviving TS caller still reaches the TS MCP
+  adapter/runtime-local path in production execution.
 
 Phase 3: route surviving callers.
 - Remove runtime-local/adapters package dependencies from surviving packages.
@@ -378,16 +515,27 @@ node scripts/check-rust-core-style.mjs
 
 ## Explicit Blockers
 
-- `rust-harness` not completed, not reviewed, or still accepting retired
-  receipt expectation fields.
-- `rust-runtime-skill-execution` not completed, or product skill execution
-  still depending on TS runtime-local, product skill aliases, old issue-control
-  names, or fixture-only success that skips receipt proof verification.
-- `rust-mcp-server-harness-receipt-seal` not completed, or MCP server
-  single-skill execution still failing to emit sealed `runx.harness_receipt.v1`
-  nodes without TS runtime-local dispatch.
+- Regression in a completed prerequisite: `rust-harness`,
+  `rust-runtime-skill-execution`, any Rust adapter spec, or
+  `rust-mcp-server-harness-receipt-seal` losing sealed harness receipt proof or
+  reintroducing TS runtime-local dispatch.
+- The 2026-05-21 importer census is nonzero: 135 active reference files
+  remain outside `.scafld/specs/**` and `dist/**`, including 111 outside the
+  two packages to delete and 81 actual import files outside those packages.
 - Any surviving local caller still importing `@runxhq/runtime-local` or
   `@runxhq/adapters`.
+- `packages/cli/src/**` still importing runtime-local/adapters package APIs or
+  retaining direct runtime-local package path expectations.
+- `plugins/ide-core/**` and `packages/langchain/**` still depending on or
+  importing runtime-local/adapters instead of a stable Rust/contract/CLI
+  boundary or being explicitly sunset.
+- Root package metadata, pnpm lock entries, `tsconfig.base.json`, or
+  `vitest.workspace-aliases.ts` still resolving runtime-local/adapters after
+  callers are routed.
+- Runtime-local/adapters oracle generators still importing deleted package
+  sources without a named durable Rust fixture owner.
+- Root `tests/**` still importing runtime-local/adapters package APIs or direct
+  package source paths after their behavior has a Rust/CLI owner.
 - Any adapter source type reachable from surviving local execution still lacks
   a Rust adapter or explicit fail-closed receipt evidence.
 - Any active replacement object model still centered on retired peer terminal
