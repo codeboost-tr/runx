@@ -3,6 +3,8 @@ use std::path::{Path, PathBuf};
 use std::thread;
 use std::time::Duration;
 
+use tempfile::TempDir;
+
 use runx_contracts::{DoctorReport, DoctorReportSchema, DoctorStatus, DoctorSummary, JsonValue};
 use runx_runtime::{
     DevFixtureResult, DevFixtureStatus, DevLoopOptions, DevReport, DevReportStatus,
@@ -19,7 +21,7 @@ fn dev_discovers_direct_unit_fixtures_before_workspace_tool_fixtures()
     let root = fixture_root()?;
     let direct = root.join("units/direct");
 
-    let paths = discover_fixture_paths(&direct, &root)?;
+    let paths = discover_fixture_paths(&direct, root.path())?;
 
     assert_eq!(paths, vec![direct.join("fixtures/direct.yaml")]);
     Ok(())
@@ -30,10 +32,10 @@ fn dev_runs_deterministic_tool_fixtures_and_skips_excluded_lanes()
 -> Result<(), Box<dyn std::error::Error>> {
     let root = fixture_root()?;
 
-    let report = run_dev_once(&DevLoopOptions::new(&root))?;
+    let report = run_dev_once(&DevLoopOptions::new(root.path()))?;
 
     assert_eq!(report.schema, "runx.dev.v1");
-    assert_eq!(report.status, DevReportStatus::Success);
+    assert_eq!(report.status, DevReportStatus::Success, "{report:#?}");
     assert_eq!(report.fixtures.len(), 3);
     assert_eq!(report.fixtures[0].name, "echo-agent");
     assert_eq!(report.fixtures[0].status, DevFixtureStatus::Skipped);
@@ -57,15 +59,19 @@ fn dev_runs_deterministic_tool_fixtures_and_skips_excluded_lanes()
 #[cfg(feature = "cli-tool")]
 fn dev_runs_native_skill_and_graph_fixtures() -> Result<(), Box<dyn std::error::Error>> {
     let root = fixture_root()?;
-    let mut options = DevLoopOptions::new(&root);
+    let mut options = DevLoopOptions::new(root.path());
     options.unit_path = Some(root.join("units/native"));
 
     let report = run_dev_once(&options)?;
 
-    assert_eq!(report.status, DevReportStatus::Success);
+    assert_eq!(report.status, DevReportStatus::Success, "{report:#?}");
     assert_eq!(report.fixtures.len(), 2);
     assert_eq!(report.fixtures[0].name, "native-graph");
-    assert_eq!(report.fixtures[0].status, DevFixtureStatus::Success);
+    assert_eq!(
+        report.fixtures[0].status,
+        DevFixtureStatus::Success,
+        "{report:#?}"
+    );
     assert_eq!(
         nested_string(report.fixtures[0].output.as_ref(), &["harness_id"]),
         Some("hrn_sequential-echo_graph")
@@ -84,16 +90,20 @@ fn dev_runs_native_skill_and_graph_fixtures() -> Result<(), Box<dyn std::error::
 fn dev_runs_native_repo_integration_skill_with_fixture_cwd()
 -> Result<(), Box<dyn std::error::Error>> {
     let root = fixture_root()?;
-    let mut options = DevLoopOptions::new(&root);
+    let mut options = DevLoopOptions::new(root.path());
     options.unit_path = Some(root.join("units/native-repo"));
     options.lane = DevLane::RepoIntegration;
 
     let report = run_dev_once(&options)?;
 
-    assert_eq!(report.status, DevReportStatus::Success);
+    assert_eq!(report.status, DevReportStatus::Success, "{report:#?}");
     assert_eq!(report.fixtures.len(), 1);
     assert_eq!(report.fixtures[0].name, "native-repo-skill");
-    assert_eq!(report.fixtures[0].status, DevFixtureStatus::Success);
+    assert_eq!(
+        report.fixtures[0].status,
+        DevFixtureStatus::Success,
+        "{report:#?}"
+    );
     assert_eq!(
         nested_string(report.fixtures[0].output.as_ref(), &["path"]),
         Some("README.md")
@@ -108,7 +118,7 @@ fn dev_runs_native_repo_integration_skill_with_fixture_cwd()
 #[test]
 fn dev_marks_workspace_executable_files_executable() -> Result<(), Box<dyn std::error::Error>> {
     let root = fixture_root()?;
-    let mut options = DevLoopOptions::new(&root);
+    let mut options = DevLoopOptions::new(root.path());
     options.unit_path = Some(root.join("tools/acme/executable"));
 
     let report = run_dev_once(&options)?;
@@ -116,7 +126,11 @@ fn dev_marks_workspace_executable_files_executable() -> Result<(), Box<dyn std::
     assert_eq!(report.status, DevReportStatus::Success);
     assert_eq!(report.fixtures.len(), 1);
     assert_eq!(report.fixtures[0].name, "executable-workspace-file");
-    assert_eq!(report.fixtures[0].status, DevFixtureStatus::Success);
+    assert_eq!(
+        report.fixtures[0].status,
+        DevFixtureStatus::Success,
+        "{report:#?}"
+    );
     assert_eq!(
         nested_string(report.fixtures[0].output.as_ref(), &["mode"]),
         Some("executable")
@@ -210,10 +224,53 @@ fn dev_receipt_metadata_marks_dev_mode_without_secret_material()
     Ok(())
 }
 
-fn fixture_root() -> Result<PathBuf, Box<dyn std::error::Error>> {
-    Ok(Path::new(env!("CARGO_MANIFEST_DIR"))
-        .join("../../fixtures/dev/simple")
-        .canonicalize()?)
+struct FixtureRoot {
+    path: PathBuf,
+    _temp_dir: TempDir,
+}
+
+impl std::ops::Deref for FixtureRoot {
+    type Target = Path;
+
+    fn deref(&self) -> &Self::Target {
+        self.path.as_path()
+    }
+}
+
+impl FixtureRoot {
+    fn path(&self) -> &Path {
+        self.path.as_path()
+    }
+}
+
+fn fixture_root() -> Result<FixtureRoot, Box<dyn std::error::Error>> {
+    let source = Path::new(env!("CARGO_MANIFEST_DIR"))
+        .join("../../fixtures")
+        .canonicalize()?;
+    let temp_dir = TempDir::new()?;
+    let copied_fixtures = temp_dir.path().join("fixtures");
+    copy_dir_all(&source, &copied_fixtures)?;
+    let path = copied_fixtures.join("dev/simple");
+    Ok(FixtureRoot {
+        path,
+        _temp_dir: temp_dir,
+    })
+}
+
+fn copy_dir_all(source: &Path, target: &Path) -> Result<(), Box<dyn std::error::Error>> {
+    fs::create_dir_all(target)?;
+    for entry in fs::read_dir(source)? {
+        let entry = entry?;
+        let source_path = entry.path();
+        let target_path = target.join(entry.file_name());
+        if entry.file_type()?.is_dir() {
+            copy_dir_all(&source_path, &target_path)?;
+        } else {
+            fs::copy(&source_path, &target_path)?;
+            fs::set_permissions(&target_path, fs::metadata(&source_path)?.permissions())?;
+        }
+    }
+    Ok(())
 }
 
 fn nested_string<'a>(value: Option<&'a JsonValue>, path: &[&str]) -> Option<&'a str> {
