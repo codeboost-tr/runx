@@ -49,6 +49,32 @@ fn dev_runs_deterministic_tool_fixtures_and_skips_excluded_lanes()
 }
 
 #[test]
+#[cfg(feature = "cli-tool")]
+fn dev_runs_native_skill_and_graph_fixtures() -> Result<(), Box<dyn std::error::Error>> {
+    let root = fixture_root()?;
+    let mut options = DevLoopOptions::new(&root);
+    options.unit_path = Some(root.join("units/native"));
+
+    let report = run_dev_once(&options)?;
+
+    assert_eq!(report.status, DevReportStatus::Success);
+    assert_eq!(report.fixtures.len(), 2);
+    assert_eq!(report.fixtures[0].name, "native-graph");
+    assert_eq!(report.fixtures[0].status, DevFixtureStatus::Success);
+    assert_eq!(
+        nested_string(report.fixtures[0].output.as_ref(), &["harness_id"]),
+        Some("hrn_sequential-echo_graph")
+    );
+    assert_eq!(report.fixtures[1].name, "native-skill");
+    assert_eq!(report.fixtures[1].status, DevFixtureStatus::Success);
+    assert_eq!(
+        report.fixtures[1].output,
+        Some(JsonValue::String("hello from dev skill".to_owned()))
+    );
+    Ok(())
+}
+
+#[test]
 fn dev_presentation_matches_terminal_shape() {
     let report = DevReport {
         schema: "runx.dev.v1".to_owned(),
