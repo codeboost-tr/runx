@@ -1,19 +1,22 @@
 use runx_contracts::{
     ActForm, HarnessState, JsonValue, OperationalPolicy, OperationalPolicyAction, Reference,
-    ReferenceType, TargetRepoRunnerDedupeLookupObservation, TargetRepoRunnerDedupeLookupPlan,
-    TargetRepoRunnerDedupeResult, TargetRepoRunnerExistingPullRequest, TargetRepoRunnerPlanRequest,
-    TargetRepoRunnerProvider, TargetRepoRunnerProviderPullRequest,
-    TargetRepoRunnerPullRequestDisposition, TargetRepoRunnerReadinessObservation,
-    TargetRepoRunnerSourceContext, plan_target_repo_runner, plan_target_repo_runner_execution,
+    ReferenceType, TargetRepoRunnerDedupeLookupObservation, TargetRepoRunnerDedupeResult,
+    TargetRepoRunnerExistingPullRequest, TargetRepoRunnerPlanRequest, TargetRepoRunnerProvider,
+    TargetRepoRunnerProviderPullRequest, TargetRepoRunnerPullRequestDisposition,
+    TargetRepoRunnerReadinessObservation, TargetRepoRunnerSourceContext, plan_target_repo_runner,
+    plan_target_repo_runner_execution,
 };
 use runx_receipts::canonical_receipt_body_digest;
 use runx_runtime::target_runner::{
-    TargetRepoRunnerAdapter, TargetRepoRunnerAdapterError, TargetRepoRunnerFixtureExecutionInput,
+    TargetRepoRunnerAdapter, TargetRepoRunnerAdapterError, TargetRepoRunnerCheckoutCommand,
+    TargetRepoRunnerFixtureExecutionInput, TargetRepoRunnerGithubPullRequestSearchState,
     TargetRepoRunnerGovernedRunnerInvocation, TargetRepoRunnerGovernedRunnerObservation,
-    TargetRepoRunnerPullRequestObservationRequest, TargetRepoRunnerRuntimeError,
-    TargetRepoRunnerSourcePublicationCommand, TargetRepoRunnerSourcePublicationObservation,
-    TargetRepoRunnerSourcePublicationRequest, execute_target_repo_runner_execution_fixture,
-    execute_target_repo_runner_fixture, execute_target_repo_runner_with_adapter,
+    TargetRepoRunnerProviderDedupeLookupCommand, TargetRepoRunnerPullRequestObservationRequest,
+    TargetRepoRunnerRuntimeError, TargetRepoRunnerSourcePublicationCommand,
+    TargetRepoRunnerSourcePublicationObservation, TargetRepoRunnerSourcePublicationRequest,
+    execute_target_repo_runner_execution_fixture, execute_target_repo_runner_fixture,
+    execute_target_repo_runner_with_adapter, target_repo_runner_provider_dedupe_lookup_command,
+    target_repo_runner_provider_dedupe_observation_from_pull_requests,
 };
 
 const NITROSEND_LIKE: &str =
@@ -198,6 +201,107 @@ fn runtime_requires_created_pull_request_for_create_decision()
 }
 
 #[test]
+fn provider_lookup_command_is_concrete_github_pr_search() -> Result<(), Box<dyn std::error::Error>>
+{
+    let policy: OperationalPolicy = serde_json::from_str(NITROSEND_LIKE)?;
+    let plan = plan_target_repo_runner(&policy, &nitrosend_request("nitrosend/api"))?;
+    let execution_plan = plan_target_repo_runner_execution(&plan, &readiness(true))?;
+
+    let command =
+        target_repo_runner_provider_dedupe_lookup_command(&execution_plan.provider_lookup)?;
+
+    assert_eq!(command.provider, TargetRepoRunnerProvider::Github);
+    assert_eq!(command.repository.owner, "nitrosend");
+    assert_eq!(command.repository.name, "api");
+    assert_eq!(command.repository.full_name, "nitrosend/api");
+    assert_eq!(command.result_limit, 20);
+    assert_eq!(command.query.repo, "nitrosend/api");
+    assert_eq!(
+        command.query.state,
+        TargetRepoRunnerGithubPullRequestSearchState::Open
+    );
+    assert_eq!(command.query.terms[0], "repo:nitrosend/api");
+    assert_eq!(command.query.terms[1], "is:pr");
+    assert_eq!(command.query.terms[2], "is:open");
+    assert!(
+        command
+            .query
+            .terms
+            .iter()
+            .any(|term| term.starts_with("\"runx-dedupe-key:"))
+    );
+    assert!(
+        command
+            .query
+            .terms
+            .iter()
+            .any(|term| term == "\"https://github.com/nitrosend/nitrosend/issues/482\"")
+    );
+    assert!(
+        command
+            .query
+            .terms
+            .iter()
+            .any(|term| term == "\"slack://nitrosend/C0APFMY0V8Q/1778834840.485629\"")
+    );
+    assert!(
+        command
+            .query
+            .query
+            .contains("repo:nitrosend/api is:pr is:open")
+    );
+    assert_public_only(&command)?;
+    Ok(())
+}
+
+#[test]
+fn provider_lookup_command_rejects_invalid_target_repo_before_adapter()
+-> Result<(), Box<dyn std::error::Error>> {
+    let policy: OperationalPolicy = serde_json::from_str(NITROSEND_LIKE)?;
+    let plan = plan_target_repo_runner(&policy, &nitrosend_request("nitrosend/api"))?;
+    let mut lookup = plan_target_repo_runner_execution(&plan, &readiness(true))?.provider_lookup;
+    lookup.target_repo = "nitrosend/api/extra".to_owned();
+
+    let error = target_repo_runner_provider_dedupe_lookup_command(&lookup).err();
+
+    assert!(matches!(
+        error,
+        Some(TargetRepoRunnerRuntimeError::CommandValidation {
+            operation: "provider_dedupe_lookup",
+            ..
+        })
+    ));
+    Ok(())
+}
+
+#[test]
+fn live_adapter_rejects_invalid_checkout_command_before_adapter_calls()
+-> Result<(), Box<dyn std::error::Error>> {
+    let policy: OperationalPolicy = serde_json::from_str(NITROSEND_LIKE)?;
+    let mut plan = plan_target_repo_runner(&policy, &nitrosend_request("nitrosend/api"))?;
+    plan.target.repo = "nitrosend/api/extra".to_owned();
+    let mut adapter = FakeTargetRepoRunnerAdapter {
+        created_pull_request: created_pull_request(),
+        provider_pull_requests: Vec::new(),
+        expected_disposition: TargetRepoRunnerPullRequestDisposition::Create,
+        omit_source_issue_publication: false,
+        events: Vec::new(),
+    };
+
+    let error = execute_target_repo_runner_with_adapter(&plan, &mut adapter, CREATED_AT).err();
+
+    assert!(matches!(
+        error,
+        Some(TargetRepoRunnerRuntimeError::CommandValidation {
+            operation: "checkout",
+            ..
+        })
+    ));
+    assert!(adapter.events.is_empty());
+    Ok(())
+}
+
+#[test]
 fn live_adapter_composes_observations_into_revision_receipt_without_network()
 -> Result<(), Box<dyn std::error::Error>> {
     let policy: OperationalPolicy = serde_json::from_str(NITROSEND_LIKE)?;
@@ -221,6 +325,15 @@ fn live_adapter_composes_observations_into_revision_receipt_without_network()
             "pull_request",
             "source_publication"
         ]
+    );
+    assert_eq!(live.checkout_command.target_repo, "nitrosend/api");
+    assert_eq!(
+        live.checkout_command.public_repo_ref.uri,
+        "https://github.com/nitrosend/api"
+    );
+    assert_eq!(
+        live.provider_lookup_command.query.terms[0],
+        "repo:nitrosend/api"
     );
     assert_eq!(
         live.execution.disposition,
@@ -464,27 +577,37 @@ struct FakeTargetRepoRunnerAdapter {
 impl TargetRepoRunnerAdapter for FakeTargetRepoRunnerAdapter {
     fn checkout_readiness(
         &mut self,
-        plan: &runx_contracts::TargetRepoRunnerPlan,
+        command: &TargetRepoRunnerCheckoutCommand,
     ) -> Result<TargetRepoRunnerReadinessObservation, TargetRepoRunnerAdapterError> {
         self.events.push("checkout");
+        assert_eq!(command.target_repo, "nitrosend/api");
+        assert_eq!(
+            command.public_repo_ref.uri,
+            "https://github.com/nitrosend/api"
+        );
+        assert_eq!(command.base_branch.as_deref(), Some("main"));
+        assert!(command.target_scafld_required);
+        assert!(command.runner_scafld_required);
+        assert!(command.mutate_target_repo);
+        assert!(command.local_path_hidden);
         Ok(TargetRepoRunnerReadinessObservation {
-            target_repo: plan.target.repo.clone(),
-            runner_id: plan.runner.runner_id.clone(),
+            target_repo: command.target_repo.clone(),
+            runner_id: command.runner_id.clone(),
             scafld_ready: true,
         })
     }
 
     fn provider_dedupe_lookup(
         &mut self,
-        lookup: &TargetRepoRunnerDedupeLookupPlan,
+        command: &TargetRepoRunnerProviderDedupeLookupCommand,
     ) -> Result<TargetRepoRunnerDedupeLookupObservation, TargetRepoRunnerAdapterError> {
         self.events.push("dedupe");
-        Ok(TargetRepoRunnerDedupeLookupObservation {
-            provider: lookup.provider,
-            target_repo: lookup.target_repo.clone(),
-            key: lookup.key.clone(),
-            pull_requests: self.provider_pull_requests.clone(),
-        })
+        assert_github_provider_lookup_command(command);
+        target_repo_runner_provider_dedupe_observation_from_pull_requests(
+            command,
+            self.provider_pull_requests.clone(),
+        )
+        .map_err(|error| TargetRepoRunnerAdapterError::new("dedupe", error.to_string()))
     }
 
     fn invoke_governed_runner(
@@ -624,6 +747,36 @@ fn assert_source_publication_commands(request: &TargetRepoRunnerSourcePublicatio
     }
     assert!(saw_issue_comment);
     assert!(saw_thread_reply);
+}
+
+fn assert_github_provider_lookup_command(command: &TargetRepoRunnerProviderDedupeLookupCommand) {
+    assert_eq!(command.provider, TargetRepoRunnerProvider::Github);
+    assert_eq!(command.target_repo, "nitrosend/api");
+    assert_eq!(command.repository.full_name, "nitrosend/api");
+    assert_eq!(command.query.repo, "nitrosend/api");
+    assert_eq!(
+        command.query.state,
+        TargetRepoRunnerGithubPullRequestSearchState::Open
+    );
+    assert_eq!(command.query.terms[0], "repo:nitrosend/api");
+    assert_eq!(command.query.terms[1], "is:pr");
+    assert_eq!(command.query.terms[2], "is:open");
+    assert!(
+        command
+            .markers
+            .iter()
+            .any(|marker| { marker == &format!("runx-dedupe-key:{}", command.dedupe_key) })
+    );
+    assert!(
+        command.required_refs.iter().any(|reference| {
+            reference.uri == "https://github.com/nitrosend/nitrosend/issues/482"
+        })
+    );
+    assert!(
+        command.required_refs.iter().any(|reference| {
+            reference.uri == "slack://nitrosend/C0APFMY0V8Q/1778834840.485629"
+        })
+    );
 }
 
 fn readiness(scafld_ready: bool) -> TargetRepoRunnerReadinessObservation {

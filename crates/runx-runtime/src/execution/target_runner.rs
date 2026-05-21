@@ -19,6 +19,7 @@ use runx_contracts::{
     TargetRepoRunnerDedupeLookupObservation, TargetRepoRunnerDedupeLookupPlan,
     TargetRepoRunnerDedupeResult, TargetRepoRunnerExecutionPlan,
     TargetRepoRunnerExistingPullRequest, TargetRepoRunnerPlan, TargetRepoRunnerPlanError,
+    TargetRepoRunnerProvider, TargetRepoRunnerProviderPullRequest,
     TargetRepoRunnerPullRequestDisposition, TargetRepoRunnerPullRequestReceiptPlan,
     TargetRepoRunnerReadinessObservation, TargetRepoRunnerSourcePublicationReceiptPlan,
     TargetSurface, Verification, VerificationCheck, VerificationStatus,
@@ -49,7 +50,9 @@ pub struct TargetRepoRunnerFixtureExecution {
 
 #[derive(Clone, Debug, PartialEq, Serialize)]
 pub struct TargetRepoRunnerLiveExecution {
+    pub checkout_command: TargetRepoRunnerCheckoutCommand,
     pub readiness: TargetRepoRunnerReadinessObservation,
+    pub provider_lookup_command: TargetRepoRunnerProviderDedupeLookupCommand,
     pub dedupe_observation: TargetRepoRunnerDedupeLookupObservation,
     pub runner_observation: Option<TargetRepoRunnerGovernedRunnerObservation>,
     pub execution: TargetRepoRunnerFixtureExecution,
@@ -76,6 +79,53 @@ pub struct TargetRepoRunnerGovernedRunnerObservation {
     pub revision_refs: Vec<Reference>,
     pub artifact_refs: Vec<Reference>,
     pub verification_refs: Vec<Reference>,
+}
+
+#[derive(Clone, Debug, Eq, PartialEq, Serialize)]
+pub struct TargetRepoRunnerCheckoutCommand {
+    pub target_repo: String,
+    pub public_repo_ref: Reference,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub base_branch: Option<String>,
+    pub runner_id: String,
+    pub runner_kind: runx_contracts::OperationalPolicyRunnerKind,
+    pub target_scafld_required: bool,
+    pub runner_scafld_required: bool,
+    pub mutate_target_repo: bool,
+    pub local_path_hidden: bool,
+}
+
+#[derive(Clone, Debug, Eq, PartialEq, Serialize)]
+pub struct TargetRepoRunnerProviderDedupeLookupCommand {
+    pub provider: TargetRepoRunnerProvider,
+    pub target_repo: String,
+    pub repository: TargetRepoRunnerGithubRepository,
+    pub dedupe_key: String,
+    pub result_limit: u16,
+    pub query: TargetRepoRunnerGithubPullRequestSearchCommand,
+    pub markers: Vec<String>,
+    pub required_refs: Vec<Reference>,
+}
+
+#[derive(Clone, Debug, Eq, PartialEq, Serialize)]
+pub struct TargetRepoRunnerGithubRepository {
+    pub owner: String,
+    pub name: String,
+    pub full_name: String,
+}
+
+#[derive(Clone, Debug, Eq, PartialEq, Serialize)]
+pub struct TargetRepoRunnerGithubPullRequestSearchCommand {
+    pub repo: String,
+    pub state: TargetRepoRunnerGithubPullRequestSearchState,
+    pub query: String,
+    pub terms: Vec<String>,
+}
+
+#[derive(Clone, Copy, Debug, Eq, PartialEq, Serialize)]
+#[serde(rename_all = "snake_case")]
+pub enum TargetRepoRunnerGithubPullRequestSearchState {
+    Open,
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize)]
@@ -141,6 +191,135 @@ pub struct TargetRepoRunnerSourcePublicationProjection {
     pub metadata: JsonObject,
 }
 
+pub fn target_repo_runner_checkout_command(
+    plan: &TargetRepoRunnerPlan,
+) -> Result<TargetRepoRunnerCheckoutCommand, TargetRepoRunnerRuntimeError> {
+    let repository = github_repository(&plan.target.repo, "checkout")?;
+    if repository.full_name != plan.target.repo {
+        return Err(TargetRepoRunnerRuntimeError::CommandValidation {
+            operation: "checkout",
+            message: "target repo must be a canonical github owner/repo".to_owned(),
+        });
+    }
+    if !plan.mutate_target_repo {
+        return Err(TargetRepoRunnerRuntimeError::CommandValidation {
+            operation: "checkout",
+            message: "target repo mutation must be admitted before checkout".to_owned(),
+        });
+    }
+    if !plan.require_human_merge_gate {
+        return Err(TargetRepoRunnerRuntimeError::CommandValidation {
+            operation: "checkout",
+            message: "target runner requires a human merge gate".to_owned(),
+        });
+    }
+
+    Ok(TargetRepoRunnerCheckoutCommand {
+        target_repo: plan.target.repo.clone(),
+        public_repo_ref: Reference {
+            reference_type: ReferenceType::GithubRepo,
+            uri: format!("https://github.com/{}", plan.target.repo),
+            provider: Some("github".to_owned()),
+            locator: Some(plan.target.repo.clone()),
+            label: Some("target repo".to_owned()),
+            observed_at: None,
+            proof_kind: None,
+        },
+        base_branch: plan.target.base_branch.clone(),
+        runner_id: plan.runner.runner_id.clone(),
+        runner_kind: plan.runner.kind,
+        target_scafld_required: plan.target.scafld_required,
+        runner_scafld_required: plan.runner.scafld_required,
+        mutate_target_repo: plan.mutate_target_repo,
+        local_path_hidden: true,
+    })
+}
+
+pub fn target_repo_runner_provider_dedupe_lookup_command(
+    lookup: &TargetRepoRunnerDedupeLookupPlan,
+) -> Result<TargetRepoRunnerProviderDedupeLookupCommand, TargetRepoRunnerRuntimeError> {
+    let repository = github_repository(&lookup.target_repo, "provider_dedupe_lookup")?;
+    if lookup.query.result_limit == 0 {
+        return Err(TargetRepoRunnerRuntimeError::CommandValidation {
+            operation: "provider_dedupe_lookup",
+            message: "provider lookup result limit must be greater than zero".to_owned(),
+        });
+    }
+    if lookup.query.markers.is_empty() {
+        return Err(TargetRepoRunnerRuntimeError::CommandValidation {
+            operation: "provider_dedupe_lookup",
+            message: "provider lookup requires at least one dedupe marker".to_owned(),
+        });
+    }
+    if lookup.query.required_refs.is_empty() {
+        return Err(TargetRepoRunnerRuntimeError::CommandValidation {
+            operation: "provider_dedupe_lookup",
+            message: "provider lookup requires source references".to_owned(),
+        });
+    }
+    for marker in &lookup.query.markers {
+        validate_provider_lookup_term(marker, "marker")?;
+    }
+    for reference in &lookup.query.required_refs {
+        validate_provider_lookup_term(&reference.uri, "source reference")?;
+    }
+
+    let mut terms = vec![
+        format!("repo:{}", repository.full_name),
+        "is:pr".to_owned(),
+        "is:open".to_owned(),
+    ];
+    terms.extend(
+        lookup
+            .query
+            .markers
+            .iter()
+            .map(|marker| github_search_exact_term(marker)),
+    );
+    terms.extend(
+        lookup
+            .query
+            .required_refs
+            .iter()
+            .map(|reference| github_search_exact_term(&reference.uri)),
+    );
+    let query = terms.join(" ");
+
+    Ok(TargetRepoRunnerProviderDedupeLookupCommand {
+        provider: lookup.provider,
+        target_repo: lookup.target_repo.clone(),
+        repository,
+        dedupe_key: lookup.key.clone(),
+        result_limit: lookup.query.result_limit,
+        query: TargetRepoRunnerGithubPullRequestSearchCommand {
+            repo: lookup.target_repo.clone(),
+            state: TargetRepoRunnerGithubPullRequestSearchState::Open,
+            query,
+            terms,
+        },
+        markers: lookup.query.markers.clone(),
+        required_refs: lookup.query.required_refs.clone(),
+    })
+}
+
+pub fn target_repo_runner_provider_dedupe_observation_from_pull_requests(
+    command: &TargetRepoRunnerProviderDedupeLookupCommand,
+    pull_requests: Vec<TargetRepoRunnerProviderPullRequest>,
+) -> Result<TargetRepoRunnerDedupeLookupObservation, TargetRepoRunnerRuntimeError> {
+    if pull_requests.len() > usize::from(command.result_limit) {
+        return Err(TargetRepoRunnerRuntimeError::CommandValidation {
+            operation: "provider_dedupe_lookup",
+            message: "provider lookup readback exceeded the command result limit".to_owned(),
+        });
+    }
+    Ok(TargetRepoRunnerDedupeLookupObservation {
+        provider: command.provider,
+        target_repo: command.target_repo.clone(),
+        key: command.dedupe_key.clone(),
+        pull_requests,
+    })
+}
+
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct TargetRepoRunnerAdapterError {
     pub operation: &'static str,
@@ -167,12 +346,12 @@ impl std::error::Error for TargetRepoRunnerAdapterError {}
 pub trait TargetRepoRunnerAdapter {
     fn checkout_readiness(
         &mut self,
-        plan: &TargetRepoRunnerPlan,
+        command: &TargetRepoRunnerCheckoutCommand,
     ) -> Result<TargetRepoRunnerReadinessObservation, TargetRepoRunnerAdapterError>;
 
     fn provider_dedupe_lookup(
         &mut self,
-        lookup: &TargetRepoRunnerDedupeLookupPlan,
+        command: &TargetRepoRunnerProviderDedupeLookupCommand,
     ) -> Result<TargetRepoRunnerDedupeLookupObservation, TargetRepoRunnerAdapterError>;
 
     fn invoke_governed_runner(
@@ -200,12 +379,20 @@ pub trait TargetRepoRunnerAdapter {
 pub enum TargetRepoRunnerRuntimeError {
     Plan(TargetRepoRunnerPlanError),
     Adapter(TargetRepoRunnerAdapterError),
+    CommandValidation {
+        operation: &'static str,
+        message: String,
+    },
     Receipt(String),
     ReceiptProjection(String),
     SourcePublicationMismatch(String),
     ReadinessMismatch(String),
-    CheckoutNotScafldReady { target_repo: String },
-    CreatedPullRequestRequired { target_repo: String },
+    CheckoutNotScafldReady {
+        target_repo: String,
+    },
+    CreatedPullRequestRequired {
+        target_repo: String,
+    },
 }
 
 impl fmt::Display for TargetRepoRunnerRuntimeError {
@@ -213,6 +400,12 @@ impl fmt::Display for TargetRepoRunnerRuntimeError {
         match self {
             Self::Plan(error) => write!(formatter, "{error}"),
             Self::Adapter(error) => write!(formatter, "{error}"),
+            Self::CommandValidation { operation, message } => {
+                write!(
+                    formatter,
+                    "target repo runner {operation} command is invalid: {message}"
+                )
+            }
             Self::Receipt(message) => {
                 write!(formatter, "target repo runner receipt failed: {message}")
             }
@@ -246,7 +439,8 @@ impl std::error::Error for TargetRepoRunnerRuntimeError {
         match self {
             Self::Plan(error) => Some(error),
             Self::Adapter(error) => Some(error),
-            Self::Receipt(_)
+            Self::CommandValidation { .. }
+            | Self::Receipt(_)
             | Self::ReceiptProjection(_)
             | Self::SourcePublicationMismatch(_)
             | Self::ReadinessMismatch(_)
@@ -276,9 +470,13 @@ pub fn execute_target_repo_runner_with_adapter<A: TargetRepoRunnerAdapter>(
     adapter: &mut A,
     created_at: &str,
 ) -> Result<TargetRepoRunnerLiveExecution, TargetRepoRunnerRuntimeError> {
-    let readiness = adapter.checkout_readiness(plan)?;
+    let checkout_command = target_repo_runner_checkout_command(plan)?;
+    let readiness = adapter.checkout_readiness(&checkout_command)?;
     let execution_plan = plan_target_repo_runner_execution(plan, &readiness)?;
-    let dedupe_observation = adapter.provider_dedupe_lookup(&execution_plan.provider_lookup)?;
+    let provider_lookup_command =
+        target_repo_runner_provider_dedupe_lookup_command(&execution_plan.provider_lookup)?;
+    let dedupe_observation = adapter.provider_dedupe_lookup(&provider_lookup_command)?;
+    validate_provider_dedupe_lookup_observation(&provider_lookup_command, &dedupe_observation)?;
     let dedupe_execution = execute_target_repo_runner_dedupe_lookup(
         &execution_plan.provider_lookup,
         &dedupe_observation,
@@ -335,7 +533,9 @@ pub fn execute_target_repo_runner_with_adapter<A: TargetRepoRunnerAdapter>(
         project_target_repo_runner_source_publication_receipt(&source_publication_receipt)?;
 
     Ok(TargetRepoRunnerLiveExecution {
+        checkout_command,
         readiness,
+        provider_lookup_command,
         dedupe_observation,
         runner_observation,
         execution,
@@ -443,6 +643,102 @@ fn validate_readiness_boundary(
         ));
     }
     Ok(())
+}
+
+fn validate_provider_dedupe_lookup_observation(
+    command: &TargetRepoRunnerProviderDedupeLookupCommand,
+    observation: &TargetRepoRunnerDedupeLookupObservation,
+) -> Result<(), TargetRepoRunnerRuntimeError> {
+    if observation.provider != command.provider {
+        return Err(TargetRepoRunnerRuntimeError::CommandValidation {
+            operation: "provider_dedupe_lookup",
+            message: "provider lookup readback provider does not match command".to_owned(),
+        });
+    }
+    if observation.target_repo != command.target_repo {
+        return Err(TargetRepoRunnerRuntimeError::CommandValidation {
+            operation: "provider_dedupe_lookup",
+            message: "provider lookup readback target repo does not match command".to_owned(),
+        });
+    }
+    if observation.key != command.dedupe_key {
+        return Err(TargetRepoRunnerRuntimeError::CommandValidation {
+            operation: "provider_dedupe_lookup",
+            message: "provider lookup readback dedupe key does not match command".to_owned(),
+        });
+    }
+    if observation.pull_requests.len() > usize::from(command.result_limit) {
+        return Err(TargetRepoRunnerRuntimeError::CommandValidation {
+            operation: "provider_dedupe_lookup",
+            message: "provider lookup readback exceeded the command result limit".to_owned(),
+        });
+    }
+    Ok(())
+}
+
+fn github_repository(
+    repo: &str,
+    operation: &'static str,
+) -> Result<TargetRepoRunnerGithubRepository, TargetRepoRunnerRuntimeError> {
+    let mut parts = repo.split('/');
+    let owner = parts.next().unwrap_or_default();
+    let name = parts.next().unwrap_or_default();
+    if owner.is_empty() || name.is_empty() || parts.next().is_some() {
+        return Err(invalid_github_repo(operation));
+    }
+    if !valid_github_owner(owner) || !valid_github_repo_name(name) {
+        return Err(invalid_github_repo(operation));
+    }
+    Ok(TargetRepoRunnerGithubRepository {
+        owner: owner.to_owned(),
+        name: name.to_owned(),
+        full_name: format!("{owner}/{name}"),
+    })
+}
+
+fn invalid_github_repo(operation: &'static str) -> TargetRepoRunnerRuntimeError {
+    TargetRepoRunnerRuntimeError::CommandValidation {
+        operation,
+        message: "target repo must be a github owner/repo with safe path segments".to_owned(),
+    }
+}
+
+fn valid_github_owner(owner: &str) -> bool {
+    !owner.is_empty()
+        && owner.len() <= 39
+        && !owner.starts_with('-')
+        && !owner.ends_with('-')
+        && owner
+            .chars()
+            .all(|character| character.is_ascii_alphanumeric() || character == '-')
+}
+
+fn valid_github_repo_name(name: &str) -> bool {
+    !name.is_empty()
+        && name.len() <= 100
+        && name != "."
+        && name != ".."
+        && name.chars().all(|character| {
+            character.is_ascii_alphanumeric() || matches!(character, '.' | '_' | '-')
+        })
+}
+
+fn validate_provider_lookup_term(
+    value: &str,
+    field: &'static str,
+) -> Result<(), TargetRepoRunnerRuntimeError> {
+    if value.trim().is_empty() || value.chars().any(char::is_control) {
+        return Err(TargetRepoRunnerRuntimeError::CommandValidation {
+            operation: "provider_dedupe_lookup",
+            message: format!("provider lookup {field} must be non-empty text"),
+        });
+    }
+    Ok(())
+}
+
+fn github_search_exact_term(value: &str) -> String {
+    let escaped = value.replace('\\', "\\\\").replace('"', "\\\"");
+    format!("\"{escaped}\"")
 }
 
 // rust-style-allow: long-function because revision receipt assembly must keep
