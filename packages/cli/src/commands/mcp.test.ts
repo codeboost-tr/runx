@@ -48,7 +48,20 @@ describe("runx mcp serve", () => {
         jsonrpc: "2.0",
         id: 1,
         method: "initialize",
-        params: {},
+        params: {
+          protocolVersion: "2025-06-18",
+          capabilities: {},
+          clientInfo: {
+            name: "runx-mcp-test",
+            version: "0.0.0",
+          },
+        },
+      });
+      // Per the MCP handshake the client must acknowledge initialization before
+      // issuing further requests; rmcp rejects tool calls until it arrives.
+      writeRpcMessage(stdin, {
+        jsonrpc: "2.0",
+        method: "notifications/initialized",
       });
       writeRpcMessage(stdin, {
         jsonrpc: "2.0",

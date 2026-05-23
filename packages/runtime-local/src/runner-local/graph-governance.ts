@@ -24,14 +24,14 @@ import {
   validateReceiptContract,
   validateScopeAdmissionContract,
   type ActContract,
+  type AuthorityContract,
+  type ClosureDispositionContract,
   type ClosureRecordContract,
-  type HarnessAuthorityContract,
-  type HarnessContract,
+  type CriterionBindingContract,
+  type HashCommitmentContract,
   type ReceiptContract,
   type ReceiptIssuerContract,
   type ReceiptSignatureContract,
-  type HarnessSealContract,
-  type HarnessSealDispositionContract,
   type ReferenceContract,
   type ScopeAdmissionContract,
 } from "@runxhq/contracts";
@@ -47,6 +47,72 @@ import { graphStepReference, graphStepRunner } from "./graph-reporting.js";
 import type { GraphStepRun, MaterializedContextEdge } from "./index.js";
 import type { NormalizedExecutionSemantics } from "./execution-semantics.js";
 import type { ExecutionGraph, GraphStep, ValidatedSkill } from "../parser-types.js";
+
+// Internal staging shapes for the local runner's receipt builder. The runner
+// assembles this nested structure and then projects it into the flat
+// `runx.receipt.v1` contract in `signReceipt`; these are NOT published
+// contracts and must never be persisted or signed in this shape.
+interface LocalRunnerSeal {
+  readonly disposition: ClosureDispositionContract;
+  readonly reason_code: string;
+  readonly summary: string;
+  readonly closed_at: string;
+  readonly last_observed_at: string;
+  readonly canonicalization: string;
+  readonly digest: string;
+  readonly criteria: readonly CriterionBindingContract[];
+  readonly verification_summary?: {
+    readonly signature_valid: boolean;
+    readonly content_address_valid: boolean;
+    readonly hash_commitments_valid: boolean;
+    readonly authority_attenuation_valid: boolean;
+    readonly criteria_bound: boolean;
+    readonly redaction_valid: boolean;
+    readonly external_attestations_present: boolean;
+  };
+  readonly redaction_refs: readonly ReferenceContract[];
+  readonly artifact_refs: readonly ReferenceContract[];
+  readonly hash_commitments: readonly HashCommitmentContract[];
+}
+
+interface LocalRunnerStaging {
+  readonly harness_id: string;
+  readonly parent_harness_ref: ReferenceContract | null;
+  readonly state: string;
+  readonly host_ref: ReferenceContract;
+  readonly harness_ref: ReferenceContract;
+  readonly authority: AuthorityContract;
+  readonly enforcement: {
+    readonly harness_ref?: ReferenceContract;
+    readonly version: string;
+    readonly enforcement_profile_hash: string;
+    readonly enforcer_ref?: ReferenceContract;
+    readonly sandbox: {
+      readonly profile: string;
+      readonly cwd_policy: string;
+      readonly network: string;
+      readonly filesystem: string;
+    };
+    readonly redaction_refs: readonly ReferenceContract[];
+    readonly stdout_hash?: HashCommitmentContract;
+    readonly stderr_hash?: HashCommitmentContract;
+  };
+  readonly idempotency: {
+    readonly intent_key: string;
+    readonly trigger_fingerprint: string;
+    readonly content_hash: string;
+  };
+  readonly revision: {
+    readonly sequence: number;
+    readonly previous_ref: ReferenceContract | null;
+  };
+  readonly signal_refs: readonly ReferenceContract[];
+  readonly decisions: readonly unknown[];
+  readonly acts: readonly ActContract[];
+  readonly child_receipt_refs: readonly ReferenceContract[];
+  readonly artifact_refs: readonly ReferenceContract[];
+  readonly seal: LocalRunnerSeal;
+}
 
 export interface RuntimeReceiptExecution {
   readonly status: "sealed" | "failure";
@@ -160,7 +226,6 @@ export async function writeRunnerSkillReceipt(
     criteria: act.criterion_bindings.map((binding) => ({
       criterion_id: binding.criterion_id,
       status: binding.status,
-      act_id: act.act_id,
       verification_refs: binding.verification_refs,
       evidence_refs: binding.evidence_refs,
       summary: binding.summary,
@@ -333,7 +398,7 @@ export function runnerReceiptDurationMs(receipt: RunnerReceipt): number | undefi
   return runtimeMetadata(receipt).duration_ms;
 }
 
-export function runnerReceiptDisposition(receipt: RunnerReceipt): HarnessSealDispositionContract {
+export function runnerReceiptDisposition(receipt: RunnerReceipt): ClosureDispositionContract {
   return receipt.seal.disposition;
 }
 
@@ -806,8 +871,8 @@ function signReceipt(options: {
   readonly createdAt: string;
   readonly issuer: RunnerReceiptIssuer;
   readonly signatureKey: KeyObject;
-  readonly harness: HarnessContract;
-  readonly seal: HarnessSealContract;
+  readonly harness: LocalRunnerStaging;
+  readonly seal: LocalRunnerSeal;
   readonly syncPoints?: readonly GraphReceiptSyncPoint[];
   readonly metadata?: Readonly<Record<string, unknown>>;
 }): RunnerReceipt {
@@ -855,7 +920,9 @@ function signReceipt(options: {
       criterion_bindings: act.criterion_bindings ?? [],
       source_refs: act.source_refs ?? [],
       target_refs: act.target_refs ?? [],
-      artifact_refs: act.artifact_refs ?? [],
+      // Surface targets (e.g. the github issue an act observes) fold into
+      // artifact_refs in the flat receipt, mirroring the Rust seal projection.
+      artifact_refs: [...(act.artifact_refs ?? []), ...(act.surface_refs ?? [])],
       closure: act.closure,
       revision: act.revision,
       verification: act.verification,
@@ -900,9 +967,9 @@ function harnessRecord(options: {
   readonly artifactRefs: readonly ReferenceContract[];
   readonly signalRefs: readonly ReferenceContract[];
   readonly surfaceRefs?: readonly ReferenceContract[];
-  readonly seal: HarnessSealContract;
+  readonly seal: LocalRunnerSeal;
   readonly metadata?: Readonly<Record<string, unknown>>;
-}): HarnessContract {
+}): LocalRunnerStaging {
   const harnessRef = harnessReference(options.id, options.name);
   return {
     harness_id: `hrn_${harnessIdentitySegment(options.id)}`,
@@ -910,7 +977,7 @@ function harnessRecord(options: {
     state: "sealed",
     host_ref: { type: "host", uri: "runx:host:local-runtime", label: "local runtime" },
     harness_ref: harnessRef,
-    authority: localHarnessAuthority(),
+    authority: localRunnerAuthority(),
     enforcement: {
       harness_ref: harnessRef,
       version: "runtime-local.ts",
@@ -1018,7 +1085,7 @@ function actRecord(options: {
 }
 
 function closureRecord(options: {
-  readonly disposition: HarnessSealDispositionContract;
+  readonly disposition: ClosureDispositionContract;
   readonly reasonCode: string;
   readonly summary: string;
   readonly closedAt: string;
@@ -1032,16 +1099,16 @@ function closureRecord(options: {
 }
 
 function sealRecord(options: {
-  readonly disposition: HarnessSealDispositionContract;
+  readonly disposition: ClosureDispositionContract;
   readonly reasonCode: string;
   readonly summary: string;
   readonly closedAt: string;
-  readonly criteria: HarnessSealContract["criteria"];
+  readonly criteria: LocalRunnerSeal["criteria"];
   readonly artifactRefs: readonly ReferenceContract[];
   readonly stdout: string;
   readonly stderr: string;
   readonly inputs: Readonly<Record<string, unknown>>;
-}): HarnessSealContract {
+}): LocalRunnerSeal {
   return {
     disposition: options.disposition,
     reason_code: options.reasonCode,
@@ -1088,7 +1155,7 @@ function sealRecord(options: {
   };
 }
 
-function localHarnessAuthority(): HarnessAuthorityContract {
+function localRunnerAuthority(): AuthorityContract {
   return {
     actor_ref: { type: "principal", uri: "runx:principal:local-runtime", label: "local runtime" },
     authority_proof_refs: [],
@@ -1170,7 +1237,7 @@ function runtimeMetadata(receipt: RunnerReceipt): RuntimeReceiptMetadata {
 function sealDisposition(
   status: "sealed" | "failure",
   disposition: NormalizedExecutionSemantics["disposition"] | undefined,
-): HarnessSealDispositionContract {
+): ClosureDispositionContract {
   if (disposition === "policy_denied") return "declined";
   if (disposition === "needs_agent" || disposition === "approval_required") return "deferred";
   if (disposition === "observing") return "deferred";

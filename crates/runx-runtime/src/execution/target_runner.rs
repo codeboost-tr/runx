@@ -14,7 +14,7 @@ use runx_contracts::{
     ActForm, AuthorityAttenuation, AuthoritySubsetProof, AuthoritySubsetResult, ChangePlan,
     ChangeRequest, Closure, ClosureDisposition, CriterionBinding, CriterionStatus, Intent,
     JsonNumber, JsonObject, JsonValue, Lineage, RECEIPT_CANONICALIZATION, Receipt, ReceiptAct,
-    ReceiptAuthority, ReceiptCriterion, ReceiptEnforcement, ReceiptIdempotency, ReceiptIssuer,
+    ReceiptAuthority, ReceiptEnforcement, ReceiptIdempotency, ReceiptIssuer,
     ReceiptIssuerType, ReceiptSchema, ReceiptSubjectKind, Reference, ReferenceType, RevisionDetails,
     Seal, SignatureAlgorithm, Subject, SuccessCriterion, TargetSurface,
     TargetRepoRunnerDedupeLookupExecution,
@@ -1807,6 +1807,9 @@ struct RevisionActInput<'a> {
 // revision body inline (proof + training signal). The bulky agent-context I/O is
 // referenced via `context_ref`. The role refs the projection needs
 // (repo/PR/thread/issue) ride on the act's target/artifact refs.
+// rust-style-allow: long-function - one cohesive ReceiptAct assembly (intent,
+// criteria, bindings, refs, closure); the bulky change-set is already extracted
+// and splitting the rest would scatter the receipt shape across helpers.
 fn revision_act(input: RevisionActInput<'_>) -> ReceiptAct {
     let RevisionActInput {
         act_id,
@@ -1835,29 +1838,7 @@ fn revision_act(input: RevisionActInput<'_>) -> ReceiptAct {
         statement: "Target pull request is ready for human review".to_owned(),
         required: true,
     }];
-    let revision = RevisionDetails {
-        change_request: ChangeRequest {
-            request_id: format!("{act_id}_request"),
-            summary: summary.to_owned(),
-            target_surfaces: vec![TargetSurface {
-                surface_ref: pull_request_ref.clone(),
-                mutating: true,
-                rationale: Some("Open the target pull request".to_owned()),
-            }],
-            success_criteria: success_criteria.clone(),
-        },
-        change_plan: ChangePlan {
-            plan_id: format!("{act_id}_plan"),
-            summary: summary.to_owned(),
-            steps: vec!["Prepare and publish the target pull request".to_owned()],
-            risks: Vec::new(),
-        },
-        target_surfaces: Vec::new(),
-        invariants: Vec::new(),
-        verification: None,
-        handoff_refs: Vec::new(),
-        revision_refs: Vec::new(),
-    };
+    let revision = revision_change_set(act_id, summary, &pull_request_ref, success_criteria.clone());
     ReceiptAct {
         id: act_id.to_owned(),
         form: ActForm::Revision,
@@ -1892,6 +1873,39 @@ fn revision_act(input: RevisionActInput<'_>) -> ReceiptAct {
         },
         revision: Some(revision),
         verification: None,
+    }
+}
+
+/// Builds the change-set (request + plan) carried by a revision act. Kept as a
+/// helper so `revision_act` stays a single readable assembly of the act shape.
+fn revision_change_set(
+    act_id: &str,
+    summary: &str,
+    pull_request_ref: &Reference,
+    success_criteria: Vec<SuccessCriterion>,
+) -> RevisionDetails {
+    RevisionDetails {
+        change_request: ChangeRequest {
+            request_id: format!("{act_id}_request"),
+            summary: summary.to_owned(),
+            target_surfaces: vec![TargetSurface {
+                surface_ref: pull_request_ref.clone(),
+                mutating: true,
+                rationale: Some("Open the target pull request".to_owned()),
+            }],
+            success_criteria,
+        },
+        change_plan: ChangePlan {
+            plan_id: format!("{act_id}_plan"),
+            summary: summary.to_owned(),
+            steps: vec!["Prepare and publish the target pull request".to_owned()],
+            risks: Vec::new(),
+        },
+        target_surfaces: Vec::new(),
+        invariants: Vec::new(),
+        verification: None,
+        handoff_refs: Vec::new(),
+        revision_refs: Vec::new(),
     }
 }
 
@@ -2074,7 +2088,7 @@ fn receipt_seal(inputs: ReceiptSealInputs<'_>) -> Seal {
         summary: inputs.summary.to_owned(),
         closed_at: inputs.created_at.to_owned(),
         last_observed_at: inputs.created_at.to_owned(),
-        criteria: vec![ReceiptCriterion {
+        criteria: vec![CriterionBinding {
             criterion_id: inputs.criterion_id.to_owned(),
             status: CriterionStatus::Verified,
             verification_refs: inputs.verification_refs.to_vec(),

@@ -644,7 +644,7 @@ async function summarizeLocalReceipt(
   const actors = extractReceiptActors(receipt);
   const artifactTypes = extractReceiptArtifactTypes(receipt, ledgerEntries);
   const metadata = isRecord(receipt.metadata) ? receipt.metadata : undefined;
-  const harness = extractReceiptHarness(receipt, ledgerEntries);
+  const harness = extractReceiptHarness(receipt);
   const approval = extractReceiptApproval(receipt);
   const lineage = extractReceiptLineage(receipt);
   const runnerProvider = metadata ? readNestedString(metadata, ["runner", "provider"]) : undefined;
@@ -673,7 +673,6 @@ async function summarizeLocalReceipt(
 
 function extractReceiptHarness(
   receipt: RuntimeReceipt,
-  ledgerEntries: readonly ArtifactEnvelope[],
 ): { readonly id?: string; readonly state?: string; readonly sealSummary?: string } | undefined {
   if (isReceipt(receipt)) {
     return {
@@ -682,38 +681,7 @@ function extractReceiptHarness(
       sealSummary: receipt.seal.summary,
     };
   }
-  for (const entry of ledgerEntries) {
-    if (entry.type === null || SYSTEM_ARTIFACT_TYPES.has(entry.type)) {
-      continue;
-    }
-    const harness = findHarnessRecord(entry.data);
-    if (harness) {
-      return harness;
-    }
-  }
   return undefined;
-}
-
-function findHarnessRecord(value: unknown): { readonly id?: string; readonly state?: string; readonly sealSummary?: string } | undefined {
-  if (!isRecord(value)) {
-    return undefined;
-  }
-  if (value.schema === "runx.harness.v1") {
-    const seal = isRecord(value.seal) ? value.seal : undefined;
-    return {
-      id: readString(value.harness_id),
-      state: readString(value.state),
-      sealSummary: readString(seal?.summary),
-    };
-  }
-  if (isRecord(value.harness)) {
-    return findHarnessRecord(value.harness);
-  }
-  return undefined;
-}
-
-function readString(value: unknown): string | undefined {
-  return typeof value === "string" && value.trim().length > 0 ? value.trim() : undefined;
 }
 
 function resolveSummaryName(field: string | null | undefined, fallbackId: string): string {
@@ -1019,8 +987,10 @@ function receiptTimestamp(receipt: RuntimeReceipt): string {
   return receipt.seal.closed_at ?? receipt.created_at;
 }
 
-function pausedRunKind(pending: PendingRunState): string {
-  return pending.stepIds.length > 0 ? RUNX_LOGICAL_SCHEMAS.harness : RUNX_LOGICAL_SCHEMAS.receipt;
+function pausedRunKind(_pending: PendingRunState): string {
+  // Flat cutover: a paused run is projected under the single receipt schema,
+  // mirroring the Rust history projection's run_kind.
+  return RUNX_LOGICAL_SCHEMAS.receipt;
 }
 
 function isReceipt(receipt: RuntimeReceipt): receipt is ReceiptContract {

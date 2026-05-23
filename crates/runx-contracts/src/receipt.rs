@@ -17,7 +17,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::{
     AuthorityAttenuation, AuthorityTerm, ClosureDisposition, Closure, CriterionBinding,
-    CriterionStatus, Decision, HashAlgorithm, Intent, JsonObject, Reference, RevisionDetails,
+    Decision, HashAlgorithm, Intent, JsonObject, Reference, RevisionDetails,
     VerificationDetails, ActForm,
 };
 
@@ -165,20 +165,6 @@ pub struct RunnerProvenance {
     pub prompt_version: Option<String>,
 }
 
-/// Result binding only: criterion_id -> status. The skill declares the criteria.
-#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[serde(deny_unknown_fields)]
-pub struct ReceiptCriterion {
-    pub criterion_id: String,
-    pub status: CriterionStatus,
-    #[serde(default)]
-    pub evidence_refs: Vec<Reference>,
-    #[serde(default)]
-    pub verification_refs: Vec<Reference>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub summary: Option<String>,
-}
-
 /// What was done, rich and inline. The act's semantic core (intent, success
 /// criteria, criterion bindings, outcome) stays in the signed body; only the
 /// bulky execution I/O (the agent-context envelope: instructions/inputs/output
@@ -223,7 +209,7 @@ pub struct Seal {
     /// runs awaiting a follow-up verdict); equals `closed_at` for terminal seals.
     pub last_observed_at: String,
     #[serde(default)]
-    pub criteria: Vec<ReceiptCriterion>,
+    pub criteria: Vec<CriterionBinding>,
 }
 
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]

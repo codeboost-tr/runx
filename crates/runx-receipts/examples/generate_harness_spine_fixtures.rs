@@ -9,7 +9,7 @@ use runx_contracts::{
     ActForm, AuthorityAttenuation, ChangePlan, ChangeRequest, Closure, ClosureDisposition,
     CriterionBinding, CriterionStatus, Decision, DecisionChoice, DecisionInputs,
     DecisionJustification, HashAlgorithm, Intent, Lineage, RECEIPT_CANONICALIZATION, Receipt,
-    ReceiptAct, ReceiptAuthority, ReceiptCommitment, ReceiptCommitmentScope, ReceiptCriterion,
+    ReceiptAct, ReceiptAuthority, ReceiptCommitment, ReceiptCommitmentScope,
     ReceiptEnforcement, ReceiptIdempotency, ReceiptInputContext, ReceiptIssuer, ReceiptIssuerType,
     ReceiptSchema, ReceiptSignature, ReceiptSubjectKind, Reference, ReferenceType,
     RevisionDetails, Seal, SignatureAlgorithm, Subject, SuccessCriterion,
@@ -269,7 +269,7 @@ fn success_receipt() -> Receipt {
     )];
     receipt.decisions = vec![open_decision("act_echo")];
     receipt.seal.summary = "cli-tool exited successfully".to_owned();
-    receipt.seal.criteria = vec![ReceiptCriterion {
+    receipt.seal.criteria = vec![CriterionBinding {
         criterion_id: "process_exit".to_owned(),
         status: CriterionStatus::Verified,
         evidence_refs: Vec::new(),
@@ -293,7 +293,7 @@ fn abnormal_receipt() -> Receipt {
     receipt.seal.disposition = ClosureDisposition::Failed;
     receipt.seal.reason_code = "process_failed".to_owned();
     receipt.seal.summary = "cli-tool failed".to_owned();
-    receipt.seal.criteria = vec![ReceiptCriterion {
+    receipt.seal.criteria = vec![CriterionBinding {
         criterion_id: "process_exit".to_owned(),
         status: CriterionStatus::Failed,
         evidence_refs: Vec::new(),
@@ -502,8 +502,8 @@ fn criterion(
     verification_refs: Vec<Reference>,
     evidence_refs: Vec<Reference>,
     summary: Option<&str>,
-) -> ReceiptCriterion {
-    ReceiptCriterion {
+) -> CriterionBinding {
+    CriterionBinding {
         criterion_id: id.to_owned(),
         status: CriterionStatus::Verified,
         evidence_refs,

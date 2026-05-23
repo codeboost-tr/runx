@@ -44,9 +44,9 @@ describe("manifest-agnostic runtime semantics", () => {
         return;
       }
 
-      expect(result.receipt.schema).toBe("runx.harness_receipt.v1");
+      expect(result.receipt.schema).toBe("runx.receipt.v1");
       expect(result.receipt.seal.disposition).toBe("deferred");
-      expect(result.receipt.harness.acts[0]?.surface_refs).toMatchObject([
+      expect(result.receipt.acts[0]?.artifact_refs).toMatchObject([
         { type: "github_issue", uri: "github://owner/repo/issues/99" },
       ]);
     } finally {
@@ -79,9 +79,9 @@ describe("manifest-agnostic runtime semantics", () => {
         return;
       }
 
-      expect(result.receipt.schema).toBe("runx.harness_receipt.v1");
+      expect(result.receipt.schema).toBe("runx.receipt.v1");
       expect(result.receipt.seal.disposition).toBe("deferred");
-      expect(result.receipt.harness.acts[0]?.surface_refs).toMatchObject([
+      expect(result.receipt.acts[0]?.artifact_refs).toMatchObject([
         { type: "github_issue", uri: "github://owner/repo/issues/77" },
       ]);
     } finally {
@@ -142,7 +142,7 @@ describe("manifest-agnostic runtime semantics", () => {
       const summarize = (receipt: typeof manifestResult.receipt) => ({
         schema: receipt.schema,
         seal_disposition: receipt.seal.disposition,
-        surface_refs: receipt.harness.acts[0]?.surface_refs,
+        surface_refs: receipt.acts[0]?.artifact_refs,
       });
 
       expect(summarize(manifestResult.receipt)).toEqual(summarize(directResult.receipt));

@@ -51,7 +51,7 @@ describe("local fanout graph runner", () => {
         ["synthesize", "success", undefined],
       ]);
       expect(result.steps[3].stdout).toBe("approved");
-      expect(result.receipt.schema).toBe("runx.harness_receipt.v1");
+      expect(result.receipt.schema).toBe("runx.receipt.v1");
       expect(runtimeSyncPoints(result.receipt)).toEqual([
         expect.objectContaining({
           group_id: "advisors",
@@ -156,8 +156,8 @@ steps:
       ]);
       expect(result.steps.slice(0, 3).map((step) => step.parentReceipt)).toEqual([undefined, undefined, undefined]);
       expect(result.steps[3].stdout).toBe("go");
-      expect(result.receipt.schema).toBe("runx.harness_receipt.v1");
-      expect(result.receipt.harness.child_harness_receipt_refs).toHaveLength(4);
+      expect(result.receipt.schema).toBe("runx.receipt.v1");
+      expect(result.receipt.lineage?.children).toHaveLength(4);
       expect(runtimeSyncPoints(result.receipt)).toEqual([
         expect.objectContaining({
           group_id: "advisors",
@@ -229,7 +229,7 @@ steps:
       expect(resumed.steps.map((step) => step.stepId)).toEqual(["market", "risk", "synthesize"]);
       expect(resumed.steps.slice(0, 2).map((step) => step.fanoutGroup)).toEqual(["advisors", "advisors"]);
       expect(resumed.output).toBe("go");
-      expect(resumed.receipt.schema).toBe("runx.harness_receipt.v1");
+      expect(resumed.receipt.schema).toBe("runx.receipt.v1");
       expect(runtimeSyncPoints(resumed.receipt)).toEqual([
         expect.objectContaining({
           group_id: "advisors",
@@ -295,7 +295,7 @@ steps:
       if (result.status !== "escalated") {
         return;
       }
-      expect(result.receipt.schema).toBe("runx.harness_receipt.v1");
+      expect(result.receipt.schema).toBe("runx.receipt.v1");
       expect(result.receipt.seal.disposition).toBe("blocked");
       expect(result.state.status).toBe("escalated");
       expect(result.errorMessage).toBe("fanout escalation: fanout branches disagreed on structured field recommendation");
@@ -380,7 +380,7 @@ steps:
       expect(result.reasons).toEqual([
         "transition policy blocked step 'market': expected seed.allowed == true",
       ]);
-      expect(result.receipt?.schema).toBe("runx.harness_receipt.v1");
+      expect(result.receipt?.schema).toBe("runx.receipt.v1");
       const graphSteps = runtimeGraphSteps(result.receipt);
       expect(graphSteps.map((step) => step.step_id)).toEqual(["seed", "market"]);
       expect(graphSteps[1]).toMatchObject({
@@ -453,7 +453,7 @@ steps:
       }
       expect(result.reasons).toEqual(["step 'deploy' declares mutating retry without an idempotency key"]);
       expect(adapter.callCount()).toBe(0);
-      expect(result.receipt?.schema).toBe("runx.harness_receipt.v1");
+      expect(result.receipt?.schema).toBe("runx.receipt.v1");
       const graphSteps = runtimeGraphSteps(result.receipt);
       expect(graphSteps).toMatchObject([
         {

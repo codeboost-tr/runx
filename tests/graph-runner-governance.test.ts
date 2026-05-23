@@ -68,8 +68,8 @@ steps:
         runner: "package-echo-cli",
         stdout: "selected runner",
       });
-      expect(result.receipt.schema).toBe("runx.harness_receipt.v1");
-      expect(result.receipt.harness.child_harness_receipt_refs).toHaveLength(1);
+      expect(result.receipt.schema).toBe("runx.receipt.v1");
+      expect(result.receipt.lineage?.children).toHaveLength(1);
       expect(result.steps[0]).toMatchObject({
         runner: "package-echo-cli",
         governance: {
@@ -127,7 +127,7 @@ steps:
         runner: "fixture-a2a",
         stdout: "hi from graph",
       });
-      expect(result.receipt.harness.child_harness_receipt_refs).toHaveLength(1);
+      expect(result.receipt.lineage?.children).toHaveLength(1);
       expect(result.steps[0]?.runner).toBe("fixture-a2a");
     } finally {
       await rm(tempDir, { recursive: true, force: true });
@@ -176,7 +176,7 @@ steps:
       }
       expect(result.reasons).toEqual(["step 'deploy' requested scope(s) outside graph grant: deployments:write"]);
       expect(adapter.callCount()).toBe(0);
-      expect(result.receipt?.schema).toBe("runx.harness_receipt.v1");
+      expect(result.receipt?.schema).toBe("runx.receipt.v1");
       expect(result.receipt?.seal.disposition).toBe("declined");
       expect(runtimeMetadata(result.receipt)).toMatchObject({
         disposition: "policy_denied",
@@ -246,7 +246,7 @@ steps:
         "graph step scope admission failed closed: Rust kernel eval requires RUNX_KERNEL_EVAL_BIN or an explicit command.",
       ]);
       expect(adapter.callCount()).toBe(0);
-      expect(result.receipt?.schema).toBe("runx.harness_receipt.v1");
+      expect(result.receipt?.schema).toBe("runx.receipt.v1");
       expect(result.receipt?.seal.disposition).toBe("declined");
     } finally {
       await rm(tempDir, { recursive: true, force: true });

@@ -65,8 +65,8 @@ steps:
         return;
       }
 
-      expect(result.receipt.schema).toBe("runx.harness_receipt.v1");
-      expect(result.receipt.harness.child_harness_receipt_refs).toHaveLength(1);
+      expect(result.receipt.schema).toBe("runx.receipt.v1");
+      expect(result.receipt.lineage?.children).toHaveLength(1);
       expect(result.steps[0]).toMatchObject({
         runner: "governed-echo-cli",
         governance: {
@@ -150,7 +150,7 @@ steps:
         return;
       }
 
-      expect(result.receipt?.schema).toBe("runx.harness_receipt.v1");
+      expect(result.receipt?.schema).toBe("runx.receipt.v1");
       expect(result.receipt?.seal.disposition).toBe("declined");
       expect(runtimeGraphSteps(result.receipt)).toMatchObject([
           {

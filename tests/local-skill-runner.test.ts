@@ -44,7 +44,7 @@ describe("local skill runner", () => {
         return;
       }
       expect(result.execution.stdout).toBe("super-secret-value");
-      expect(result.receipt.schema).toBe("runx.harness_receipt.v1");
+      expect(result.receipt.schema).toBe("runx.receipt.v1");
       expect(result.receipt.seal.disposition).toBe("closed");
 
       const files = await readdir(receiptDir);
@@ -95,7 +95,7 @@ describe("local skill runner", () => {
         status: "done",
         summary: "caller executed the portable skill",
       });
-      expect(result.receipt.schema).toBe("runx.harness_receipt.v1");
+      expect(result.receipt.schema).toBe("runx.receipt.v1");
       expect(result.receipt.seal.disposition).toBe("closed");
       expect(result.receipt.metadata).toMatchObject({
         agent_runner: {
@@ -132,7 +132,7 @@ describe("local skill runner", () => {
       if (result.status !== "sealed") {
         return;
       }
-      expect(result.receipt.schema).toBe("runx.harness_receipt.v1");
+      expect(result.receipt.schema).toBe("runx.receipt.v1");
       expect(result.receipt.seal.disposition).toBe("closed");
       expect(result.receipt.metadata).toMatchObject({
         runner: {
@@ -199,9 +199,9 @@ describe("local skill runner", () => {
         return;
       }
 
-      expect(result.receipt.schema).toBe("runx.harness_receipt.v1");
+      expect(result.receipt.schema).toBe("runx.receipt.v1");
       expect(result.receipt.seal.disposition).toBe("deferred");
-      expect(result.receipt.harness.acts[0]?.surface_refs).toMatchObject([
+      expect(result.receipt.acts[0]?.artifact_refs).toMatchObject([
         { type: "github_issue", uri: "github://owner/repo/issues/1" },
       ]);
     } finally {

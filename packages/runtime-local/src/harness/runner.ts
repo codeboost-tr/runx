@@ -57,21 +57,24 @@ interface HarnessResultExpectation extends Omit<HarnessExpectation, "receipt"> {
 interface ReceiptShape {
   readonly schema: typeof receiptSchemaName;
   readonly id: string;
+  readonly digest?: string;
   readonly signature?: {
     readonly value?: string;
   };
-  readonly harness: {
-    readonly harness_id: string;
-    readonly state: string;
-    readonly acts?: readonly {
-      readonly act_id?: string;
-    }[];
-    readonly child_receipt_refs?: readonly {
+  readonly subject: {
+    readonly ref: {
+      readonly uri?: string;
+    };
+  };
+  readonly acts?: readonly {
+    readonly id?: string;
+  }[];
+  readonly lineage?: {
+    readonly children?: readonly {
       readonly uri?: string;
     }[];
   };
   readonly seal: {
-    readonly digest?: string;
     readonly disposition: string;
     readonly reason_code: string;
   };
@@ -465,16 +468,16 @@ function assertReceiptShape(
   if (receipt.schema !== expected.schema) {
     errors.push(`Expected receipt schema ${expected.schema}, got ${receipt.schema}.`);
   }
-  if (expected.body_digest && hasPseudoLocalSignature(receipt) && receipt.seal.digest !== expected.body_digest) {
-    errors.push(`Expected receipt body_digest to equal ${expected.body_digest}, got ${receipt.seal.digest}.`);
+  if (expected.body_digest && hasPseudoLocalSignature(receipt) && receipt.digest !== expected.body_digest) {
+    errors.push(`Expected receipt body_digest to equal ${expected.body_digest}, got ${receipt.digest}.`);
   }
   if (expected.receipt_digest && hasPseudoLocalSignature(receipt) && receipt.signature?.value === expected.receipt_digest) {
     errors.push("Expected receipt_digest must be a canonical receipt digest, not the signature value.");
   }
-  if (expected.harness_id && receipt.harness.harness_id !== expected.harness_id) {
+  if (expected.harness_id && receipt.subject.ref.uri !== expected.harness_id) {
     errors.push(`Expected receipt harness_id to equal ${expected.harness_id}.`);
   }
-  if (expected.state && receipt.harness.state !== expected.state) {
+  if (expected.state && receiptState(receipt) !== expected.state) {
     errors.push(`Expected receipt state to equal ${expected.state}.`);
   }
   if (expected.disposition && receipt.seal.disposition !== expected.disposition) {
@@ -484,13 +487,13 @@ function assertReceiptShape(
     errors.push(`Expected receipt reason_code to equal ${expected.reason_code}.`);
   }
   if (expected.act_ids) {
-    const actualActIds = (receipt.harness.acts ?? []).map((act) => act.act_id).filter((actId): actId is string => typeof actId === "string");
+    const actualActIds = (receipt.acts ?? []).map((act) => act.id).filter((actId): actId is string => typeof actId === "string");
     if (JSON.stringify(actualActIds) !== JSON.stringify(expected.act_ids)) {
       errors.push(`Expected receipt act_ids ${expected.act_ids.join(", ")}, got ${actualActIds.join(", ")}.`);
     }
   }
   if (expected.child_receipt_refs) {
-    const actualChildRefs = (receipt.harness.child_receipt_refs ?? [])
+    const actualChildRefs = (receipt.lineage?.children ?? [])
       .map((ref) => ref.uri)
       .filter((uri): uri is string => typeof uri === "string");
     if (JSON.stringify(actualChildRefs) !== JSON.stringify(expected.child_receipt_refs)) {
@@ -504,14 +507,20 @@ function hasPseudoLocalSignature(receipt: ReceiptShape): boolean {
   return typeof receipt.signature?.value === "string" && receipt.signature.value.startsWith("sig:");
 }
 
+// Flat receipts carry no explicit lifecycle state; a deferred seal reports the
+// "deferred" suspension state, every terminal seal reports "sealed". Mirrors the
+// Rust harness summarizer in execution/harness/assertions.rs.
+function receiptState(receipt: ReceiptShape): string {
+  return receipt.seal.disposition === "deferred" ? "deferred" : "sealed";
+}
+
 function isReceiptShape(value: unknown): value is ReceiptShape {
-  if (!isRecord(value) || value.schema !== receiptSchemaName || !isRecord(value.harness) || !isRecord(value.seal)) {
+  if (!isRecord(value) || value.schema !== receiptSchemaName || !isRecord(value.subject) || !isRecord(value.seal)) {
     return false;
   }
   return (
     typeof value.id === "string"
-    && typeof value.harness.harness_id === "string"
-    && typeof value.harness.state === "string"
+    && isRecord(value.subject.ref)
     && typeof value.seal.disposition === "string"
     && typeof value.seal.reason_code === "string"
   );

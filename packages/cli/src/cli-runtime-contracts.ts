@@ -1,6 +1,6 @@
 import type {
   ReceiptContract,
-  HarnessSealDispositionContract,
+  ClosureDispositionContract,
   ResolutionRequestContract as ResolutionRequest,
   ResolutionResponseContract as ResolutionResponse,
 } from "@runxhq/contracts";
@@ -81,7 +81,7 @@ export type CliRuntimeReceipt = Partial<ReceiptContract> & {
   readonly id: string;
   readonly schema: string;
   readonly seal?: {
-    readonly disposition?: HarnessSealDispositionContract | string;
+    readonly disposition?: ClosureDispositionContract | string;
     readonly closed_at?: string;
     readonly [key: string]: unknown;
   };
@@ -133,7 +133,7 @@ export type CliSkillRunResult =
 
 export function runnerReceiptDisposition(
   receipt: CliRuntimeReceipt,
-): HarnessSealDispositionContract | string {
+): ClosureDispositionContract | string {
   return receipt.seal?.disposition ?? "failed";
 }
 

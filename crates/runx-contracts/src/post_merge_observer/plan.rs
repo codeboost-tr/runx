@@ -1004,7 +1004,7 @@ fn closure_state_from_reason(reason_code: &str) -> Option<PostMergeObserverClosu
 fn require_receipt_criterion<'a>(
     receipt: &'a Receipt,
     criterion_id: &str,
-) -> Result<&'a crate::ReceiptCriterion, PostMergeObserverPlanError> {
+) -> Result<&'a crate::CriterionBinding, PostMergeObserverPlanError> {
     receipt
         .seal
         .criteria

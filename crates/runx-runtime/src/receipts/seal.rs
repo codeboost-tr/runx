@@ -5,7 +5,7 @@ use runx_contracts::{
     ActForm, AuthorityAttenuation, AuthoritySubsetResult, Closure, ClosureDisposition,
     CriterionBinding, CriterionStatus, Decision, DecisionChoice, DecisionInputs,
     DecisionJustification, FanoutReceiptSyncPoint, Intent, JsonObject, JsonValue, Lineage,
-    ProofKind, RECEIPT_CANONICALIZATION, Receipt, ReceiptAct, ReceiptAuthority, ReceiptCriterion,
+    ProofKind, RECEIPT_CANONICALIZATION, Receipt, ReceiptAct, ReceiptAuthority,
     ReceiptEnforcement, ReceiptIdempotency, ReceiptIssuer, ReceiptIssuerType, ReceiptSchema,
     ReceiptSubjectKind, Reference, ReferenceType, Seal, SignatureAlgorithm, Subject,
     SuccessCriterion,
@@ -104,7 +104,7 @@ pub(crate) fn step_receipt_with_disposition_and_policy(
     } = params;
     let output_refs = output_refs(output);
     let act = observation_act(step_id, output, created_at, disposition.clone(), &output_refs);
-    let seal_criterion = ReceiptCriterion {
+    let seal_criterion = CriterionBinding {
         criterion_id: "process_exit".to_owned(),
         status: if output.succeeded() {
             CriterionStatus::Verified
@@ -442,7 +442,7 @@ fn seal(
     reason_code: String,
     summary: String,
     closed_at: &str,
-    criteria: Vec<ReceiptCriterion>,
+    criteria: Vec<CriterionBinding>,
 ) -> Seal {
     Seal {
         disposition,

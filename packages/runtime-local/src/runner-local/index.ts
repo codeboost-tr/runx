@@ -641,7 +641,18 @@ export async function runValidatedSkill(options: RunValidatedSkillOptions): Prom
     skill,
     inputs: options.inputs,
   });
-  const scopeAdmission = await localScopeAdmissionViaKernel(skill.auth, grantResolution?.grants ?? [], {}, { env: options.env });
+  // The connected-auth grant lifetime gate fails closed unless it is given the
+  // moment to validate the grant's window against; pass the current time so a
+  // live (unexpired) grant is admitted while expired/undated grants stay denied.
+  // The same instant feeds both the authority-proof scope admission and the
+  // skill admission decision below so they agree on grant validity.
+  const connectedAuthCheckedAt = new Date().toISOString();
+  const scopeAdmission = await localScopeAdmissionViaKernel(
+    skill.auth,
+    grantResolution?.grants ?? [],
+    { connectedAuthCheckedAt },
+    { env: options.env },
+  );
   const authorityProofScopeAdmission = isNoConnectedAuthScopeAdmission(scopeAdmission)
     ? options.authorityScopeAdmission ?? scopeAdmission
     : scopeAdmission;
@@ -658,6 +669,7 @@ export async function runValidatedSkill(options: RunValidatedSkillOptions): Prom
   const admission = await localSkillAdmissionViaKernel(skill, {
     allowedSourceTypes: options.allowedSourceTypes,
     connectedGrants: grantResolution?.grants,
+    connectedAuthCheckedAt,
     approvedSandboxEscalation,
     executionPolicy: workspacePolicy,
   }, { env: options.env });

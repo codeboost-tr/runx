@@ -71,6 +71,7 @@ Exercises connected credential binding.
                 provider: "github",
                 scopes: ["repo:read"],
                 status: "active",
+                expires_at: "2099-01-01T00:00:00Z",
                 scope_family: "github_repo",
                 authority_kind: "read_only",
                 target_repo: "runxhq/aster",
@@ -187,6 +188,7 @@ Exercises admitted grant narrowing.
                 provider: "github",
                 scopes: ["repo:read"],
                 status: "active",
+                expires_at: "2099-01-01T00:00:00Z",
                 scope_family: "github_repo",
                 authority_kind: "read_only",
                 target_repo: "runxhq/aster",
@@ -197,6 +199,7 @@ Exercises admitted grant narrowing.
                 provider: "github",
                 scopes: ["repo:read"],
                 status: "active",
+                expires_at: "2099-01-01T00:00:00Z",
                 scope_family: "github_repo",
                 authority_kind: "read_only",
                 target_repo: "runxhq/aster",
@@ -281,6 +284,7 @@ Exercises missing credential denial.
                 provider: "github",
                 scopes: ["repo:read"],
                 status: "active",
+                expires_at: "2099-01-01T00:00:00Z",
               },
             ],
           }),
@@ -372,7 +376,7 @@ Graph wrapper used to verify policy denial receipt propagation.
       }
       expect(result.reasons).toEqual(["step 'deploy' declares mutating retry without an idempotency key"]);
       expect(result.receipt).toMatchObject({
-        schema: "runx.harness_receipt.v1",
+        schema: "runx.receipt.v1",
         metadata: {
           authority_proof: {
             run_id: expect.any(String),
@@ -391,7 +395,7 @@ Graph wrapper used to verify policy denial receipt propagation.
       });
       const receiptContents = await readFile(path.join(receiptDir, `${result.receipt?.id}.json`), "utf8");
       const receipt = JSON.parse(receiptContents) as { readonly metadata?: Readonly<Record<string, unknown>> };
-      expect(receipt).toMatchObject({ schema: "runx.harness_receipt.v1" });
+      expect(receipt).toMatchObject({ schema: "runx.receipt.v1" });
       expect(graphStepStatusesFromReceipt(receipt)).toEqual([["deploy", "failure"]]);
       expect(receiptContents).not.toContain("should-not-run");
     } finally {
@@ -452,7 +456,7 @@ Graph wrapper used to verify top-level graph authority proof metadata.
         return;
       }
       expect(result.receipt).toMatchObject({
-        schema: "runx.harness_receipt.v1",
+        schema: "runx.receipt.v1",
         metadata: {
           authority_proof: {
             run_id: result.receipt.id,

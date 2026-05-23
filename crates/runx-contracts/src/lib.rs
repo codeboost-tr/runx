@@ -12,13 +12,13 @@ pub mod doctor;
 pub mod execution;
 pub mod external_adapter;
 pub mod fingerprint;
-pub mod harness;
 pub mod host_protocol;
 pub mod json;
 pub mod links;
 pub mod maturity;
 pub mod operational_policy;
 pub mod post_merge_observer;
+pub mod receipt;
 pub mod receipts;
 pub mod redaction;
 pub mod reference;
@@ -82,10 +82,10 @@ pub use external_adapter::{
     ExternalAdapterTransport, ExternalAdapterTransportKind,
 };
 pub use fingerprint::{Fingerprint, FingerprintAlgorithm, hex_lower, sha256_hex, sha256_prefixed};
-pub use harness::{
+pub use receipt::{
     FanoutReceiptDecision, FanoutReceiptStrategy, FanoutReceiptSyncPoint, Lineage,
     RECEIPT_CANONICALIZATION, RECEIPT_SCHEMA, Receipt, ReceiptAct, ReceiptAuthority,
-    ReceiptCommitment, ReceiptCommitmentScope, ReceiptCriterion, ReceiptEnforcement,
+    ReceiptCommitment, ReceiptCommitmentScope, ReceiptEnforcement,
     ReceiptIdempotency, ReceiptInputContext, ReceiptIssuer, ReceiptIssuerType, ReceiptSchema,
     ReceiptSignature, ReceiptSubjectKind, RunnerProvenance, Seal, SignatureAlgorithm, Subject,
 };

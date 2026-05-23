@@ -70,21 +70,7 @@ export const signalTrustLevels = [
   "operator_attested",
 ] as const;
 
-export const harnessStates = [
-  "forming",
-  "admitted",
-  "running",
-  "waiting",
-  "delegated",
-  "sealing",
-  "sealed",
-  "killed",
-  "timed_out",
-  "failed",
-  "superseded",
-] as const;
-
-export const harnessSealDispositions = [
+export const closureDispositions = [
   "closed",
   "deferred",
   "superseded",
@@ -231,8 +217,7 @@ export const redactionCommitmentAlgorithms = [
 export const referenceTypeSchema = stringEnum(referenceTypes);
 export const signalTypeSchema = stringEnum(signalTypes);
 export const signalTrustLevelSchema = stringEnum(signalTrustLevels);
-export const harnessStateSchema = stringEnum(harnessStates);
-export const harnessSealDispositionSchema = stringEnum(harnessSealDispositions);
+export const closureDispositionSchema = stringEnum(closureDispositions);
 export const decisionChoiceSchema = stringEnum(decisionChoices);
 export const actFormSchema = stringEnum(actForms);
 export const targetLifecycleStateSchema = stringEnum(targetLifecycleStates);
@@ -479,7 +464,7 @@ export const authoritySubsetProofSchema = Type.Object(
   },
 );
 
-export const harnessAuthorityAttenuationSchema = Type.Object(
+export const authorityAttenuationSchema = Type.Object(
   {
     parent_authority_ref: nullableReferenceSchema,
     subset_proof: Type.Union([authoritySubsetProofSchema, Type.Null()]),
@@ -487,7 +472,7 @@ export const harnessAuthorityAttenuationSchema = Type.Object(
   { additionalProperties: false },
 );
 
-export const harnessAuthoritySchema = Type.Object(
+export const authoritySchema = Type.Object(
   {
     schema: Type.Optional(Type.Literal(RUNX_LOGICAL_SCHEMAS.authority)),
     actor_ref: referenceSchema,
@@ -496,7 +481,7 @@ export const harnessAuthoritySchema = Type.Object(
     scope_refs: Type.Array(referenceSchema),
     policy_refs: Type.Array(referenceSchema),
     terms: Type.Array(authorityTermSchema),
-    attenuation: harnessAuthorityAttenuationSchema,
+    attenuation: authorityAttenuationSchema,
     mandate_ref: Type.Optional(referenceSchema),
   },
   {
@@ -622,7 +607,7 @@ export const criterionBindingSchema = Type.Object(
 
 export const closureSchema = Type.Object(
   {
-    disposition: harnessSealDispositionSchema,
+    disposition: closureDispositionSchema,
     reason_code: Type.String({ minLength: 1 }),
     summary: Type.String({ minLength: 1 }),
     closed_at: dateTimeStringSchema(),
@@ -696,67 +681,6 @@ export const decisionSchema = Type.Object(
   },
 );
 
-export const harnessSandboxSchema = Type.Object(
-  {
-    profile: Type.String({ minLength: 1 }),
-    cwd_policy: stringEnum(["workspace", "readonly", "none", "custom"] as const),
-    network: stringEnum(["none", "allowlist", "host", "custom"] as const),
-    filesystem: stringEnum([
-      "none",
-      "read_only",
-      "workspace",
-      "workspace_read_artifact_write",
-      "custom",
-    ] as const),
-  },
-  { additionalProperties: false },
-);
-
-export const harnessEnforcementSchema = Type.Object(
-  {
-    harness_ref: Type.Optional(referenceSchema),
-    version: Type.String({ minLength: 1 }),
-    enforcement_profile_hash: Type.String({ minLength: 1 }),
-    enforcer_ref: Type.Optional(referenceSchema),
-    sandbox: harnessSandboxSchema,
-    redaction_refs: Type.Array(referenceSchema),
-    stdout_hash: Type.Optional(hashCommitmentSchema),
-    stderr_hash: Type.Optional(hashCommitmentSchema),
-    setup_receipt_refs: Type.Optional(Type.Array(referenceSchema)),
-    teardown_receipt_refs: Type.Optional(Type.Array(referenceSchema)),
-  },
-  { additionalProperties: false },
-);
-
-export const harnessIdempotencySchema = Type.Object(
-  {
-    intent_key: Type.String({ minLength: 1 }),
-    trigger_fingerprint: Type.String({ minLength: 1 }),
-    content_hash: Type.String({ minLength: 1 }),
-  },
-  { additionalProperties: false },
-);
-
-export const harnessRevisionSchema = Type.Object(
-  {
-    sequence: Type.Integer({ minimum: 1 }),
-    previous_ref: nullableReferenceSchema,
-  },
-  { additionalProperties: false },
-);
-
-export const harnessSealCriterionSchema = Type.Object(
-  {
-    criterion_id: Type.String({ minLength: 1 }),
-    status: criterionStatusSchema,
-    act_id: Type.Optional(Type.String({ minLength: 1 })),
-    verification_refs: Type.Array(referenceSchema),
-    evidence_refs: Type.Array(referenceSchema),
-    summary: Type.Optional(Type.String({ minLength: 1 })),
-  },
-  { additionalProperties: false },
-);
-
 export const receiptVerificationSummarySchema = Type.Object(
   {
     signature_valid: Type.Boolean(),
@@ -768,51 +692,6 @@ export const receiptVerificationSummarySchema = Type.Object(
     external_attestations_present: Type.Boolean(),
   },
   { additionalProperties: false },
-);
-
-export const harnessSealSchema = Type.Object(
-  {
-    disposition: harnessSealDispositionSchema,
-    reason_code: Type.String({ minLength: 1 }),
-    summary: Type.String({ minLength: 1 }),
-    closed_at: dateTimeStringSchema(),
-    last_observed_at: dateTimeStringSchema(),
-    canonicalization: Type.String({ minLength: 1 }),
-    digest: Type.String({ minLength: 1 }),
-    criteria: Type.Array(harnessSealCriterionSchema),
-    verification_summary: Type.Optional(receiptVerificationSummarySchema),
-    redaction_refs: Type.Array(referenceSchema),
-    artifact_refs: Type.Array(referenceSchema),
-    hash_commitments: Type.Array(hashCommitmentSchema),
-  },
-  { additionalProperties: false },
-);
-
-export const harnessSchema = Type.Object(
-  {
-    schema: Type.Optional(Type.Literal(RUNX_LOGICAL_SCHEMAS.harness)),
-    harness_id: Type.String({ minLength: 1 }),
-    parent_harness_ref: nullableReferenceSchema,
-    state: harnessStateSchema,
-    host_ref: referenceSchema,
-    harness_ref: referenceSchema,
-    authority: harnessAuthoritySchema,
-    enforcement: harnessEnforcementSchema,
-    idempotency: harnessIdempotencySchema,
-    revision: harnessRevisionSchema,
-    signal_refs: Type.Array(referenceSchema),
-    decisions: Type.Array(decisionSchema),
-    acts: Type.Array(actSchema),
-    child_receipt_refs: Type.Array(referenceSchema),
-    artifact_refs: Type.Array(referenceSchema),
-    seal: Type.Union([harnessSealSchema, Type.Null()]),
-  },
-  {
-    $schema: JSON_SCHEMA_DRAFT_2020_12,
-    $id: RUNX_CONTRACT_IDS.harness,
-    "x-runx-schema": RUNX_LOGICAL_SCHEMAS.harness,
-    additionalProperties: false,
-  },
 );
 
 export const artifactSchema = Type.Object(
@@ -1110,8 +989,7 @@ export const feedEntrySchema = Type.Object(
 export type ReferenceTypeContract = DeepReadonly<Static<typeof referenceTypeSchema>>;
 export type SignalTypeContract = DeepReadonly<Static<typeof signalTypeSchema>>;
 export type SignalTrustLevelContract = DeepReadonly<Static<typeof signalTrustLevelSchema>>;
-export type HarnessStateContract = DeepReadonly<Static<typeof harnessStateSchema>>;
-export type HarnessSealDispositionContract = DeepReadonly<Static<typeof harnessSealDispositionSchema>>;
+export type ClosureDispositionContract = DeepReadonly<Static<typeof closureDispositionSchema>>;
 export type DecisionChoiceContract = DeepReadonly<Static<typeof decisionChoiceSchema>>;
 export type ActFormContract = DeepReadonly<Static<typeof actFormSchema>>;
 export type TargetLifecycleStateContract = DeepReadonly<Static<typeof targetLifecycleStateSchema>>;
@@ -1140,7 +1018,7 @@ export type AuthorityConditionContract = DeepReadonly<Static<typeof authorityCon
 export type AuthorityApprovalContract = DeepReadonly<Static<typeof authorityApprovalSchema>>;
 export type AuthorityTermContract = DeepReadonly<Static<typeof authorityTermSchema>>;
 export type AuthoritySubsetProofContract = DeepReadonly<Static<typeof authoritySubsetProofSchema>>;
-export type HarnessAuthorityContract = DeepReadonly<Static<typeof harnessAuthoritySchema>>;
+export type AuthorityContract = DeepReadonly<Static<typeof authoritySchema>>;
 export type SuccessCriterionContract = DeepReadonly<Static<typeof successCriterionSchema>>;
 export type IntentContract = DeepReadonly<Static<typeof intentSchema>>;
 export type VerificationCheckContract = DeepReadonly<Static<typeof verificationCheckSchema>>;
@@ -1156,14 +1034,7 @@ export type DecisionInputsContract = DeepReadonly<Static<typeof decisionInputsSc
 export type DecisionJustificationContract = DeepReadonly<Static<typeof decisionJustificationSchema>>;
 export type ClosureRecordContract = DeepReadonly<Static<typeof closureSchema>>;
 export type DecisionContract = DeepReadonly<Static<typeof decisionSchema>>;
-export type HarnessSandboxContract = DeepReadonly<Static<typeof harnessSandboxSchema>>;
-export type HarnessEnforcementContract = DeepReadonly<Static<typeof harnessEnforcementSchema>>;
-export type HarnessIdempotencyContract = DeepReadonly<Static<typeof harnessIdempotencySchema>>;
-export type HarnessRevisionContract = DeepReadonly<Static<typeof harnessRevisionSchema>>;
-export type HarnessSealCriterionContract = DeepReadonly<Static<typeof harnessSealCriterionSchema>>;
 export type ReceiptVerificationSummaryContract = DeepReadonly<Static<typeof receiptVerificationSummarySchema>>;
-export type HarnessSealContract = DeepReadonly<Static<typeof harnessSealSchema>>;
-export type HarnessContract = DeepReadonly<Static<typeof harnessSchema>>;
 export type ArtifactContract = DeepReadonly<Static<typeof artifactSchema>>;
 export type ReceiptIssuerContract = DeepReadonly<Static<typeof receiptIssuerSchema>>;
 export type ReceiptSignatureContract = DeepReadonly<Static<typeof receiptSignatureSchema>>;
@@ -1187,8 +1058,8 @@ export function validateSignalContract(value: unknown, label = "signal"): Signal
   return validateContractSchema(signalSchema, value, label);
 }
 
-export function validateAuthorityContract(value: unknown, label = "authority"): HarnessAuthorityContract {
-  return validateContractSchema(harnessAuthoritySchema, value, label);
+export function validateAuthorityContract(value: unknown, label = "authority"): AuthorityContract {
+  return validateContractSchema(authoritySchema, value, label);
 }
 
 export function validateAuthoritySubsetProofContract(
@@ -1210,15 +1081,6 @@ export function validateActContract(value: unknown, label = "act"): ActContract 
 
 export function validateVerificationContract(value: unknown, label = "verification"): VerificationContract {
   return validateContractSchema(verificationSchema, value, label);
-}
-
-export function validateHarnessContract(value: unknown, label = "harness"): HarnessContract {
-  const harness = validateContractSchema(harnessSchema, value, label);
-  assertHarnessSealState(harness, label);
-  for (const [index, act] of harness.acts.entries()) {
-    assertActFormDetails(act, `${label}.acts[${index}]`);
-  }
-  return harness;
 }
 
 export function validateSpineArtifactContract(value: unknown, label = "artifact"): ArtifactContract {
@@ -1298,24 +1160,6 @@ function assertActFormDetails(act: ActContract, label: string): void {
   }
   if (act.revision || act.verification) {
     throw new Error(`${label} must not carry revision or verification details when form is ${act.form}.`);
-  }
-}
-
-function assertHarnessSealState(node: HarnessContract, label: string): void {
-  const terminalStates = new Set<HarnessStateContract>([
-    "sealed",
-    "killed",
-    "timed_out",
-    "failed",
-    "superseded",
-  ]);
-  const terminal = terminalStates.has(node.state);
-  const seal = node.seal;
-  if (terminal && seal === null) {
-    throw new Error(`${label}.seal is required when state is ${node.state}.`);
-  }
-  if (!terminal && seal !== null) {
-    throw new Error(`${label}.seal must be null when state is ${node.state}.`);
   }
 }
 

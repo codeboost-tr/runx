@@ -973,7 +973,7 @@ fn invalid_paused_run(run_id: &str, reason: String) -> PausedRunSummary {
 
 fn run_kind(run_id: &str) -> String {
     let _ = run_id;
-    "runx.harness.v1".to_owned()
+    "runx.receipt.v1".to_owned()
 }
 
 fn clean_string_array(items: Vec<String>) -> Vec<String> {
