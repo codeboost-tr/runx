@@ -78,7 +78,9 @@ fn native_cli_smoke_runs_without_node_or_typescript_env() -> Result<(), Box<dyn 
     assert_success(&harness)?;
     let receipt = serde_json::from_slice::<serde_json::Value>(&harness.stdout)?;
     assert_eq!(receipt["schema"], "runx.receipt.v1");
-    assert_eq!(receipt["harness"]["state"], "sealed");
+    // Flat receipts carry no nested harness state; a terminal seal is the
+    // "sealed" signal, and this graph closes cleanly.
+    assert_eq!(receipt["seal"]["disposition"], "closed");
 
     Ok(())
 }
