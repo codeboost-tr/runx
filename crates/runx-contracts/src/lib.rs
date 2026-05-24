@@ -168,5 +168,6 @@ pub use thread_outbox_provider::{
     ThreadOutboxProviderTransport, ThreadOutboxProviderTransportKind,
 };
 pub use verification::{
-    ReceiptVerificationSummary, Verification, VerificationCheck, VerificationStatus,
+    ReceiptVerificationSummary, VERIFICATION_SCHEMA, Verification, VerificationCheck,
+    VerificationSchema, VerificationStatus,
 };

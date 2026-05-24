@@ -2,8 +2,17 @@
 use serde::{Deserialize, Serialize};
 
 use crate::Reference;
+use crate::schema::{IsoDateTime, NonEmptyString, RunxSchema};
 
-#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+pub const VERIFICATION_SCHEMA: &str = "runx.verification.v1";
+
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize, RunxSchema)]
+pub enum VerificationSchema {
+    #[serde(rename = "runx.verification.v1")]
+    V1,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize, RunxSchema)]
 #[serde(rename_all = "snake_case")]
 pub enum VerificationStatus {
     Passed,
@@ -13,39 +22,42 @@ pub enum VerificationStatus {
     Missing,
 }
 
-#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize, RunxSchema)]
 #[serde(deny_unknown_fields)]
 pub struct VerificationCheck {
-    pub check_id: String,
-    pub criterion_ids: Vec<String>,
+    pub check_id: NonEmptyString,
+    pub criterion_ids: Vec<NonEmptyString>,
     pub status: VerificationStatus,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub summary: Option<String>,
+    pub summary: Option<NonEmptyString>,
     #[serde(default)]
     pub checked_refs: Vec<Reference>,
-    #[serde(default)]
+    // Required on the wire (present, possibly empty); no serde default so Rust
+    // deserialization matches the committed schema's `required` list.
     pub evidence_refs: Vec<Reference>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub verified_at: Option<String>,
+    pub verified_at: Option<IsoDateTime>,
 }
 
-#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize, RunxSchema)]
 #[serde(deny_unknown_fields)]
+#[runx_schema(id = "runx.verification.v1")]
 pub struct Verification {
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub schema: Option<String>,
+    pub schema: Option<VerificationSchema>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub verification_id: Option<String>,
+    pub verification_id: Option<NonEmptyString>,
     pub status: VerificationStatus,
-    #[serde(default)]
+    // Required on the wire (present, possibly empty); see `evidence_refs`.
     pub checks: Vec<VerificationCheck>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub verified_at: Option<String>,
-    #[serde(default)]
+    pub verified_at: Option<IsoDateTime>,
+    // Required on the wire (present, possibly empty); no serde default so Rust
+    // deserialization matches the committed schema's `required` list.
     pub evidence_refs: Vec<Reference>,
 }
 
-#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize, RunxSchema)]
 #[serde(deny_unknown_fields)]
 pub struct ReceiptVerificationSummary {
     pub signature_valid: bool,

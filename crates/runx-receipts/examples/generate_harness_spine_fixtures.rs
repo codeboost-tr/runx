@@ -389,18 +389,18 @@ fn post_merge_receipt() -> Receipt {
         .collect::<Vec<_>>();
     let verification = Verification {
         schema: None,
-        verification_id: Some("ver_post_merge_verified".to_owned()),
+        verification_id: Some("ver_post_merge_verified".into()),
         status: VerificationStatus::Passed,
         checks: vec![VerificationCheck {
-            check_id: "post_merge.verification_passed".to_owned(),
-            criterion_ids: vec!["post_merge.verification_passed".to_owned()],
+            check_id: "post_merge.verification_passed".into(),
+            criterion_ids: vec!["post_merge.verification_passed".into()],
             status: VerificationStatus::Passed,
-            summary: Some("Nitrosend dogfood verification passed.".to_owned()),
+            summary: Some("Nitrosend dogfood verification passed.".into()),
             checked_refs: vec![pr_ref.clone()],
             evidence_refs: vec![verification_ref.clone()],
-            verified_at: Some(CREATED_AT.to_owned()),
+            verified_at: Some(CREATED_AT.into()),
         }],
-        verified_at: Some(CREATED_AT.to_owned()),
+        verified_at: Some(CREATED_AT.into()),
         evidence_refs: vec![verification_ref.clone()],
     };
     let revision = RevisionDetails {

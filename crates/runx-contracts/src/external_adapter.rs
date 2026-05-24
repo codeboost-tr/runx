@@ -1,6 +1,7 @@
 //! External adapter contract types.
 use serde::{Deserialize, Deserializer, Serialize};
 
+use crate::schema::RunxSchema;
 use crate::{JsonNumber, JsonObject, Reference, ResolutionRequest};
 
 pub const EXTERNAL_ADAPTER_PROTOCOL_VERSION: &str = "runx.external_adapter.v1";
@@ -12,7 +13,7 @@ pub enum ExternalAdapterTransportKind {
     Http,
 }
 
-#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize, RunxSchema)]
 #[serde(rename_all = "snake_case")]
 pub enum ExternalAdapterStatus {
     Completed,
@@ -135,7 +136,7 @@ pub struct ExternalAdapterInvocation {
     pub metadata: Option<JsonObject>,
 }
 
-#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize, RunxSchema)]
 #[serde(deny_unknown_fields)]
 pub struct ExternalAdapterArtifactObservation {
     pub artifact_ref: Reference,
@@ -143,7 +144,7 @@ pub struct ExternalAdapterArtifactObservation {
     pub summary: Option<String>,
 }
 
-#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize, RunxSchema)]
 #[serde(deny_unknown_fields)]
 pub struct ExternalAdapterErrorObservation {
     pub code: String,
@@ -151,7 +152,7 @@ pub struct ExternalAdapterErrorObservation {
     pub retryable: bool,
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, RunxSchema)]
 #[serde(untagged)]
 pub enum ExternalAdapterTelemetryValue {
     Number(JsonNumber),
@@ -159,7 +160,7 @@ pub enum ExternalAdapterTelemetryValue {
     Bool(bool),
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, RunxSchema)]
 #[serde(deny_unknown_fields)]
 pub struct ExternalAdapterTelemetryObservation {
     pub name: String,
@@ -168,8 +169,9 @@ pub struct ExternalAdapterTelemetryObservation {
     pub unit: Option<String>,
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, RunxSchema)]
 #[serde(deny_unknown_fields)]
+#[runx_schema(id = "runx.external_adapter.response.v1")]
 pub struct ExternalAdapterResponse {
     pub schema: String,
     pub protocol_version: String,

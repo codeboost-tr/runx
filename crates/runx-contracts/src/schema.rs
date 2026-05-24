@@ -89,18 +89,37 @@ pub fn string_enum(variants: &[&str]) -> Value {
     json!({ "anyOf": any_of })
 }
 
+/// A union of subschemas rendered as `{ "anyOf": [...] }`, the committed shape
+/// for data-carrying enums (externally-tagged, internally-tagged, and untagged
+/// representations all collapse to an `anyOf` of variant subschemas).
+pub fn any_of(variants: Vec<Value>) -> Value {
+    json!({ "anyOf": variants })
+}
+
+/// An externally-tagged data variant: a single-key object `{ "<tag>": <inner> }`
+/// where the key is the variant's wire name and the value is its payload schema.
+/// Matches serde's default (externally-tagged) struct/tuple-variant encoding.
+pub fn externally_tagged_variant(tag: &'static str, inner: Value) -> Value {
+    object_schema(vec![Property::new(tag, inner, true)], true, None)
+}
+
 /// A single string literal leaf: `{ "const": <s>, "type": "string" }`.
 pub fn const_string(value: &str) -> Value {
     json!({ "const": value, "type": "string" })
 }
 
 /// Map a logical schema name (`runx.reference.v1`) to its canonical `$id` URL
-/// (`https://schemas.runx.dev/runx/reference/v1.json`).
+/// (`https://schemas.runx.dev/runx/reference/v1.json`). Each dot-delimited
+/// segment is path-joined with `/`, and underscores within a segment become
+/// hyphens (`runx.external_adapter.response.v1` ->
+/// `.../runx/external-adapter/response/v1.json`).
 pub fn schema_id_url(logical: &str) -> String {
-    format!(
-        "https://schemas.runx.dev/{}.json",
-        logical.replace('.', "/")
-    )
+    let path = logical
+        .split('.')
+        .map(|segment| segment.replace('_', "-"))
+        .collect::<Vec<_>>()
+        .join("/");
+    format!("https://schemas.runx.dev/{path}.json")
 }
 
 impl RunxSchema for String {

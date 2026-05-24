@@ -12,9 +12,12 @@ use std::path::PathBuf;
 
 use runx_contracts::artifact::Artifact;
 use runx_contracts::doctor::DoctorReport;
+use runx_contracts::external_adapter::ExternalAdapterResponse;
 use runx_contracts::redaction::Redaction;
 use runx_contracts::reference::Reference;
 use runx_contracts::schema::RunxSchema;
+use runx_contracts::signal::Signal;
+use runx_contracts::verification::Verification;
 use serde_json::{Value, json};
 
 struct Covered {
@@ -45,6 +48,258 @@ fn covered() -> Vec<Covered> {
             emitted: Artifact::json_schema(),
             corpus: artifact_corpus(),
         },
+        Covered {
+            file_name: "verification.schema.json",
+            emitted: Verification::json_schema(),
+            corpus: verification_corpus(),
+        },
+        Covered {
+            file_name: "signal.schema.json",
+            emitted: Signal::json_schema(),
+            corpus: signal_corpus(),
+        },
+        Covered {
+            file_name: "external-adapter-response.schema.json",
+            emitted: ExternalAdapterResponse::json_schema(),
+            corpus: external_adapter_response_corpus(),
+        },
+    ]
+}
+
+fn verification_corpus() -> Vec<(&'static str, Value)> {
+    let check = json!({
+        "check_id": "c1",
+        "criterion_ids": ["crit_1"],
+        "status": "passed",
+        "summary": "looks good",
+        "checked_refs": [a_ref()],
+        "evidence_refs": [a_ref()],
+        "verified_at": "2026-01-01T00:00:00Z",
+    });
+    let valid = json!({
+        "schema": "runx.verification.v1",
+        "verification_id": "ver_1",
+        "status": "passed",
+        "checks": [check],
+        "verified_at": "2026-01-01T00:00:00Z",
+        "evidence_refs": [a_ref()],
+    });
+    vec![
+        ("full valid", valid.clone()),
+        (
+            "minimal valid",
+            json!({ "status": "pending", "checks": [], "evidence_refs": [] }),
+        ),
+        (
+            "valid without optional schema marker and id",
+            json!({
+                "status": "failed",
+                "checks": [{
+                    "check_id": "c1",
+                    "criterion_ids": ["crit_1"],
+                    "status": "failed",
+                    "evidence_refs": [],
+                }],
+                "evidence_refs": [],
+            }),
+        ),
+        ("missing status", {
+            let mut v = valid.clone();
+            v.as_object_mut().unwrap().remove("status");
+            v
+        }),
+        ("missing checks", {
+            let mut v = valid.clone();
+            v.as_object_mut().unwrap().remove("checks");
+            v
+        }),
+        ("missing evidence_refs", {
+            let mut v = valid.clone();
+            v.as_object_mut().unwrap().remove("evidence_refs");
+            v
+        }),
+        ("unknown status variant", {
+            let mut v = valid.clone();
+            v["status"] = json!("maybe");
+            v
+        }),
+        ("empty verification_id", {
+            let mut v = valid.clone();
+            v["verification_id"] = json!("");
+            v
+        }),
+        ("malformed verified_at", {
+            let mut v = valid.clone();
+            v["verified_at"] = json!("not-a-timestamp");
+            v
+        }),
+        ("check missing required field", {
+            let mut v = valid.clone();
+            v["checks"] = json!([{ "criterion_ids": ["crit_1"], "status": "passed" }]);
+            v
+        }),
+        ("additional property", {
+            let mut v = valid.clone();
+            v["bogus"] = json!(true);
+            v
+        }),
+    ]
+}
+
+fn signal_corpus() -> Vec<(&'static str, Value)> {
+    let valid = json!({
+        "schema": "runx.signal.v1",
+        "signal_id": "sig_1",
+        "source_ref": a_ref(),
+        "signal_type": "issue_opened",
+        "title": "an issue opened",
+        "observed_at": "2026-01-01T00:00:00Z",
+    });
+    let full = json!({
+        "schema": "runx.signal.v1",
+        "signal_id": "sig_1",
+        "source_ref": a_ref(),
+        "authenticity": {
+            "host_ref": a_ref(),
+            "principal_ref": a_ref(),
+            "verified_by_ref": a_ref(),
+            "trust_level": "verified_signature",
+            "verified_at": "2026-01-01T00:00:00Z",
+            "signature_refs": [a_ref()],
+            "evidence_refs": [a_ref()],
+        },
+        "signal_type": "alert",
+        "title": "an alert",
+        "body_preview": "some body",
+        "observed_at": "2026-01-01T00:00:00Z",
+        "evidence_refs": [a_ref()],
+        "fingerprint": {
+            "algorithm": "sha256",
+            "canonicalization": "json-c14n",
+            "value": "abc",
+            "derived_from": [a_ref()],
+        },
+        "extensions": { "k": 1 },
+    });
+    vec![
+        ("minimal valid", valid.clone()),
+        ("full valid", full),
+        ("missing schema", {
+            let mut v = valid.clone();
+            v.as_object_mut().unwrap().remove("schema");
+            v
+        }),
+        ("missing signal_id", {
+            let mut v = valid.clone();
+            v.as_object_mut().unwrap().remove("signal_id");
+            v
+        }),
+        ("missing signal_type", {
+            let mut v = valid.clone();
+            v.as_object_mut().unwrap().remove("signal_type");
+            v
+        }),
+        ("missing title", {
+            let mut v = valid.clone();
+            v.as_object_mut().unwrap().remove("title");
+            v
+        }),
+        ("empty signal_id", {
+            let mut v = valid.clone();
+            v["signal_id"] = json!("");
+            v
+        }),
+        ("empty title", {
+            let mut v = valid.clone();
+            v["title"] = json!("");
+            v
+        }),
+        ("unknown signal_type variant", {
+            let mut v = valid.clone();
+            v["signal_type"] = json!("not_a_type");
+            v
+        }),
+        ("malformed observed_at", {
+            let mut v = valid.clone();
+            v["observed_at"] = json!("not-a-timestamp");
+            v
+        }),
+        ("additional property", {
+            let mut v = valid.clone();
+            v["bogus"] = json!(true);
+            v
+        }),
+    ]
+}
+
+fn external_adapter_response_corpus() -> Vec<(&'static str, Value)> {
+    let valid = json!({
+        "schema": "runx.external_adapter.response.v1",
+        "protocol_version": "runx.external_adapter.v1",
+        "invocation_id": "inv_1",
+        "adapter_id": "ad_1",
+        "status": "completed",
+        "observed_at": "2026-01-01T00:00:00Z",
+    });
+    let full = json!({
+        "schema": "runx.external_adapter.response.v1",
+        "protocol_version": "runx.external_adapter.v1",
+        "invocation_id": "inv_1",
+        "adapter_id": "ad_1",
+        "status": "completed",
+        "stdout": "out",
+        "exit_code": 0,
+        "telemetry": [
+            { "name": "latency", "value": 12.5 },
+            { "name": "label", "value": "ok" },
+            { "name": "flag", "value": true },
+        ],
+        "errors": [{ "code": "e1", "message": "m", "retryable": false }],
+        "observed_at": "2026-01-01T00:00:00Z",
+    });
+    vec![
+        ("minimal valid", valid.clone()),
+        ("full valid", full),
+        ("missing status", {
+            let mut v = valid.clone();
+            v.as_object_mut().unwrap().remove("status");
+            v
+        }),
+        ("missing invocation_id", {
+            let mut v = valid.clone();
+            v.as_object_mut().unwrap().remove("invocation_id");
+            v
+        }),
+        ("unknown status variant", {
+            let mut v = valid.clone();
+            v["status"] = json!("frozen");
+            v
+        }),
+        ("telemetry value as object rejected by untagged union", {
+            let mut v = valid.clone();
+            v["telemetry"] = json!([{ "name": "x", "value": { "nested": 1 } }]);
+            v
+        }),
+        ("telemetry value as null rejected by untagged union", {
+            let mut v = valid.clone();
+            v["telemetry"] = json!([{ "name": "x", "value": null }]);
+            v
+        }),
+        ("telemetry value string accepted", {
+            let mut v = valid.clone();
+            v["telemetry"] = json!([{ "name": "x", "value": "text" }]);
+            v
+        }),
+        ("telemetry missing required value", {
+            let mut v = valid.clone();
+            v["telemetry"] = json!([{ "name": "x" }]);
+            v
+        }),
+        ("additional property", {
+            let mut v = valid.clone();
+            v["bogus"] = json!(true);
+            v
+        }),
     ]
 }
 

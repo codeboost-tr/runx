@@ -3,10 +3,12 @@
 //! `rust-contract-pipeline-inversion`.
 //!
 //! Supported today: named-field structs (honoring `#[serde(rename)]`,
-//! `#[serde(rename_all)]`, `#[serde(skip)]`, `Option<T>` optionality, and
-//! `#[serde(deny_unknown_fields)]`) and unit-only enums (rendered as `anyOf` of
-//! `const`). Data-carrying enums emit a clear compile error until their oneOf
-//! shape lands in a later batch.
+//! `#[serde(rename_all)]`, `#[serde(skip)]`, `Option<T>` and `#[serde(default)]`
+//! optionality, and `#[serde(deny_unknown_fields)]`), unit-only enums (rendered
+//! as `anyOf` of `const`), and data-carrying enums under serde's default
+//! (externally-tagged), internally-tagged (`#[serde(tag = "...")]`), and
+//! `#[serde(untagged)]` representations (each rendered as an `anyOf` of variant
+//! subschemas). Multi-field tuple variants are not modeled.
 
 use proc_macro::TokenStream;
 use quote::quote;
@@ -66,29 +68,12 @@ fn struct_body(
 ) -> syn::Result<proc_macro2::TokenStream> {
     let rename_all = serde_rename_all(&input.attrs)?;
     let deny_unknown = serde_deny_unknown_fields(&input.attrs);
+    // A container-level `#[serde(default)]` fills any omitted field, so every
+    // field is optional regardless of its own attributes.
+    let container_default = serde_default(&input.attrs);
 
-    let mut properties = Vec::new();
-    for field in &data.fields {
-        let Some(ident) = field.ident.as_ref() else {
-            continue;
-        };
-        if serde_skip(&field.attrs) {
-            continue;
-        }
-        let wire_name = match serde_rename(&field.attrs)? {
-            Some(name) => name,
-            None => apply_rename_all(&ident.to_string(), rename_all.as_deref()),
-        };
-        let (inner_ty, optional) = unwrap_option(&field.ty);
-        let required = !optional;
-        properties.push(quote! {
-            ::runx_contracts::schema::Property::new(
-                #wire_name,
-                <#inner_ty as ::runx_contracts::schema::RunxSchema>::json_schema(),
-                #required,
-            )
-        });
-    }
+    let properties =
+        struct_field_properties(&data.fields, rename_all.as_deref(), container_default)?;
 
     Ok(quote! {
         ::runx_contracts::schema::object_schema(
@@ -99,24 +84,209 @@ fn struct_body(
     })
 }
 
+/// Build the `Property` constructors for a set of named fields, honoring
+/// `rename`/`rename_all`, `skip`, and optionality. A field is NOT required when
+/// it is `Option<...>`, carries a field-level `#[serde(default)]`, or the
+/// container carries `#[serde(default)]`.
+fn struct_field_properties(
+    fields: &Fields,
+    rename_all: Option<&str>,
+    container_default: bool,
+) -> syn::Result<Vec<proc_macro2::TokenStream>> {
+    let mut properties = Vec::new();
+    for field in fields {
+        let Some(ident) = field.ident.as_ref() else {
+            continue;
+        };
+        if serde_skip(&field.attrs) {
+            continue;
+        }
+        let wire_name = match serde_rename(&field.attrs)? {
+            Some(name) => name,
+            None => apply_rename_all(&ident.to_string(), rename_all),
+        };
+        let (inner_ty, optional) = unwrap_option(&field.ty);
+        let field_default = serde_default(&field.attrs);
+        let required = !(optional || field_default || container_default);
+        properties.push(quote! {
+            ::runx_contracts::schema::Property::new(
+                #wire_name,
+                <#inner_ty as ::runx_contracts::schema::RunxSchema>::json_schema(),
+                #required,
+            )
+        });
+    }
+    Ok(properties)
+}
+
 fn enum_body(input: &DeriveInput, data: &syn::DataEnum) -> syn::Result<proc_macro2::TokenStream> {
     let rename_all = serde_rename_all(&input.attrs)?;
-    let mut names = Vec::new();
-    for variant in &data.variants {
-        if !matches!(variant.fields, Fields::Unit) {
-            return Err(syn::Error::new_spanned(
-                &variant.ident,
-                "RunxSchema enum support is unit-only for now (data variants land in a later batch)",
-            ));
+    let rename_all_fields = serde_rename_all_fields(&input.attrs)?;
+    let untagged = serde_untagged(&input.attrs);
+    let internal_tag = serde_tag(&input.attrs)?;
+
+    // The simple, fast path: an all-unit enum is a closed string enum.
+    let all_unit = data
+        .variants
+        .iter()
+        .all(|variant| matches!(variant.fields, Fields::Unit));
+    if all_unit && internal_tag.is_none() && !untagged {
+        let mut names = Vec::new();
+        for variant in &data.variants {
+            let wire_name = match serde_rename(&variant.attrs)? {
+                Some(name) => name,
+                None => apply_rename_all(&variant.ident.to_string(), rename_all.as_deref()),
+            };
+            names.push(wire_name);
         }
+        return Ok(quote! {
+            ::runx_contracts::schema::string_enum(&[#(#names),*])
+        });
+    }
+
+    // Data-carrying enums render as an `anyOf` of per-variant subschemas. The
+    // subschema shape depends on the serde representation.
+    let mut variant_schemas = Vec::new();
+    for variant in &data.variants {
         let wire_name = match serde_rename(&variant.attrs)? {
             Some(name) => name,
             None => apply_rename_all(&variant.ident.to_string(), rename_all.as_deref()),
         };
-        names.push(wire_name);
+        let schema = if untagged {
+            untagged_variant_schema(variant, rename_all_fields.as_deref())?
+        } else if let Some(tag) = &internal_tag {
+            internally_tagged_variant_schema(
+                variant,
+                &wire_name,
+                tag,
+                rename_all_fields.as_deref(),
+            )?
+        } else {
+            externally_tagged_variant_schema(variant, &wire_name, rename_all_fields.as_deref())?
+        };
+        variant_schemas.push(schema);
     }
+
     Ok(quote! {
-        ::runx_contracts::schema::string_enum(&[#(#names),*])
+        ::runx_contracts::schema::any_of(::std::vec![#(#variant_schemas),*])
+    })
+}
+
+/// The payload schema for a variant under `#[serde(untagged)]`: the inner type's
+/// schema for newtype variants, or an inlined object for struct variants. Unit
+/// variants under untagged are unusual; we emit a closed const for them.
+fn untagged_variant_schema(
+    variant: &syn::Variant,
+    rename_all_fields: Option<&str>,
+) -> syn::Result<proc_macro2::TokenStream> {
+    match &variant.fields {
+        Fields::Unit => {
+            let wire_name = apply_rename_all(&variant.ident.to_string(), None);
+            Ok(quote! { ::runx_contracts::schema::const_string(#wire_name) })
+        }
+        Fields::Unnamed(fields) => newtype_inner_schema(variant, fields),
+        Fields::Named(_) => {
+            let properties = struct_field_properties(&variant.fields, rename_all_fields, false)?;
+            let deny_unknown = serde_deny_unknown_fields(&variant.attrs);
+            Ok(quote! {
+                ::runx_contracts::schema::object_schema(
+                    ::std::vec![#(#properties),*],
+                    #deny_unknown,
+                    ::core::option::Option::None,
+                )
+            })
+        }
+    }
+}
+
+/// The subschema for a variant under serde's default (externally-tagged)
+/// representation: a bare const for unit variants, otherwise a single-key object
+/// `{ "<variant>": <payload> }`.
+fn externally_tagged_variant_schema(
+    variant: &syn::Variant,
+    wire_name: &str,
+    rename_all_fields: Option<&str>,
+) -> syn::Result<proc_macro2::TokenStream> {
+    match &variant.fields {
+        Fields::Unit => Ok(quote! { ::runx_contracts::schema::const_string(#wire_name) }),
+        Fields::Unnamed(fields) => {
+            let inner = newtype_inner_schema(variant, fields)?;
+            Ok(quote! {
+                ::runx_contracts::schema::externally_tagged_variant(#wire_name, #inner)
+            })
+        }
+        Fields::Named(_) => {
+            let properties = struct_field_properties(&variant.fields, rename_all_fields, false)?;
+            let deny_unknown = serde_deny_unknown_fields(&variant.attrs);
+            let inner = quote! {
+                ::runx_contracts::schema::object_schema(
+                    ::std::vec![#(#properties),*],
+                    #deny_unknown,
+                    ::core::option::Option::None,
+                )
+            };
+            Ok(quote! {
+                ::runx_contracts::schema::externally_tagged_variant(#wire_name, #inner)
+            })
+        }
+    }
+}
+
+/// The subschema for a variant under `#[serde(tag = "...")]`: an object whose
+/// tag field is `const`-pinned to the variant name, plus the struct variant's
+/// fields. serde permits only struct and unit variants under internal tagging.
+fn internally_tagged_variant_schema(
+    variant: &syn::Variant,
+    wire_name: &str,
+    tag: &str,
+    rename_all_fields: Option<&str>,
+) -> syn::Result<proc_macro2::TokenStream> {
+    let mut properties = Vec::new();
+    properties.push(quote! {
+        ::runx_contracts::schema::Property::new(
+            #tag,
+            ::runx_contracts::schema::const_string(#wire_name),
+            true,
+        )
+    });
+    match &variant.fields {
+        Fields::Unit => {}
+        Fields::Named(_) => {
+            let field_props = struct_field_properties(&variant.fields, rename_all_fields, false)?;
+            properties.extend(field_props);
+        }
+        Fields::Unnamed(_) => {
+            return Err(syn::Error::new_spanned(
+                &variant.ident,
+                "internally-tagged enums cannot have tuple variants (serde rejects this too)",
+            ));
+        }
+    }
+    let deny_unknown = serde_deny_unknown_fields(&variant.attrs);
+    Ok(quote! {
+        ::runx_contracts::schema::object_schema(
+            ::std::vec![#(#properties),*],
+            #deny_unknown,
+            ::core::option::Option::None,
+        )
+    })
+}
+
+/// The payload schema for a single-field (newtype) tuple variant: the wrapped
+/// type's own schema. Multi-field tuple variants are not modeled.
+fn newtype_inner_schema(
+    variant: &syn::Variant,
+    fields: &syn::FieldsUnnamed,
+) -> syn::Result<proc_macro2::TokenStream> {
+    if fields.unnamed.len() != 1 {
+        return Err(syn::Error::new_spanned(
+            &variant.ident,
+            "RunxSchema supports only single-field tuple variants (newtype variants)",
+        ));
+    }
+    let inner_ty = &fields.unnamed[0].ty;
+    Ok(quote! {
+        <#inner_ty as ::runx_contracts::schema::RunxSchema>::json_schema()
     })
 }
 
@@ -163,6 +333,16 @@ fn runx_identity(attrs: &[syn::Attribute]) -> syn::Result<Option<String>> {
 
 fn serde_rename_all(attrs: &[syn::Attribute]) -> syn::Result<Option<String>> {
     serde_string_value(attrs, "rename_all")
+}
+
+/// `#[serde(rename_all_fields = "...")]` on an enum: the case convention applied
+/// to the fields of every struct variant.
+fn serde_rename_all_fields(attrs: &[syn::Attribute]) -> syn::Result<Option<String>> {
+    serde_string_value(attrs, "rename_all_fields")
+}
+
+fn serde_tag(attrs: &[syn::Attribute]) -> syn::Result<Option<String>> {
+    serde_string_value(attrs, "tag")
 }
 
 fn serde_rename(attrs: &[syn::Attribute]) -> syn::Result<Option<String>> {
@@ -223,6 +403,16 @@ fn serde_flag(attrs: &[syn::Attribute], flag: &str) -> bool {
 
 fn serde_deny_unknown_fields(attrs: &[syn::Attribute]) -> bool {
     serde_flag(attrs, "deny_unknown_fields")
+}
+
+/// A `#[serde(default)]` flag (the value form `default = "path"` also makes the
+/// field optional, so accept either).
+fn serde_default(attrs: &[syn::Attribute]) -> bool {
+    serde_flag(attrs, "default")
+}
+
+fn serde_untagged(attrs: &[syn::Attribute]) -> bool {
+    serde_flag(attrs, "untagged")
 }
 
 fn serde_skip(attrs: &[syn::Attribute]) -> bool {

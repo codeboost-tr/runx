@@ -3,6 +3,7 @@ use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
 
 use crate::Reference;
+use crate::schema::{NonEmptyString, RunxSchema};
 
 /// Lowercase hex encoding of raw bytes.
 #[must_use]
@@ -28,17 +29,17 @@ pub fn sha256_prefixed(bytes: &[u8]) -> String {
     format!("sha256:{}", sha256_hex(bytes))
 }
 
-#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize, RunxSchema)]
 #[serde(rename_all = "snake_case")]
 pub enum FingerprintAlgorithm {
     Sha256,
 }
 
-#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize, RunxSchema)]
 #[serde(deny_unknown_fields)]
 pub struct Fingerprint {
     pub algorithm: FingerprintAlgorithm,
-    pub canonicalization: String,
-    pub value: String,
+    pub canonicalization: NonEmptyString,
+    pub value: NonEmptyString,
     pub derived_from: Vec<Reference>,
 }
