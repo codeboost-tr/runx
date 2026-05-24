@@ -27,7 +27,16 @@ async function runVitest(args, extraEnv = {}) {
     const child = spawn(pnpm, ["exec", "vitest", ...args], {
       cwd: workspaceRoot,
       stdio: "inherit",
-      env: { ...process.env, RUNX_KERNEL_EVAL_BIN: rustKernelBin, ...extraEnv },
+      env: {
+        ...process.env,
+        // Point every subprocess-backed suite at the single prebuilt binary so the
+        // kernel-parity / parser / CLI eval paths never cold-start a debug binary
+        // under parallel load.
+        RUNX_KERNEL_EVAL_BIN: rustKernelBin,
+        RUNX_PARSER_EVAL_BIN: rustKernelBin,
+        RUNX_RUST_CLI_BIN: rustKernelBin,
+        ...extraEnv,
+      },
     });
     child.on("error", reject);
     child.on("exit", (code) => {

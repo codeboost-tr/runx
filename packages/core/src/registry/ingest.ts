@@ -116,9 +116,9 @@ export function buildRegistrySkillVersion(markdown: string, options: IngestSkill
       options.attestations,
     ),
     required_scopes: unique([...extractScopes(skill), ...extractRunnerScopes(bindingArtifact.manifest)]),
-    runtime: skill.runtime ?? recordField(skill.runx, "runtime") ?? extractRunnerRuntime(bindingArtifact.manifest),
+    runtime: skill.runtime ?? readField(skill.runx, "runtime") ?? extractRunnerRuntime(bindingArtifact.manifest),
     auth: skill.auth,
-    risk: skill.risk ?? recordField(skill.runx, "risk"),
+    risk: skill.risk ?? readField(skill.runx, "risk"),
     runx: skill.runx,
     tags: unique([...extractTags(skill), ...extractRunnerTags(bindingArtifact.manifest)]),
     publisher,
@@ -218,7 +218,7 @@ function recordArrayField(value: unknown, field: string): readonly string[] {
   return arrayValue.filter((item): item is string => typeof item === "string" && item.length > 0);
 }
 
-function recordField(value: unknown, field: string): unknown {
+function readField(value: unknown, field: string): unknown {
   return isRecord(value) ? value[field] : undefined;
 }
 

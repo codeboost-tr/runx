@@ -468,7 +468,7 @@ function validateRemoteToolSearchResult(value: unknown): RemoteToolCatalogSearch
   return {
     tool_id: requireString(record.tool_id, "remote_tools.tools[].tool_id"),
     name: requireString(record.name, "remote_tools.tools[].name"),
-    summary: optionalString(record.summary, "remote_tools.tools[].summary"),
+    summary: coerceString(record.summary, "remote_tools.tools[].summary"),
     source: requireString(record.source, "remote_tools.tools[].source"),
     source_label: requireString(record.source_label, "remote_tools.tools[].source_label"),
     source_type: requireString(record.source_type, "remote_tools.tools[].source_type"),
@@ -489,14 +489,14 @@ function validateRemoteToolInspectResult(value: unknown): RemoteToolInspectResul
     inputs[name] = {
       type: requireString(input.type, `remote_tools.tool.inputs.${name}.type`),
       required: requireBoolean(input.required, `remote_tools.tool.inputs.${name}.required`),
-      description: optionalString(input.description, `remote_tools.tool.inputs.${name}.description`),
+      description: coerceString(input.description, `remote_tools.tool.inputs.${name}.description`),
     };
   }
   const provenanceRecord = requireRecord(record.provenance, "remote_tools.tool.provenance");
   return {
     ref: requireString(record.ref, "remote_tools.tool.ref"),
     name: requireString(record.name, "remote_tools.tool.name"),
-    description: optionalString(record.description, "remote_tools.tool.description"),
+    description: coerceString(record.description, "remote_tools.tool.description"),
     execution_source_type: requireString(record.execution_source_type, "remote_tools.tool.execution_source_type"),
     inputs,
     scopes: requireStringArray(record.scopes, "remote_tools.tool.scopes"),
@@ -508,13 +508,13 @@ function validateRemoteToolInspectResult(value: unknown): RemoteToolInspectResul
     skill_directory: requireString(record.skill_directory, "remote_tools.tool.skill_directory"),
     provenance: {
       origin: requireEnum(provenanceRecord.origin, "remote_tools.tool.provenance.origin", ["local", "imported"]) as "local" | "imported",
-      source: optionalString(provenanceRecord.source, "remote_tools.tool.provenance.source"),
-      source_label: optionalString(provenanceRecord.source_label, "remote_tools.tool.provenance.source_label"),
-      source_type: optionalString(provenanceRecord.source_type, "remote_tools.tool.provenance.source_type"),
-      namespace: optionalString(provenanceRecord.namespace, "remote_tools.tool.provenance.namespace"),
-      external_name: optionalString(provenanceRecord.external_name, "remote_tools.tool.provenance.external_name"),
-      catalog_ref: optionalString(provenanceRecord.catalog_ref, "remote_tools.tool.provenance.catalog_ref"),
-      tool_id: optionalString(provenanceRecord.tool_id, "remote_tools.tool.provenance.tool_id"),
+      source: coerceString(provenanceRecord.source, "remote_tools.tool.provenance.source"),
+      source_label: coerceString(provenanceRecord.source_label, "remote_tools.tool.provenance.source_label"),
+      source_type: coerceString(provenanceRecord.source_type, "remote_tools.tool.provenance.source_type"),
+      namespace: coerceString(provenanceRecord.namespace, "remote_tools.tool.provenance.namespace"),
+      external_name: coerceString(provenanceRecord.external_name, "remote_tools.tool.provenance.external_name"),
+      catalog_ref: coerceString(provenanceRecord.catalog_ref, "remote_tools.tool.provenance.catalog_ref"),
+      tool_id: coerceString(provenanceRecord.tool_id, "remote_tools.tool.provenance.tool_id"),
       tags: optionalStringArray(provenanceRecord.tags, "remote_tools.tool.provenance.tags"),
     },
   };
@@ -534,7 +534,7 @@ function requireString(value: unknown, label: string): string {
   return value;
 }
 
-function optionalString(value: unknown, _label: string): string | undefined {
+function coerceString(value: unknown, _label: string): string | undefined {
   return typeof value === "string" ? value : undefined;
 }
 

@@ -325,14 +325,14 @@ export function validateSkill(raw: RawSkillIR, options: ValidateSkillOptions = {
     runtime: raw.frontmatter.runtime,
     retry: validateSkillRetry(raw.frontmatter.retry ?? runx?.retry, "retry"),
     idempotency: validateSkillIdempotency(raw.frontmatter.idempotency ?? runx?.idempotency, "idempotency"),
-    mutating: validateSkillMutation(raw.frontmatter.mutating ?? recordField(risk, "mutating") ?? runx?.mutating, "mutating"),
-    artifacts: validateArtifactContract(recordField(runx, "artifacts"), "runx.artifacts"),
+    mutating: validateSkillMutation(raw.frontmatter.mutating ?? readField(risk, "mutating") ?? runx?.mutating, "mutating"),
+    artifacts: validateArtifactContract(readField(runx, "artifacts"), "runx.artifacts"),
     qualityProfile: extractSkillQualityProfile(raw.body),
     allowedTools: validateAllowedTools(
-      recordField(runx, "allowed_tools"),
+      readField(runx, "allowed_tools"),
       "runx.allowed_tools",
     ),
-    execution: validateExecutionSemantics(raw.frontmatter.execution ?? recordField(runx, "execution"), "execution"),
+    execution: validateExecutionSemantics(raw.frontmatter.execution ?? readField(runx, "execution"), "execution"),
     runx,
     raw,
   };
@@ -369,16 +369,16 @@ export function validateRunnerManifest(raw: RawRunnerManifestIR): SkillRunnerMan
       runtime: runner.runtime,
       retry: validateSkillRetry(runner.retry ?? runx?.retry, `runners.${name}.retry`),
       idempotency: validateSkillIdempotency(runner.idempotency ?? runx?.idempotency, `runners.${name}.idempotency`),
-      mutating: validateSkillMutation(runner.mutating ?? recordField(risk, "mutating") ?? runx?.mutating, `runners.${name}.mutating`),
+      mutating: validateSkillMutation(runner.mutating ?? readField(risk, "mutating") ?? runx?.mutating, `runners.${name}.mutating`),
       artifacts: validateArtifactContract(
-        recordField(runner, "artifacts") ?? recordField(runx, "artifacts"),
+        readField(runner, "artifacts") ?? readField(runx, "artifacts"),
         `runners.${name}.artifacts`,
       ),
       allowedTools: validateAllowedTools(
-        recordField(runx, "allowed_tools"),
+        readField(runx, "allowed_tools"),
         `runners.${name}.runx.allowed_tools`,
       ),
-      execution: validateExecutionSemantics(runner.execution ?? recordField(runx, "execution"), `runners.${name}.execution`),
+      execution: validateExecutionSemantics(runner.execution ?? readField(runx, "execution"), `runners.${name}.execution`),
       runx,
       raw: runner,
     };
@@ -480,10 +480,10 @@ export function validateToolManifest(raw: RawToolManifestIR): ValidatedTool {
     retry: validateSkillRetry(raw.document.retry ?? runx?.retry, "retry"),
     idempotency: validateSkillIdempotency(raw.document.idempotency ?? runx?.idempotency, "idempotency"),
     mutating: validateSkillMutation(
-      raw.document.mutating ?? recordField(risk, "mutating") ?? runx?.mutating,
+      raw.document.mutating ?? readField(risk, "mutating") ?? runx?.mutating,
       "mutating",
     ),
-    artifacts: validateArtifactContract(recordField(runx, "artifacts"), "runx.artifacts"),
+    artifacts: validateArtifactContract(readField(runx, "artifacts"), "runx.artifacts"),
     runx,
     raw,
   };
@@ -507,8 +507,8 @@ export function resolvePostRunReflectPolicy(
   runx: Record<string, unknown> | undefined,
   field = "runx",
 ): PostRunReflectPolicy {
-  const postRun = optionalRecord(recordField(runx, "post_run"), `${field}.post_run`);
-  const reflect = optionalString(recordField(postRun, "reflect"), `${field}.post_run.reflect`) ?? "never";
+  const postRun = optionalRecord(readField(runx, "post_run"), `${field}.post_run`);
+  const reflect = optionalString(readField(postRun, "reflect"), `${field}.post_run.reflect`) ?? "never";
   if (reflect !== "auto" && reflect !== "always" && reflect !== "never") {
     throw new SkillValidationError(`${field}.post_run.reflect must be auto, always, or never.`);
   }
@@ -968,7 +968,7 @@ function optionalNonEmptyString(value: unknown, field: string): string | undefin
   return stringValue;
 }
 
-function recordField(value: unknown, field: string): unknown {
+function readField(value: unknown, field: string): unknown {
   return isRecord(value) ? value[field] : undefined;
 }
 

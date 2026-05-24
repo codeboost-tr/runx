@@ -355,8 +355,8 @@ function parseRustRegistrySkillResolution(value: Record<string, unknown>): Regis
   }
   return {
     markdown: requiredString(value, "markdown"),
-    profile_document: optionalString(value.profile_document),
-    profile_digest: optionalString(value.profile_digest),
+    profile_document: coerceString(value.profile_document),
+    profile_digest: coerceString(value.profile_digest),
     runner_names: requiredStringArray(value, "runner_names"),
     skill_id: requiredString(value, "skill_id"),
     name: requiredString(value, "name"),
@@ -366,7 +366,7 @@ function parseRustRegistrySkillResolution(value: Record<string, unknown>): Regis
     source_label: sourceLabel,
     source_type: requiredString(value, "source_type"),
     trust_tier: requiredTrustTier(value, "trust_tier"),
-    registry_url: optionalString(value.registry_url),
+    registry_url: coerceString(value.registry_url),
     add_command: requiredString(value, "add_command"),
     run_command: requiredString(value, "run_command"),
   };
@@ -396,7 +396,7 @@ function requiredTrustTier(record: Record<string, unknown>, field: string): Regi
   return value;
 }
 
-function optionalString(value: unknown): string | undefined {
+function coerceString(value: unknown): string | undefined {
   return typeof value === "string" ? value : undefined;
 }
 

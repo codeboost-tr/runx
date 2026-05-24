@@ -441,7 +441,7 @@ function validateRemoteRegistrySearchResult(value: unknown, query: string): Remo
   return {
     skill_id: skill.skill_id,
     name: skill.name,
-    version: optionalString(skill.version),
+    version: coerceString(skill.version),
   };
 }
 
@@ -522,8 +522,8 @@ function validateAcquiredRegistrySkillForInstall(value: unknown, skillId: string
     version: acquisition.version,
     digest: acquisition.digest,
     markdown: acquisition.markdown,
-    profile_document: optionalString(acquisition.profile_document),
-    profile_digest: optionalString(acquisition.profile_digest),
+    profile_document: coerceString(acquisition.profile_document),
+    profile_digest: coerceString(acquisition.profile_digest),
     runner_names: acquisition.runner_names,
     trust_tier: acquisition.trust_tier,
   };
@@ -603,7 +603,7 @@ function optionalNonEmptyString(value: unknown, label: string): string | undefin
   return requiredString(value, label);
 }
 
-function optionalString(value: unknown): string | undefined {
+function coerceString(value: unknown): string | undefined {
   return typeof value === "string" ? value : undefined;
 }
 

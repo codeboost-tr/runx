@@ -217,13 +217,13 @@ function parseRustRegistryInstallResult(value: unknown): NativeRegistryInstallRe
     skill_name: install.skill_name,
     source: install.source,
     source_label: install.source_label,
-    skill_id: optionalString(install.skill_id),
-    version: optionalString(install.version),
+    skill_id: coerceString(install.skill_id),
+    version: coerceString(install.version),
     digest: install.digest,
-    profileDigest: optionalString(install.profile_digest),
-    profileStatePath: optionalString(install.profile_state_path),
+    profileDigest: coerceString(install.profile_digest),
+    profileStatePath: coerceString(install.profile_state_path),
     runnerNames: install.runner_names.filter((runnerName): runnerName is string => typeof runnerName === "string"),
-    trust_tier: optionalString(install.trust_tier),
+    trust_tier: coerceString(install.trust_tier),
   };
 }
 
@@ -255,7 +255,7 @@ function parsePositiveInt(value: string | undefined): number | undefined {
   return Number.isFinite(parsed) && parsed > 0 ? parsed : undefined;
 }
 
-function optionalString(value: unknown): string | undefined {
+function coerceString(value: unknown): string | undefined {
   return typeof value === "string" ? value : undefined;
 }
 

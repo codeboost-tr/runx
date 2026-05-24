@@ -26,6 +26,7 @@ const commands = [
   ["pnpm", ["fixtures:kernel:keys"]],
   ["pnpm", ["fixtures:contracts:check"]],
   ["pnpm", ["fixtures:contracts:keys"]],
+  ["pnpm", ["fixtures:harness:check"]],
   ["pnpm", ["fixtures:adapters:a2a:check"]],
   ["pnpm", ["fixtures:adapters:agent:check"]],
   ["pnpm", ["fixtures:cli-parity:check"]],
@@ -44,10 +45,19 @@ if (cargoBuild.status !== 0) {
   process.exit(cargoBuild.status ?? 1);
 }
 
+// The binary is built once above; point the kernel / parser / CLI eval paths at
+// that single prebuilt binary so subprocess-backed suites never cold-start a
+// debug binary under parallel load.
+const evalBinEnv = {
+  RUNX_KERNEL_EVAL_BIN: rustKernelBin,
+  RUNX_PARSER_EVAL_BIN: rustKernelBin,
+  RUNX_RUST_CLI_BIN: rustKernelBin,
+};
+
 for (const [command, args] of commands) {
   const result = spawnSync(command, args, {
     cwd: workspaceRoot,
-    env: { ...process.env, RUNX_KERNEL_EVAL_BIN: rustKernelBin },
+    env: { ...process.env, ...evalBinEnv },
     stdio: "inherit",
   });
   if (result.status !== 0) {
