@@ -279,6 +279,9 @@ Summarize the topic.
 "#,
     )?;
     let fixture_path = temp.path().join("harness.yaml");
+    // Agent skills replay from the caller's recorded answer, keyed by the agent
+    // act request id `agent.<skill>.output`, rather than from a live adapter
+    // resolver; a recorded answer with no refusing closure seals the run.
     std::fs::write(
         &fixture_path,
         r#"
@@ -287,6 +290,10 @@ kind: agent
 target: skill
 inputs:
   topic: harness replay
+caller:
+  answers:
+    agent.fixture-agent.output:
+      summary: agent replayed
 expect:
   status: sealed
 "#,
@@ -303,9 +310,7 @@ expect:
         .skill_output
         .ok_or_else(|| std::io::Error::other("missing replay skill output"))?;
     assert_eq!(output.status, InvocationStatus::Success);
-    assert_eq!(output.stdout, "agent replayed");
-    let requests = resolver.requests.borrow();
-    assert_eq!(requests.len(), 1);
+    assert!(output.stdout.contains("agent replayed"));
     Ok(())
 }
 
