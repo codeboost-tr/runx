@@ -330,6 +330,18 @@
       ]
     },
     {
+      "id": "kernel.validate",
+      "commandId": "kernel",
+      "mode": "validate",
+      "proves": []
+    },
+    {
+      "id": "registry.validate",
+      "commandId": "registry",
+      "mode": "validate",
+      "proves": []
+    },
+    {
       "id": "mcp.serve.validate",
       "commandId": "mcp.serve",
       "mode": "validate",
