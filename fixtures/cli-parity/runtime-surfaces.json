@@ -27,9 +27,10 @@
       "parityClass": "fixture-backed",
       "coveredBy": [
         "skill.run",
-        "harness"
+        "harness",
+        "kernel"
       ],
-      "notes": "Covers graph execution, branching, caller handoffs, and receipts."
+      "notes": "Covers graph execution, branching, caller handoffs, receipts, and the deterministic decision kernel."
     },
     {
       "id": "receipts",
@@ -107,7 +108,8 @@
       "coveredBy": [
         "skill.search",
         "skill.add",
-        "skill.publish"
+        "skill.publish",
+        "registry"
       ],
       "notes": "Live registries are replaced by deterministic registry fixtures."
     },

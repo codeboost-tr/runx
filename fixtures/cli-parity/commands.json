@@ -852,9 +852,14 @@
         "jsonOutput": "schema-exact",
         "receipt": "none",
         "sideEffect": "local-runtime",
-        "surfaces": []
+        "surfaces": [
+          "graph-runtime",
+          "cli-presentation"
+        ]
       },
-      "cases": []
+      "cases": [
+        "kernel.validate"
+      ]
     },
     {
       "id": "registry",
@@ -874,10 +879,15 @@
         "humanOutput": "semantic",
         "jsonOutput": "schema-exact",
         "receipt": "none",
-        "sideEffect": "none",
-        "surfaces": []
+        "sideEffect": "external-stub",
+        "surfaces": [
+          "registry",
+          "cli-presentation"
+        ]
       },
-      "cases": []
+      "cases": [
+        "registry.validate"
+      ]
     },
     {
       "id": "mcp.serve",
