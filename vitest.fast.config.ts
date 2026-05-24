@@ -8,5 +8,9 @@ export default defineConfig({
   },
   test: {
     include: ["packages/**/*.test.ts", "tests/runtime-local-*.test.ts", "tests/kernel-parity-fixtures.test.ts"],
+    // These suites shell out to the debug `runx` binary; its cold start under
+    // parallel load can exceed the 5s default, so give subprocess work headroom.
+    testTimeout: 30_000,
+    hookTimeout: 30_000,
   },
 });
