@@ -831,6 +831,55 @@
       ]
     },
     {
+      "id": "kernel",
+      "usage": "runx kernel eval --input <file|-> --json",
+      "aliases": [],
+      "requiredPositionals": [
+        "<file|->"
+      ],
+      "flags": [
+        "--input",
+        "--json"
+      ],
+      "exitCodes": [
+        0,
+        1,
+        2,
+        64
+      ],
+      "parity": {
+        "humanOutput": "semantic",
+        "jsonOutput": "schema-exact",
+        "receipt": "none",
+        "sideEffect": "local-runtime",
+        "surfaces": []
+      },
+      "cases": []
+    },
+    {
+      "id": "registry",
+      "usage": "runx registry search|read|resolve|install|publish ... --json",
+      "aliases": [],
+      "requiredPositionals": [],
+      "flags": [
+        "--json"
+      ],
+      "exitCodes": [
+        0,
+        1,
+        2,
+        64
+      ],
+      "parity": {
+        "humanOutput": "semantic",
+        "jsonOutput": "schema-exact",
+        "receipt": "none",
+        "sideEffect": "none",
+        "surfaces": []
+      },
+      "cases": []
+    },
+    {
       "id": "mcp.serve",
       "usage": "runx mcp serve <skill-ref>",
       "aliases": [],
