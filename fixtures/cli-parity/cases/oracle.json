@@ -333,13 +333,19 @@
       "id": "kernel.validate",
       "commandId": "kernel",
       "mode": "validate",
-      "proves": []
+      "proves": [
+        "graph-runtime",
+        "cli-presentation"
+      ]
     },
     {
       "id": "registry.validate",
       "commandId": "registry",
       "mode": "validate",
-      "proves": []
+      "proves": [
+        "registry",
+        "cli-presentation"
+      ]
     },
     {
       "id": "mcp.serve.validate",
