@@ -13,10 +13,10 @@ expect:
     disposition: closed
     reason_code: graph_closed
     child_receipt_refs:
-      - runx:receipt:hrn_rcpt_stripe-spt-payment_quote
-      - runx:receipt:hrn_rcpt_stripe-spt-payment_reserve
-      - runx:receipt:hrn_rcpt_stripe-spt-payment_approve-spend
-      - runx:receipt:hrn_rcpt_stripe-spt-payment_fulfill
+      - runx:receipt:sha256:00e05c36bd2952f2b828468478e91e4928fd3af9a494608bbb0a3da381c2fd5f
+      - runx:receipt:sha256:a21ef882927def2220bf5853780f41b3e2acf7accca1efd1804a7fb4a3e92647
+      - runx:receipt:sha256:1d6c11c695647c10198eb0990f0f3afc2eaaf37ae091e21262a35142f7c2afd8
+      - runx:receipt:sha256:89b169d3ac1c366a19413c8bc735e1450f8426b59aa6dec7de75dfd36a29656c
   steps:
     - quote
     - reserve

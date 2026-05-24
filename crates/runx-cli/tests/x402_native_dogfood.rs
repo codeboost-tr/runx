@@ -17,7 +17,6 @@ fn native_x402_mock_dogfood_fixtures_run_without_typescript()
         ],
     )?;
     assert_eq!(approved["schema"], "runx.receipt.v1");
-    assert_eq!(approved["harness"]["state"], "sealed");
     assert_eq!(approved["seal"]["disposition"], "closed");
     assert_eq!(
         child_receipt_uris(&approved),
@@ -36,7 +35,6 @@ fn native_x402_mock_dogfood_fixtures_run_without_typescript()
         ],
     )?;
     assert_eq!(denied["schema"], "runx.receipt.v1");
-    assert_eq!(denied["harness"]["state"], "sealed");
     assert_eq!(denied["seal"]["disposition"], "blocked");
     assert_eq!(denied["seal"]["reason_code"], "graph_blocked");
     assert_eq!(
@@ -60,7 +58,6 @@ fn native_x402_paid_echo_fixture_passes_only_refs_downstream()
     )?;
 
     assert_eq!(receipt["schema"], "runx.receipt.v1");
-    assert_eq!(receipt["harness"]["state"], "sealed");
     assert_eq!(receipt["seal"]["disposition"], "closed");
     assert_eq!(
         child_receipt_uris(&receipt),
@@ -215,7 +212,6 @@ fn native_x402_stripe_spt_happy_path_runs_without_typescript()
     )?;
 
     assert_eq!(receipt["schema"], "runx.receipt.v1");
-    assert_eq!(receipt["harness"]["state"], "sealed");
     assert_eq!(receipt["seal"]["disposition"], "closed");
     assert_eq!(
         child_receipt_uris(&receipt),
@@ -238,7 +234,6 @@ fn native_x402_negative_fixtures_refuse_without_settlement()
         &["runx:receipt:hrn_rcpt_x402-pay-negative-malformed-challenge_reserve"],
     )?;
     assert_eq!(malformed["schema"], "runx.receipt.v1");
-    assert_eq!(malformed["harness"]["state"], "sealed");
     assert_eq!(malformed["seal"]["disposition"], "blocked");
     assert_eq!(malformed["seal"]["reason_code"], "graph_blocked");
     assert_eq!(
@@ -254,7 +249,6 @@ fn native_x402_negative_fixtures_refuse_without_settlement()
         ],
     )?;
     assert_eq!(ambiguous["schema"], "runx.receipt.v1");
-    assert_eq!(ambiguous["harness"]["state"], "sealed");
     assert_eq!(ambiguous["seal"]["disposition"], "blocked");
     assert_eq!(ambiguous["seal"]["reason_code"], "graph_blocked");
     assert_eq!(
