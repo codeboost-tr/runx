@@ -9,6 +9,7 @@ import {
   resolveSkillInstallRoot,
 } from "@runxhq/core/config";
 import { createFileKnowledgeStore } from "@runxhq/core/knowledge";
+import { firstNonEmpty, isRecord, recordField } from "@runxhq/core/util";
 
 import type { ParsedArgs } from "./args.js";
 import type { CliIo, CliServices } from "./index.js";
@@ -561,18 +562,6 @@ function nativeSkillRunResult(skillPath: string, value: unknown): CliSkillRunRes
   throw new Error(`native runx skill returned unsupported status '${status ?? "<missing>"}'.`);
 }
 
-function isRecord(value: unknown): value is Readonly<Record<string, unknown>> {
-  return typeof value === "object" && value !== null && !Array.isArray(value);
-}
-
-function recordField(
-  value: Readonly<Record<string, unknown>>,
-  key: string,
-): Readonly<Record<string, unknown>> | undefined {
-  const field = value[key];
-  return isRecord(field) ? field : undefined;
-}
-
 function arrayField(value: Readonly<Record<string, unknown>>, key: string): readonly unknown[] {
   const field = value[key];
   return Array.isArray(field) ? field : [];
@@ -583,10 +572,3 @@ function stringField(value: Readonly<Record<string, unknown>>, key: string): str
   return typeof field === "string" ? field : undefined;
 }
 
-function firstNonEmpty(...values: readonly string[]): string {
-  for (const value of values) {
-    const trimmed = value.trim();
-    if (trimmed) return trimmed;
-  }
-  return "";
-}

@@ -1,3 +1,4 @@
+import { isDefined } from "../util/types.js";
 import { runxLinkForVersion } from "./links.js";
 import { deriveTrustSignals } from "./trust.js";
 import type { SkillSearchResult } from "./search-result.js";
@@ -71,8 +72,4 @@ function searchableText(version: RegistrySkillVersion): string {
 
 function normalize(value: string): string {
   return value.trim().toLowerCase();
-}
-
-function isDefined<T>(value: T | undefined): value is T {
-  return value !== undefined;
 }

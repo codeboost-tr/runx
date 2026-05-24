@@ -1,6 +1,8 @@
 import { spawn } from "node:child_process";
 import process from "node:process";
 
+import { firstNonEmptyOrUndefined } from "@runxhq/core/util";
+
 import type { CliIo } from "../index.js";
 
 export interface McpCommandArgs {
@@ -58,7 +60,7 @@ function nativeMcpServeArgs(parsed: McpCommandArgs, skillRefs: readonly string[]
 }
 
 function resolveNativeRunxCommand(env: NodeJS.ProcessEnv): string {
-  const command = firstNonEmpty(
+  const command = firstNonEmptyOrUndefined(
     env.RUNX_RUST_CLI_BIN,
     env.RUNX_MCP_NATIVE_BIN,
     env.RUNX_KERNEL_EVAL_BIN,
@@ -131,6 +133,3 @@ function nativeMcpExitMessage(status: number | null, stderr: string): string {
   return `Native MCP serve failed with exit ${status ?? "unknown"}${details ? `: ${details}` : "."}`;
 }
 
-function firstNonEmpty(...values: readonly (string | undefined)[]): string | undefined {
-  return values.find((value): value is string => typeof value === "string" && value.length > 0);
-}

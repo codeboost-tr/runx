@@ -1,3 +1,4 @@
+import { asRecord } from "../util/types.js";
 import { validateOutboxEntry, type OutboxEntry, type OutboxEntryStatus } from "./outbox.js";
 
 export const THREAD_STORY_CONTROL_SCHEMA_VERSION = "runx.thread-story.control.v1";
@@ -382,12 +383,6 @@ function appendBullets(
 
 function compactLines(values: readonly (string | undefined)[]): string[] {
   return values.filter((value): value is string => Boolean(value && value.trim().length > 0));
-}
-
-function asRecord(value: unknown): Readonly<Record<string, unknown>> | undefined {
-  return typeof value === "object" && value !== null && !Array.isArray(value)
-    ? value as Readonly<Record<string, unknown>>
-    : undefined;
 }
 
 function pruneRecord(value: Readonly<Record<string, unknown>> | undefined): Readonly<Record<string, unknown>> | undefined {

@@ -21,6 +21,7 @@ import {
   errorMessage,
   fetchWithTimeout,
   hashString,
+  isDefined,
   isNotFound,
   isRecord,
   safeReadDirNames,
@@ -1713,10 +1714,6 @@ function requireEnum(value: unknown, label: string, allowed: readonly string[]):
     throw new Error(`${label} must be one of ${allowed.join(", ")}.`);
   }
   return value;
-}
-
-function isDefined<T>(value: T | undefined): value is T {
-  return value !== undefined;
 }
 
 export interface RunxInstallState {

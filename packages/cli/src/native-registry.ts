@@ -2,7 +2,7 @@ import { spawn } from "node:child_process";
 import process from "node:process";
 
 import type { SkillSearchResult } from "@runxhq/core/registry";
-import { asRecord, errorMessage } from "@runxhq/core/util";
+import { asRecord, errorMessage, firstNonEmpty } from "@runxhq/core/util";
 
 export interface NativeRegistryOptions {
   readonly env: NodeJS.ProcessEnv;
@@ -253,14 +253,6 @@ function parsePositiveInt(value: string | undefined): number | undefined {
   if (!value) return undefined;
   const parsed = Number.parseInt(value, 10);
   return Number.isFinite(parsed) && parsed > 0 ? parsed : undefined;
-}
-
-function firstNonEmpty(...values: readonly string[]): string {
-  for (const value of values) {
-    const trimmed = value.trim();
-    if (trimmed) return trimmed;
-  }
-  return "";
 }
 
 function optionalString(value: unknown): string | undefined {

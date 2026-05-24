@@ -1,7 +1,7 @@
 import { spawn } from "node:child_process";
 import process from "node:process";
 
-import { errorMessage, isRecord } from "@runxhq/core/util";
+import { errorMessage, firstNonEmpty, isRecord } from "@runxhq/core/util";
 
 export interface ParserBridgeOptions {
   readonly env?: NodeJS.ProcessEnv;
@@ -666,6 +666,3 @@ function requireArray(value: unknown, label: string): readonly unknown[] {
   return value;
 }
 
-function firstNonEmpty(...values: readonly (string | undefined)[]): string {
-  return values.find((value) => value !== undefined && value.trim().length > 0) ?? "";
-}

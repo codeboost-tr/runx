@@ -1,4 +1,5 @@
 import { resolvePathFromUserInput } from "@runxhq/core/config";
+import { arrayValue, asRecord, stringValue } from "@runxhq/core/util";
 
 import { runNativeRunxJson } from "../native-runx.js";
 import { relativeTime, shortId, statusIcon, theme } from "../ui.js";
@@ -144,20 +145,6 @@ function pushOptionalFlag(args: string[], flag: string, value: string | undefine
   if (value !== undefined && value.length > 0) {
     args.push(flag, value);
   }
-}
-
-function asRecord(value: unknown): Readonly<Record<string, unknown>> | undefined {
-  return typeof value === "object" && value !== null && !Array.isArray(value)
-    ? value as Readonly<Record<string, unknown>>
-    : undefined;
-}
-
-function arrayValue(value: unknown): readonly unknown[] {
-  return Array.isArray(value) ? value : [];
-}
-
-function stringValue(value: unknown): string | undefined {
-  return typeof value === "string" ? value : undefined;
 }
 
 function stringArray(value: unknown): readonly string[] {

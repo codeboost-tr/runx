@@ -1,6 +1,8 @@
 import { spawn } from "node:child_process";
 import process from "node:process";
 
+import { errorMessage, firstNonEmpty, isRecord } from "@runxhq/core/util";
+
 export interface RetryAdmissionRequest {
   readonly stepId: string;
   readonly retry?: {
@@ -1047,10 +1049,6 @@ function isKernelSuccessEnvelope(value: unknown): value is KernelSuccessEnvelope
   return value.result.kind === "output" && "value" in value.result;
 }
 
-function isRecord(value: unknown): value is Readonly<Record<string, unknown>> {
-  return typeof value === "object" && value !== null && !Array.isArray(value);
-}
-
 function isStringArray(value: unknown): value is readonly string[] {
   return Array.isArray(value) && value.every((entry) => typeof entry === "string");
 }
@@ -1066,14 +1064,6 @@ function isNumberRecord(value: unknown): value is Readonly<Record<string, number
 
 function isStringArrayRecord(value: unknown): value is Readonly<Record<string, readonly string[]>> {
   return isRecord(value) && Object.values(value).every(isStringArray);
-}
-
-function firstNonEmpty(...values: readonly string[]): string {
-  return values.find((value) => value.trim().length > 0)?.trim() ?? "";
-}
-
-function errorMessage(error: unknown): string {
-  return error instanceof Error ? error.message : String(error);
 }
 
 function uniqueStrings(values: readonly string[]): readonly string[] {

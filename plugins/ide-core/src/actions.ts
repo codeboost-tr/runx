@@ -9,6 +9,7 @@ import {
   type RegistrySkillVersion,
   type RegistryStore,
 } from "@runxhq/core/registry";
+import { firstNonEmpty, isRecord, recordField } from "@runxhq/core/util";
 import { parse as parseYaml } from "yaml";
 
 export interface IdeActionCoreOptions {
@@ -426,21 +427,3 @@ function harnessReceipt(value: unknown): HarnessReceiptLike {
   return isRecord(value) ? value : {};
 }
 
-function recordField(value: Readonly<Record<string, unknown>>, key: string): Readonly<Record<string, unknown>> | undefined {
-  const field = value[key];
-  return isRecord(field) ? field : undefined;
-}
-
-function isRecord(value: unknown): value is Readonly<Record<string, unknown>> {
-  return typeof value === "object" && value !== null && !Array.isArray(value);
-}
-
-function firstNonEmpty(...values: readonly string[]): string {
-  for (const value of values) {
-    const trimmed = value.trim();
-    if (trimmed) {
-      return trimmed;
-    }
-  }
-  return "";
-}

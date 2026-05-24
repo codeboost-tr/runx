@@ -53,7 +53,7 @@ import {
   prepareLedgerAppend,
   type ArtifactEnvelope,
 } from "@runxhq/core/artifacts";
-import { errorMessage, isRecord } from "@runxhq/core/util";
+import { errorMessage, isRecord, recordField } from "@runxhq/core/util";
 import { appendPendingSkillLedgerEntries, buildSkillLedgerEntries } from "./graph-ledger.js";
 import {
   createCallerAgentAdapter,
@@ -1230,14 +1230,6 @@ function findRailProof(value: unknown): Readonly<Record<string, unknown>> | unde
   const packet = recordField(value, "payment_rail_packet");
   const packetData = recordField(packet, "data") ?? packet;
   return recordField(packetData, "rail_proof");
-}
-
-function recordField(value: unknown, field: string): Readonly<Record<string, unknown>> | undefined {
-  if (!isRecord(value)) {
-    return undefined;
-  }
-  const fieldValue = value[field];
-  return isRecord(fieldValue) ? fieldValue : undefined;
 }
 
 function stringField(value: unknown, field: string): string | undefined {

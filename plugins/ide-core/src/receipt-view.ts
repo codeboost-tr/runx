@@ -1,3 +1,5 @@
+import { arrayValue, asRecord, isRecord, stringValue } from "@runxhq/core/util";
+
 export interface ReceiptViewNode {
   readonly id: string;
   readonly label: string;
@@ -30,7 +32,7 @@ export function buildReceiptViewModel(receipt: unknown): ReceiptViewModel {
 
   const id = stringValue(receipt.id) ?? "receipt";
   const schema = stringValue(receipt.schema) ?? "receipt";
-  const seal = recordValue(receipt.seal);
+  const seal = asRecord(receipt.seal);
   const nodes: ReceiptViewNode[] = [
     {
       id,
@@ -48,8 +50,8 @@ export function buildReceiptViewModel(receipt: unknown): ReceiptViewModel {
     }
     const actId = stringValue(act.id) ?? `act-${nodes.length}`;
     const nodeId = `${id}:act:${actId}`;
-    const closure = recordValue(act.closure);
-    const provenance = recordValue(act.by);
+    const closure = asRecord(act.closure);
+    const provenance = asRecord(act.by);
     nodes.push({
       id: nodeId,
       label: `${stringValue(act.form) ?? "act"} ${actId}`,
@@ -75,7 +77,7 @@ export function buildReceiptViewModel(receipt: unknown): ReceiptViewModel {
     }
     const decisionId = stringValue(decision.decision_id) ?? `decision-${nodes.length}`;
     const nodeId = `${id}:decision:${decisionId}`;
-    const closure = recordValue(decision.closure);
+    const closure = asRecord(decision.closure);
     nodes.push({
       id: nodeId,
       label: `decision ${stringValue(decision.choice) ?? ""}`.trim(),
@@ -91,7 +93,7 @@ export function buildReceiptViewModel(receipt: unknown): ReceiptViewModel {
     edges.push({ from: id, to: nodeId, label: "decision" });
   }
 
-  const lineage = recordValue(receipt.lineage);
+  const lineage = asRecord(receipt.lineage);
   for (const syncPoint of arrayValue(lineage?.sync)) {
     if (!isRecord(syncPoint)) {
       continue;
@@ -145,7 +147,7 @@ function sealDetail(
     reason_code: seal?.reason_code,
     summary: seal?.summary,
   };
-  const subject = recordValue(receipt.subject);
+  const subject = asRecord(receipt.subject);
   for (const commitment of arrayValue(subject?.commitments)) {
     if (!isRecord(commitment)) {
       continue;
@@ -173,22 +175,6 @@ function criterionStatuses(value: unknown): readonly string[] {
   return statuses;
 }
 
-function isRecord(value: unknown): value is Readonly<Record<string, unknown>> {
-  return typeof value === "object" && value !== null && !Array.isArray(value);
-}
-
-function recordValue(value: unknown): Readonly<Record<string, unknown>> | undefined {
-  return isRecord(value) ? value : undefined;
-}
-
-function arrayValue(value: unknown): readonly unknown[] {
-  return Array.isArray(value) ? value : [];
-}
-
-function stringValue(value: unknown): string | undefined {
-  return typeof value === "string" ? value : undefined;
-}
-
 function referenceValue(value: unknown): Readonly<{ type?: string; uri: string; label?: string }> | undefined {
   if (!isRecord(value)) {
     return undefined;
@@ -205,8 +191,8 @@ function referenceValue(value: unknown): Readonly<{ type?: string; uri: string; 
 }
 
 function receiptTitle(receipt: Readonly<Record<string, unknown>>, fallback: string): string {
-  const subject = recordValue(receipt.subject);
-  const subjectRef = recordValue(subject?.ref);
+  const subject = asRecord(receipt.subject);
+  const subjectRef = asRecord(subject?.ref);
   return stringValue(subjectRef?.label)
     ?? stringValue(subjectRef?.uri)
     ?? fallback;

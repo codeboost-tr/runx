@@ -10,6 +10,26 @@ export function asRecord(value: unknown): Record<string, unknown> | undefined {
   return isRecord(value) ? value : undefined;
 }
 
+/** Read `value[key]` and return it only when it is itself a record. */
+export function recordField(value: unknown, key: string): Readonly<Record<string, unknown>> | undefined {
+  return asRecord(asRecord(value)?.[key]);
+}
+
+/** Narrow an unknown to a string, returning undefined otherwise (no throw). */
+export function stringValue(value: unknown): string | undefined {
+  return typeof value === "string" ? value : undefined;
+}
+
+/** Return the value when it is an array, otherwise an empty array. */
+export function arrayValue(value: unknown): readonly unknown[] {
+  return Array.isArray(value) ? value : [];
+}
+
+/** Type guard that filters out `undefined` (handy in `.filter(isDefined)`). */
+export function isDefined<T>(value: T | undefined): value is T {
+  return value !== undefined;
+}
+
 export function isNodeError(error: unknown): error is NodeJS.ErrnoException {
   return error instanceof Error && "code" in error;
 }

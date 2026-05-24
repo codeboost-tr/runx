@@ -3,7 +3,7 @@ import { existsSync } from "node:fs";
 import path from "node:path";
 import process from "node:process";
 
-import { errorMessage } from "@runxhq/core/util";
+import { errorMessage, firstNonEmpty } from "@runxhq/core/util";
 
 export interface NativeRunxProcessResult {
   readonly status: number | null;
@@ -146,10 +146,3 @@ function parsePositiveInt(value: string | undefined): number | undefined {
   return Number.isFinite(parsed) && parsed > 0 ? parsed : undefined;
 }
 
-function firstNonEmpty(...values: readonly string[]): string {
-  for (const value of values) {
-    const trimmed = value.trim();
-    if (trimmed) return trimmed;
-  }
-  return "";
-}
