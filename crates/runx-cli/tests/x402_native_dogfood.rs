@@ -104,7 +104,7 @@ fn native_x402_ledger_projection() -> Result<(), Box<dyn std::error::Error>> {
         .join("artifacts")
         .join("payment-ledger")
         .join("x402-pay")
-        .join("hrn_rcpt_x402-pay-paid-echo.json");
+        .join("sha256:c3d4c37bb414273c6db19f82f2b6608feb8604215f734f5ff53389aec73ea943.json");
     let projection: Value = serde_json::from_str(&fs::read_to_string(&projection_path)?)?;
     assert_eq!(
         projection["schema_version"],
@@ -126,11 +126,11 @@ fn native_x402_ledger_projection() -> Result<(), Box<dyn std::error::Error>> {
     assert_eq!(event["entry"]["data"]["kind"], "payment_ledger_projected");
     assert_eq!(
         event["entry"]["data"]["detail"]["projection_artifact_id"],
-        "x402-pay:runx:receipt:hrn_rcpt_x402-pay-paid-echo"
+        "x402-pay:runx:receipt:sha256:c3d4c37bb414273c6db19f82f2b6608feb8604215f734f5ff53389aec73ea943"
     );
     assert_eq!(
         event["entry"]["data"]["detail"]["source_receipt_id"],
-        "runx:receipt:hrn_rcpt_x402-pay-paid-echo"
+        "runx:receipt:sha256:c3d4c37bb414273c6db19f82f2b6608feb8604215f734f5ff53389aec73ea943"
     );
 
     fs::remove_dir_all(&receipt_dir).ok();
@@ -157,7 +157,7 @@ fn native_x402_refusal_ledger_projection() -> Result<(), Box<dyn std::error::Err
         .join("artifacts")
         .join("payment-ledger")
         .join("x402-pay")
-        .join("hrn_rcpt_x402-pay-ledger-governed-refusal.json");
+        .join("sha256:51b54a40d8905844a2ee8e212c6fc4f79760ace6ba7d1dd581d60c7795c8c72e.json");
     let projection: Value = serde_json::from_str(&fs::read_to_string(&projection_path)?)?;
     assert_eq!(
         projection["schema_version"],
@@ -188,7 +188,7 @@ fn native_x402_refusal_ledger_projection() -> Result<(), Box<dyn std::error::Err
     assert_eq!(event["entry"]["data"]["kind"], "payment_ledger_projected");
     assert_eq!(
         event["entry"]["data"]["detail"]["projection_artifact_id"],
-        "x402-pay:runx:receipt:hrn_rcpt_x402-pay-ledger-governed-refusal"
+        "x402-pay:runx:receipt:sha256:51b54a40d8905844a2ee8e212c6fc4f79760ace6ba7d1dd581d60c7795c8c72e"
     );
     assert_eq!(event["entry"]["data"]["detail"]["disposition"], "refused");
 
