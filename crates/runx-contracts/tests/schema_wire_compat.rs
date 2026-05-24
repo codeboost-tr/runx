@@ -12,6 +12,7 @@ use std::path::PathBuf;
 
 use runx_contracts::act::Act;
 use runx_contracts::act_assignment::ActAssignment;
+use runx_contracts::agent_context::AgentContextEnvelope;
 use runx_contracts::artifact::Artifact;
 use runx_contracts::aster::{
     FeedEntry, Opportunity, ReflectionEntry, Selection, SelectionCycle, SkillBinding, Target,
@@ -29,15 +30,20 @@ use runx_contracts::external_adapter::{
     ExternalAdapterHostResolutionFrame, ExternalAdapterInvocation, ExternalAdapterManifest,
     ExternalAdapterResponse,
 };
+use runx_contracts::handoff::{HandoffSignal, HandoffState};
 use runx_contracts::host_protocol::{
     ApprovalGate, Question, ResolutionRequest, ResolutionResponse,
 };
 use runx_contracts::operational_policy::OperationalPolicy;
+use runx_contracts::packet_index::PacketIndex;
 use runx_contracts::receipt::Receipt;
 use runx_contracts::redaction::Redaction;
 use runx_contracts::reference::Reference;
+use runx_contracts::registry_binding::RegistryBinding;
+use runx_contracts::review::ReviewReceiptOutput;
 use runx_contracts::schema::RunxSchema;
 use runx_contracts::signal::Signal;
+use runx_contracts::suppression::SuppressionRecord;
 use runx_contracts::thread_outbox_provider::{
     ThreadOutboxProviderFetch, ThreadOutboxProviderManifest, ThreadOutboxProviderObservation,
     ThreadOutboxProviderPush,
@@ -253,6 +259,487 @@ fn covered() -> Vec<Covered> {
             emitted: Receipt::json_schema(),
             corpus: receipt_corpus(),
         },
+        Covered {
+            file_name: "handoff-signal.schema.json",
+            emitted: HandoffSignal::json_schema(),
+            corpus: handoff_signal_corpus(),
+        },
+        Covered {
+            file_name: "handoff-state.schema.json",
+            emitted: HandoffState::json_schema(),
+            corpus: handoff_state_corpus(),
+        },
+        Covered {
+            file_name: "suppression-record.schema.json",
+            emitted: SuppressionRecord::json_schema(),
+            corpus: suppression_record_corpus(),
+        },
+        Covered {
+            file_name: "packet-index.schema.json",
+            emitted: PacketIndex::json_schema(),
+            corpus: packet_index_corpus(),
+        },
+        Covered {
+            file_name: "registry-binding.schema.json",
+            emitted: RegistryBinding::json_schema(),
+            corpus: registry_binding_corpus(),
+        },
+        Covered {
+            file_name: "review-receipt-output.schema.json",
+            emitted: ReviewReceiptOutput::json_schema(),
+            corpus: review_receipt_output_corpus(),
+        },
+        Covered {
+            file_name: "agent-context-envelope.schema.json",
+            emitted: AgentContextEnvelope::json_schema(),
+            corpus: agent_context_envelope_corpus(),
+        },
+    ]
+}
+
+fn handoff_signal_corpus() -> Vec<(&'static str, Value)> {
+    let valid = json!({
+        "schema": "runx.handoff_signal.v1",
+        "signal_id": "sig_1",
+        "handoff_id": "ho_1",
+        "source": "issue_comment",
+        "disposition": "acknowledged",
+        "recorded_at": "2026-01-01T00:00:00Z",
+    });
+    vec![
+        ("minimal valid", valid.clone()),
+        ("full valid", {
+            let mut v = valid.clone();
+            v["boundary_kind"] = json!("pull_request");
+            v["target_repo"] = json!("acme/widgets");
+            v["thread_locator"] = json!("acme/widgets#1");
+            v["actor"] = json!({ "actor_id": "u1", "display_name": "User", "role": "maintainer" });
+            v["notes"] = json!("looks good");
+            v["labels"] = json!(["bug"]);
+            v["source_ref"] = json!({ "type": "pull_request", "uri": "runx:pr:1", "label": "PR" });
+            v["metadata"] = json!({ "k": 1 });
+            v
+        }),
+        ("missing schema", drop_field(valid.clone(), "schema")),
+        ("missing signal_id", drop_field(valid.clone(), "signal_id")),
+        (
+            "missing disposition",
+            drop_field(valid.clone(), "disposition"),
+        ),
+        (
+            "empty signal_id",
+            set_field(valid.clone(), "signal_id", json!("")),
+        ),
+        (
+            "unknown source",
+            set_field(valid.clone(), "source", json!("smoke_signal")),
+        ),
+        (
+            "unknown disposition",
+            set_field(valid.clone(), "disposition", json!("ghosted")),
+        ),
+        (
+            "malformed recorded_at",
+            set_field(valid.clone(), "recorded_at", json!("nope")),
+        ),
+        (
+            "source_ref empty uri rejected",
+            set_field(
+                valid.clone(),
+                "source_ref",
+                json!({ "type": "pull_request", "uri": "" }),
+            ),
+        ),
+        (
+            "additional property",
+            set_field(valid.clone(), "bogus", json!(true)),
+        ),
+    ]
+}
+
+fn handoff_state_corpus() -> Vec<(&'static str, Value)> {
+    let valid = json!({
+        "schema": "runx.handoff_state.v1",
+        "handoff_id": "ho_1",
+        "status": "awaiting_response",
+        "signal_count": 0,
+    });
+    vec![
+        ("minimal valid", valid.clone()),
+        ("full valid", {
+            let mut v = valid.clone();
+            v["boundary_kind"] = json!("pull_request");
+            v["target_repo"] = json!("acme/widgets");
+            v["last_signal_id"] = json!("sig_9");
+            v["last_signal_at"] = json!("2026-01-02T00:00:00Z");
+            v["last_signal_disposition"] = json!("merged");
+            v["suppression_record_id"] = json!("sup_1");
+            v["suppression_reason"] = json!("operator_block");
+            v["summary"] = json!("ongoing");
+            v
+        }),
+        ("missing schema", drop_field(valid.clone(), "schema")),
+        (
+            "missing handoff_id",
+            drop_field(valid.clone(), "handoff_id"),
+        ),
+        (
+            "missing signal_count",
+            drop_field(valid.clone(), "signal_count"),
+        ),
+        (
+            "empty handoff_id",
+            set_field(valid.clone(), "handoff_id", json!("")),
+        ),
+        (
+            "unknown status",
+            set_field(valid.clone(), "status", json!("ghosted")),
+        ),
+        // `signal_count` commits a `minimum: 0` bound the type-driven emitter
+        // does not model (same gap as `minItems`/`minProperties`); keep the
+        // corpus on the non-negative side so both validators agree.
+        (
+            "signal_count as string",
+            set_field(valid.clone(), "signal_count", json!("two")),
+        ),
+        (
+            "unknown suppression_reason",
+            set_field(valid.clone(), "suppression_reason", json!("mood")),
+        ),
+        (
+            "malformed last_signal_at",
+            set_field(valid.clone(), "last_signal_at", json!("nope")),
+        ),
+        (
+            "additional property",
+            set_field(valid.clone(), "bogus", json!(true)),
+        ),
+    ]
+}
+
+fn suppression_record_corpus() -> Vec<(&'static str, Value)> {
+    let valid = json!({
+        "schema": "runx.suppression_record.v1",
+        "record_id": "sup_1",
+        "scope": "contact",
+        "key": "user@example.com",
+        "reason": "requested_no_contact",
+        "recorded_at": "2026-01-01T00:00:00Z",
+    });
+    vec![
+        ("minimal valid", valid.clone()),
+        ("full valid", {
+            let mut v = valid.clone();
+            v["expires_at"] = json!("2026-02-01T00:00:00Z");
+            v["source_signal_id"] = json!("sig_1");
+            v["notes"] = json!("per request");
+            v
+        }),
+        ("missing schema", drop_field(valid.clone(), "schema")),
+        ("missing record_id", drop_field(valid.clone(), "record_id")),
+        ("missing reason", drop_field(valid.clone(), "reason")),
+        (
+            "empty record_id",
+            set_field(valid.clone(), "record_id", json!("")),
+        ),
+        ("empty key", set_field(valid.clone(), "key", json!(""))),
+        (
+            "unknown scope",
+            set_field(valid.clone(), "scope", json!("galaxy")),
+        ),
+        (
+            "unknown reason",
+            set_field(valid.clone(), "reason", json!("mood")),
+        ),
+        (
+            "malformed expires_at",
+            set_field(valid.clone(), "expires_at", json!("nope")),
+        ),
+        (
+            "additional property",
+            set_field(valid.clone(), "bogus", json!(true)),
+        ),
+    ]
+}
+
+fn packet_index_corpus() -> Vec<(&'static str, Value)> {
+    let valid = json!({
+        "schema": "runx.packet.index.v1",
+        "packets": [{
+            "id": "p1",
+            "package": "@runxhq/skill",
+            "version": "1.0.0",
+            "path": "skills/p1",
+            "sha256": "abc",
+        }],
+    });
+    vec![
+        ("valid with packet", valid.clone()),
+        (
+            "valid empty packets",
+            set_field(valid.clone(), "packets", json!([])),
+        ),
+        ("missing schema", drop_field(valid.clone(), "schema")),
+        ("missing packets", drop_field(valid.clone(), "packets")),
+        (
+            "wrong schema const",
+            set_field(valid.clone(), "schema", json!("runx.other.v1")),
+        ),
+        (
+            "packet missing id",
+            set_field(
+                valid.clone(),
+                "packets",
+                json!([{ "package": "p", "version": "1", "path": "x", "sha256": "y" }]),
+            ),
+        ),
+        (
+            "packet additional property",
+            set_field(
+                valid.clone(),
+                "packets",
+                json!([{ "id": "p1", "package": "p", "version": "1", "path": "x", "sha256": "y", "bogus": true }]),
+            ),
+        ),
+        (
+            "additional property",
+            set_field(valid.clone(), "bogus", json!(true)),
+        ),
+    ]
+}
+
+fn registry_binding_corpus() -> Vec<(&'static str, Value)> {
+    let valid = json!({
+        "schema": "runx.registry_binding.v1",
+        "state": "registry_bound",
+        "skill": { "id": "s1", "name": "Skill", "description": "does a thing" },
+        "upstream": {
+            "host": "github.com",
+            "owner": "acme",
+            "repo": "skills",
+            "path": "s1/SKILL.md",
+            "commit": "deadbeef",
+            "blob_sha": "cafef00d",
+            "source_of_truth": true,
+        },
+        "registry": {
+            "owner": "acme",
+            "trust_tier": "first_party",
+            "version": "1.0.0",
+            "profile_path": "profiles/s1",
+            "materialized_package_is_registry_artifact": true,
+        },
+        "harness": { "status": "harness_verified", "case_count": 3 },
+    });
+    vec![
+        ("minimal valid", valid.clone()),
+        ("full valid (open extras + optionals)", {
+            let mut v = valid.clone();
+            v["extra_top"] = json!("ok");
+            v["upstream"]["branch"] = json!("main");
+            v["upstream"]["pr_url"] = json!("https://github.com/acme/skills/pull/1");
+            v["registry"]["install_command"] = json!("runx install s1");
+            v["harness"]["assertion_count"] = json!(9);
+            v["harness"]["case_names"] = json!(["c1", "c2"]);
+            v
+        }),
+        ("missing schema", drop_field(valid.clone(), "schema")),
+        ("missing state", drop_field(valid.clone(), "state")),
+        ("missing harness", drop_field(valid.clone(), "harness")),
+        (
+            "wrong schema const",
+            set_field(valid.clone(), "schema", json!("runx.other.v1")),
+        ),
+        (
+            "unknown state",
+            set_field(valid.clone(), "state", json!("limbo")),
+        ),
+        (
+            "unknown trust_tier",
+            set_field(
+                valid.clone(),
+                "registry",
+                json!({
+                    "owner": "acme",
+                    "trust_tier": "platinum",
+                    "version": "1.0.0",
+                    "profile_path": "profiles/s1",
+                    "materialized_package_is_registry_artifact": true,
+                }),
+            ),
+        ),
+        (
+            "unknown harness status",
+            set_field(
+                valid.clone(),
+                "harness",
+                json!({ "status": "exploded", "case_count": 1 }),
+            ),
+        ),
+        (
+            "skill missing description",
+            set_field(
+                valid.clone(),
+                "skill",
+                json!({ "id": "s1", "name": "Skill" }),
+            ),
+        ),
+    ]
+}
+
+fn review_receipt_output_corpus() -> Vec<(&'static str, Value)> {
+    let valid = json!({
+        "verdict": "needs_update",
+        "failure_summary": "the harness step failed because the prompt drifted",
+        "improvement_proposals": [{
+            "target": "SKILL.md",
+            "change": "tighten the output contract",
+            "rationale": "prevents drift",
+            "risk": "none",
+        }],
+        "next_harness_checks": ["output parses", "verdict present"],
+    });
+    vec![
+        ("full valid", valid.clone()),
+        ("valid pass (empty proposals)", {
+            let mut v = valid.clone();
+            v["verdict"] = json!("pass");
+            v["improvement_proposals"] = json!([]);
+            v
+        }),
+        ("valid with open extras", {
+            let mut v = valid.clone();
+            v["extra"] = json!("ok");
+            v["improvement_proposals"] = json!([{ "target": "t", "change": "c", "extra": 1 }]);
+            v
+        }),
+        ("missing verdict", drop_field(valid.clone(), "verdict")),
+        (
+            "missing failure_summary",
+            drop_field(valid.clone(), "failure_summary"),
+        ),
+        (
+            "missing next_harness_checks",
+            drop_field(valid.clone(), "next_harness_checks"),
+        ),
+        (
+            "unknown verdict",
+            set_field(valid.clone(), "verdict", json!("maybe")),
+        ),
+        (
+            "proposal missing change",
+            set_field(
+                valid.clone(),
+                "improvement_proposals",
+                json!([{ "target": "SKILL.md" }]),
+            ),
+        ),
+        (
+            "next_harness_checks as object",
+            set_field(valid.clone(), "next_harness_checks", json!({})),
+        ),
+    ]
+}
+
+fn agent_context_meta() -> Value {
+    json!({
+        "artifact_id": "art_1",
+        "run_id": "run_1",
+        "step_id": null,
+        "producer": { "skill": "demo", "runner": "local" },
+        "created_at": "2026-01-01T00:00:00Z",
+        "hash": "sha256:abc",
+        "size_bytes": 12,
+        "parent_artifact_id": null,
+        "receipt_id": null,
+        "redacted": false,
+    })
+}
+
+fn agent_context_envelope_corpus() -> Vec<(&'static str, Value)> {
+    let valid = json!({
+        "run_id": "run_1",
+        "skill": "demo",
+        "instructions": "do the thing",
+        "inputs": {},
+        "allowed_tools": ["fs.read"],
+        "current_context": [],
+        "historical_context": [],
+        "provenance": [],
+        "trust_boundary": "trusted",
+    });
+    vec![
+        ("minimal valid", valid.clone()),
+        ("full valid (nested context + output spec)", {
+            let mut v = valid.clone();
+            v["step_id"] = json!("step_1");
+            v["current_context"] = json!([{
+                "type": "artifact",
+                "version": "1",
+                "data": { "k": 1 },
+                "meta": agent_context_meta(),
+            }]);
+            v["historical_context"] = json!([{
+                "type": null,
+                "version": "1",
+                "data": {},
+                "meta": agent_context_meta(),
+            }]);
+            v["provenance"] = json!([{ "input": "a", "output": "b", "from_step": "s0" }]);
+            v["context"] = json!({
+                "memory": { "root_path": "/r", "path": "MEMORY.md", "sha256": "abc", "content": "x" },
+            });
+            v["voice_profile"] =
+                json!({ "root_path": "/r", "path": "voice.md", "sha256": "abc", "content": "" });
+            v["quality_profile"] =
+                json!({ "source": "SKILL.md#quality-profile", "sha256": "abc", "content": "" });
+            v["execution_location"] =
+                json!({ "skill_directory": "/skills/demo", "tool_roots": ["/tools"] });
+            v["output"] =
+                json!({ "result": "string", "report": { "type": "object", "required": true } });
+            v
+        }),
+        ("missing run_id", drop_field(valid.clone(), "run_id")),
+        (
+            "missing trust_boundary",
+            drop_field(valid.clone(), "trust_boundary"),
+        ),
+        (
+            "empty run_id",
+            set_field(valid.clone(), "run_id", json!("")),
+        ),
+        (
+            "empty instructions",
+            set_field(valid.clone(), "instructions", json!("")),
+        ),
+        (
+            "allowed_tools empty item",
+            set_field(valid.clone(), "allowed_tools", json!([""])),
+        ),
+        (
+            "context entry bad version const",
+            set_field(
+                valid.clone(),
+                "current_context",
+                json!([{ "type": "x", "version": "2", "data": {}, "meta": agent_context_meta() }]),
+            ),
+        ),
+        (
+            "context entry missing meta",
+            set_field(
+                valid.clone(),
+                "current_context",
+                json!([{ "type": "x", "version": "1", "data": {} }]),
+            ),
+        ),
+        (
+            "output bad type name",
+            set_field(valid.clone(), "output", json!({ "result": "blob" })),
+        ),
+        (
+            "additional property",
+            set_field(valid.clone(), "bogus", json!(true)),
+        ),
     ]
 }
 
@@ -1884,8 +2371,14 @@ fn resolution_request_corpus() -> Vec<(&'static str, Value)> {
         ("valid input request", input.clone()),
         ("valid approval request", approval.clone()),
         ("valid agent_act request", agent_act.clone()),
-        ("input missing questions", drop_field(input.clone(), "questions")),
-        ("input empty id rejected", set_field(input.clone(), "id", json!(""))),
+        (
+            "input missing questions",
+            drop_field(input.clone(), "questions"),
+        ),
+        (
+            "input empty id rejected",
+            set_field(input.clone(), "id", json!("")),
+        ),
         (
             "unknown kind rejected",
             set_field(input.clone(), "kind", json!("teleport")),

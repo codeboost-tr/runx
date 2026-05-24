@@ -147,10 +147,7 @@ fn struct_field_properties(
     fields: &Fields,
     rename_all: Option<&str>,
     container_default: bool,
-) -> syn::Result<(
-    Vec<proc_macro2::TokenStream>,
-    Vec<proc_macro2::TokenStream>,
-)> {
+) -> syn::Result<(Vec<proc_macro2::TokenStream>, Vec<proc_macro2::TokenStream>)> {
     let mut properties = Vec::new();
     let mut flattened = Vec::new();
     for field in fields {
