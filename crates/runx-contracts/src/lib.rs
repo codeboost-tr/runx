@@ -6,6 +6,7 @@ extern crate self as runx_contracts;
 
 pub mod act;
 pub mod act_assignment;
+pub mod agent_context;
 pub mod artifact;
 pub mod aster;
 pub mod authority;
@@ -16,19 +17,25 @@ pub mod doctor;
 pub mod execution;
 pub mod external_adapter;
 pub mod fingerprint;
+pub mod handoff;
 pub mod host_protocol;
 pub mod json;
 pub mod links;
 pub mod maturity;
 pub mod operational_policy;
+pub mod output;
+pub mod packet_index;
 pub mod post_merge_observer;
 pub mod receipt;
 pub mod receipts;
 pub mod redaction;
 pub mod reference;
 pub mod registry;
+pub mod registry_binding;
+pub mod review;
 pub mod schema;
 pub mod signal;
+pub mod suppression;
 pub mod target_runner;
 pub mod thread_outbox_provider;
 pub mod tools;
@@ -42,6 +49,11 @@ pub use act_assignment::{
     ActAssignment, ActAssignmentActor, ActAssignmentHost, ActAssignmentHostKind,
     ActAssignmentIdempotency, ActAssignmentSchema, BuildActAssignment, IntentKeyInput,
     derive_content_hash, derive_intent_key, derive_trigger_key,
+};
+pub use agent_context::{
+    AgentContextEnvelope, AgentContextProfiles, ContextArtifactMeta, ContextArtifactProducer,
+    ContextEntry, ContextEntryVersion, ExecutionLocation, ProfileFile, ProvenanceEntry,
+    QualityProfile, QualityProfileSource,
 };
 pub use artifact::{ARTIFACT_SCHEMA, Artifact, ArtifactProducedBy, ArtifactSchema};
 pub use aster::{
@@ -92,6 +104,11 @@ pub use external_adapter::{
     ExternalAdapterTransportKind,
 };
 pub use fingerprint::{Fingerprint, FingerprintAlgorithm, hex_lower, sha256_hex, sha256_prefixed};
+pub use handoff::{
+    HandoffDisposition, HandoffSignal, HandoffSignalActor, HandoffSignalSchema,
+    HandoffSignalSource, HandoffSignalSourceRef, HandoffState, HandoffStateSchema, HandoffStatus,
+    SuppressionReason,
+};
 pub use host_protocol::{
     AgentActInvocation, AgentActSourceType, ApprovalDecision, ApprovalGate, ExecutionEvent,
     HostNeedsAgentState, HostRunApproval, HostRunApprovalDecision, HostRunKind, HostRunLineage,
@@ -118,6 +135,8 @@ pub use operational_policy::{
     project_operational_policy_readback, validate_operational_policy_contract,
     validate_operational_policy_semantics,
 };
+pub use output::{OutputField, OutputFieldSpec, OutputType};
+pub use packet_index::{PacketIndex, PacketIndexEntry, PacketIndexSchema};
 pub use post_merge_observer::{
     PostMergeObserverClosureState, PostMergeObserverCriterionPlan,
     PostMergeObserverIdempotencyPlan, PostMergeObserverPlan, PostMergeObserverPlanError,
@@ -138,9 +157,16 @@ pub use receipt::{
 };
 pub use redaction::{HashAlgorithm, HashCommitment, REDACTION_SCHEMA, Redaction, RedactionSchema};
 pub use reference::{ActRef, ProofKind, Reference, ReferenceType};
+pub use registry_binding::{
+    RegistryBinding, RegistryBindingHarness, RegistryBindingRegistry, RegistryBindingSchema,
+    RegistryBindingSkill, RegistryBindingState, RegistryBindingUpstream, RegistryHarnessStatus,
+    RegistryTrustTier,
+};
+pub use review::{ReviewReceiptImprovementProposal, ReviewReceiptOutput, ReviewReceiptVerdict};
 pub use signal::{
     SIGNAL_SCHEMA, Signal, SignalAuthenticity, SignalSchema, SignalTrustLevel, SignalType,
 };
+pub use suppression::{SuppressionRecord, SuppressionRecordSchema, SuppressionScope};
 pub use target_runner::{
     TargetRepoRunnerCheckoutPlan, TargetRepoRunnerDedupeComponent,
     TargetRepoRunnerDedupeLookupExecution, TargetRepoRunnerDedupeLookupObservation,
