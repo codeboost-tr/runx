@@ -401,6 +401,150 @@ fn native_graph_skill_run_pauses_and_resumes_agent_step() -> Result<(), Box<dyn 
     Ok(())
 }
 
+#[test]
+fn native_graph_skill_run_pauses_and_resumes_nested_agent_skill()
+-> Result<(), Box<dyn std::error::Error>> {
+    let temp = tempdir()?;
+    let skill_dir = write_graph_nested_agent_skill(temp.path(), "agent")?;
+    let receipt_dir = temp.path().join("receipts");
+    let inputs = [(
+        "thread_title".to_owned(),
+        JsonValue::String("Nested agent bug".to_owned()),
+    )]
+    .into_iter()
+    .collect::<BTreeMap<_, _>>();
+
+    let initial = run_skill(SkillRunRequest {
+        skill_path: skill_dir.clone(),
+        receipt_dir: Some(receipt_dir.clone()),
+        run_id: None,
+        answers_path: None,
+        inputs: inputs.clone(),
+        env: BTreeMap::new(),
+        cwd: temp.path().to_path_buf(),
+        local_credential: None,
+    })?;
+
+    let output = object(&initial.output, "nested agent graph result")?;
+    assert_eq!(string_field(output, "status"), Some("needs_agent"));
+    let run_id = string_field(output, "run_id").ok_or("missing run_id")?;
+    let requests = array_field(output, "requests").ok_or("missing requests")?;
+    assert_eq!(requests.len(), 1);
+    let request = object(&requests[0], "request")?;
+    assert_eq!(
+        string_field(request, "id"),
+        Some("agent.child-agent.output")
+    );
+    let invocation = object_field(request, "invocation").ok_or("missing invocation")?;
+    assert_eq!(string_field(invocation, "source_type"), Some("agent"));
+
+    let answers_path = temp.path().join("nested-agent-answers.json");
+    fs::write(
+        &answers_path,
+        serde_json::json!({
+            "answers": {
+                "agent.child-agent.output": {
+                    "result": {
+                        "summary": "Nested agent fix authored."
+                    }
+                }
+            }
+        })
+        .to_string(),
+    )?;
+    let resumed = run_skill(SkillRunRequest {
+        skill_path: skill_dir,
+        receipt_dir: Some(receipt_dir),
+        run_id: Some(run_id.to_owned()),
+        answers_path: Some(answers_path),
+        inputs,
+        env: BTreeMap::new(),
+        cwd: temp.path().to_path_buf(),
+        local_credential: None,
+    })?;
+
+    let output = object(&resumed.output, "resumed nested agent graph result")?;
+    assert_eq!(string_field(output, "status"), Some("sealed"));
+    let payload = object_field(output, "payload").ok_or("missing payload")?;
+    let result = object_field(payload, "result").ok_or("missing result")?;
+    assert_eq!(
+        string_field(result, "summary"),
+        Some("Nested agent fix authored.")
+    );
+    let step_outputs = object_field(payload, "step_outputs").ok_or("missing step_outputs")?;
+    assert!(object_field(step_outputs, "nested").is_some());
+
+    Ok(())
+}
+
+#[test]
+fn native_graph_skill_run_pauses_and_resumes_nested_agent_step_skill()
+-> Result<(), Box<dyn std::error::Error>> {
+    let temp = tempdir()?;
+    let skill_dir = write_graph_nested_agent_skill(temp.path(), "agent-step")?;
+    let receipt_dir = temp.path().join("receipts");
+
+    let initial = run_skill(SkillRunRequest {
+        skill_path: skill_dir.clone(),
+        receipt_dir: Some(receipt_dir.clone()),
+        run_id: None,
+        answers_path: None,
+        inputs: BTreeMap::new(),
+        env: BTreeMap::new(),
+        cwd: temp.path().to_path_buf(),
+        local_credential: None,
+    })?;
+
+    let output = object(&initial.output, "nested agent-step graph result")?;
+    assert_eq!(string_field(output, "status"), Some("needs_agent"));
+    let run_id = string_field(output, "run_id").ok_or("missing run_id")?;
+    let requests = array_field(output, "requests").ok_or("missing requests")?;
+    assert_eq!(requests.len(), 1);
+    let request = object(&requests[0], "request")?;
+    assert_eq!(
+        string_field(request, "id"),
+        Some("agent_step.child-agent-step.output")
+    );
+    let invocation = object_field(request, "invocation").ok_or("missing invocation")?;
+    assert_eq!(string_field(invocation, "source_type"), Some("agent-step"));
+
+    let answers_path = temp.path().join("nested-agent-step-answers.json");
+    fs::write(
+        &answers_path,
+        serde_json::json!({
+            "answers": {
+                "agent_step.child-agent-step.output": {
+                    "result": {
+                        "summary": "Nested agent-step fix authored."
+                    }
+                }
+            }
+        })
+        .to_string(),
+    )?;
+    let resumed = run_skill(SkillRunRequest {
+        skill_path: skill_dir,
+        receipt_dir: Some(receipt_dir),
+        run_id: Some(run_id.to_owned()),
+        answers_path: Some(answers_path),
+        inputs: BTreeMap::new(),
+        env: BTreeMap::new(),
+        cwd: temp.path().to_path_buf(),
+        local_credential: None,
+    })?;
+
+    let output = object(&resumed.output, "resumed nested agent-step graph result")?;
+    assert_eq!(string_field(output, "status"), Some("sealed"));
+    let payload = object_field(output, "payload").ok_or("missing payload")?;
+    let result = object_field(payload, "result").ok_or("missing result")?;
+    assert_eq!(
+        string_field(result, "summary"),
+        Some("Nested agent-step fix authored.")
+    );
+
+    Ok(())
+}
+
 #[cfg(feature = "catalog")]
 #[test]
 fn native_graph_skill_run_executes_local_tool_step() -> Result<(), Box<dyn std::error::Error>> {
@@ -623,6 +767,70 @@ runners:
 "#,
     )?;
     Ok(skill_dir.to_path_buf())
+}
+
+fn write_graph_nested_agent_skill(
+    root: &Path,
+    source_type: &str,
+) -> Result<PathBuf, Box<dyn std::error::Error>> {
+    let child_name = match source_type {
+        "agent" => "child-agent",
+        "agent-step" => "child-agent-step",
+        _ => return Err(format!("unsupported nested agent source type {source_type}").into()),
+    };
+    let child_dir = root.join(child_name);
+    fs::create_dir_all(&child_dir)?;
+    let source = if source_type == "agent-step" {
+        r#"
+source:
+  type: agent-step
+  agent: builder
+  task: child-agent-step
+  outputs:
+    result: object
+"#
+    } else {
+        r#"
+source:
+  type: agent
+"#
+    };
+    fs::write(
+        child_dir.join("SKILL.md"),
+        format!(
+            r#"---
+name: {child_name}{source}---
+# {child_name}
+"#
+        ),
+    )?;
+
+    let skill_dir = root.join(format!("graph-nested-{source_type}"));
+    fs::create_dir_all(&skill_dir)?;
+    fs::write(
+        skill_dir.join("SKILL.md"),
+        format!("---\nname: graph-nested-{source_type}\n---\n# Graph Nested {source_type}\n"),
+    )?;
+    fs::write(
+        skill_dir.join("X.yaml"),
+        format!(
+            r#"
+skill: graph-nested-{source_type}
+runners:
+  graph:
+    default: true
+    type: graph
+    graph:
+      name: graph-nested-{source_type}
+      steps:
+        - id: nested
+          skill: ../{child_name}
+          inputs:
+            thread_title: $input.thread_title
+"#
+        ),
+    )?;
+    Ok(skill_dir)
 }
 
 #[cfg(feature = "catalog")]

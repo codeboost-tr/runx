@@ -81,7 +81,7 @@ where
     let skill_dir = skill_dir(graph_dir, step)?;
     let skill = load_skill(&skill_dir)?;
     let skill_name = skill.name.clone();
-    let mut output = runtime.adapter.invoke(SkillInvocation {
+    let invocation = SkillInvocation {
         skill_name: skill.name,
         source: skill.source,
         inputs,
@@ -89,7 +89,21 @@ where
         skill_directory: skill_dir,
         env: runtime.options.env.clone(),
         credential_delivery: crate::credentials::CredentialDelivery::none(),
-    })?;
+    };
+    if let Some(source_type) = agent_skill_source_type(invocation.source.source_type) {
+        return run_agent_skill_step(
+            runtime,
+            graph_name,
+            step,
+            attempt,
+            skill_name,
+            invocation,
+            source_type,
+            host,
+        );
+    }
+
+    let mut output = runtime.adapter.invoke(invocation)?;
     route_external_adapter_host_resolution(step, host, &mut output)?;
     let outputs = output_object(&output);
     let receipt = step_receipt_with_signature_policy(
@@ -490,6 +504,73 @@ where
         receipt,
         admission_witness,
     })
+}
+
+fn run_agent_skill_step<A>(
+    runtime: &Runtime<A>,
+    graph_name: &str,
+    step: &GraphStep,
+    attempt: u32,
+    skill_name: String,
+    invocation: SkillInvocation,
+    source_type: AgentActInvocationSourceType,
+    host: &mut dyn Host,
+) -> Result<StepRun, RuntimeError>
+where
+    A: SkillAdapter,
+{
+    let request_id = agent_act_invocation_id(&invocation, source_type);
+    let request = agent_act_resolution_request(&invocation, source_type)?;
+    host.report(ExecutionEvent::ResolutionRequested {
+        message: format!(
+            "agent skill step '{}' requested resolution for {}",
+            step.id, skill_name
+        ),
+        data: Some(resolution_event_data(step, &request)?),
+    })?;
+    let Some(response) = host.resolve(request)? else {
+        return Err(RuntimeError::GraphBlocked {
+            step_id: step.id.clone(),
+            reason: format!("agent act {request_id} requires resolution"),
+        });
+    };
+    let output = agent_step_output(response)?;
+    let outputs = output_object(&output);
+    let disposition = agent_answer_disposition(&outputs);
+    let disposition_label = closure_disposition_label(&disposition);
+    let receipt = step_receipt_with_disposition_and_policy(
+        StepReceiptWithDisposition {
+            graph_name,
+            step_id: &step.id,
+            attempt,
+            output: &output,
+            created_at: &runtime.options.created_at,
+            disposition,
+            reason_code: format!("agent_act_{disposition_label}"),
+            summary: format!("agent act closed with {disposition_label}"),
+        },
+        runtime.options.signature_policy(),
+    )?;
+    let admission_witness = StepAdmissionWitness::local_runtime(&step.id, receipt.id.as_str());
+    Ok(StepRun {
+        step_id: step.id.clone(),
+        attempt,
+        skill: skill_name,
+        runner: step.runner.clone(),
+        fanout_group: step.fanout_group.clone(),
+        output,
+        outputs,
+        receipt,
+        admission_witness,
+    })
+}
+
+fn agent_skill_source_type(source_type: SourceKind) -> Option<AgentActInvocationSourceType> {
+    match source_type {
+        SourceKind::Agent => Some(AgentActInvocationSourceType::Agent),
+        SourceKind::AgentStep => Some(AgentActInvocationSourceType::AgentStep),
+        _ => None,
+    }
 }
 
 fn agent_step_source(step: &GraphStep) -> Result<SkillSource, RuntimeError> {
