@@ -2,6 +2,8 @@
 // modeling, header validation, status parsing, and security-focused unit tests
 // in one review unit.
 use std::fmt;
+#[cfg(any(feature = "async-http", test))]
+use std::net::{IpAddr, Ipv4Addr, Ipv6Addr};
 #[cfg(feature = "async-http")]
 use std::time::Duration;
 
@@ -104,6 +106,8 @@ pub trait HostedTransport {
 pub struct ReqwestHttpTransport {
     #[cfg(feature = "async-http")]
     client: reqwest::Client,
+    #[cfg(feature = "async-http")]
+    allow_private_networks: bool,
 }
 
 #[cfg(feature = "async-http")]
@@ -128,14 +132,34 @@ impl ReqwestHttpTransport {
             .map_err(|error| HostedHttpError::Transport {
                 message: error.to_string(),
             })?;
-        Ok(Self { client })
+        Ok(Self {
+            client,
+            allow_private_networks: false,
+        })
+    }
+
+    #[cfg(test)]
+    fn with_private_network_access_for_tests() -> Result<Self, HostedHttpError> {
+        let mut transport = Self::with_timeouts(Duration::from_secs(30), Duration::from_secs(10))?;
+        transport.allow_private_networks = true;
+        Ok(transport)
+    }
+
+    #[cfg(test)]
+    fn with_private_network_timeouts_for_tests(
+        request_timeout: Duration,
+        connect_timeout: Duration,
+    ) -> Result<Self, HostedHttpError> {
+        let mut transport = Self::with_timeouts(request_timeout, connect_timeout)?;
+        transport.allow_private_networks = true;
+        Ok(transport)
     }
 }
 
 #[cfg(feature = "async-http")]
 impl HostedTransport for ReqwestHttpTransport {
     fn send(&self, request: HostedHttpRequest) -> Result<HostedHttpResponse, HostedHttpError> {
-        validate_http_url(&request.url)?;
+        validate_http_url(&request.url, self.allow_private_networks)?;
         let client = self.client.clone();
         block_on_http(async move {
             let method = reqwest_method(request.method);
@@ -193,7 +217,7 @@ impl<T: HostedTransport> HostedHttpClient<T> {
         transport: T,
     ) -> Result<Self, HostedHttpError> {
         let base_url = strip_one_trailing_slash(base_url.as_ref());
-        validate_http_url(&base_url)?;
+        validate_http_url(&base_url, false)?;
         Ok(Self {
             base_url,
             transport,
@@ -203,7 +227,7 @@ impl<T: HostedTransport> HostedHttpClient<T> {
     pub fn route_url(&self, route: &str) -> Result<String, HostedHttpError> {
         let normalized_route = route.trim_start_matches('/');
         let url = format!("{}/{}", self.base_url, normalized_route);
-        validate_http_url(&url)?;
+        validate_http_url(&url, false)?;
         Ok(url)
     }
 
@@ -239,6 +263,8 @@ pub enum HostedHttpError {
     TransportDecode { message: String },
     #[error("unsupported hosted HTTP url scheme '{scheme}': only http and https are allowed")]
     UnsupportedUrlScheme { scheme: String },
+    #[error("hosted HTTP url host '{host}' is not publicly routable")]
+    PrivateNetworkUrl { host: String },
     #[error("invalid hosted HTTP header name '{name}': {message}")]
     InvalidHeaderName { name: String, message: String },
     #[error("invalid hosted HTTP header value for '{name}': {message}")]
@@ -280,14 +306,93 @@ fn validate_header(header: &HostedHttpHeader) -> Result<(), HostedHttpError> {
 
 #[cfg(any(feature = "async-http", test))]
 #[allow(dead_code)]
-fn validate_http_url(value: &str) -> Result<(), HostedHttpError> {
+fn validate_http_url(value: &str, allow_private_networks: bool) -> Result<(), HostedHttpError> {
     let url = Url::parse(value)?;
     match url.scheme() {
-        "http" | "https" => Ok(()),
+        "http" | "https" => validate_public_host(&url, allow_private_networks),
         scheme => Err(HostedHttpError::UnsupportedUrlScheme {
             scheme: scheme.to_owned(),
         }),
     }
+}
+
+#[cfg(any(feature = "async-http", test))]
+fn validate_public_host(url: &Url, allow_private_networks: bool) -> Result<(), HostedHttpError> {
+    if allow_private_networks {
+        return Ok(());
+    }
+    let Some(host) = url.host_str() else {
+        return Err(HostedHttpError::PrivateNetworkUrl {
+            host: "<missing>".to_owned(),
+        });
+    };
+    let normalized = host.trim_end_matches('.').to_ascii_lowercase();
+    if normalized == "localhost"
+        || normalized.ends_with(".localhost")
+        || normalized == "metadata.google.internal"
+    {
+        return Err(HostedHttpError::PrivateNetworkUrl {
+            host: host.to_owned(),
+        });
+    }
+    let ip_host = normalized
+        .strip_prefix('[')
+        .and_then(|value| value.strip_suffix(']'))
+        .unwrap_or(&normalized);
+    if let Ok(ip) = ip_host.parse::<IpAddr>() {
+        if is_private_network_ip(ip) {
+            return Err(HostedHttpError::PrivateNetworkUrl {
+                host: host.to_owned(),
+            });
+        }
+    }
+    Ok(())
+}
+
+#[cfg(any(feature = "async-http", test))]
+fn is_private_network_ip(ip: IpAddr) -> bool {
+    match ip {
+        IpAddr::V4(ip) => is_private_network_ipv4(ip),
+        IpAddr::V6(ip) => is_private_network_ipv6(ip),
+    }
+}
+
+#[cfg(any(feature = "async-http", test))]
+fn is_private_network_ipv4(ip: Ipv4Addr) -> bool {
+    ip.is_private()
+        || ip.is_loopback()
+        || ip.is_link_local()
+        || ip.is_broadcast()
+        || ip.is_documentation()
+        || ip.is_unspecified()
+        || ip.is_multicast()
+        || ip.octets() == [169, 254, 169, 254]
+}
+
+#[cfg(any(feature = "async-http", test))]
+fn is_private_network_ipv6(ip: Ipv6Addr) -> bool {
+    ip.to_ipv4_mapped().is_some_and(is_private_network_ipv4)
+        || ip.is_loopback()
+        || ip.is_unspecified()
+        || ip.is_multicast()
+        || is_unique_local_ipv6(ip)
+        || is_unicast_link_local_ipv6(ip)
+        || is_documentation_ipv6(ip)
+}
+
+#[cfg(any(feature = "async-http", test))]
+fn is_unique_local_ipv6(ip: Ipv6Addr) -> bool {
+    (ip.segments()[0] & 0xfe00) == 0xfc00
+}
+
+#[cfg(any(feature = "async-http", test))]
+fn is_unicast_link_local_ipv6(ip: Ipv6Addr) -> bool {
+    (ip.segments()[0] & 0xffc0) == 0xfe80
+}
+
+#[cfg(any(feature = "async-http", test))]
+fn is_documentation_ipv6(ip: Ipv6Addr) -> bool {
+    ip.segments()[0] == 0x2001 && ip.segments()[1] == 0x0db8
 }
 
 #[cfg(feature = "async-http")]
@@ -434,6 +539,39 @@ mod tests {
     }
 
     #[test]
+    fn private_network_base_urls_fail_closed() {
+        for value in [
+            "http://localhost",
+            "http://service.localhost",
+            "http://127.0.0.1",
+            "http://10.0.0.1",
+            "http://172.16.0.1",
+            "http://192.168.0.1",
+            "http://169.254.169.254",
+            "http://[::1]",
+            "http://[::ffff:127.0.0.1]",
+            "http://[fc00::1]",
+            "http://[fe80::1]",
+            "http://metadata.google.internal",
+        ] {
+            assert!(
+                matches!(
+                    HostedHttpClient::with_transport(value, &MockTransport::default()),
+                    Err(HostedHttpError::PrivateNetworkUrl { .. })
+                ),
+                "{value} should be rejected as private"
+            );
+        }
+    }
+
+    #[test]
+    fn public_base_urls_are_allowed() -> Result<(), HostedHttpTestError> {
+        HostedHttpClient::with_transport("https://api.example", &MockTransport::default())?;
+        HostedHttpClient::with_transport("http://8.8.8.8", &MockTransport::default())?;
+        Ok(())
+    }
+
+    #[test]
     #[cfg(feature = "async-http")]
     fn reqwest_transport_does_not_follow_redirects() -> Result<(), HostedHttpTestError> {
         let listener = TcpListener::bind("127.0.0.1:0")?;
@@ -448,11 +586,13 @@ mod tests {
             Ok(String::from_utf8_lossy(&buffer[..bytes_read]).into_owned())
         });
 
-        let client = HostedHttpClient::with_transport(
-            format!("http://{address}"),
-            ReqwestHttpTransport::new()?,
-        )?;
-        let response = client.send(client.request(HttpMethod::Get, "/start")?)?;
+        let transport = ReqwestHttpTransport::with_private_network_access_for_tests()?;
+        let response = transport.send(HostedHttpRequest {
+            method: HttpMethod::Get,
+            url: format!("http://{address}/start"),
+            headers: Vec::new(),
+            body: None,
+        })?;
         let request = server
             .join()
             .map_err(|_| HostedHttpTestError::ServerThread)??;
@@ -512,7 +652,7 @@ mod tests {
             Ok(())
         });
 
-        let transport = ReqwestHttpTransport::with_timeouts(
+        let transport = ReqwestHttpTransport::with_private_network_timeouts_for_tests(
             Duration::from_millis(100),
             Duration::from_millis(100),
         )?;
