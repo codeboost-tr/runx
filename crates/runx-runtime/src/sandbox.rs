@@ -405,7 +405,7 @@ fn resolved_writable_paths(sandbox: Option<&SkillSandbox>, inputs: &JsonObject) 
             .writable_paths
             .iter()
             .map(|path| resolve_template(path, inputs))
-            .filter(|path| !path.trim().is_empty())
+            .filter(|path| !path.trim().is_empty() && !has_unresolved_template(path))
             .collect()
     })
 }
@@ -938,11 +938,49 @@ fn resolve_template(template: &str, inputs: &JsonObject) -> String {
     resolved
 }
 
+fn has_unresolved_template(value: &str) -> bool {
+    value.contains("{{") && value.contains("}}")
+}
+
 pub fn sandbox_metadata(sandbox: Option<&SkillSandbox>) -> JsonObject {
     let writable_paths = sandbox
         .map(|sandbox| sandbox.writable_paths.clone())
         .unwrap_or_default();
     sandbox_metadata_with_runtime(sandbox, &writable_paths, None)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn writable_paths_omit_unresolved_optional_templates() {
+        let sandbox = SkillSandbox {
+            profile: SandboxProfile::WorkspaceWrite,
+            cwd_policy: None,
+            env_allowlist: None,
+            network: None,
+            writable_paths: vec![
+                "{{workspace_path}}".to_owned(),
+                "{{ fixture }}".to_owned(),
+                "logs".to_owned(),
+            ],
+            require_enforcement: None,
+            approved_escalation: None,
+            raw: JsonObject::new(),
+        };
+        let inputs = [(
+            "fixture".to_owned(),
+            JsonValue::String("/tmp/runx-fixture".to_owned()),
+        )]
+        .into_iter()
+        .collect();
+
+        assert_eq!(
+            resolved_writable_paths(Some(&sandbox), &inputs),
+            vec!["/tmp/runx-fixture".to_owned(), "logs".to_owned()]
+        );
+    }
 }
 
 fn sandbox_metadata_with_runtime(
