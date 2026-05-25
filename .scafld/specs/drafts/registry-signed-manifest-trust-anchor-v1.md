@@ -57,9 +57,36 @@ Definition of done:
   signature, and digest mismatch failures.
 
 Validation:
-- [ ] `v1` `cargo test --manifest-path crates/Cargo.toml -p runx-runtime --test registry_install`
-- [ ] `v2` `cargo test --manifest-path crates/Cargo.toml -p runx-cli --test registry`
-- [ ] `v3` `rg -n "candidate\\.digest|validate_candidate_digest" crates/runx-runtime/src crates/runx-cli/src`
+- [ ] `v1` runtime registry install tests
+  - Command: `cargo test --manifest-path crates/Cargo.toml -p runx-runtime --test registry_install`
+  - Expected kind: `exit_code_zero`
+  - Timeout seconds: none
+  - Result: none
+  - Status: pending
+  - Evidence: must prove trusted/tampered/unsigned/mismatched manifest cases
+  - Source event: none
+  - Last attempt: none
+  - Checked at: none
+- [ ] `v2` CLI registry install tests
+  - Command: `cargo test --manifest-path crates/Cargo.toml -p runx-cli --test registry`
+  - Expected kind: `exit_code_zero`
+  - Timeout seconds: none
+  - Result: none
+  - Status: pending
+  - Evidence: must prove typed CLI errors for unsigned, unknown-key, invalid signature, and digest mismatch
+  - Source event: none
+  - Last attempt: none
+  - Checked at: none
+- [ ] `v3` self-asserted digest path removed
+  - Command: `rg -n "candidate\\.digest|validate_candidate_digest" crates/runx-runtime/src crates/runx-cli/src`
+  - Expected kind: `no_matches`
+  - Timeout seconds: none
+  - Result: none
+  - Status: pending
+  - Evidence: no trusted install path accepts a candidate-supplied digest as the trust anchor
+  - Source event: none
+  - Last attempt: none
+  - Checked at: none
 
 ## Review
 
