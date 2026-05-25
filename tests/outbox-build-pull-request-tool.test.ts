@@ -319,8 +319,29 @@ describe("outbox.build_pull_request tool", () => {
     expect(result.stderr).not.toContain("/tmp/");
   });
 
-  it("fails closed when a code PR has no scafld validation checks", () => {
+  it("fails closed when a code PR has neither scafld validation checks nor tests", () => {
     const result = runToolRaw({
+      ...minimalPullRequestInputs(),
+      build_result: {
+        passed: 0,
+        failed: 0,
+      },
+      fix_bundle: {
+        files: [
+          {
+            path: "app/controllers/api/v1/my/subscription_controller.rb",
+            contents: "class Api::V1::My::SubscriptionController; end\n",
+          },
+        ],
+      },
+    });
+
+    expect(result.status).toBe(1);
+    expect(result.stderr).toContain("either scafld validation evidence or a test/spec file");
+  });
+
+  it("allows tested code PRs when scafld validation counts are unavailable", () => {
+    const result = runTool({
       ...minimalPullRequestInputs(),
       build_result: {
         passed: 0,
@@ -340,8 +361,15 @@ describe("outbox.build_pull_request tool", () => {
       },
     });
 
-    expect(result.status).toBe(1);
-    expect(result.stderr).toContain("at least one scafld validation check");
+    expect(result.draft_pull_request.governance.quality_gate).toMatchObject({
+      status: "passed",
+      test_file_count: 1,
+      validation_check_count: 0,
+      scafld_validation_check_count: 0,
+      validation_source: "test_file",
+    });
+    expect(result.draft_pull_request.governance.quality_gate.summary).toContain("scafld validation count unavailable");
+    expect(result.draft_pull_request.governance.quality_gate.summary).toContain("1 test/spec file");
   });
 
   it("admits PR packaging through operational policy before producing packets", () => {

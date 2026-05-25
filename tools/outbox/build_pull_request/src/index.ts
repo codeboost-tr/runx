@@ -479,9 +479,9 @@ function buildQualityGate({ changedFiles, buildResult, threadBody, repoContext, 
     );
   }
 
-  if (codeFiles.length > 0 && validationCount === 0) {
+  if (codeFiles.length > 0 && validationCount === 0 && testFiles.length === 0) {
     throw new Error(
-      "pull request quality gate failed: code PRs must publish with at least one scafld validation check.",
+      "pull request quality gate failed: code PRs must publish with either scafld validation evidence or a test/spec file.",
     );
   }
 
@@ -498,6 +498,8 @@ function buildQualityGate({ changedFiles, buildResult, threadBody, repoContext, 
     test_file_count: testFiles.length,
     required_regression_coverage: requiresRegressionCoverage,
     validation_check_count: validationCount,
+    scafld_validation_check_count: validationCount,
+    validation_source: validationCount > 0 ? "scafld" : testFiles.length > 0 ? "test_file" : undefined,
   });
 }
 
@@ -505,8 +507,10 @@ function qualityGateSummary({ codeFileCount, testFileCount, requiresRegressionCo
   if (codeFileCount === 0) {
     return "No code files changed; code validation gate not required.";
   }
-  const parts = [`${validationCount} validation check${validationCount === 1 ? "" : "s"}`];
-  if (requiresRegressionCoverage) {
+  const parts = validationCount > 0
+    ? [`${validationCount} scafld validation check${validationCount === 1 ? "" : "s"}`]
+    : ["scafld validation count unavailable"];
+  if (requiresRegressionCoverage || testFileCount > 0) {
     parts.push(`${testFileCount} test/spec file${testFileCount === 1 ? "" : "s"}`);
   }
   if (hasContext) {
