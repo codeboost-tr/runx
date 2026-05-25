@@ -60,10 +60,36 @@ Definition of done:
   or satisfy a gated fact.
 
 Validation:
-- [ ] `v1` `cargo test --manifest-path crates/Cargo.toml -p runx-runtime --test skill_run`
-- [ ] `v2` `cargo test --manifest-path crates/Cargo.toml -p runx-runtime --test receipt_refs`
-- [ ] `v3` focused grep review for `output_object`, `transition_field_value`,
-  and `collect_payload_refs` documents the final trust boundary.
+- [ ] `v1` skill-run output boundary tests
+  - Command: `cargo test --manifest-path crates/Cargo.toml -p runx-runtime --test skill_run`
+  - Expected kind: `exit_code_zero`
+  - Timeout seconds: none
+  - Result: none
+  - Status: pending
+  - Evidence: skill-produced stdout remains a claim and cannot satisfy supervisor facts
+  - Source event: none
+  - Last attempt: none
+  - Checked at: none
+- [ ] `v2` receipt-reference trust-boundary tests
+  - Command: `cargo test --manifest-path crates/Cargo.toml -p runx-runtime --test receipt_refs`
+  - Expected kind: `exit_code_zero`
+  - Timeout seconds: none
+  - Result: none
+  - Status: pending
+  - Evidence: malicious stdout cannot inject proof refs or satisfy gated facts
+  - Source event: none
+  - Last attempt: none
+  - Checked at: none
+- [ ] `v3` focused trust-boundary grep review
+  - Command: `rg -n "output_object|transition_field_value|collect_payload_refs" crates/runx-runtime/src crates/runx-runtime/tests`
+  - Expected kind: `reviewed_output`
+  - Timeout seconds: none
+  - Result: none
+  - Status: pending
+  - Evidence: final reviewed call sites document which data is skill-claimed versus supervisor-attested
+  - Source event: none
+  - Last attempt: none
+  - Checked at: none
 
 ## Review
 

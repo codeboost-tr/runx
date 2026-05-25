@@ -59,11 +59,46 @@ Definition of done:
   leaking secret material.
 
 Validation:
-- [ ] `v1` `cargo test --manifest-path crates/Cargo.toml -p runx-runtime --features mcp --test mcp_server`
-- [ ] `v2` `cargo test --manifest-path crates/Cargo.toml -p runx-runtime --test external_adapter`
-- [ ] `v3` `cargo test --manifest-path crates/Cargo.toml -p runx-runtime --test credential_delivery`
-- [ ] `v4` focused grep review for `CredentialDelivery::ProcessEnv` in runtime
-  adapter spawn paths.
+- [ ] `v1` MCP process credential delivery tests
+  - Command: `cargo test --manifest-path crates/Cargo.toml -p runx-runtime --features mcp --test mcp_server`
+  - Expected kind: `exit_code_zero`
+  - Timeout seconds: none
+  - Result: none
+  - Status: pending
+  - Evidence: MCP process delivery cannot retain raw secrets in ambient child env
+  - Source event: none
+  - Last attempt: none
+  - Checked at: none
+- [ ] `v2` external-adapter credential delivery tests
+  - Command: `cargo test --manifest-path crates/Cargo.toml -p runx-runtime --test external_adapter`
+  - Expected kind: `exit_code_zero`
+  - Timeout seconds: none
+  - Result: none
+  - Status: pending
+  - Evidence: external adapter process delivery cannot retain raw secrets in ambient child env
+  - Source event: none
+  - Last attempt: none
+  - Checked at: none
+- [ ] `v3` credential-delivery contract tests
+  - Command: `cargo test --manifest-path crates/Cargo.toml -p runx-runtime --test credential_delivery`
+  - Expected kind: `exit_code_zero`
+  - Timeout seconds: none
+  - Result: none
+  - Status: pending
+  - Evidence: public observations carry opaque handles/hashes/refs without secret material
+  - Source event: none
+  - Last attempt: none
+  - Checked at: none
+- [ ] `v4` focused process-env delivery grep review
+  - Command: `rg -n "CredentialDelivery::ProcessEnv|secret_env\\(|\\.envs\\(secret_env|process_env" crates/runx-runtime/src crates/runx-runtime/tests`
+  - Expected kind: `reviewed_output`
+  - Timeout seconds: none
+  - Result: none
+  - Status: pending
+  - Evidence: no supervised process adapter keeps raw secrets in long-lived child environment
+  - Source event: none
+  - Last attempt: none
+  - Checked at: none
 
 ## Review
 
