@@ -2,8 +2,8 @@
 spec_version: '2.0'
 task_id: doctor-parser-yaml-parity
 created: '2026-05-22T00:00:00Z'
-updated: '2026-05-22T00:00:00Z'
-status: draft
+updated: '2026-05-25T16:15:42+10:00'
+status: completed
 harden_status: not_run
 size: small
 risk_level: medium
@@ -13,18 +13,18 @@ risk_level: medium
 
 ## Current State
 
-Status: draft
-Current phase: design only; the harness-status half landed, the YAML half is
-pending
-Next: align the Rust YAML parse strictness with the canonical parser, or add a
-doctor lint for the ambiguous constructs, so `runx doctor` rejects what publish
-rejects
-Reason: seeding the catalog surfaced that `runx doctor` accepted skills the
-canonical publish parser rejected, so authors hit the failure only at publish.
-Blockers: the code fix touches `runx-parser`, which is under a concurrent
-stringly-to-enum refactor (`SourceKind`/`InputMode`); sequence this after that
-lands to avoid conflict.
-Review gate: not_started
+Status: completed
+Current phase: final
+Next: done
+Reason: implemented in `fix(parser): reject ambiguous yaml constructs`
+(`da678f0`). `runx-parser` now rejects embedded-colon mapping keys and
+colon-space plain scalars before `serde_norway` parsing across skill
+frontmatter, graph YAML, runner manifests, and tool manifests. Quoted
+colon-space values remain accepted.
+Blockers: none
+Allowed follow-up command: `none`
+Latest runner update: 2026-05-25T16:15:42+10:00
+Review gate: pass
 
 ## Why this exists
 
@@ -70,11 +70,20 @@ covers only the remaining YAML-strictness half.
 
 Definition of done:
 
-- A skill X.yaml with an embedded-colon mapping key fails `runx doctor` (parity
-  with publish).
-- A skill X.yaml with a colon-space in an unquoted scalar fails `runx doctor`.
-- All currently-seeded skills still pass `runx doctor` (no false positives).
-- A test locks both rejections.
+- [x] A skill X.yaml with an embedded-colon mapping key fails `runx doctor`
+  (parity with publish).
+- [x] A skill X.yaml with a colon-space in an unquoted scalar fails
+  `runx doctor`.
+- [x] All currently-seeded skills still pass `runx doctor` (no false positives).
+- [x] A test locks both rejections.
+
+## Validation
+
+- `cargo test --manifest-path crates/Cargo.toml -p runx-parser --test parser_rejections`
+- `cargo test --manifest-path crates/Cargo.toml -p runx-parser --test parser_fixtures`
+- `cargo fmt --manifest-path crates/Cargo.toml --all -- --check`
+- `pnpm typecheck`
+- `/Users/kam/dev/0state/scafld/bin/scafld validate doctor-parser-yaml-parity --json`
 
 ## References
 
