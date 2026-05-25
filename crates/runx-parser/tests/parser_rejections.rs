@@ -2,7 +2,8 @@ use std::collections::BTreeSet;
 
 use runx_parser::{
     ParseErrorKind, ValidationErrorKind, assert_yaml_scalar_subset, parse_graph_yaml,
-    parse_skill_markdown, parse_tool_manifest_json, validate_graph, validate_skill,
+    parse_runner_manifest_yaml, parse_skill_markdown, parse_tool_manifest_json,
+    parse_tool_manifest_yaml, validate_graph, validate_skill,
 };
 
 #[test]
@@ -95,6 +96,69 @@ Body
             Ok(())
         }
     }
+}
+
+#[test]
+fn yaml_parity_rejects_embedded_colon_mapping_key() -> Result<(), String> {
+    let error = parse_runner_manifest_yaml(
+        r#"
+skill: bad
+email:send:
+  type: cli-tool
+runners:
+  default:
+    type: cli-tool
+    command: echo
+"#,
+    )
+    .err()
+    .ok_or_else(|| "expected embedded-colon key rejection".to_owned())?;
+
+    assert_eq!(error.kind(), ParseErrorKind::InvalidYaml);
+    assert!(
+        error.to_string().contains("ambiguous YAML construct"),
+        "{error}"
+    );
+    Ok(())
+}
+
+#[test]
+fn yaml_parity_rejects_colon_space_in_plain_scalar() -> Result<(), String> {
+    let error = parse_tool_manifest_yaml(
+        r#"
+name: bad-tool
+description: needs quote (granted: repo.read)
+source:
+  type: cli-tool
+  command: echo
+"#,
+    )
+    .err()
+    .ok_or_else(|| "expected colon-space scalar rejection".to_owned())?;
+
+    assert_eq!(error.kind(), ParseErrorKind::InvalidYaml);
+    assert!(
+        error.to_string().contains("ambiguous YAML construct"),
+        "{error}"
+    );
+    Ok(())
+}
+
+#[test]
+fn yaml_parity_allows_quoted_colon_space() -> Result<(), String> {
+    let raw = parse_tool_manifest_yaml(
+        r#"
+name: ok-tool
+description: "quoted value (granted: repo.read)"
+source:
+  type: cli-tool
+  command: echo
+"#,
+    )
+    .map_err(|error| error.to_string())?;
+
+    assert!(raw.document.contains_key("name"));
+    Ok(())
 }
 
 fn parse_error_kind<T>(

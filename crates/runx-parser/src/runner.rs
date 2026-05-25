@@ -7,7 +7,7 @@ use crate::skill::{
     CatalogMetadata, RunnerHarnessManifest, SkillRunnerDefinition, validate_catalog_metadata,
     validate_harness_manifest, validate_runner_definition,
 };
-use crate::{ParseError, ValidationError};
+use crate::{ParseError, ValidationError, assert_yaml_parity_subset};
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 pub struct RawRunnerManifestIr {
@@ -28,6 +28,7 @@ pub struct SkillRunnerManifest {
 }
 
 pub fn parse_runner_manifest_yaml(yaml: &str) -> Result<RawRunnerManifestIr, ParseError> {
+    assert_yaml_parity_subset("runner_manifest", yaml)?;
     let parsed: JsonValue =
         serde_norway::from_str(yaml).map_err(|error| ParseError::InvalidYaml {
             field: "runner_manifest".to_owned(),

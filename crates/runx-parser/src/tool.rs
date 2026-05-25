@@ -7,7 +7,7 @@ use crate::skill::{
     SkillArtifactContract, SkillIdempotencyPolicy, SkillInput, SkillRetryPolicy, SkillSource,
     validate_skill_artifact_contract, validate_skill_source,
 };
-use crate::{ParseError, ValidationError};
+use crate::{ParseError, ValidationError, assert_yaml_parity_subset};
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 pub struct RawToolManifestIr {
@@ -42,6 +42,7 @@ pub struct ValidatedTool {
 }
 
 pub fn parse_tool_manifest_yaml(yaml: &str) -> Result<RawToolManifestIr, ParseError> {
+    assert_yaml_parity_subset("tool_manifest", yaml)?;
     let parsed: JsonValue =
         serde_norway::from_str(yaml).map_err(|error| ParseError::InvalidYaml {
             field: "tool_manifest".to_owned(),

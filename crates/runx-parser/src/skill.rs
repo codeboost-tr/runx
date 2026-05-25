@@ -945,6 +945,7 @@ fn validate_mutating(
 }
 
 fn parse_yaml_object(source: &str, object_error: &str) -> Result<JsonObject, ParseError> {
+    crate::assert_yaml_parity_subset("skill_frontmatter", source)?;
     let parsed: JsonValue =
         serde_norway::from_str(source).map_err(|error| ParseError::InvalidYaml {
             field: "skill_frontmatter".to_owned(),
