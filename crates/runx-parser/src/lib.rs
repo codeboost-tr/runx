@@ -34,4 +34,7 @@ pub use tool::{
     RawToolManifestIr, ValidatedTool, parse_tool_manifest_json, parse_tool_manifest_yaml,
     validate_tool_manifest,
 };
-pub use yaml::{assert_yaml_scalar_subset, parse_yaml_document, yaml_scalar_subset_allows};
+pub use yaml::{
+    assert_yaml_parity_subset, assert_yaml_scalar_subset, parse_yaml_document,
+    yaml_scalar_subset_allows,
+};

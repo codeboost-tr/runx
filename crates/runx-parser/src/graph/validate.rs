@@ -9,9 +9,10 @@ use super::helpers::{
 use super::policy::validate_graph_policy;
 use super::step::validate_step;
 use super::types::{ExecutionGraph, RawGraphIr};
-use crate::{ParseError, ValidationError};
+use crate::{ParseError, ValidationError, assert_yaml_parity_subset};
 
 pub fn parse_graph_yaml(source: &str) -> Result<RawGraphIr, ParseError> {
+    assert_yaml_parity_subset("graph", source)?;
     let document: JsonObject =
         serde_norway::from_str(source).map_err(|error| ParseError::InvalidYaml {
             field: "graph".to_owned(),

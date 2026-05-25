@@ -8,10 +8,27 @@ pub fn parse_yaml_document<T>(source: &str) -> Result<T, ParseError>
 where
     T: DeserializeOwned,
 {
+    assert_yaml_parity_subset("yaml", source)?;
     serde_norway::from_str(source).map_err(|error| ParseError::InvalidYaml {
         field: "yaml".to_owned(),
         message: error.to_string(),
     })
+}
+
+pub fn assert_yaml_parity_subset(field: &str, source: &str) -> Result<(), ParseError> {
+    for (line_index, line) in source.lines().enumerate() {
+        let line_number = line_index + 1;
+        let Some(content) = strip_yaml_comment(line) else {
+            continue;
+        };
+        let trimmed = content.trim();
+        if trimmed.is_empty() || trimmed.starts_with("---") || trimmed.starts_with("...") {
+            continue;
+        }
+        reject_embedded_colon_key(field, line_number, trimmed)?;
+        reject_colon_space_plain_scalar(field, line_number, content)?;
+    }
+    Ok(())
 }
 
 #[must_use]
@@ -32,6 +49,134 @@ pub fn assert_yaml_scalar_subset(field: &str, literal: &str) -> Result<(), Parse
         field: field.to_owned(),
         literal: literal.to_owned(),
     })
+}
+
+fn strip_yaml_comment(line: &str) -> Option<&str> {
+    let mut in_single_quote = false;
+    let mut in_double_quote = false;
+    let mut previous = '\0';
+    for (index, char) in line.char_indices() {
+        match char {
+            '\'' if !in_double_quote => in_single_quote = !in_single_quote,
+            '"' if !in_single_quote && previous != '\\' => in_double_quote = !in_double_quote,
+            '#' if !in_single_quote && !in_double_quote && is_comment_start(line, index) => {
+                return Some(&line[..index]);
+            }
+            _ => {}
+        }
+        previous = char;
+    }
+    Some(line)
+}
+
+fn is_comment_start(line: &str, index: usize) -> bool {
+    index == 0 || line[..index].ends_with(char::is_whitespace)
+}
+
+fn reject_embedded_colon_key(
+    field: &str,
+    line_number: usize,
+    trimmed: &str,
+) -> Result<(), ParseError> {
+    let Some(key) = top_level_plain_key(trimmed) else {
+        return Ok(());
+    };
+    if key.contains(':') {
+        return Err(ambiguous_yaml(field, line_number, trimmed));
+    }
+    Ok(())
+}
+
+fn top_level_plain_key(trimmed: &str) -> Option<&str> {
+    let bytes = trimmed.as_bytes();
+    if bytes
+        .first()
+        .is_some_and(|byte| matches!(byte, b'-' | b'?' | b'{' | b'[' | b'"' | b'\''))
+    {
+        return None;
+    }
+    let mut in_single_quote = false;
+    let mut in_double_quote = false;
+    let mut previous = '\0';
+    for (index, char) in trimmed.char_indices() {
+        match char {
+            '\'' if !in_double_quote => in_single_quote = !in_single_quote,
+            '"' if !in_single_quote && previous != '\\' => in_double_quote = !in_double_quote,
+            ':' if !in_single_quote && !in_double_quote && is_mapping_delimiter(trimmed, index) => {
+                return Some(trimmed[..index].trim());
+            }
+            _ => {}
+        }
+        previous = char;
+    }
+    None
+}
+
+fn is_mapping_delimiter(value: &str, index: usize) -> bool {
+    value[index + 1..]
+        .chars()
+        .next()
+        .is_none_or(char::is_whitespace)
+}
+
+fn reject_colon_space_plain_scalar(
+    field: &str,
+    line_number: usize,
+    content: &str,
+) -> Result<(), ParseError> {
+    let Some((_, value)) = split_plain_mapping_value(content) else {
+        return Ok(());
+    };
+    if plain_scalar_contains_colon_space(value) {
+        return Err(ambiguous_yaml(field, line_number, value.trim()));
+    }
+    Ok(())
+}
+
+fn split_plain_mapping_value(content: &str) -> Option<(&str, &str)> {
+    let trimmed = content.trim_start();
+    let key = top_level_plain_key(trimmed)?;
+    let delimiter_index = key.len();
+    Some((key, &trimmed[delimiter_index + 1..]))
+}
+
+fn plain_scalar_contains_colon_space(value: &str) -> bool {
+    let trimmed = value.trim_start();
+    if trimmed.is_empty()
+        || trimmed.starts_with(['"', '\'', '|', '>', '{', '['])
+        || trimmed == "null"
+        || matches!(trimmed, "true" | "false")
+    {
+        return false;
+    }
+    contains_unquoted_colon_space(trimmed)
+}
+
+fn contains_unquoted_colon_space(value: &str) -> bool {
+    let mut in_single_quote = false;
+    let mut in_double_quote = false;
+    let mut previous = '\0';
+    for (index, char) in value.char_indices() {
+        match char {
+            '\'' if !in_double_quote => in_single_quote = !in_single_quote,
+            '"' if !in_single_quote && previous != '\\' => in_double_quote = !in_double_quote,
+            ':' if !in_single_quote && !in_double_quote && is_mapping_delimiter(value, index) => {
+                return true;
+            }
+            _ => {}
+        }
+        previous = char;
+    }
+    false
+}
+
+fn ambiguous_yaml(field: &str, line_number: usize, literal: &str) -> ParseError {
+    ParseError::InvalidYaml {
+        field: field.to_owned(),
+        message: format!(
+            "ambiguous YAML construct at line {line_number}; quote the value or key: {literal}"
+        ),
+    }
 }
 
 fn is_boolish(value: &str) -> bool {
