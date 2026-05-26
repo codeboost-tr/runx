@@ -15,7 +15,7 @@ use wait_timeout::ChildExt;
 pub(crate) use self::capture::CapturedOutput;
 use self::capture::{CaptureHandle, capture_pipe, join_capture};
 use self::signal::signal_timed_out_process;
-pub(crate) use self::signal::{ProcessSignal, configure_process_group, signal_process_group_id};
+use crate::process_signal::{ProcessSignal, configure_process_group};
 
 const DEFAULT_FORCE_KILL_GRACE: Duration = Duration::from_millis(100);
 

@@ -29,6 +29,7 @@ pub mod payment;
 pub mod post_merge_observer;
 #[cfg(any(feature = "cli-tool", feature = "external-adapter"))]
 mod process;
+mod process_signal;
 pub mod receipts;
 pub mod redaction;
 pub mod registry;

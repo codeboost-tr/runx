@@ -14,7 +14,7 @@ use runx_contracts::{
 use thiserror::Error;
 
 use crate::credentials::CredentialDelivery;
-use crate::process::{ProcessSignal, configure_process_group, signal_process_group_id};
+use crate::process_signal::{ProcessSignal, configure_process_group, signal_process_group_id};
 
 const DEFAULT_TIMEOUT_MS: u64 = 5_000;
 const DEFAULT_OUTPUT_LIMIT_BYTES: usize = 1_048_576;
