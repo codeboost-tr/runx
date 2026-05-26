@@ -10,6 +10,7 @@ use runx_contracts::{
 
 use crate::RuntimeError;
 use crate::adapter::{InvocationStatus, SkillAdapter, SkillInvocation, SkillOutput};
+use crate::adapter_pipeline::{AdapterCapture, AdapterProjection};
 use crate::agent_invocation::{
     AgentActInvocationSourceType, agent_act_resolution_request, build_agent_act_invocation,
 };
@@ -195,25 +196,19 @@ fn success_output(
     started: Instant,
     metadata: JsonObject,
 ) -> Result<SkillOutput, RuntimeError> {
-    Ok(SkillOutput {
-        status: InvocationStatus::Success,
-        stdout: stringify_payload(&resolution.response.payload)?,
-        stderr: String::new(),
-        exit_code: Some(0),
-        duration_ms: duration_ms(started),
+    Ok(AdapterProjection::from_started(started).output(
+        InvocationStatus::Success,
+        AdapterCapture::new(
+            stringify_payload(&resolution.response.payload)?,
+            String::new(),
+        ),
+        Some(0),
         metadata,
-    })
+    ))
 }
 
 fn failure_output(message: &str, started: Instant, metadata: JsonObject) -> SkillOutput {
-    SkillOutput {
-        status: InvocationStatus::Failure,
-        stdout: String::new(),
-        stderr: message.to_owned(),
-        exit_code: None,
-        duration_ms: duration_ms(started),
-        metadata,
-    }
+    AdapterProjection::from_started(started).failure(message.to_owned(), metadata)
 }
 
 fn stringify_payload(payload: &JsonValue) -> Result<String, RuntimeError> {
@@ -331,9 +326,4 @@ fn provider_name(provider: &ManagedAgentProvider) -> &'static str {
         ManagedAgentProvider::OpenAi => "openai",
         ManagedAgentProvider::Anthropic => "anthropic",
     }
-}
-
-fn duration_ms(started: Instant) -> u64 {
-    let millis = started.elapsed().as_millis();
-    u64::try_from(millis).unwrap_or(u64::MAX)
 }

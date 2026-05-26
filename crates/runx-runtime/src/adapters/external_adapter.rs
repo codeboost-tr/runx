@@ -18,7 +18,7 @@ use thiserror::Error;
 
 use crate::RuntimeError;
 use crate::adapter::{InvocationStatus, SkillAdapter, SkillInvocation, SkillOutput};
-use crate::adapter_pipeline::AdapterInvocationPlan;
+use crate::adapter_pipeline::{AdapterCapture, AdapterInvocationPlan, AdapterProjection};
 use crate::credentials::CredentialDelivery;
 use crate::process::{ProcessOutcome, ProcessSpec, ProcessStdin, run_process};
 use crate::receipts::paths::RUNX_RECEIPT_DIR_ENV;
@@ -585,14 +585,14 @@ fn skill_output_from_outcome(
     }
     add_credential_delivery_metadata(&mut metadata, credential_delivery)?;
 
-    Ok(SkillOutput {
-        status,
-        stdout,
-        stderr,
-        exit_code,
-        duration_ms: outcome.duration_ms,
-        metadata,
-    })
+    Ok(
+        AdapterProjection::from_duration_ms(outcome.duration_ms).output(
+            status,
+            AdapterCapture::new(stdout, stderr),
+            exit_code,
+            metadata,
+        ),
+    )
 }
 
 fn add_credential_delivery_metadata(

@@ -13,8 +13,28 @@ use crate::{RuntimeError, StepRun};
 pub(crate) struct ExecutionGraphIndex {
     definitions: Vec<SequentialGraphStepDefinition>,
     planner_index: SequentialGraphStepIndex,
-    step_positions: BTreeMap<String, usize>,
+    step_positions: StepPositionIndex,
     fanout_group_positions: BTreeMap<String, Vec<usize>>,
+}
+
+struct StepPositionIndex {
+    positions: BTreeMap<String, usize>,
+}
+
+impl StepPositionIndex {
+    fn new() -> Self {
+        Self {
+            positions: BTreeMap::new(),
+        }
+    }
+
+    fn insert(&mut self, step_id: &str, index: usize) {
+        self.positions.insert(step_id.to_owned(), index);
+    }
+
+    fn position(&self, step_id: &str) -> Option<usize> {
+        self.positions.get(step_id).copied()
+    }
 }
 
 impl ExecutionGraphIndex {
@@ -24,10 +44,10 @@ impl ExecutionGraphIndex {
         definitions: Vec<SequentialGraphStepDefinition>,
     ) -> Self {
         let planner_index = create_sequential_graph_step_index(&definitions);
-        let mut step_positions = BTreeMap::new();
+        let mut step_positions = StepPositionIndex::new();
         let mut fanout_group_positions: BTreeMap<String, Vec<usize>> = BTreeMap::new();
         for (index, step) in graph.steps.iter().enumerate() {
-            step_positions.insert(step.id.clone(), index);
+            step_positions.insert(&step.id, index);
             if let Some(group_id) = step.fanout_group.as_deref().filter(|id| !id.is_empty()) {
                 fanout_group_positions
                     .entry(group_id.to_owned())
@@ -64,14 +84,11 @@ impl ExecutionGraphIndex {
     ) -> Result<&'a GraphStep, RuntimeError> {
         graph
             .steps
-            .get(
-                *self
-                    .step_positions
-                    .get(step_id)
-                    .ok_or_else(|| RuntimeError::StepMissing {
-                        step_id: step_id.to_owned(),
-                    })?,
-            )
+            .get(self.step_positions.position(step_id).ok_or_else(|| {
+                RuntimeError::StepMissing {
+                    step_id: step_id.to_owned(),
+                }
+            })?)
             .filter(|step| step.id == step_id)
             .ok_or_else(|| RuntimeError::StepMissing {
                 step_id: step_id.to_owned(),
@@ -112,8 +129,8 @@ impl ExecutionGraphIndex {
         step_id: &str,
     ) -> Option<&'a runx_core::state_machine::SequentialGraphStepState> {
         self.step_positions
-            .get(step_id)
-            .and_then(|index| state.steps.get(*index))
+            .position(step_id)
+            .and_then(|index| state.steps.get(index))
             .filter(|state| state.step_id == step_id)
     }
 }

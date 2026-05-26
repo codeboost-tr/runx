@@ -70,7 +70,7 @@ try {
     const workloads = options.workloads ?? Object.keys(baseline.workloads);
     const current = options.candidate
       ? readJson(path.resolve(repoRoot, options.candidate))
-      : capture(workloads, options);
+      : capture(workloads, { ...options, captureMode: "check" });
     assertBaselineShape(current, "candidate");
     const findings = compareReports(baseline, current, workloads, options);
     const failed = findings.filter((finding) => finding.status === "failed");
@@ -115,24 +115,25 @@ function capture(workloads, options) {
 }
 
 function runRequiredBenches(workloads, options) {
-  const sampleSize = String(options.sampleSize ?? 20);
+  const sampleSize = String(options.sampleSize ?? (options.captureMode === "check" ? 10 : 20));
   const runtimeWorkloads = workloads.filter((workload) => runtimeBench.workloads.has(workload));
   if (runtimeWorkloads.length > 0) {
-    runCargoBench(runtimeBench, sampleSize, runtimeWorkloads);
+    runCargoBench(runtimeBench, sampleSize, runtimeWorkloads, options);
   }
   const receiptWorkloads = workloads.filter((workload) => receiptBench.workloads.has(workload));
   if (receiptWorkloads.length > 0) {
-    runCargoBench(receiptBench, sampleSize, receiptWorkloads);
+    runCargoBench(receiptBench, sampleSize, receiptWorkloads, options);
   }
 }
 
-function runCargoBench(bench, sampleSize, workloads) {
+function runCargoBench(bench, sampleSize, workloads, options) {
+  const executable = buildCargoBench(bench);
   for (const filter of criterionFilters(bench, workloads)) {
-    runCargoBenchFilter(bench, sampleSize, filter);
+    runCriterionBench(executable, sampleSize, filter, options);
   }
 }
 
-function runCargoBenchFilter(bench, sampleSize, filter) {
+function buildCargoBench(bench) {
   const args = [
     "bench",
     "--manifest-path",
@@ -143,23 +144,79 @@ function runCargoBenchFilter(bench, sampleSize, filter) {
   if (bench.features) {
     args.push("--features", bench.features);
   }
-  args.push("--bench", bench.bench, "--");
-  if (filter) {
-    args.push(filter);
-  }
-  args.push("--sample-size", sampleSize);
+  args.push("--bench", bench.bench, "--no-run", "--message-format=json");
   const result = spawnSync("cargo", args, {
     cwd: repoRoot,
-    stdio: "inherit",
-    env: {
-      ...process.env,
-      CARGO_TARGET_DIR: cargoTargetDir,
-      CARGO_TERM_COLOR: process.env.CARGO_TERM_COLOR ?? "never",
-    },
+    encoding: "utf8",
+    stdio: ["ignore", "pipe", "inherit"],
+    env: cargoBenchEnv(),
   });
   if (result.status !== 0) {
     throw new Error(`cargo ${args.join(" ")} failed with exit ${result.status ?? "signal"}`);
   }
+  const executable = benchExecutableFromCargoOutput(result.stdout, bench.bench);
+  if (!executable) {
+    throw new Error(`cargo ${args.join(" ")} did not report an executable for ${bench.bench}`);
+  }
+  return executable;
+}
+
+function benchExecutableFromCargoOutput(stdout, benchName) {
+  let executable;
+  for (const line of stdout.split(/\r?\n/u)) {
+    if (!line.trimStart().startsWith("{")) {
+      continue;
+    }
+    let event;
+    try {
+      event = JSON.parse(line);
+    } catch {
+      continue;
+    }
+    if (
+      event.reason === "compiler-artifact"
+      && Array.isArray(event.target?.kind)
+      && event.target.kind.includes("bench")
+      && event.target.name === benchName
+      && typeof event.executable === "string"
+    ) {
+      executable = event.executable;
+    }
+  }
+  return executable;
+}
+
+function runCriterionBench(executable, sampleSize, filter, options) {
+  const args = [];
+  if (filter) {
+    args.push(filter);
+  }
+  args.push("--sample-size", sampleSize);
+  const warmUpTime = options.warmUpTime ?? (options.captureMode === "check" ? 1 : undefined);
+  const measurementTime = options.measurementTime ?? (options.captureMode === "check" ? 2 : undefined);
+  if (warmUpTime !== undefined) {
+    args.push("--warm-up-time", String(warmUpTime));
+  }
+  if (measurementTime !== undefined) {
+    args.push("--measurement-time", String(measurementTime));
+  }
+  args.push("--bench");
+  const result = spawnSync(executable, args, {
+    cwd: repoRoot,
+    stdio: "inherit",
+    env: cargoBenchEnv(),
+  });
+  if (result.status !== 0) {
+    throw new Error(`${executable} ${args.join(" ")} failed with exit ${result.status ?? "signal"}`);
+  }
+}
+
+function cargoBenchEnv() {
+  return {
+    ...process.env,
+    CARGO_TARGET_DIR: cargoTargetDir,
+    CARGO_TERM_COLOR: process.env.CARGO_TERM_COLOR ?? "never",
+  };
 }
 
 function criterionFilters(bench, workloads) {
@@ -401,6 +458,10 @@ function parseArgs(argv) {
       parsed.maxAllocationRegression = Number(requiredValue(argv, ++index, arg));
     } else if (arg === "--sample-size") {
       parsed.sampleSize = Number(requiredValue(argv, ++index, arg));
+    } else if (arg === "--warm-up-time") {
+      parsed.warmUpTime = Number(requiredValue(argv, ++index, arg));
+    } else if (arg === "--measurement-time") {
+      parsed.measurementTime = Number(requiredValue(argv, ++index, arg));
     } else {
       throw new Error(`unknown argument '${arg}'`);
     }

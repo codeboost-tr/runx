@@ -5,22 +5,6 @@
 This page lists the public package entry points from each `@runxhq/*` package `exports` map.
 The package manifests are authoritative; regenerate this page with `pnpm docs:api`.
 
-## @runxhq/adapters
-
-Runx adapter implementations for CLI tools, MCP, agent, A2A, runtime, and catalogs.
-
-Version: `0.1.5`
-
-| Import | Types | Runtime |
-| --- | --- | --- |
-| `@runxhq/adapters` | `./dist/index.d.ts` | `./dist/index.js` |
-| `@runxhq/adapters/a2a` | `./dist/src/a2a/index.d.ts` | `./dist/src/a2a/index.js` |
-| `@runxhq/adapters/agent` | `./dist/src/agent/index.d.ts` | `./dist/src/agent/index.js` |
-| `@runxhq/adapters/catalog` | `./dist/src/catalog/index.d.ts` | `./dist/src/catalog/index.js` |
-| `@runxhq/adapters/cli-tool` | `./dist/src/cli-tool/index.d.ts` | `./dist/src/cli-tool/index.js` |
-| `@runxhq/adapters/mcp` | `./dist/src/mcp/index.d.ts` | `./dist/src/mcp/index.js` |
-| `@runxhq/adapters/runtime` | `./dist/src/runtime.d.ts` | `./dist/src/runtime.js` |
-
 ## @runxhq/authoring
 
 Runx authoring SDK - defineTool, definePacket, typed input parsers, harness runtime.
@@ -68,6 +52,7 @@ Version: `0.1.6`
 | `@runxhq/core/parser` | `./dist/src/parser/index.d.ts` | `./dist/src/parser/index.js` |
 | `@runxhq/core/policy` | `./dist/src/policy/index.d.ts` | `./dist/src/policy/index.js` |
 | `@runxhq/core/registry` | `./dist/src/registry/index.d.ts` | `./dist/src/registry/index.js` |
+| `@runxhq/core/source` | `./dist/src/source/index.d.ts` | `./dist/src/source/index.js` |
 | `@runxhq/core/util` | `./dist/src/util/index.d.ts` | `./dist/src/util/index.js` |
 
 ## @runxhq/create-skill
@@ -99,18 +84,3 @@ Version: `0.1.2`
 | Import | Types | Runtime |
 | --- | --- | --- |
 | `@runxhq/langchain` | `./dist/index.d.ts` | `./dist/index.js` |
-
-## @runxhq/runtime-local
-
-Runx local runtime support for harness replay, receipt history, SDK bindings, MCP, and tool catalogs.
-
-Version: `0.1.2`
-
-| Import | Types | Runtime |
-| --- | --- | --- |
-| `@runxhq/runtime-local` | `./dist/index.d.ts` | `./dist/index.js` |
-| `@runxhq/runtime-local/harness` | `./dist/src/harness/index.d.ts` | `./dist/src/harness/index.js` |
-| `@runxhq/runtime-local/mcp` | `./dist/src/mcp/index.d.ts` | `./dist/src/mcp/index.js` |
-| `@runxhq/runtime-local/runner-local` | `./dist/src/runner-local/index.d.ts` | `./dist/src/runner-local/index.js` |
-| `@runxhq/runtime-local/sdk` | `./dist/src/sdk/index.d.ts` | `./dist/src/sdk/index.js` |
-| `@runxhq/runtime-local/tool-catalogs` | `./dist/src/tool-catalogs/index.d.ts` | `./dist/src/tool-catalogs/index.js` |

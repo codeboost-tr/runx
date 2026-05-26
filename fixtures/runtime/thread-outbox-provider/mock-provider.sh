@@ -36,6 +36,15 @@ if [ "$MODE" = "leaky" ]; then
   echo "diagnostic leaked credential ${TOKEN}" >&2
 fi
 
+if [ "$MODE" = "spawn-marker" ]; then
+  MARKER="${2:?missing marker path}"
+  (
+    sleep 0.4
+    printf 'survived\n' > "$MARKER"
+  ) &
+  sleep 5
+fi
+
 if printf "%s" "$INPUT" | grep -q '"fetch_id"'; then
   cat <<JSON
 {

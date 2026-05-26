@@ -32,8 +32,10 @@ use crate::services::ReceiptServices;
 
 mod authority;
 mod execution;
+mod host_resolution;
 mod inputs;
 mod scheduler;
+mod step_execution;
 mod steps;
 mod sync;
 

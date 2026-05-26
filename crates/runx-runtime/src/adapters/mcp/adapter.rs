@@ -60,7 +60,6 @@ where
                         .credential_delivery
                         .redact_text(super::templates::stringify_mcp_tool_result(&result)?),
                     String::new(),
-                    false,
                 ),
                 Some(0),
                 prepared.success_metadata,

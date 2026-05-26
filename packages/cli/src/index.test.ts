@@ -2,7 +2,7 @@ import { chmod, mkdir, mkdtemp, readFile, rm, writeFile } from "node:fs/promises
 import os from "node:os";
 import path from "node:path";
 
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeAll, describe, expect, it, vi } from "vitest";
 
 import {
   validateDevReportContract,
@@ -11,9 +11,18 @@ import {
 } from "@runxhq/contracts";
 import { runCli, parseArgs, resolveSkillReference } from "./index.js";
 import { readCliDependencyVersion } from "./metadata.js";
+import { resolveRunxBinary } from "../../../tests/runx-binary.js";
 
 const tempDirs: string[] = [];
 const originalFetch = globalThis.fetch;
+const testRunxBinary = resolveRunxBinary();
+
+beforeAll(() => {
+  process.env.RUNX_DEV_RUST_CLI_BIN ??= testRunxBinary;
+  process.env.RUNX_RECEIPT_SIGN_KID ??= "cli-package-test-key";
+  process.env.RUNX_RECEIPT_SIGN_ED25519_SEED_BASE64 ??= "QkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkI=";
+  process.env.RUNX_RECEIPT_SIGN_ISSUER_TYPE ??= "hosted";
+});
 
 afterEach(async () => {
   vi.restoreAllMocks();

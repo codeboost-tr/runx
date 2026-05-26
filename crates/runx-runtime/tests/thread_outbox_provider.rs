@@ -1,4 +1,5 @@
 use std::path::PathBuf;
+use std::time::Duration;
 
 use runx_contracts::{
     CredentialDeliveryMode, CredentialDeliveryObservation, CredentialDeliveryObservationStatus,
@@ -10,7 +11,7 @@ use runx_core::policy::{CredentialBindingDecision, CredentialEnvelope};
 use runx_runtime::{
     CredentialDelivery, CredentialDeliveryProfile, InMemoryMaterialResolver,
     ResolvedCredentialMaterial, ThreadOutboxProviderProcessSupervisor,
-    ThreadOutboxProviderSupervisorError,
+    ThreadOutboxProviderSupervisorError, ThreadOutboxProviderSupervisorOptions,
 };
 
 #[derive(Debug, serde::Deserialize)]
@@ -152,6 +153,43 @@ fn provider_process_rejects_process_env_credential_delivery()
         Err(ThreadOutboxProviderSupervisorError::CredentialProcessEnvUnsupported)
     ));
     assert!(!format!("{result:?}").contains("ghs_TEST_SECRET_TOKEN"));
+    Ok(())
+}
+
+#[cfg(unix)]
+#[test]
+fn provider_process_timeout_kills_process_group_descendants()
+-> Result<(), Box<dyn std::error::Error>> {
+    let marker = std::env::temp_dir().join(format!(
+        "runx-thread-outbox-provider-timeout-{}-{}.marker",
+        std::process::id(),
+        std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)?
+            .as_nanos()
+    ));
+    let marker_arg = marker.to_string_lossy().into_owned();
+    let manifest = manifest_with_fixture_args(&["spawn-marker", &marker_arg])?;
+    let push = push_fixture()?;
+    let supervisor =
+        ThreadOutboxProviderProcessSupervisor::new(ThreadOutboxProviderSupervisorOptions {
+            timeout_ms: 100,
+            output_limit_bytes: 4096,
+            cwd: None,
+        });
+
+    let result = supervisor.invoke_push(&manifest, &push, &CredentialDelivery::none());
+
+    assert!(matches!(
+        result,
+        Err(ThreadOutboxProviderSupervisorError::TimedOut { timeout_ms: 100 })
+    ));
+    std::thread::sleep(Duration::from_millis(700));
+    assert!(
+        !marker.exists(),
+        "timed-out provider descendant survived and wrote {}",
+        marker.display()
+    );
+    let _ = std::fs::remove_file(marker);
     Ok(())
 }
 

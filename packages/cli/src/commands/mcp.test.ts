@@ -135,6 +135,9 @@ function startServer(
       ...process.env,
       RUNX_CWD: process.cwd(),
       RUNX_KERNEL_EVAL_BIN: runxBinary,
+      RUNX_RECEIPT_SIGN_ED25519_SEED_BASE64: process.env.RUNX_RECEIPT_SIGN_ED25519_SEED_BASE64 ?? "QkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkI=",
+      RUNX_RECEIPT_SIGN_ISSUER_TYPE: process.env.RUNX_RECEIPT_SIGN_ISSUER_TYPE ?? "hosted",
+      RUNX_RECEIPT_SIGN_KID: process.env.RUNX_RECEIPT_SIGN_KID ?? "cli-mcp-test-key",
       RUNX_RUST_CLI_BIN: runxBinary,
     },
     {

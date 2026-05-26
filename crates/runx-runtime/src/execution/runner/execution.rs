@@ -19,7 +19,8 @@ use super::super::graph_index::{ExecutionGraphIndex, PriorRunIndex};
 use super::scheduler::{
     FanoutSchedule, FanoutScheduler, ParallelFanoutSchedule, ScheduledFanoutStep,
 };
-use super::steps::{output_error, run_step, run_step_with_index, runtime_error_step_run};
+use super::step_execution::{run_step, run_step_with_index};
+use super::steps::{output_error, runtime_error_step_run};
 use super::sync::{fanout_sync_point, latest_fanout_receipt_ids};
 use super::{GraphCheckpoint, GraphRun, Runtime, RuntimeOptions, StepRun};
 use crate::RuntimeError;

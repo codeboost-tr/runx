@@ -1,12 +1,14 @@
-#[cfg(feature = "mcp")]
+#[cfg(any(
+    feature = "a2a",
+    feature = "agent",
+    feature = "catalog",
+    feature = "mcp"
+))]
 use std::time::Instant;
 
-#[cfg(feature = "mcp")]
 use runx_contracts::JsonObject;
 
-use crate::adapter::SkillInvocation;
-#[cfg(feature = "mcp")]
-use crate::adapter::{InvocationStatus, SkillOutput};
+use crate::adapter::{InvocationStatus, SkillInvocation, SkillOutput};
 
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub(crate) struct AdapterInvocationPlan {
@@ -42,8 +44,8 @@ impl AdapterInvocationPlan {
     }
 }
 
-#[cfg(feature = "mcp")]
 #[derive(Clone, Debug)]
+#[cfg(feature = "mcp")]
 pub(crate) struct AdapterExecutionContext {
     started: Instant,
 }
@@ -61,39 +63,42 @@ impl AdapterExecutionContext {
     }
 
     pub(crate) fn projection(&self) -> AdapterProjection {
-        AdapterProjection {
-            duration_ms: self.duration_ms(),
-        }
+        AdapterProjection::from_duration_ms(self.duration_ms())
     }
 }
 
-#[cfg(feature = "mcp")]
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub(crate) struct AdapterCapture {
     pub(crate) stdout: String,
     pub(crate) stderr: String,
-    pub(crate) truncated: bool,
 }
 
-#[cfg(feature = "mcp")]
 impl AdapterCapture {
-    pub(crate) fn new(stdout: String, stderr: String, truncated: bool) -> Self {
-        Self {
-            stdout,
-            stderr,
-            truncated,
-        }
+    pub(crate) fn new(stdout: String, stderr: String) -> Self {
+        Self { stdout, stderr }
     }
 }
 
-#[cfg(feature = "mcp")]
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub(crate) struct AdapterProjection {
     duration_ms: u64,
 }
 
-#[cfg(feature = "mcp")]
 impl AdapterProjection {
+    pub(crate) const fn from_duration_ms(duration_ms: u64) -> Self {
+        Self { duration_ms }
+    }
+
+    #[cfg(any(
+        feature = "a2a",
+        feature = "agent",
+        feature = "catalog",
+        feature = "mcp"
+    ))]
+    pub(crate) fn from_started(started: Instant) -> Self {
+        Self::from_duration_ms(duration_ms(started))
+    }
+
     pub(crate) fn output(
         &self,
         status: InvocationStatus,
@@ -111,17 +116,28 @@ impl AdapterProjection {
         }
     }
 
+    #[cfg(any(
+        feature = "a2a",
+        feature = "agent",
+        feature = "catalog",
+        feature = "mcp"
+    ))]
     pub(crate) fn failure(self, message: String, metadata: JsonObject) -> SkillOutput {
         self.output(
             InvocationStatus::Failure,
-            AdapterCapture::new(String::new(), message, false),
+            AdapterCapture::new(String::new(), message),
             None,
             metadata,
         )
     }
 }
 
-#[cfg(feature = "mcp")]
+#[cfg(any(
+    feature = "a2a",
+    feature = "agent",
+    feature = "catalog",
+    feature = "mcp"
+))]
 pub(crate) fn duration_ms(started: Instant) -> u64 {
     u64::try_from(started.elapsed().as_millis()).unwrap_or(u64::MAX)
 }

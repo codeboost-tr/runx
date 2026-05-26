@@ -9,6 +9,7 @@ use runx_contracts::{JsonObject, JsonValue, sha256_hex};
 
 use crate::RuntimeError;
 use crate::adapter::{InvocationStatus, SkillAdapter, SkillInvocation, SkillOutput};
+use crate::adapter_pipeline::{AdapterCapture, AdapterProjection};
 
 const DEFAULT_POLL_INTERVAL: Duration = Duration::from_millis(10);
 const MIN_TIMEOUT: Duration = Duration::from_millis(50);
@@ -227,14 +228,15 @@ where
             ));
         }
 
-        Ok(SkillOutput {
-            status: InvocationStatus::Success,
-            stdout: stringify_a2a_output(completed.output.as_ref())?,
-            stderr: String::new(),
-            exit_code: Some(0),
-            duration_ms: duration_ms(started),
-            metadata: metadata_for(&source, Some(&completed), Some(&message), None)?,
-        })
+        Ok(AdapterProjection::from_started(started).output(
+            InvocationStatus::Success,
+            AdapterCapture::new(
+                stringify_a2a_output(completed.output.as_ref())?,
+                String::new(),
+            ),
+            Some(0),
+            metadata_for(&source, Some(&completed), Some(&message), None)?,
+        ))
     }
 }
 
@@ -533,18 +535,5 @@ fn sha256_json(value: &JsonValue) -> Result<String, RuntimeError> {
 }
 
 fn failure(message: impl Into<String>, started: Instant, metadata: JsonObject) -> SkillOutput {
-    let message = message.into();
-    SkillOutput {
-        status: InvocationStatus::Failure,
-        stdout: String::new(),
-        stderr: message,
-        exit_code: None,
-        duration_ms: duration_ms(started),
-        metadata,
-    }
-}
-
-fn duration_ms(started: Instant) -> u64 {
-    let millis = started.elapsed().as_millis();
-    u64::try_from(millis).unwrap_or(u64::MAX)
+    AdapterProjection::from_started(started).failure(message.into(), metadata)
 }

@@ -9,6 +9,7 @@ use crate::RuntimeError;
 use crate::adapter::{
     FanoutExecutionMode, InvocationStatus, SkillAdapter, SkillInvocation, SkillOutput,
 };
+use crate::adapter_pipeline::{AdapterCapture, AdapterProjection};
 use crate::adapters::cli_tool::CliToolAdapter;
 use crate::tool_catalogs::search::{FixtureTool, fixture_tool};
 use crate::tool_catalogs::{ToolCatalogError, ToolInspectOptions, resolve_local_tool};
@@ -250,37 +251,20 @@ fn invoke_fixture_tool(
 }
 
 fn success(stdout: String, tool_name: &str, started: Instant) -> SkillOutput {
-    SkillOutput {
-        status: InvocationStatus::Success,
-        stdout,
-        stderr: String::new(),
-        exit_code: Some(0),
-        duration_ms: duration_ms(started),
-        metadata: mcp_metadata(tool_name),
-    }
+    AdapterProjection::from_started(started).output(
+        InvocationStatus::Success,
+        AdapterCapture::new(stdout, String::new()),
+        Some(0),
+        mcp_metadata(tool_name),
+    )
 }
 
 fn failure(message: impl Into<String>, started: Instant) -> SkillOutput {
-    let message = message.into();
-    SkillOutput {
-        status: InvocationStatus::Failure,
-        stdout: String::new(),
-        stderr: message,
-        exit_code: None,
-        duration_ms: duration_ms(started),
-        metadata: JsonObject::new(),
-    }
+    AdapterProjection::from_started(started).failure(message.into(), JsonObject::new())
 }
 
 fn failure_with_metadata(message: String, tool_name: &str, started: Instant) -> SkillOutput {
-    SkillOutput {
-        status: InvocationStatus::Failure,
-        stdout: String::new(),
-        stderr: message,
-        exit_code: None,
-        duration_ms: duration_ms(started),
-        metadata: mcp_metadata(tool_name),
-    }
+    AdapterProjection::from_started(started).failure(message, mcp_metadata(tool_name))
 }
 
 fn missing_imported_tool(catalog_ref: &str, started: Instant) -> SkillOutput {
@@ -333,9 +317,4 @@ fn mcp_metadata(tool_name: &str) -> JsonObject {
     let mut metadata = JsonObject::new();
     metadata.insert("mcp".to_owned(), JsonValue::Object(mcp));
     metadata
-}
-
-fn duration_ms(started: Instant) -> u64 {
-    let millis = started.elapsed().as_millis();
-    u64::try_from(millis).unwrap_or(u64::MAX)
 }

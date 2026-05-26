@@ -6,7 +6,7 @@ use crate::RuntimeError;
 use crate::adapter::{
     FanoutExecutionMode, InvocationStatus, SkillAdapter, SkillInvocation, SkillOutput,
 };
-use crate::adapter_pipeline::AdapterInvocationPlan;
+use crate::adapter_pipeline::{AdapterCapture, AdapterInvocationPlan, AdapterProjection};
 use crate::credentials::CredentialDelivery;
 use crate::process::{CapturedOutput, ProcessOutcome, ProcessSpec, ProcessStdin, run_process};
 use crate::services::SandboxServices;
@@ -114,18 +114,16 @@ fn cli_tool_output(
     } else {
         (stdout.text, stderr.text)
     };
-    SkillOutput {
-        status: if success {
+    AdapterProjection::from_duration_ms(outcome.duration_ms).output(
+        if success {
             InvocationStatus::Success
         } else {
             InvocationStatus::Failure
         },
-        stdout,
-        stderr,
-        exit_code: outcome.status.code(),
-        duration_ms: outcome.duration_ms,
+        AdapterCapture::new(stdout, stderr),
+        outcome.status.code(),
         metadata,
-    }
+    )
 }
 
 struct CapturedText {

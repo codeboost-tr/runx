@@ -10,6 +10,14 @@
 //! runtime orchestration under `runner` or `orchestrator`.
 
 pub mod adapter;
+#[cfg(any(
+    feature = "cli-tool",
+    feature = "catalog",
+    feature = "mcp",
+    feature = "a2a",
+    feature = "agent",
+    feature = "external-adapter"
+))]
 mod adapter_pipeline;
 mod agent_invocation;
 pub mod approval;

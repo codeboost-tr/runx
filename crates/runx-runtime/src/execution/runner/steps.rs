@@ -10,17 +10,14 @@ use runx_contracts::{
 use runx_core::state_machine::StepAdmissionWitness;
 use runx_parser::{GraphStep, SkillSource, SourceKind};
 
-use super::super::graph::{
-    load_step_skill, output_object, output_object_with_claim, resolve_inputs,
-    resolve_inputs_with_index,
-};
-use super::super::graph_index::PriorRunIndex;
+use super::super::graph::{load_step_skill, output_object, output_object_with_claim};
 use super::authority::{
     StepPaymentReplay, attach_payment_supervisor_evidence_before_gate, authority_denied,
     enforce_step_authority_admission, enforce_step_authority_receipt_before_success,
     escalate_in_flight_payment_recovery, sealed_payment_replay,
     validate_replayed_payment_supervisor_proof,
 };
+use super::host_resolution::resolve_step_approval;
 use super::inputs::{optional_input_string, required_input_string, string_value, string_value_ref};
 use super::{Runtime, StepRun};
 use crate::RuntimeError;
@@ -30,7 +27,7 @@ use crate::adapters::catalog::CatalogAdapter;
 use crate::agent_invocation::{
     AgentActInvocationSourceType, agent_act_invocation_id, agent_act_resolution_request,
 };
-use crate::approval::{ApprovalResolution, request_approval};
+use crate::approval::ApprovalResolution;
 use crate::host::Host;
 use crate::payment::state::{PaymentStepStateInput, persist_payment_step_state};
 use crate::payment::supervisor::{
@@ -60,41 +57,9 @@ pub(super) fn output_error(run: &StepRun) -> String {
     }
 }
 
-pub(super) fn run_step<A>(
-    runtime: &Runtime<A>,
-    graph_dir: &Path,
-    graph_name: &str,
-    step: &GraphStep,
-    attempt: u32,
-    prior_runs: &[StepRun],
-    host: &mut dyn Host,
-) -> Result<StepRun, RuntimeError>
-where
-    A: SkillAdapter,
-{
-    let inputs = resolve_inputs(step, prior_runs)?;
-    run_step_with_inputs(runtime, graph_dir, graph_name, step, attempt, inputs, host)
-}
-
-pub(super) fn run_step_with_index<A>(
-    runtime: &Runtime<A>,
-    graph_dir: &Path,
-    graph_name: &str,
-    step: &GraphStep,
-    attempt: u32,
-    prior_run_index: &PriorRunIndex<'_>,
-    host: &mut dyn Host,
-) -> Result<StepRun, RuntimeError>
-where
-    A: SkillAdapter,
-{
-    let inputs = resolve_inputs_with_index(step, prior_run_index)?;
-    run_step_with_inputs(runtime, graph_dir, graph_name, step, attempt, inputs, host)
-}
-
 // rust-style-allow: long-function - step execution is one linear admit/run/seal sequence; splitting
 // it would scatter the ordering invariants between admission, invocation, and receipt sealing.
-fn run_step_with_inputs<A>(
+pub(super) fn run_step_with_inputs<A>(
     runtime: &Runtime<A>,
     graph_dir: &Path,
     graph_name: &str,
@@ -1022,12 +987,7 @@ where
 {
     let gate = approval_gate(step, &inputs)?;
     let request_id = format!("{}_approval", step.id);
-    let resolution = request_approval(host, request_id, gate.clone()).map_err(|source| {
-        RuntimeError::InvalidRunStep {
-            step_id: step.id.clone(),
-            reason: source.to_string(),
-        }
-    })?;
+    let resolution = resolve_step_approval(step, host, request_id, gate.clone())?;
     let outputs = approval_outputs(step, &gate, &resolution)?;
     let stdout = serde_json::to_string(&outputs)
         .map_err(|source| RuntimeError::json("serializing approval run output", source))?;

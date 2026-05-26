@@ -104,12 +104,13 @@ function checkExecutionSplit() {
 
 function checkProjectionHotPaths() {
   const runtimeRoot = path.join(workspaceRoot, "crates/runx-runtime/src");
-  const internerFound = rustFiles("crates/runx-runtime/src").some((filePath) => {
+  const compactIndexFound = rustFiles("crates/runx-runtime/src").some((filePath) => {
     const source = readFileSync(filePath, "utf8");
-    return /\bstruct\s+\w*(?:Id)?Interner\b/u.test(source);
+    return /\bstruct\s+\w*(?:Id)?Interner\b/u.test(source)
+      || /\bstruct\s+\w*(?:Step)?PositionIndex\b[\s\S]*?\bpositions:\s*BTreeMap<String,\s*usize>/u.test(source);
   });
-  if (!internerFound) {
-    findings.push(`${relative(runtimeRoot)} has no runtime-local id interner for hot execution/projection paths`);
+  if (!compactIndexFound) {
+    findings.push(`${relative(runtimeRoot)} has no runtime-local id interner or compact position index for hot execution/projection paths`);
   }
 
   const cloneBudget = new Map([

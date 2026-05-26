@@ -218,13 +218,11 @@ console.log("Boundary check passed.");
 
 async function checkPackageExports() {
   const coreManifestPath = path.join(workspaceRoot, "packages", "core", "package.json");
-  const runtimeLocalManifestPath = path.join(workspaceRoot, "packages", "runtime-local", "package.json");
   const coreManifest = JSON.parse(await readFile(coreManifestPath, "utf8"));
-  const runtimeLocalManifest = JSON.parse(await readFile(runtimeLocalManifestPath, "utf8"));
 
   for (const removedSubpath of ["./runner-local", "./harness", "./sdk", "./mcp", "./tool-catalogs"]) {
     if (Object.hasOwn(coreManifest.exports ?? {}, removedSubpath)) {
-      findings.push(`packages/core/package.json still exports ${removedSubpath}; use @runxhq/runtime-local instead.`);
+      findings.push(`packages/core/package.json still exports ${removedSubpath}; local execution is Rust-owned.`);
     }
   }
 
@@ -234,9 +232,9 @@ async function checkPackageExports() {
     }
   }
 
-  for (const requiredSubpath of [".", "./harness", "./runner-local", "./sdk", "./mcp", "./tool-catalogs"]) {
-    if (!Object.hasOwn(runtimeLocalManifest.exports ?? {}, requiredSubpath)) {
-      findings.push(`packages/runtime-local/package.json is missing export ${requiredSubpath}.`);
+  for (const sunsetPath of ["packages/runtime-local/package.json", "packages/adapters/package.json"]) {
+    if (await readJsonIfExists(path.join(workspaceRoot, sunsetPath))) {
+      findings.push(`${sunsetPath} still exists; local execution is Rust-owned.`);
     }
   }
 }
@@ -253,6 +251,9 @@ async function checkForbiddenCompatibilityPackages() {
     if (forbiddenCompatibilityPackageDirectoryNames.has(entry.name)) {
       findings.push(`packages/${entry.name} uses a compatibility package directory; runtime-local/adapters shims are not allowed.`);
     }
+    if (sunsetTsPackageNames.has(entry.name)) {
+      findings.push(`packages/${entry.name} is a sunset TypeScript executor package and must be deleted.`);
+    }
 
     manifestPaths.push(path.join(packagesDir, entry.name, "package.json"));
   }
@@ -266,6 +267,9 @@ async function checkForbiddenCompatibilityPackages() {
     const rel = toPosix(path.relative(workspaceRoot, manifestPath));
     if (isForbiddenCompatibilityPackageName(manifest.name)) {
       findings.push(`${rel} names ${manifest.name}; runtime-local/adapters compatibility packages are not allowed.`);
+    }
+    if (manifest.name === "@runxhq/runtime-local" || manifest.name === "@runxhq/adapters") {
+      findings.push(`${rel} names sunset TypeScript executor package ${manifest.name}.`);
     }
 
     for (const field of packageDependencyFields) {
@@ -341,7 +345,7 @@ async function checkForbiddenCoreRuntimeDirectories() {
     const directoryPath = path.join(workspaceRoot, "packages", "core", "src", directoryName);
     const entry = await statIfExists(directoryPath);
     if (entry?.isDirectory()) {
-      findings.push(`packages/core/src/${directoryName} still exists; runtime-local owns this boundary.`);
+      findings.push(`packages/core/src/${directoryName} still exists; local runtime execution is Rust-owned.`);
     }
   }
   for (const directoryName of forbiddenDeletedCoreDirs) {
@@ -432,7 +436,7 @@ async function checkSourceFile(filePath) {
 
   for (const specifier of specifiers) {
     if (removedCoreRuntimeSubpaths.some((prefix) => specifier === prefix || specifier.startsWith(`${prefix}/`))) {
-      findings.push(`${rel} imports removed ${specifier}; use @runxhq/runtime-local public paths.`);
+      findings.push(`${rel} imports removed ${specifier}; use Rust CLI JSON, generated contracts, or an explicit hosted/client protocol boundary.`);
     }
     if (removedCoreKernelSubpaths.some((prefix) => specifier === prefix || specifier.startsWith(`${prefix}/`))) {
       findings.push(`${rel} imports removed ${specifier}; use the Rust kernel eval boundary.`);

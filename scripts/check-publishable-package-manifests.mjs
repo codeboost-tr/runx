@@ -3,13 +3,13 @@ import path from "node:path";
 import { readPackageManifest, readWorkspacePackageVersions, resolveWorkspacePackageDir, rewriteManifestForPublish } from "./public-package-utils.mjs";
 
 const packageNames = [
-  "adapters",
   "authoring",
   "cli",
   "contracts",
   "core",
   "create-skill",
-  "runtime-local",
+  "host-adapters",
+  "langchain",
 ];
 const dependencySections = [
   "dependencies",
