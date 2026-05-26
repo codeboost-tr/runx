@@ -806,6 +806,77 @@ fn native_graph_skill_run_resolves_agent_step_named_emit_context()
 
 #[cfg(feature = "catalog")]
 #[test]
+fn native_graph_skill_run_resolves_agent_step_output_envelope_named_emit_context()
+-> Result<(), Box<dyn std::error::Error>> {
+    let temp = tempdir()?;
+    let skill_dir = write_graph_agent_artifact_context_skill(temp.path())?;
+    write_echo_tool(temp.path())?;
+    let receipt_dir = temp.path().join("receipts");
+    let tool_root = temp.path().join("tools");
+    let answers_path = temp.path().join("answers.json");
+    fs::write(
+        &answers_path,
+        serde_json::json!({
+            "answers": {
+                "agent_step.graph-author.output": {
+                    "output": {
+                        "fix_bundle": {
+                            "message": "Graph tool bug"
+                        }
+                    }
+                }
+            }
+        })
+        .to_string(),
+    )?;
+    let env = [(
+        "RUNX_TOOL_ROOTS".to_owned(),
+        tool_root.to_string_lossy().into_owned(),
+    )]
+    .into_iter()
+    .collect::<BTreeMap<_, _>>();
+    let pending = run_skill(SkillRunRequest {
+        skill_path: skill_dir.clone(),
+        receipt_dir: Some(receipt_dir.clone()),
+        run_id: None,
+        answers_path: None,
+        inputs: BTreeMap::new(),
+        env: env.clone(),
+        cwd: temp.path().to_path_buf(),
+        local_credential: None,
+    })?;
+    let pending_output = object(
+        &pending.output,
+        "pending graph agent artifact envelope result",
+    )?;
+    assert_eq!(string_field(pending_output, "status"), Some("needs_agent"));
+    let run_id = string_field(pending_output, "run_id")
+        .ok_or("pending graph agent artifact envelope result missing run_id")?
+        .to_owned();
+
+    let result = run_skill(SkillRunRequest {
+        skill_path: skill_dir,
+        receipt_dir: Some(receipt_dir),
+        run_id: Some(run_id),
+        answers_path: Some(answers_path),
+        inputs: BTreeMap::new(),
+        env,
+        cwd: temp.path().to_path_buf(),
+        local_credential: None,
+    })?;
+
+    let output = object(&result.output, "graph agent artifact envelope result")?;
+    assert_eq!(string_field(output, "status"), Some("sealed"));
+    let payload = object_field(output, "payload").ok_or("missing payload")?;
+    let echo_claim = step_claim(payload, "echo").ok_or("missing echo skill claim")?;
+    let echo = object_field(echo_claim, "echo").ok_or("missing echo")?;
+    assert_eq!(string_field(echo, "message"), Some("Graph tool bug"));
+
+    Ok(())
+}
+
+#[cfg(feature = "catalog")]
+#[test]
 fn native_graph_skill_run_rejects_reserved_artifact_output_names()
 -> Result<(), Box<dyn std::error::Error>> {
     let temp = tempdir()?;

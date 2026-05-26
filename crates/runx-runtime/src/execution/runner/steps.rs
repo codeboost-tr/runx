@@ -468,7 +468,7 @@ fn expose_declared_run_outputs(
 
     for name in declared_outputs.keys() {
         reject_reserved_step_output_name(step, name, "declared run output")?;
-        let Some(value) = claim.get(name).cloned() else {
+        let Some(value) = declared_claim_value(claim, name) else {
             continue;
         };
         outputs.insert(name.clone(), value);
@@ -490,7 +490,7 @@ fn expose_declared_artifacts(
 
     if let Some(wrap_as) = artifacts.get("wrap_as").and_then(json_string) {
         reject_reserved_step_output_name(step, wrap_as, "artifact output")?;
-        let value = claim.get(wrap_as).cloned().unwrap_or_else(|| {
+        let value = declared_claim_value(claim, wrap_as).unwrap_or_else(|| {
             let mut wrapper = JsonObject::new();
             wrapper.insert("data".to_owned(), JsonValue::Object(claim.clone()));
             JsonValue::Object(wrapper)
@@ -501,13 +501,26 @@ fn expose_declared_artifacts(
     if let Some(JsonValue::Object(named_emits)) = artifacts.get("named_emits") {
         for name in named_emits.keys() {
             reject_reserved_step_output_name(step, name, "artifact output")?;
-            let Some(value) = claim.get(name).cloned() else {
+            let Some(value) = declared_claim_value(claim, name) else {
                 continue;
             };
             outputs.insert(name.clone(), artifact_data_wrapper(value));
         }
     }
     Ok(())
+}
+
+fn declared_claim_value(claim: &JsonObject, name: &str) -> Option<JsonValue> {
+    claim.get(name).cloned().or_else(|| {
+        ["output", "outputs", "payload"]
+            .iter()
+            .find_map(|envelope| {
+                let JsonValue::Object(object) = claim.get(*envelope)? else {
+                    return None;
+                };
+                object.get(name).cloned()
+            })
+    })
 }
 
 fn expose_skill_claim_context_fields(claim: &JsonObject, outputs: &mut JsonObject) {
