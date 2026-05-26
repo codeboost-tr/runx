@@ -7,7 +7,7 @@ use runx_contracts::{
 };
 use runx_core::state_machine::{GraphStatus, GraphStepStatus};
 use runx_receipts::validate_receipt_tree;
-use runx_runtime::{Runtime, RuntimeError, RuntimeOptions};
+use runx_runtime::{RUNX_MAX_FANOUT_CONCURRENCY_ENV, Runtime, RuntimeError, RuntimeOptions};
 use serde::Deserialize;
 
 const FIXTURE_CREATED_AT: &str = "2026-05-18T00:00:00Z";
@@ -90,6 +90,24 @@ fn fanout_all_success_runs_group_then_synthesizes() -> Result<(), Box<dyn std::e
         "budget",
         JsonValue::String("approved".to_owned()),
     )?;
+    assert_sync_points(&run, &expected.sync_points);
+    assert_receipt_tree(&run);
+    Ok(())
+}
+
+#[test]
+fn fanout_parallel_cli_tool_mode_preserves_plan_order() -> Result<(), Box<dyn std::error::Error>> {
+    let expected = fixture()?.all_success;
+    let mut options = fixture_runtime_options();
+    options
+        .env
+        .insert(RUNX_MAX_FANOUT_CONCURRENCY_ENV.to_owned(), "4".to_owned());
+    let run = Runtime::new(runx_runtime::adapters::cli_tool::CliToolAdapter, options)
+        .run_graph_file(Path::new("../../fixtures/graphs/fanout/all.yaml"))?;
+
+    assert_eq!(run.graph.name, expected.graph);
+    assert_eq!(graph_status(&run.state.status), expected.status);
+    assert_steps(&run, &expected.steps);
     assert_sync_points(&run, &expected.sync_points);
     assert_receipt_tree(&run);
     Ok(())
