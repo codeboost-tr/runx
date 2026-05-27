@@ -2,8 +2,8 @@
 spec_version: '2.0'
 task_id: monolith-decomposition-v1
 created: '2026-05-24T00:00:00Z'
-updated: '2026-05-26T02:41:00Z'
-status: draft
+updated: '2026-05-27T06:53:32Z'
+status: cancelled
 harden_status: not_run
 size: large
 risk_level: medium
@@ -13,25 +13,13 @@ risk_level: medium
 
 ## Current State
 
-Status: draft
+Status: cancelled
 Current phase: ready for scoped harden
-Next: harden
-Reason: refreshed on 2026-05-26 after the Rust rewrite. The original concrete
-target list was stale, but the spec is not obsolete. The runtime-local TS
-offenders still exist and are still large, but `rust-ts-sunset-runtime-local`
-declares `packages/runtime-local/**` and `packages/adapters/**` deletion targets.
-Do not spend decomposition effort inside those packages unless the sunset spec
-later declares a surviving stable boundary. Current `runx doctor` file budgets
-are only `packages/cli/src/index.ts` (62/1000 lines) and
-`packages/cli/src/commands/doctor.ts` (873/950 lines), so there is no current
-doctor file-budget offender. The surviving debt is now mostly Rust: 61 current
-`rust-style-allow: large-file` waivers across surviving Rust crates.
-Blockers: runtime-local/adapters deletion is blocked by its own sunset spec and
-must not be solved here. Runtime Rust files are under active parallel work; each
-implementation slice must rebase on the owning agent's edits and avoid broad
-refactors. `runx-rust-95-release-readiness` is a dependency signal only; this
-spec must not edit it.
-Allowed follow-up command: `scafld harden monolith-decomposition-v1 --provider <provider>`
+Next: done
+Reason: cancel
+Blockers: none
+Allowed follow-up command: `none`
+Latest runner update: none
 Review gate: not_started
 
 ## Summary

@@ -2,8 +2,8 @@
 spec_version: '2.0'
 task_id: rust-ts-sunset-runtime-local
 created: '2026-05-18T00:00:00Z'
-updated: '2026-05-22T00:09:50+10:00'
-status: draft
+updated: '2026-05-27T06:53:32Z'
+status: cancelled
 harden_status: not_run
 size: large
 risk_level: very_high
@@ -13,40 +13,13 @@ risk_level: very_high
 
 ## Current State
 
-Status: draft
+Status: cancelled
 Current phase: none
-Next: smaller importer specs, not package deletion
-Reason: refreshed after the CLI importer completion and a small non-CLI
-contract fixture generator cleanup. This remains a deletion/cutover spec, not
-a compatibility-bridge spec. A 2026-05-21 exact-package census finds 92
-active files outside `.scafld/specs/**` and `dist/**` with
-runtime-local/adapters package references, imports, direct source paths, docs,
-fixtures, or package-resolution entries. Of those, 68 are outside the two
-packages being deleted and 46 are actual package import files outside those
-packages. `packages/cli/src/**` has zero exact runtime-local/adapters package
-references in this tree. Blockers: not currently executable. `rust-harness`,
-`rust-runtime-skill-execution`, `rust-runtime-adapters-agent`,
-`rust-runtime-adapters-a2a`, `rust-runtime-adapters-catalog`,
-`rust-runtime-adapters-mcp`, and `rust-mcp-server-receipt-seal` are
-completed or archived completed. The remaining blockers are importer/routing
-blockers: IDE core, langchain, package manifests, path aliases, vitest aliases,
-oracle scripts, active docs/fixtures, Rust parity/doctor references, and many
-tests still reference `@runxhq/runtime-local`, `@runxhq/adapters`, or their
-package paths. Host-adapters and CLI source no longer import
-runtime-local/adapters in the current tree. All surviving local callers must be
-Rust-routed, moved to the correct language-neutral protocol lane under Rust
-supervision, or explicitly sunset before deletion starts. Cloud `agent-runner`
-binding is not settled by this draft while its target boundary remains open.
+Next: done
+Reason: cancel
+Blockers: none
 Allowed follow-up command: `none`
 Latest runner update: 2026-05-22T00:09:50+10:00 promoted the extension-surface
-boundary to priority-zero cutover law: `external-adapter-plugin-protocol-v1`
-must be treated as the external execution-adapter protocol, not as the umbrella
-for every extension, integration, source-ingress, catalog, hosted-runtime, or
-outbox queue. Runtime-local deletion remains blocked by live non-CLI importers,
-tests, scripts, package-resolution entries, open cloud binding disposition,
-custom execution-adapter protocol gaps, and any unclassified surviving extension
-surface that would otherwise be forced into Rust or hidden behind a TypeScript
-runtime fallback.
 Review gate: not_started
 
 ## Summary

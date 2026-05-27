@@ -2,8 +2,8 @@
 spec_version: '2.0'
 task_id: runx-oss-trust-boundary-cleanup-v1
 created: '2026-05-26T00:00:00Z'
-updated: '2026-05-26T11:48:19Z'
-status: draft
+updated: '2026-05-27T06:53:32Z'
+status: cancelled
 harden_status: needs_revision
 size: large
 risk_level: high
@@ -13,19 +13,13 @@ risk_level: high
 
 ## Current State
 
-Status: draft
+Status: cancelled
 Current phase: implementation in progress
-Next: run queued Rust checks after the active external cargo check releases
-the artifact lock; continue phase 2/3/4 tactical validation.
-Reason: harden round 2 found stale evidence after the first build slice; this
-revision separates retired findings from live blockers.
-Blockers: none for the first build slice; remaining blockers are the live
-phase items below.
-Allowed follow-up command: `continue implementation from the live phase items`
+Next: done
+Reason: cancel
+Blockers: none
+Allowed follow-up command: `none`
 Latest runner update: 2026-05-26T12:40:00Z production signing fallback
-removed from governed env parsing, implicit RuntimeOptions::default() deleted,
-duplicate packaged shell.exec tree deleted, and surviving shell.exec hardened
-with cwd containment, timeout, output caps, and process-group termination.
 Review gate: not_started
 
 ## Summary
