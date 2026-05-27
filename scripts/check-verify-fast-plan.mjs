@@ -8,7 +8,7 @@ const source = readFileSync(path.join(workspaceRoot, "scripts", "verify-fast.mjs
 const parallelSourceGroup = sliceBetween(
   source,
   'await runParallelGroup("source checks"',
-  'await runSerialGroup("package contract checks"',
+  'await runSerialGroup("rust structure checks"',
 );
 
 for (const forbidden of [
@@ -26,17 +26,30 @@ for (const forbidden of [
 }
 
 for (const required of [
-  'await runSerialGroup("package contract checks"',
   'await runSerialGroup("rust structure checks"',
   'step("build native runx binary"',
   'step("build harness fixture oracle binary"',
+  'step("build workspace"',
+  'step("authoring package contract"',
+  'step("create-skill package contract"',
 ]) {
   if (!source.includes(required)) {
     throw new Error(`verify:fast is missing required serialized step marker: ${required}`);
   }
 }
 
-console.log("verify:fast plan keeps package and Rust-heavy checks serialized.");
+const buildWorkspaceIndex = source.indexOf('step("build workspace"');
+for (const requiredAfterBuild of [
+  'step("authoring package contract"',
+  'step("create-skill package contract"',
+]) {
+  const stepIndex = source.indexOf(requiredAfterBuild);
+  if (stepIndex < buildWorkspaceIndex) {
+    throw new Error(`verify:fast runs ${requiredAfterBuild} before the workspace build`);
+  }
+}
+
+console.log("verify:fast plan keeps package checks after build and Rust-heavy checks serialized.");
 
 function sliceBetween(contents, start, end) {
   const startIndex = contents.indexOf(start);
