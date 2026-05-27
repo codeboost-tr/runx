@@ -2,8 +2,8 @@
 spec_version: '2.0'
 task_id: runx-target-repo-runners
 created: '2026-05-19T02:08:02Z'
-updated: '2026-05-22T10:47:43+10:00'
-status: draft
+updated: '2026-05-27T06:53:32Z'
+status: cancelled
 harden_status: in_progress
 size: large
 risk_level: high
@@ -13,31 +13,13 @@ risk_level: high
 
 ## Current State
 
-Status: draft
+Status: cancelled
 Current phase: typed pull-request create/readback adapter proof
-Next: resolve live target execution blockers before marking harden passed
-Reason: hardening round in progress; the Rust target-runner path is
-fixture-executable for policy admission, same-repo/cross-repo planning,
-readiness gating, provider dedupe observations, PR create/reuse receipt
-metadata, and source-publication receipt metadata, but it is not live-target
-executable.
-Blockers: real target checkout/git mutation, live pull-request API
-create/update, outbox pushers for source issue/thread publication, and Aster
-scheduling/readback are not implemented in this target-runner path. Live GitHub
-provider API lookup now has a transport-backed search client, and the create
-path has fixture-backed typed git mutation plus pull-request create/readback
-proofs, but live end-to-end target mutation is still blocked.
-Allowed follow-up command: `scafld harden runx-target-repo-runners --mark-passed`
-only after the live execution blockers are resolved or explicitly descoped.
+Next: done
+Reason: cancel
+Blockers: none
+Allowed follow-up command: `none`
 Latest runner update: 2026-05-22T10:47:43+10:00 added the next fixture-only
-adapter proof: create-path live-adapter execution now carries the validated git
-mutation branch/head SHA into the typed pull-request create command, requires
-pull-request observation readback for provider, target repo, head branch, and
-head SHA, rejects mismatched created-PR branches before source publication, and
-keeps the reuse path free of git/PR-create head readback. This still makes no
-live network, git, or PR creation calls. The spec must stay draft because real
-target checkout/git mutation, live PR create/update, source publication
-pushers, and Aster scheduling/readback remain open.
 Review gate: not_started
 
 ## Summary

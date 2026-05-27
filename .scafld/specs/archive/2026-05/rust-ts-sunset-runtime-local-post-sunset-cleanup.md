@@ -2,8 +2,8 @@
 spec_version: '2.0'
 task_id: rust-ts-sunset-runtime-local-post-sunset-cleanup
 created: '2026-05-21T13:42:18Z'
-updated: '2026-05-21T13:42:18Z'
-status: draft
+updated: '2026-05-27T06:53:32Z'
+status: cancelled
 harden_status: not_run
 size: large
 risk_level: high
@@ -13,24 +13,14 @@ risk_level: high
 
 ## Current State
 
-Status: draft
+Status: cancelled
 Current phase: blocked
-Next: wait for `rust-ts-sunset-runtime-local` completion
-Reason: this is a follow-up cleanup ledger for residue after the runtime-local
-and adapters sunset has landed. It must not become a second place to perform
-the cutover itself.
-Blockers: `rust-ts-sunset-runtime-local` must be completed and archived with
-review pass evidence. External adapter/plugin authoring and embedded/cloud
-binding disposition must already be settled by the prerequisite sunset work.
-Allowed follow-up command: `none until rust-ts-sunset-runtime-local is complete`
+Next: done
+Reason: cancel
+Blockers: none
+Allowed follow-up command: `none`
 Latest runner update: 2026-05-21T13:42:18Z
 Review gate: not_started
-
-Guardrail: this spec must not resurrect runtime-local/adapters through tests,
-scripts, docs, fixtures, API-surface references, package metadata, path aliases,
-shim packages, v2 package names, or compatibility adapters. It only removes
-stale post-sunset references and tightens negative checks after the parent
-deletion has landed.
 
 ## Summary
 

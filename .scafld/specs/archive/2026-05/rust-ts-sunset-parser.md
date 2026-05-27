@@ -2,8 +2,8 @@
 spec_version: '2.0'
 task_id: rust-ts-sunset-parser
 created: '2026-05-18T00:00:00Z'
-updated: '2026-05-22T12:10:02+10:00'
-status: draft
+updated: '2026-05-27T06:53:32Z'
+status: cancelled
 harden_status: not_run
 size: medium
 risk_level: high
@@ -13,26 +13,13 @@ risk_level: high
 
 ## Current State
 
-Status: draft
+Status: cancelled
 Current phase: blocked
-Next: wait for parser importer migration specs to remove live TS consumers.
-Reason: draft created under `plans/rust-takeover.md`. Third TS sunset. On
-2026-05-22 this draft was rechecked after the runtime-local direct parser import
-slice completed and a follow-up runtime-local structural cleanup removed four
-more `parser-types.js` consumers. Deletion is still not valid: 48 live files still import
-`@runxhq/core/parser`, reference relative/direct parser source paths, or carry
-runtime-local parser structural type surfaces.
-Blockers: parser importers still live after `rust-ts-sunset-policy` completion,
-but runtime-local direct imports are no longer one of the blockers.
-Allowed follow-up command: none while blocked; do not run `scafld harden`
-for this draft.
+Next: done
+Reason: cancel
+Blockers: none
+Allowed follow-up command: `none`
 Latest runner update: 2026-05-22T12:10:02+10:00 importer census refreshed after
-runtime-local structural cleanup removed parser-shaped type imports from
-`harness/agent-hook.test.ts`, `runner-local/graph-context.ts`,
-`runner-local/graph-reporting.ts`, and `runner-local/reflect.ts`. Deletion
-remains blocked by CLI command readers, core internal consumers,
-fixture/oracle generators, tests, and temporary runtime-local `parser-types.js`
-structural consumers owned by the runtime-local sunset parent.
 Review gate: blocked
 
 ## Summary

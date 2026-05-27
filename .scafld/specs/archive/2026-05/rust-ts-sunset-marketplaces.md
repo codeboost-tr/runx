@@ -2,8 +2,8 @@
 spec_version: '2.0'
 task_id: rust-ts-sunset-marketplaces
 created: '2026-05-18T00:00:00Z'
-updated: '2026-05-22T12:00:00+10:00'
-status: draft
+updated: '2026-05-27T06:53:32Z'
+status: cancelled
 harden_status: not_run
 size: small
 risk_level: medium
@@ -13,38 +13,13 @@ risk_level: medium
 
 ## Current State
 
-Status: draft, blocked
+Status: cancelled
 Current phase: discovery refresh after registry search-result migration
-Next: reroute marketplace adapter/ref consumers before approval.
-Reason: this draft describes a future deletion, not work that can be executed
-against the current tree. A fresh 2026-05-22 source scan still finds 5 live
-consumer/import files plus the marketplace source package marker and public
-export with imports of `@runxhq/core/marketplaces` across CLI fixture
-marketplace search, runtime-local SDK/install, and marketplace fixture tests.
-The registry/CLI `SkillSearchResult` shape has moved to
-`@runxhq/core/registry`, but marketplace adapter behavior remains live. The
-prerequisite
-`rust-ts-sunset-registry` is also archived as failed, not completed. Deleting
-`packages/core/src/marketplaces/**` now would break current package exports and
-live consumers.
-Blockers:
-- `rust-ts-sunset-registry` is archived with `status: failed`; the original
-  dependency is not satisfied.
-- CLI skill refs still import marketplace helpers and fixture adapters from
-  `@runxhq/core/marketplaces`.
-- Runtime-local skill install and SDK search/install surfaces still accept
-  `MarketplaceAdapter` and call `resolveMarketplaceSkill` /
-  `searchMarketplaceAdapters`.
-- Focused tests still import marketplace fixtures/types directly.
-- `packages/core/package.json` still exposes `./marketplaces`; remove it only
-  after all importers are rerouted or retired by owning specs.
-Allowed follow-up command: none while blocked; do not run `scafld harden rust-ts-sunset-marketplaces`.
+Next: done
+Reason: cancel
+Blockers: none
+Allowed follow-up command: `none`
 Latest runner update: 2026-05-22T12:00:00+10:00 - child draft
-`rust-ts-sunset-marketplaces-registry-search-result-ownership` moved
-`SkillSearchResult` ownership to `@runxhq/core/registry`. Refreshed source scan
-confirmed 5 live consumer/import files plus the marketplace source marker and
-`./marketplaces` public export still reference marketplace adapter surfaces;
-deletion remains blocked.
 Review gate: not_started
 
 ## Summary

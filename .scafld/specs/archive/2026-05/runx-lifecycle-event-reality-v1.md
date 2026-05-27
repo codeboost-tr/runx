@@ -2,8 +2,8 @@
 spec_version: '2.0'
 task_id: runx-lifecycle-event-reality-v1
 created: '2026-05-27T00:00:00Z'
-updated: '2026-05-27T00:00:00Z'
-status: draft
+updated: '2026-05-27T06:53:32Z'
+status: cancelled
 harden_status: not_run
 size: medium
 risk_level: high
@@ -13,12 +13,12 @@ risk_level: high
 
 ## Current State
 
-Status: draft
+Status: cancelled
 Current phase: none
-Next: wait_for_safe_window
-Reason: high-value cleanup, but runtime event producers may overlap S-tier
-Blockers: active S-tier cutover may modify runtime execution and services
-Allowed follow-up command: inspect overlap, then `scafld approve runx-lifecycle-event-reality-v1`
+Next: done
+Reason: cancel
+Blockers: none
+Allowed follow-up command: `none`
 Latest runner update: 2026-05-27T00:00:00Z
 Review gate: not_started
 

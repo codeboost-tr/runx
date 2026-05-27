@@ -2,8 +2,8 @@
 spec_version: '2.0'
 task_id: rust-kernel-blocking-promotion
 created: '2026-05-17T00:30:00Z'
-updated: '2026-05-22T00:30:13+10:00'
-status: draft
+updated: '2026-05-27T06:53:32Z'
+status: cancelled
 harden_status: not_run
 size: medium
 risk_level: high
@@ -13,54 +13,13 @@ risk_level: high
 
 ## Current State
 
-Status: draft
+Status: cancelled
 Current phase: planning/spec-only reconciliation; evidence script landed; soak
-evidence pending
-Next: continue soak verification by running the clean-kernel counter against
-live GitHub metadata or an audited operator fixture
-Reason: CI still marks Rust kernel parity advisory. The obsolete umbrella
-orchestration spec has been superseded by narrow slices, and clean-PR counter
-semantics are now locked by `rust-kernel-clean-pr-counter-semantics`.
-Conservative advisory-start evidence is recorded from the archived completed
-`rust-parity-ci-governance` spec, but five qualifying post-advisory PRs are
-still missing.
-Blockers: 5 clean kernel-touching PRs landed while Rust kernel parity checks
-are advisory. Current full local `node scripts/check-rust-kernel-parity.mjs`
-passes, but that only clears the local parity prerequisite; it does not satisfy
-the five-PR soak gate or authorize the CI flip.
-Execution lock: CI blocking promotion is not executable until the clean-kernel
-counter returns at least 5 qualifying post-advisory PRs from live GitHub
-metadata or audited operator evidence. While the counter remains below 5,
-Phase 3 and Phase 4 stay planning-only and no workflow or docs flip may be
-made under this draft.
-Allowed follow-up command: run the evidence script against audited evidence; do
-not run `scafld harden rust-kernel-blocking-promotion`.
-Counter update: 2026-05-20 clean-kernel counter live-GitHub mode now
-requires parseable advisory-start timestamps for timestamped PR metadata,
-requires live GitHub records to include post-advisory merge times, and requires
-the Rust kernel parity check itself to pass. A read-only live probe from
-`2026-05-20T00:00:00Z` found zero qualifying kernel PRs; the checked-in fixture
-still has four qualifying records, so the CI promotion remains blocked.
-Latest local evidence update: 2026-05-21T22:14:35+10:00 reran the full Rust
-kernel parity gate after aligning the credential-envelope fixtures, tightening
-the `mcp-rmcp` crate-graph guard, clearing Rust style findings, and refreshing
-the stale `runx-core` public API snapshot. `node
-scripts/check-rust-kernel-parity.mjs` passed. This evidence does not satisfy
-the live five-PR soak gate and does not authorize the CI flip.
-Latest soak evidence update: 2026-05-22T00:30:13+10:00 reran the clean-kernel
-counter tests and fixture/live count commands. Counter tests passed, fixture
-mode still counts four qualifying records, and live GitHub mode against
-`runxhq/runx` still counts zero qualifying PRs after the conservative advisory
-start. The five-PR soak gate remains blocked.
-Safe evidence/planning update: 2026-05-21T03:19:54Z recorded a conservative
-advisory-start timestamp of `2026-05-19T03:33:01Z` from the completed archived
-`rust-parity-ci-governance` spec. Fixture mode still counts 4 qualifying PRs;
-live GitHub mode against `runxhq/runx` still counts 0 qualifying PRs after
-that start.
-Prior local parity update: 2026-05-21T04:08:33Z re-ran the full local wrapper
-and failed on a rustfmt check. That evidence is superseded by the
-2026-05-21T22:14:35+10:00 passing wrapper run, but the five-PR soak gate still
-blocks CI promotion.
+Next: done
+Reason: cancel
+Blockers: none
+Allowed follow-up command: `none`
+Latest runner update: none
 Review gate: not_started
 
 ## Summary
