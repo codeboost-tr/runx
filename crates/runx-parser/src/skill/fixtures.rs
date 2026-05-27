@@ -1,0 +1,177 @@
+use std::collections::BTreeMap;
+
+use runx_contracts::{JsonObject, JsonValue};
+
+use crate::ValidationError;
+
+use super::{
+    HarnessCallerFixture, HarnessExpectation, ReceiptExpectation, RunnerHarnessCase,
+    RunnerHarnessManifest, optional_non_empty_string, optional_object, optional_string,
+    optional_string_array, required_object, required_plain_array, required_string,
+    validation_error,
+};
+
+pub(crate) fn validate_harness_manifest(
+    value: Option<JsonObject>,
+    field: &str,
+) -> Result<Option<RunnerHarnessManifest>, ValidationError> {
+    let Some(value) = value else {
+        return Ok(None);
+    };
+    let cases = required_plain_array(value.get("cases"), &format!("{field}.cases"))?
+        .iter()
+        .enumerate()
+        .map(|(index, entry)| {
+            validate_harness_case(
+                required_object(Some(entry), &format!("{field}.cases[{index}]"))?,
+                &format!("{field}.cases[{index}]"),
+            )
+        })
+        .collect::<Result<Vec<_>, _>>()?;
+    Ok(Some(RunnerHarnessManifest { cases }))
+}
+
+fn validate_harness_case(
+    value: &JsonObject,
+    field: &str,
+) -> Result<RunnerHarnessCase, ValidationError> {
+    Ok(RunnerHarnessCase {
+        name: required_string(value.get("name"), &format!("{field}.name"))?,
+        runner: optional_non_empty_string(value.get("runner"), &format!("{field}.runner"))?,
+        inputs: optional_object(value.get("inputs"), &format!("{field}.inputs"))?
+            .unwrap_or_default(),
+        env: validate_string_object(
+            optional_object(value.get("env"), &format!("{field}.env"))?.unwrap_or_default(),
+            &format!("{field}.env"),
+        )?,
+        caller: validate_harness_caller(
+            optional_object(value.get("caller"), &format!("{field}.caller"))?.unwrap_or_default(),
+            &format!("{field}.caller"),
+        )?,
+        expect: validate_harness_expectation(
+            required_object(value.get("expect"), &format!("{field}.expect"))?,
+            &format!("{field}.expect"),
+        )?,
+    })
+}
+
+fn validate_string_object(
+    value: JsonObject,
+    field: &str,
+) -> Result<BTreeMap<String, String>, ValidationError> {
+    value
+        .into_iter()
+        .map(|(key, value)| match value {
+            JsonValue::String(value) => Ok((key, value)),
+            _ => Err(validation_error(format!("{field}.{key} must be a string."))),
+        })
+        .collect()
+}
+
+fn validate_harness_caller(
+    value: JsonObject,
+    field: &str,
+) -> Result<HarnessCallerFixture, ValidationError> {
+    Ok(HarnessCallerFixture {
+        answers: optional_object(value.get("answers"), &format!("{field}.answers"))?,
+        approvals: Some(validate_bool_object(
+            optional_object(value.get("approvals"), &format!("{field}.approvals"))?
+                .unwrap_or_default(),
+            &format!("{field}.approvals"),
+        )?),
+    })
+}
+
+fn validate_bool_object(
+    value: JsonObject,
+    field: &str,
+) -> Result<BTreeMap<String, bool>, ValidationError> {
+    value
+        .into_iter()
+        .map(|(key, value)| match value {
+            JsonValue::Bool(value) => Ok((key, value)),
+            _ => Err(validation_error(format!(
+                "{field}.{key} must be a boolean."
+            ))),
+        })
+        .collect()
+}
+
+fn validate_harness_expectation(
+    value: &JsonObject,
+    field: &str,
+) -> Result<HarnessExpectation, ValidationError> {
+    Ok(HarnessExpectation {
+        status: optional_harness_status(value.get("status"), &format!("{field}.status"))?,
+        receipt: validate_receipt_expectation(
+            optional_object(value.get("receipt"), &format!("{field}.receipt"))?,
+            &format!("{field}.receipt"),
+        )?,
+        steps: optional_string_array(value.get("steps"), &format!("{field}.steps"))?,
+    })
+}
+
+fn validate_receipt_expectation(
+    value: Option<JsonObject>,
+    field: &str,
+) -> Result<Option<ReceiptExpectation>, ValidationError> {
+    let Some(value) = value else {
+        return Ok(None);
+    };
+    Ok(Some(ReceiptExpectation {
+        kind: optional_receipt_kind(value.get("kind"), &format!("{field}.kind"))?,
+        status: optional_receipt_status(value.get("status"), &format!("{field}.status"))?,
+        skill_name: optional_string(value.get("skill_name"), &format!("{field}.skill_name"))?,
+        source_type: optional_string(value.get("source_type"), &format!("{field}.source_type"))?,
+        graph_name: optional_string(value.get("graph_name"), &format!("{field}.graph_name"))?,
+        owner: optional_string(value.get("owner"), &format!("{field}.owner"))?,
+    }))
+}
+
+fn optional_harness_status(
+    value: Option<&JsonValue>,
+    field: &str,
+) -> Result<Option<String>, ValidationError> {
+    validate_enum(
+        value,
+        field,
+        &[
+            "sealed",
+            "failure",
+            "needs_agent",
+            "policy_denied",
+            "escalated",
+        ],
+    )
+}
+
+fn optional_receipt_status(
+    value: Option<&JsonValue>,
+    field: &str,
+) -> Result<Option<String>, ValidationError> {
+    validate_enum(value, field, &["sealed", "failure"])
+}
+
+fn optional_receipt_kind(
+    value: Option<&JsonValue>,
+    field: &str,
+) -> Result<Option<String>, ValidationError> {
+    validate_enum(value, field, &["receipt"])
+}
+
+fn validate_enum(
+    value: Option<&JsonValue>,
+    field: &str,
+    allowed: &[&str],
+) -> Result<Option<String>, ValidationError> {
+    let Some(value) = optional_string(value, field)? else {
+        return Ok(None);
+    };
+    if allowed.iter().any(|allowed| *allowed == value) {
+        return Ok(Some(value));
+    }
+    Err(validation_error(format!(
+        "{field} must be {}.",
+        allowed.join(", ")
+    )))
+}
