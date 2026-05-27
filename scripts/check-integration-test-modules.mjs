@@ -145,7 +145,7 @@ if (errors.length > 0) {
   for (const error of errors) console.error(`  - ${error}`);
   console.error(
     `\n${errors.length} issue(s). See ` +
-      `.scafld/specs/drafts/test-surface-build-consolidation.md.`,
+      `.scafld/specs/active/test-surface-build-consolidation.md.`,
   );
   process.exit(1);
 }
