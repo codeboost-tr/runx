@@ -260,10 +260,10 @@ pub(crate) fn graph_receipt_with_disposition_and_policy(
         })
     };
 
-    // Pass 1: seal the graph receipt with no children to learn its stable
-    // content-addressed id (lineage is excluded from the address).
+    // Pass 1: learn the stable content-addressed id. The final pass below is
+    // the only graph body digest/signature/proof seal this path needs.
     let mut receipt = build_graph_receipt(Vec::new());
-    seal_receipt(&mut receipt, signature_policy)?;
+    content_address_receipt(&mut receipt, signature_policy)?;
     let parent_ref = Reference::runx(ReferenceType::Receipt, &receipt.id);
 
     // Attach the parent link to each child and re-seal them (ids are stable
@@ -845,36 +845,14 @@ fn placeholder_signature() -> ReceiptSignature {
     }
 }
 
-fn seal_receipt(
-    receipt: &mut Receipt,
-    signature_policy: RuntimeReceiptSignaturePolicy<'_>,
-) -> Result<(), RuntimeError> {
-    let digest = seal_receipt_unvalidated(receipt, signature_policy)?;
-
-    let proof_contexts = RuntimeReceiptProofContextProvider::new(signature_policy);
-    let context = proof_contexts.proof_context(receipt);
-    runx_receipts::validate_receipt_proof(receipt, &context).map_err(receipt_error)?;
-    if receipt.digest != digest {
-        return Err(RuntimeError::ReceiptInvalid {
-            message: "receipt digest changed during proof validation".to_owned(),
-        });
-    }
-    Ok(())
-}
-
 fn seal_receipt_unvalidated(
     receipt: &mut Receipt,
     signature_policy: RuntimeReceiptSignaturePolicy<'_>,
 ) -> Result<String, RuntimeError> {
-    signature_policy.prepare_receipt(receipt)?;
     // Content-address the id over the canonical body (id = hash(canonical_body),
     // excluding id/signature/digest/metadata/lineage) before the digest commits
     // it. Lineage is excluded so parent<->child wiring does not perturb the id.
-    receipt.id = content_addressed_receipt_id(receipt)
-        .map_err(|error| RuntimeError::ReceiptInvalid {
-            message: error.to_string(),
-        })?
-        .into();
+    content_address_receipt(receipt, signature_policy)?;
     let digest =
         canonical_receipt_body_digest(receipt).map_err(|error| RuntimeError::ReceiptInvalid {
             message: error.to_string(),
@@ -882,6 +860,19 @@ fn seal_receipt_unvalidated(
     receipt.digest = digest.clone().into();
     signature_policy.sign_receipt(receipt, &digest)?;
     Ok(digest)
+}
+
+fn content_address_receipt(
+    receipt: &mut Receipt,
+    signature_policy: RuntimeReceiptSignaturePolicy<'_>,
+) -> Result<(), RuntimeError> {
+    signature_policy.prepare_receipt(receipt)?;
+    receipt.id = content_addressed_receipt_id(receipt)
+        .map_err(|error| RuntimeError::ReceiptInvalid {
+            message: error.to_string(),
+        })?
+        .into();
+    Ok(())
 }
 
 pub(crate) fn proof_context<'a>(

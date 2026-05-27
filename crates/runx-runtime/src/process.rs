@@ -180,11 +180,16 @@ pub(crate) fn run_process(spec: ProcessSpec) -> Result<ProcessOutcome, ProcessSu
 
 fn spawn_process(spec: &ProcessSpec) -> Result<Child, ProcessSupervisorError> {
     let mut command = Command::new(&spec.command);
+    let stdin = if spec.stdin.is_some() {
+        Stdio::piped()
+    } else {
+        Stdio::null()
+    };
     command
         .args(&spec.args)
         .env_clear()
         .envs(&spec.env)
-        .stdin(Stdio::piped())
+        .stdin(stdin)
         .stdout(Stdio::piped())
         .stderr(Stdio::piped());
     if let Some(cwd) = spec.cwd.as_ref() {

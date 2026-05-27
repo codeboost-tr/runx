@@ -5,17 +5,19 @@ use std::path::Path;
 
 use runx_contracts::{
     ApprovalGate, AuthorityVerb, ClosureDisposition, ExecutionEvent, JsonObject, JsonValue,
-    ProofKind, ResolutionRequest, ResolutionResponse, ResolutionResponseActor,
+    ProofKind, Receipt, ResolutionRequest, ResolutionResponse, ResolutionResponseActor,
 };
 use runx_core::state_machine::StepAdmissionWitness;
 use runx_parser::{GraphStep, SkillSource, SourceKind};
 
-use super::super::graph::{load_step_skill, output_object, output_object_with_claim};
+use super::super::graph::{
+    LoadedStepSkill, load_step_skill, output_object, output_object_with_claim,
+};
 use super::authority::{
-    StepPaymentReplay, attach_payment_supervisor_evidence_before_gate, authority_denied,
-    enforce_step_authority_admission, enforce_step_authority_receipt_before_success,
-    escalate_in_flight_payment_recovery, sealed_payment_replay,
-    validate_replayed_payment_supervisor_proof,
+    StepAuthorityContext, StepPaymentReplay, attach_payment_supervisor_evidence_before_gate,
+    authority_denied, enforce_step_authority_admission,
+    enforce_step_authority_receipt_before_success, escalate_in_flight_payment_recovery,
+    sealed_payment_replay, validate_replayed_payment_supervisor_proof,
 };
 use super::host_resolution::resolve_step_approval;
 use super::inputs::{optional_input_string, required_input_string, string_value, string_value_ref};
@@ -49,6 +51,12 @@ struct AgentSkillStepInvocation {
     source_type: AgentActInvocationSourceType,
 }
 
+struct RegularSkillStepOutput {
+    output: SkillOutput,
+    outputs: JsonObject,
+    skill_claim: JsonObject,
+}
+
 pub(super) fn output_error(run: &StepRun) -> String {
     if run.output.stderr.is_empty() {
         "cli-tool failed without stderr".to_owned()
@@ -71,8 +79,59 @@ pub(super) fn run_step_with_inputs<A>(
 where
     A: SkillAdapter,
 {
+    run_step_with_optional_loaded_skill(
+        runtime, graph_dir, graph_name, step, attempt, None, inputs, host,
+    )
+}
+
+pub(super) fn run_step_with_loaded_skill_inputs<A>(
+    runtime: &Runtime<A>,
+    graph_dir: &Path,
+    graph_name: &str,
+    step: &GraphStep,
+    attempt: u32,
+    loaded_skill: LoadedStepSkill,
+    inputs: JsonObject,
+    host: &mut dyn Host,
+) -> Result<StepRun, RuntimeError>
+where
+    A: SkillAdapter,
+{
+    run_step_with_optional_loaded_skill(
+        runtime,
+        graph_dir,
+        graph_name,
+        step,
+        attempt,
+        Some(loaded_skill),
+        inputs,
+        host,
+    )
+}
+
+fn run_step_with_optional_loaded_skill<A>(
+    runtime: &Runtime<A>,
+    graph_dir: &Path,
+    graph_name: &str,
+    step: &GraphStep,
+    attempt: u32,
+    loaded_skill: Option<LoadedStepSkill>,
+    inputs: JsonObject,
+    host: &mut dyn Host,
+) -> Result<StepRun, RuntimeError>
+where
+    A: SkillAdapter,
+{
     if let Some(replay) = sealed_payment_replay(step, &inputs, &runtime.options.env, graph_dir)? {
-        return run_replayed_payment_step(runtime, graph_dir, graph_name, step, attempt, replay);
+        return run_replayed_payment_step(
+            runtime,
+            graph_dir,
+            graph_name,
+            step,
+            attempt,
+            loaded_skill,
+            replay,
+        );
     }
     escalate_in_flight_payment_recovery(step, &inputs, &runtime.options.env, graph_dir)?;
     let authority =
@@ -84,17 +143,34 @@ where
         return run_tool_step(runtime, graph_dir, graph_name, step, attempt, inputs);
     }
 
-    let skill = load_step_skill(graph_dir, step)?;
-    let skill_name = skill.name.clone();
-    let invocation = SkillInvocation {
-        skill_name: skill.name,
-        source: skill.source,
+    run_loaded_skill_step(
+        runtime,
+        graph_dir,
+        graph_name,
+        step,
+        attempt,
+        loaded_skill_or_load(loaded_skill, graph_dir, step)?,
         inputs,
-        resolved_inputs: JsonObject::new(),
-        skill_directory: skill.directory,
-        env: runtime.options.env.clone(),
-        credential_delivery: crate::credentials::CredentialDelivery::none(),
-    };
+        authority.as_ref(),
+        host,
+    )
+}
+
+fn run_loaded_skill_step<A>(
+    runtime: &Runtime<A>,
+    graph_dir: &Path,
+    graph_name: &str,
+    step: &GraphStep,
+    attempt: u32,
+    skill: LoadedStepSkill,
+    inputs: JsonObject,
+    authority: Option<&StepAuthorityContext>,
+    host: &mut dyn Host,
+) -> Result<StepRun, RuntimeError>
+where
+    A: SkillAdapter,
+{
+    let (skill_name, invocation) = loaded_skill_invocation(skill, inputs, &runtime.options.env);
     if let Some(source_type) = agent_skill_source_type(invocation.source.source_type) {
         return run_agent_skill_step(
             runtime,
@@ -110,16 +186,75 @@ where
         );
     }
 
+    let regular = invoke_regular_skill_step(runtime, step, invocation, authority, host)?;
+    seal_regular_skill_step(
+        runtime, graph_dir, graph_name, step, attempt, skill_name, regular, authority,
+    )
+}
+
+fn loaded_skill_invocation(
+    skill: LoadedStepSkill,
+    inputs: JsonObject,
+    env: &std::collections::BTreeMap<String, String>,
+) -> (String, SkillInvocation) {
+    let skill_name = skill.name.clone();
+    let invocation = SkillInvocation {
+        skill_name: skill.name,
+        source: skill.source,
+        inputs,
+        resolved_inputs: JsonObject::new(),
+        skill_directory: skill.directory,
+        env: env.clone(),
+        credential_delivery: crate::credentials::CredentialDelivery::none(),
+    };
+    (skill_name, invocation)
+}
+
+fn invoke_regular_skill_step<A>(
+    runtime: &Runtime<A>,
+    step: &GraphStep,
+    invocation: SkillInvocation,
+    authority: Option<&StepAuthorityContext>,
+    host: &mut dyn Host,
+) -> Result<RegularSkillStepOutput, RuntimeError>
+where
+    A: SkillAdapter,
+{
     let mut output = runtime.adapter.invoke(invocation)?;
     route_external_adapter_host_resolution(step, host, &mut output)?;
     let (outputs, skill_claim) = step_output_object_and_claim(step, &output)?;
     attach_payment_supervisor_evidence_before_gate(
         step,
-        authority.as_ref(),
+        authority,
         &skill_claim,
         &mut output,
         &runtime.options.payment_supervisor,
     )?;
+    Ok(RegularSkillStepOutput {
+        output,
+        outputs,
+        skill_claim,
+    })
+}
+
+fn seal_regular_skill_step<A>(
+    runtime: &Runtime<A>,
+    graph_dir: &Path,
+    graph_name: &str,
+    step: &GraphStep,
+    attempt: u32,
+    skill_name: String,
+    regular: RegularSkillStepOutput,
+    authority: Option<&StepAuthorityContext>,
+) -> Result<StepRun, RuntimeError>
+where
+    A: SkillAdapter,
+{
+    let RegularSkillStepOutput {
+        mut output,
+        outputs,
+        skill_claim,
+    } = regular;
     let receipt = step_receipt_with_signature_policy(
         graph_name,
         &step.id,
@@ -130,33 +265,60 @@ where
     )?;
     let supervisor_proof = enforce_step_authority_receipt_before_success(
         step,
-        authority.as_ref(),
+        authority,
         &output,
         &skill_claim,
         &receipt,
     )?;
-    if let Some(proof) = supervisor_proof.as_ref() {
-        insert_payment_supervisor_proof_metadata(&mut output.metadata, proof).map_err(
-            |source| {
-                authority_denied(
-                    step,
-                    AuthorityVerb::Spend,
-                    format!("recording supervisor proof metadata failed: {source}"),
-                )
-            },
-        )?;
-    }
+    record_payment_supervisor_proof_metadata(step, &mut output, supervisor_proof.as_ref())?;
     persist_payment_state_for_step(
         runtime,
         graph_dir,
         step,
-        authority.as_ref(),
+        authority,
         &skill_claim,
         &receipt,
         supervisor_proof.as_ref(),
     )?;
-    let admission_witness = step_admission_witness(&step.id, &receipt.id, authority.as_ref());
-    Ok(StepRun {
+    let admission_witness = step_admission_witness(&step.id, &receipt.id, authority);
+    Ok(regular_step_run(
+        step,
+        attempt,
+        skill_name,
+        output,
+        outputs,
+        receipt,
+        admission_witness,
+    ))
+}
+
+fn record_payment_supervisor_proof_metadata(
+    step: &GraphStep,
+    output: &mut SkillOutput,
+    supervisor_proof: Option<&PaymentSupervisorProof>,
+) -> Result<(), RuntimeError> {
+    let Some(proof) = supervisor_proof else {
+        return Ok(());
+    };
+    insert_payment_supervisor_proof_metadata(&mut output.metadata, proof).map_err(|source| {
+        authority_denied(
+            step,
+            AuthorityVerb::Spend,
+            format!("recording supervisor proof metadata failed: {source}"),
+        )
+    })
+}
+
+fn regular_step_run(
+    step: &GraphStep,
+    attempt: u32,
+    skill_name: String,
+    output: SkillOutput,
+    outputs: JsonObject,
+    receipt: Receipt,
+    admission_witness: StepAdmissionWitness,
+) -> StepRun {
+    StepRun {
         step_id: step.id.clone(),
         attempt,
         skill: skill_name,
@@ -166,7 +328,7 @@ where
         outputs,
         receipt,
         admission_witness,
-    })
+    }
 }
 
 fn route_external_adapter_host_resolution(
@@ -273,9 +435,10 @@ fn run_replayed_payment_step(
     graph_name: &str,
     step: &GraphStep,
     attempt: u32,
+    loaded_skill: Option<LoadedStepSkill>,
     replay: StepPaymentReplay,
 ) -> Result<StepRun, RuntimeError> {
-    let skill = load_step_skill(graph_dir, step)?;
+    let skill = loaded_skill_or_load(loaded_skill, graph_dir, step)?;
     let skill_name = skill.name.clone();
     let mut output = replay_skill_output(step, &replay.outputs)?;
     if !output.succeeded() {
@@ -345,6 +508,14 @@ fn run_replayed_payment_step(
         receipt,
         admission_witness,
     })
+}
+
+fn loaded_skill_or_load(
+    loaded_skill: Option<LoadedStepSkill>,
+    graph_dir: &Path,
+    step: &GraphStep,
+) -> Result<LoadedStepSkill, RuntimeError> {
+    loaded_skill.map_or_else(|| load_step_skill(graph_dir, step), Ok)
 }
 
 fn replay_skill_output(

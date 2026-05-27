@@ -180,10 +180,9 @@ fn execute_graph_skill_run(
             Ok(next_checkpoint) => {
                 if next_checkpoint.state.status == GraphStatus::Succeeded {
                     let mut final_host = SkillRunGraphHost::new(JsonObject::new());
-                    let run = runtime.resume_graph_with_host(
-                        &skill_dir,
+                    let run = runtime.seal_completed_graph_checkpoint_with_host(
                         graph.clone(),
-                        previous_checkpoint,
+                        next_checkpoint,
                         &mut final_host,
                     )?;
                     write_skill_receipt(request, workspace, receipts, &run.receipt)?;

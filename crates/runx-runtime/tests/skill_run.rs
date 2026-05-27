@@ -1135,6 +1135,38 @@ fn native_graph_skill_run_executes_nested_cli_tool_skill() -> Result<(), Box<dyn
 
 #[cfg(feature = "cli-tool")]
 #[test]
+fn native_graph_skill_run_does_not_rerun_final_step() -> Result<(), Box<dyn std::error::Error>> {
+    let temp = tempdir()?;
+    let skill_dir = write_graph_nested_cli_counter_skill(temp.path())?;
+    let receipt_dir = temp.path().join("receipts");
+    let count_file = temp.path().join("count.txt");
+    let inputs = [(
+        "count_file".to_owned(),
+        JsonValue::String(count_file.to_string_lossy().into_owned()),
+    )]
+    .into_iter()
+    .collect::<BTreeMap<_, _>>();
+
+    let result = run_skill(SkillRunRequest {
+        skill_path: skill_dir,
+        receipt_dir: Some(receipt_dir),
+        run_id: None,
+        answers_path: None,
+        inputs,
+        env: BTreeMap::new(),
+        cwd: temp.path().to_path_buf(),
+        local_credential: None,
+    })?;
+
+    let output = object(&result.output, "counter graph skill result")?;
+    assert_eq!(string_field(output, "status"), Some("sealed"));
+    assert_eq!(fs::read_to_string(count_file)?, "1");
+
+    Ok(())
+}
+
+#[cfg(feature = "cli-tool")]
+#[test]
 fn native_graph_skill_run_executes_nested_x_yaml_runner_skill()
 -> Result<(), Box<dyn std::error::Error>> {
     let temp = tempdir()?;
@@ -1682,6 +1714,68 @@ runners:
           skill: ../child-echo
           inputs:
             message: $input.thread_title
+"#,
+    )?;
+    Ok(skill_dir)
+}
+
+#[cfg(feature = "cli-tool")]
+fn write_graph_nested_cli_counter_skill(
+    root: &Path,
+) -> Result<PathBuf, Box<dyn std::error::Error>> {
+    let child_dir = root.join("child-counter");
+    fs::create_dir_all(&child_dir)?;
+    fs::write(
+        child_dir.join("SKILL.md"),
+        r#"---
+name: child-counter
+source:
+  type: cli-tool
+  command: node
+  args:
+    - run.mjs
+  input_mode: stdin
+---
+# Child Counter
+"#,
+    )?;
+    fs::write(
+        child_dir.join("run.mjs"),
+        r#"import fs from "node:fs";
+const raw = fs.readFileSync(0, "utf8");
+const input = raw.trim() ? JSON.parse(raw) : {};
+const path = input.count_file;
+let count = 0;
+try {
+  count = Number(fs.readFileSync(path, "utf8")) || 0;
+} catch {}
+count += 1;
+fs.writeFileSync(path, String(count));
+console.log(JSON.stringify({ counted: { count } }));
+"#,
+    )?;
+
+    let skill_dir = root.join("graph-nested-cli-counter");
+    fs::create_dir_all(&skill_dir)?;
+    fs::write(
+        skill_dir.join("SKILL.md"),
+        "---\nname: graph-nested-cli-counter\n---\n# Graph Nested CLI Counter\n",
+    )?;
+    fs::write(
+        skill_dir.join("X.yaml"),
+        r#"
+skill: graph-nested-cli-counter
+runners:
+  graph:
+    default: true
+    type: graph
+    graph:
+      name: graph-nested-cli-counter
+      steps:
+        - id: counted
+          skill: ../child-counter
+          inputs:
+            count_file: $input.count_file
 "#,
     )?;
     Ok(skill_dir)

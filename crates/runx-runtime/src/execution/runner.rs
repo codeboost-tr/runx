@@ -11,7 +11,7 @@ use std::collections::BTreeMap;
 use std::path::Path;
 
 use runx_contracts::{ClosureDisposition, FanoutReceiptSyncPoint, JsonObject, Receipt};
-use runx_core::state_machine::{SequentialGraphState, StepAdmissionWitness};
+use runx_core::state_machine::{GraphStatus, SequentialGraphState, StepAdmissionWitness};
 use runx_parser::ExecutionGraph;
 use serde::{Deserialize, Serialize};
 
@@ -309,6 +309,33 @@ where
     ) -> Result<GraphRun, RuntimeError> {
         let mut execution = GraphExecution::from_checkpoint(&graph, checkpoint)?;
         execution.run(self, graph_dir, &graph, host, None)?;
+        let receipt = graph_receipt_with_signature_policy(
+            &graph.name,
+            &mut execution.runs,
+            execution.sync_points.clone(),
+            &self.options.created_at,
+            self.options.signature_policy(),
+        )?;
+        execution.record_lifecycle(host, LifecycleEvent::graph_completed(&graph.name, &receipt))?;
+        Ok(execution.finish(graph, receipt))
+    }
+
+    pub(crate) fn seal_completed_graph_checkpoint_with_host(
+        &self,
+        graph: ExecutionGraph,
+        checkpoint: GraphCheckpoint,
+        host: &mut dyn Host,
+    ) -> Result<GraphRun, RuntimeError> {
+        if checkpoint.state.status != GraphStatus::Succeeded {
+            return Err(RuntimeError::GraphBlocked {
+                step_id: "graph".to_owned(),
+                reason: format!(
+                    "cannot seal graph checkpoint with status {:?}",
+                    checkpoint.state.status
+                ),
+            });
+        }
+        let mut execution = GraphExecution::from_checkpoint(&graph, checkpoint)?;
         let receipt = graph_receipt_with_signature_policy(
             &graph.name,
             &mut execution.runs,

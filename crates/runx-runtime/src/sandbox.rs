@@ -41,6 +41,28 @@ pub struct SandboxPlan {
     pub cleanup_paths: Vec<PathBuf>,
 }
 
+pub(crate) struct SandboxProcessPlan {
+    pub(crate) command: String,
+    pub(crate) args: Vec<String>,
+    pub(crate) cwd: PathBuf,
+    pub(crate) env: BTreeMap<String, String>,
+    pub(crate) metadata: JsonObject,
+    pub(crate) cleanup_paths: Vec<PathBuf>,
+}
+
+impl SandboxPlan {
+    pub(crate) fn into_process_plan(mut self) -> SandboxProcessPlan {
+        SandboxProcessPlan {
+            command: std::mem::take(&mut self.command),
+            args: std::mem::take(&mut self.args),
+            cwd: std::mem::take(&mut self.cwd),
+            env: std::mem::take(&mut self.env),
+            metadata: std::mem::take(&mut self.metadata),
+            cleanup_paths: std::mem::take(&mut self.cleanup_paths),
+        }
+    }
+}
+
 impl Drop for SandboxPlan {
     fn drop(&mut self) {
         cleanup_paths_quietly(&self.cleanup_paths);

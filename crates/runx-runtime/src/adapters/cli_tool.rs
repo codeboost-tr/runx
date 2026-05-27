@@ -32,22 +32,23 @@ impl SkillAdapter for CliToolAdapter {
             &request.env,
         )?;
         let stdin = cli_tool_stdin(&request)?;
-        let outcome = run_process(
-            ProcessSpec::new("cli-tool", sandbox.command.clone(), OUTPUT_LIMIT_BYTES)
-                .args(sandbox.args.clone())
-                .cwd(sandbox.cwd.clone())
-                .env(sandbox.env.clone())
+        let sandbox = sandbox.into_process_plan();
+        let mut outcome = run_process(
+            ProcessSpec::new("cli-tool", sandbox.command, OUTPUT_LIMIT_BYTES)
+                .args(sandbox.args)
+                .cwd(sandbox.cwd)
+                .env(sandbox.env)
                 .stdin(stdin)
                 .timeout(request.source.timeout_seconds.map(Duration::from_secs))
-                .cleanup_paths(sandbox.cleanup_paths.clone()),
+                .cleanup_paths(sandbox.cleanup_paths),
         )
         .map_err(|error| match error {
             crate::process::ProcessSupervisorError::Io { context, source } => {
                 RuntimeError::io(context, source)
             }
         })?;
-        let cleanup_errors = outcome.cleanup_errors.clone();
-        let mut output = cli_tool_output(outcome, &credential_delivery, sandbox.metadata.clone());
+        let cleanup_errors = std::mem::take(&mut outcome.cleanup_errors);
+        let mut output = cli_tool_output(outcome, &credential_delivery, sandbox.metadata);
         if !cleanup_errors.is_empty() {
             output.metadata.insert(
                 "cleanup_errors".to_owned(),

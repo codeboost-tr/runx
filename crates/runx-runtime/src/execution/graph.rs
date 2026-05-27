@@ -1,3 +1,4 @@
+use std::collections::BTreeMap;
 use std::fs;
 use std::path::{Path, PathBuf};
 
@@ -15,10 +16,31 @@ use crate::{RuntimeError, StepRun};
 use super::graph_index::PriorRunIndex;
 use super::output_projection::project_skill_output;
 
+#[derive(Clone)]
 pub(crate) struct LoadedStepSkill {
     pub(crate) name: String,
     pub(crate) source: SkillSource,
     pub(crate) directory: PathBuf,
+}
+
+#[derive(Default)]
+pub(crate) struct StepSkillCache {
+    loaded: BTreeMap<String, LoadedStepSkill>,
+}
+
+impl StepSkillCache {
+    pub(crate) fn load(
+        &mut self,
+        graph_dir: &Path,
+        step: &GraphStep,
+    ) -> Result<LoadedStepSkill, RuntimeError> {
+        if let Some(skill) = self.loaded.get(&step.id) {
+            return Ok(skill.clone());
+        }
+        let skill = load_step_skill(graph_dir, step)?;
+        self.loaded.insert(step.id.clone(), skill.clone());
+        Ok(skill)
+    }
 }
 
 pub(crate) fn load_graph(graph_path: &Path) -> Result<ExecutionGraph, RuntimeError> {

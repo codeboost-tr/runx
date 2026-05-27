@@ -1,4 +1,7 @@
+use std::io::{self, Write};
+
 use runx_contracts::{JsonValue, Receipt, sha256_prefixed};
+use serde::Serialize;
 
 use crate::ReceiptError;
 
@@ -44,11 +47,10 @@ pub fn content_addressed_receipt_id(receipt: &Receipt) -> Result<String, Receipt
 }
 
 fn receipt_value(receipt: &Receipt) -> Result<JsonValue, ReceiptError> {
-    let serialized =
-        serde_json::to_string(receipt).map_err(|source| ReceiptError::Serialization {
-            message: source.to_string(),
-        })?;
-    serde_json::from_str(&serialized).map_err(|source| ReceiptError::Serialization {
+    let value = serde_json::to_value(receipt).map_err(|source| ReceiptError::Serialization {
+        message: source.to_string(),
+    })?;
+    serde_json::from_value(value).map_err(|source| ReceiptError::Serialization {
         message: source.to_string(),
     })
 }
@@ -105,11 +107,29 @@ fn write_canonical_json_value(value: &JsonValue, output: &mut String) -> Result<
 }
 
 fn write_json_string(value: &str, output: &mut String) -> Result<(), ReceiptError> {
-    let encoded = serde_json::to_string(value).map_err(|source| ReceiptError::Serialization {
-        message: source.to_string(),
-    })?;
-    output.push_str(&encoded);
-    Ok(())
+    let mut serializer = serde_json::Serializer::new(JsonStringWriter { output });
+    value
+        .serialize(&mut serializer)
+        .map_err(|source| ReceiptError::Serialization {
+            message: source.to_string(),
+        })
+}
+
+struct JsonStringWriter<'a> {
+    output: &'a mut String,
+}
+
+impl Write for JsonStringWriter<'_> {
+    fn write(&mut self, bytes: &[u8]) -> io::Result<usize> {
+        let text = std::str::from_utf8(bytes)
+            .map_err(|source| io::Error::new(io::ErrorKind::InvalidData, source))?;
+        self.output.push_str(text);
+        Ok(bytes.len())
+    }
+
+    fn flush(&mut self) -> io::Result<()> {
+        Ok(())
+    }
 }
 
 #[cfg(test)]
