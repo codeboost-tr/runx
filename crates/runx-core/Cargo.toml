@@ -1,4 +1,7 @@
 [package]
+# Integration tests compile as a single binary (tests/integration.rs); see
+# .scafld/specs/drafts/test-surface-build-consolidation.md.
+autotests = false
 name = "runx-core"
 version = "0.0.2"
 edition.workspace = true
@@ -32,3 +35,7 @@ path = "src/lib.rs"
 
 [dev-dependencies]
 proptest = { version = "1.11.0", default-features = false, features = ["std"] }
+
+[[test]]
+name = "integration"
+path = "tests/integration.rs"

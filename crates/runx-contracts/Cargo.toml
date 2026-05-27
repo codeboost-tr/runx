@@ -1,4 +1,7 @@
 [package]
+# Integration tests compile as a single binary (tests/integration.rs); see
+# .scafld/specs/drafts/test-surface-build-consolidation.md.
+autotests = false
 name = "runx-contracts"
 version = "0.0.2"
 edition.workspace = true
@@ -28,3 +31,7 @@ runx-contracts-derive.workspace = true
 [dev-dependencies]
 jsonschema = { version = "0.46.5", default-features = false }
 serde_json.workspace = true
+
+[[test]]
+name = "integration"
+path = "tests/integration.rs"

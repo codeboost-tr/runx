@@ -1,4 +1,3 @@
-mod support;
 
 use std::fs;
 use std::io::{Read, Write};
@@ -138,7 +137,7 @@ fn mcp_native_binary_reports_mid_session_framing_fault() -> Result<(), Box<dyn s
 fn spawn_mcp_server(args: &[String]) -> Result<McpProcess, Box<dyn std::error::Error>> {
     let repo_root = repo_root()?;
     let mut command = Command::new(env!("CARGO_BIN_EXE_runx"));
-    support::apply_fixture_signing(&mut command, "mcp-dogfood-test-key");
+    crate::support::apply_fixture_signing(&mut command, "mcp-dogfood-test-key");
     let mut child = command
         .current_dir(&repo_root)
         .env("RUNX_CWD", &repo_root)

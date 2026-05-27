@@ -1,0 +1,23 @@
+//! Single integration-test binary for runx-cli.
+//!
+//! Each module below is one integration test file, compiled and linked once
+//! as a single binary instead of one binary per file. `support` is the shared
+//! helper module (tests/support/), referenced by test modules as
+//! `crate::support`. `autotests = false` in Cargo.toml keeps Cargo from also
+//! building each file as its own binary.
+//! See .scafld/specs/drafts/test-surface-build-consolidation.md.
+
+mod support;
+mod doctor;
+mod kernel;
+mod launcher;
+mod local_credential;
+mod locality;
+mod mcp_dogfood;
+mod native_no_ts;
+mod parser;
+mod policy;
+mod registry;
+mod skill;
+mod tool;
+mod x402_native_dogfood;

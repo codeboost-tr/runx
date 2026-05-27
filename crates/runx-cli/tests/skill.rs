@@ -1,4 +1,3 @@
-mod support;
 
 use std::fs;
 use std::path::{Path, PathBuf};
@@ -6,7 +5,7 @@ use std::process::Command;
 
 #[test]
 fn native_skill_pauses_and_resumes_with_run_id() -> Result<(), Box<dyn std::error::Error>> {
-    let root = support::temp_root("runx-skill");
+    let root = crate::support::temp_root("runx-skill");
     let skill_dir = write_agent_step_skill(&root)?;
     let receipt_dir = root.join("receipts");
 
@@ -71,7 +70,7 @@ fn native_skill_pauses_and_resumes_with_run_id() -> Result<(), Box<dyn std::erro
 
 #[test]
 fn native_skill_rejects_answers_without_run_id() -> Result<(), Box<dyn std::error::Error>> {
-    let root = support::temp_root("runx-skill-reject-answers");
+    let root = crate::support::temp_root("runx-skill-reject-answers");
     let skill_dir = write_agent_step_skill(&root)?;
     let answers_path = root.join("answers.json");
     fs::write(&answers_path, "{}")?;
@@ -93,7 +92,7 @@ fn native_skill_rejects_answers_without_run_id() -> Result<(), Box<dyn std::erro
 
 #[test]
 fn native_skill_rejects_run_id_without_answers() -> Result<(), Box<dyn std::error::Error>> {
-    let root = support::temp_root("runx-skill-reject-run-id");
+    let root = crate::support::temp_root("runx-skill-reject-run-id");
     let skill_dir = write_agent_step_skill(&root)?;
     let output = runx_command()
         .args([
@@ -113,7 +112,7 @@ fn native_skill_rejects_run_id_without_answers() -> Result<(), Box<dyn std::erro
 
 #[test]
 fn native_skill_rejects_retired_receipt_options() -> Result<(), Box<dyn std::error::Error>> {
-    let root = support::temp_root("runx-skill-reject-retired-receipt");
+    let root = crate::support::temp_root("runx-skill-reject-retired-receipt");
     let skill_dir = write_agent_step_skill(&root)?;
     let receipt_dir = root.join("receipts");
     let retired_receipt = format!("--{}", "receipt");
@@ -159,7 +158,7 @@ fn native_skill_rejects_retired_receipt_options() -> Result<(), Box<dyn std::err
 }
 
 fn runx_command() -> Command {
-    support::signed_runx_command("skill-test-key")
+    crate::support::signed_runx_command("skill-test-key")
 }
 
 fn assert_json(

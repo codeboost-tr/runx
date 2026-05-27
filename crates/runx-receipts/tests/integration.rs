@@ -1,0 +1,10 @@
+//! Single integration-test binary for runx-receipts.
+//!
+//! Each module below is one integration test file, compiled and linked once
+//! as a single binary instead of one binary per file. `autotests = false` in
+//! Cargo.toml keeps Cargo from also building each file as its own binary.
+//! See .scafld/specs/drafts/test-surface-build-consolidation.md.
+
+mod conformance;
+mod receipt_contracts;
+mod receipt_tree_fixtures;

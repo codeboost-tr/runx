@@ -1,4 +1,7 @@
 [package]
+# Integration tests compile as a single binary (tests/integration.rs); see
+# .scafld/specs/drafts/test-surface-build-consolidation.md.
+autotests = false
 name = "runx-cli"
 # Kept in lockstep with packages/cli/package.json (the npm distribution line).
 # The release workflow stamps this from the npm manifest before building.
@@ -39,3 +42,7 @@ extended-description = "Native governed runtime for agent skills, tools, graphs,
 section = "utils"
 priority = "optional"
 assets = [["target/release/runx", "usr/bin/", "755"]]
+
+[[test]]
+name = "integration"
+path = "tests/integration.rs"

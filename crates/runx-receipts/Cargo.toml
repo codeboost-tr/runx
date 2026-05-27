@@ -1,4 +1,7 @@
 [package]
+# Integration tests compile as a single binary (tests/integration.rs); see
+# .scafld/specs/drafts/test-surface-build-consolidation.md.
+autotests = false
 name = "runx-receipts"
 version = "0.0.1"
 edition.workspace = true
@@ -33,3 +36,7 @@ path = "src/lib.rs"
 [[bench]]
 name = "receipt_canonicalization"
 harness = false
+
+[[test]]
+name = "integration"
+path = "tests/integration.rs"

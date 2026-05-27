@@ -35,7 +35,7 @@ const cases: readonly OracleCase[] = [
 const owner = {
   spec: ".scafld/specs/archive/2026-05/rust-runtime-adapters-a2a.md",
   rustTest: "crates/runx-runtime/tests/a2a_parity.rs",
-  cargo: "cargo test --manifest-path crates/Cargo.toml -p runx-runtime --features a2a,agent --test a2a_parity",
+  cargo: "cargo test --manifest-path crates/Cargo.toml -p runx-runtime --features a2a,agent --test integration -- a2a_parity",
   markers: ["A2aAdapter", "FixtureA2aTransport", "run_harness_fixture_with_adapter"],
 } as const;
 

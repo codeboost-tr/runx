@@ -1,4 +1,3 @@
-mod support;
 
 use std::fs;
 use std::path::PathBuf;
@@ -59,7 +58,7 @@ fn native_x402_paid_echo_fixture_passes_only_refs_downstream()
 #[test]
 fn native_x402_ledger_projection() -> Result<(), Box<dyn std::error::Error>> {
     let receipt_dir = isolated_receipt_dir()?;
-    let fixture = support::governed_harness_fixture("fixtures/harness/x402-pay-paid-echo.yaml")?;
+    let fixture = crate::support::governed_harness_fixture("fixtures/harness/x402-pay-paid-echo.yaml")?;
     let output = native_command()?
         .env("RUNX_RECEIPT_DIR", &receipt_dir)
         .args(["harness", fixture.path_str()?, "--json"])
@@ -122,7 +121,7 @@ fn native_x402_ledger_projection() -> Result<(), Box<dyn std::error::Error>> {
 #[test]
 fn native_x402_refusal_ledger_projection() -> Result<(), Box<dyn std::error::Error>> {
     let receipt_dir = isolated_receipt_dir()?;
-    let fixture = support::governed_harness_fixture(
+    let fixture = crate::support::governed_harness_fixture(
         "fixtures/harness/x402-pay-ledger-governed-refusal.yaml",
     )?;
     let output = native_command()?
@@ -307,7 +306,7 @@ fn run_harness_fixture(
     fixture: &str,
     denied_fragments: &[&str],
 ) -> Result<Value, Box<dyn std::error::Error>> {
-    let fixture = support::governed_harness_fixture(fixture)?;
+    let fixture = crate::support::governed_harness_fixture(fixture)?;
     let output = native_command()?
         .args(["harness", fixture.path_str()?, "--json"])
         .output()?;
@@ -330,7 +329,7 @@ fn run_harness_fixture_failure(
     fixture: &str,
     required_stderr_fragments: &[&str],
 ) -> Result<FailedHarnessOutput, Box<dyn std::error::Error>> {
-    let fixture = support::governed_harness_fixture(fixture)?;
+    let fixture = crate::support::governed_harness_fixture(fixture)?;
     let output = native_command()?
         .args(["harness", fixture.path_str()?, "--json"])
         .output()?;
@@ -352,7 +351,7 @@ fn run_harness_fixture_failure(
 }
 
 fn native_command() -> Result<Command, Box<dyn std::error::Error>> {
-    support::isolated_runx_command("x402-native-dogfood-test-key")
+    crate::support::isolated_runx_command("x402-native-dogfood-test-key")
 }
 
 fn assert_success(output: &Output) -> Result<(), Box<dyn std::error::Error>> {
@@ -411,7 +410,7 @@ fn receipt_ref(receipt: &Value) -> Result<String, Box<dyn std::error::Error>> {
 }
 
 fn isolated_receipt_dir() -> Result<PathBuf, Box<dyn std::error::Error>> {
-    let path = support::isolated_target_temp_root("x402-ledger-projection")?;
+    let path = crate::support::isolated_target_temp_root("x402-ledger-projection")?;
     fs::create_dir_all(&path)?;
     Ok(path)
 }

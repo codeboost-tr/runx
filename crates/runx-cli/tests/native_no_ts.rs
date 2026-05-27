@@ -1,4 +1,3 @@
-mod support;
 
 use std::fs;
 use std::path::{Path, PathBuf};
@@ -26,7 +25,7 @@ fn native_cli_smoke_runs_without_node_or_typescript_env() -> Result<(), Box<dyn 
     let list_json = serde_json::from_slice::<serde_json::Value>(&list.stdout)?;
     assert_eq!(list_json["schema"], "runx.list.v1");
 
-    let temp = support::temp_root("runx-native-no-ts");
+    let temp = crate::support::temp_root("runx-native-no-ts");
     fs::create_dir_all(&temp)?;
     let receipt_dir = temp.join("receipts");
 
@@ -89,7 +88,7 @@ fn native_cli_smoke_runs_without_node_or_typescript_env() -> Result<(), Box<dyn 
 }
 
 fn native_command() -> Result<std::process::Command, Box<dyn std::error::Error>> {
-    support::isolated_runx_command("native-no-ts-test-key")
+    crate::support::isolated_runx_command("native-no-ts-test-key")
 }
 
 fn assert_success(output: &std::process::Output) -> Result<(), Box<dyn std::error::Error>> {
@@ -131,7 +130,7 @@ runners:
 fn write_sequential_graph_smoke_harness(
     root: &Path,
 ) -> Result<PathBuf, Box<dyn std::error::Error>> {
-    let graph_path = support::repo_root()?.join("fixtures/graphs/sequential/graph.yaml");
+    let graph_path = crate::support::repo_root()?.join("fixtures/graphs/sequential/graph.yaml");
     let harness_path = root.join("sequential-graph-smoke.yaml");
     fs::write(
         &harness_path,

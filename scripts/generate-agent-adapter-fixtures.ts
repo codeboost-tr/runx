@@ -31,7 +31,7 @@ const cases: readonly OracleCase[] = [
 const owner = {
   spec: ".scafld/specs/archive/2026-05/rust-runtime-adapters-agent.md",
   rustTest: "crates/runx-runtime/tests/agent_parity.rs",
-  cargo: "cargo test --manifest-path crates/Cargo.toml -p runx-runtime --features a2a,agent --test agent_parity",
+  cargo: "cargo test --manifest-path crates/Cargo.toml -p runx-runtime --features a2a,agent --test integration -- agent_parity",
   markers: ["AgentAdapter", "RecordingResolver", "run_harness_fixture_with_adapter"],
 } as const;
 

@@ -5,7 +5,6 @@
 //! `cli-tool` runners must reject that process-env delivery path before spawn
 //! so local secrets cannot enter an unbounded child process.
 
-mod support;
 
 use std::fs;
 use std::path::{Path, PathBuf};
@@ -16,7 +15,7 @@ const SECRET: &str = "ghs_cli_local_provision_secret_value";
 #[test]
 fn cli_rejects_local_credential_for_cli_tool_before_spawn() -> Result<(), Box<dyn std::error::Error>>
 {
-    let temp = support::temp_root("runx-cli-local-credential");
+    let temp = crate::support::temp_root("runx-cli-local-credential");
     fs::create_dir_all(&temp)?;
     let skill_dir = write_echo_token_skill(&temp)?;
     let receipt_dir = temp.join("receipts");
@@ -59,7 +58,7 @@ fn cli_rejects_local_credential_for_cli_tool_before_spawn() -> Result<(), Box<dy
 
 #[test]
 fn cli_rejects_secret_env_without_credential() -> Result<(), Box<dyn std::error::Error>> {
-    let temp = support::temp_root("runx-cli-local-credential-bad");
+    let temp = crate::support::temp_root("runx-cli-local-credential-bad");
     fs::create_dir_all(&temp)?;
     let skill_dir = write_echo_token_skill(&temp)?;
 
@@ -91,7 +90,7 @@ fn cli_rejects_secret_env_without_credential() -> Result<(), Box<dyn std::error:
 
 #[test]
 fn cli_rejects_empty_secret_value() -> Result<(), Box<dyn std::error::Error>> {
-    let temp = support::temp_root("runx-cli-local-credential-empty");
+    let temp = crate::support::temp_root("runx-cli-local-credential-empty");
     fs::create_dir_all(&temp)?;
     let skill_dir = write_echo_token_skill(&temp)?;
 
@@ -121,7 +120,7 @@ fn cli_rejects_empty_secret_value() -> Result<(), Box<dyn std::error::Error>> {
 
 #[test]
 fn cli_rejects_secret_env_value_on_argv() -> Result<(), Box<dyn std::error::Error>> {
-    let temp = support::temp_root("runx-cli-local-credential-argv-secret");
+    let temp = crate::support::temp_root("runx-cli-local-credential-argv-secret");
     fs::create_dir_all(&temp)?;
     let skill_dir = write_echo_token_skill(&temp)?;
 
@@ -153,7 +152,7 @@ fn cli_rejects_secret_env_value_on_argv() -> Result<(), Box<dyn std::error::Erro
 }
 
 fn native_command() -> Result<Command, Box<dyn std::error::Error>> {
-    Ok(support::isolated_runx_command_with_inherited_cwd(
+    Ok(crate::support::isolated_runx_command_with_inherited_cwd(
         "local-credential-test-key",
     ))
 }

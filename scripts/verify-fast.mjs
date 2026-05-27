@@ -26,6 +26,7 @@ const commands = [
   ["node", ["scripts/check-publishable-package-manifests.mjs"]],
   ["pnpm", ["rust:crate-graph"]],
   ["pnpm", ["rust:style"]],
+  ["node", ["scripts/check-integration-test-modules.mjs"]],
   ["node", ["scripts/check-authoring-package-contract.mjs"]],
   ["node", ["scripts/check-create-skill-package-contract.mjs"]],
   ["pnpm", ["fixtures:kernel:validate"]],
