@@ -26,6 +26,7 @@ pub mod links;
 pub mod list;
 pub mod maturity;
 pub mod operational_policy;
+pub mod operational_proposal;
 pub mod output;
 pub mod packet_index;
 pub mod policy_proof;
@@ -162,6 +163,12 @@ pub use operational_policy::{
     project_operational_policy_readback, validate_operational_policy_contract,
     validate_operational_policy_semantics,
 };
+pub use operational_proposal::{
+    OPERATIONAL_PROPOSAL_SCHEMA, OperationalProposal, OperationalProposalAuthority,
+    OperationalProposalHumanGate, OperationalProposalIdempotency, OperationalProposalOutcome,
+    OperationalProposalRecommendedAction, OperationalProposalRedactionStatus,
+    OperationalProposalSchema,
+};
 pub use output::{Output, OutputField, OutputFieldSpec, OutputType};
 pub use packet_index::{PacketIndex, PacketIndexEntry, PacketIndexSchema};
 pub use policy_proof::{
@@ -193,7 +200,7 @@ pub use receipt::{
     ReceiptSubjectKind, RunnerProvenance, Seal, SignatureAlgorithm, Subject,
 };
 pub use redaction::{HashAlgorithm, HashCommitment, REDACTION_SCHEMA, Redaction, RedactionSchema};
-pub use reference::{ActRef, ProofKind, Reference, ReferenceType};
+pub use reference::{ActRef, ProofKind, Reference, ReferenceLink, ReferenceType};
 pub use registry_binding::{
     RegistryBinding, RegistryBindingHarness, RegistryBindingRegistry, RegistryBindingSchema,
     RegistryBindingSkill, RegistryBindingState, RegistryBindingUpstream, RegistryHarnessStatus,

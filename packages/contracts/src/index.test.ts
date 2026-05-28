@@ -78,6 +78,7 @@ import {
   validateSuppressionRecordContract,
   validateOperationalPolicyContract,
   validateOperationalPolicySemantics,
+  validateOperationalProposalContract,
   validateSignalContract,
   validateReferenceContract,
   proofKinds,
@@ -88,6 +89,7 @@ describe("@runxhq/contracts", () => {
   it("exports stable runx logical schema identifiers", () => {
     expect(RUNX_LOGICAL_SCHEMAS.doctor).toBe("runx.doctor.v1");
     expect(RUNX_LOGICAL_SCHEMAS.receipt).toBe("runx.receipt.v1");
+    expect(RUNX_LOGICAL_SCHEMAS.operationalProposal).toBe("runx.operational_proposal.v1");
   });
 
   it("uses durable schema URI ids", () => {
@@ -367,6 +369,7 @@ describe("@runxhq/contracts", () => {
     expect(runxGeneratedSchemaArtifacts["handoff-state.schema.json"]).toBe(runxContractSchemas.handoffState);
     expect(runxGeneratedSchemaArtifacts["suppression-record.schema.json"]).toBe(runxContractSchemas.suppressionRecord);
     expect(runxGeneratedSchemaArtifacts["operational-policy.schema.json"]).toBe(runxContractSchemas.operationalPolicy);
+    expect(runxGeneratedSchemaArtifacts["operational-proposal.schema.json"]).toBe(runxContractSchemas.operationalProposal);
     expect(runxGeneratedSchemaArtifacts["thread-outbox-provider-manifest.schema.json"])
       .toBe(runxContractSchemas.threadOutboxProviderManifest);
     expect(runxGeneratedSchemaArtifacts["thread-outbox-provider-push.schema.json"])
@@ -445,6 +448,138 @@ describe("@runxhq/contracts", () => {
         auto_merge: false,
       },
     });
+  });
+
+  it("owns the generic operational proposal contract", () => {
+    expect(RUNX_CONTRACT_IDS.operationalProposal)
+      .toBe("https://schemas.runx.dev/runx/operational-proposal/v1.json");
+    expect(runxContractSchemas.operationalProposal.$id)
+      .toBe(RUNX_CONTRACT_IDS.operationalProposal);
+
+    const proposal = validateOperationalProposalContract({
+      schema: RUNX_LOGICAL_SCHEMAS.operationalProposal,
+      proposal_id: "proposal_123",
+      proposal_kind: "escalation",
+      source_event_id: "slack_event_123",
+      idempotency: {
+        key: "operational-proposal:slack_event_123:tracking-to-change:api-owner",
+        fingerprint: "sha256:proposal-123-source-action-target",
+      },
+      source_ref: {
+        type: "provider_thread",
+        uri: "slack://team/T123/channel/CBUGS/thread/1710000000.000100",
+      },
+      source_thread_ref: {
+        type: "provider_thread",
+        uri: "slack://team/T123/channel/CBUGS/thread/1710000000.000100",
+      },
+      hydrated_context_ref: {
+        type: "artifact",
+        uri: "runx:artifact:hydrated_context_123",
+      },
+      redaction_status: "redacted",
+      decision_summary: "The issue needs a governed fix.",
+      rationale: "The source thread contains reproducible failure evidence and a target repo route.",
+      recommended_actions: [{
+        action_intent: "tracking-to-change",
+        summary: "Build a guarded fix in the owning repository.",
+        mutating: true,
+        target_refs: [{
+          type: "repository",
+          uri: "github://example/api",
+        }],
+      }],
+      evidence_refs: [{
+        type: "artifact",
+        uri: "runx:artifact:public_evidence_123",
+      }],
+      artifact_refs: [{
+        type: "artifact",
+        uri: "runx:artifact:plan_123",
+      }],
+      receipt_refs: [{
+        type: "receipt",
+        uri: "runx:receipt:receipt_123",
+      }],
+      story_refs: [{
+        type: "surface",
+        uri: "runx:story:story_123",
+      }],
+      result_refs: [{
+        role: "tracking_item",
+        ref: {
+          type: "tracking_item",
+          uri: "github://example/api/issues/123",
+          provider: "github",
+          locator: "example/api#123",
+        },
+      }, {
+        role: "change_request",
+        ref: {
+          type: "change_request",
+          uri: "github://example/api/pulls/124",
+          provider: "github",
+          locator: "example/api#124",
+        },
+      }],
+      publication_refs: [{
+        role: "source_thread_update",
+        ref: {
+          type: "provider_thread",
+          uri: "slack://team/T123/channel/CBUGS/thread/1710000000.000100",
+          provider: "slack",
+          locator: "T123/CBUGS/1710000000.000100",
+        },
+      }],
+      owner_route_id: "api-owner",
+      confidence: 0.86,
+      risks: ["Target repo tests may reveal a broader contract issue."],
+      caveats: ["Customer send is not authorized by this proposal."],
+      missing_context: [],
+      authority: {
+        proposal_only: true,
+        mutation_authority_granted: false,
+        publication_authority_granted: false,
+        final_decision_authority_granted: false,
+        notes: ["A human must approve merge and any customer-facing send."],
+      },
+      human_gates: [{
+        gate_id: "gate_merge_review",
+        gate_kind: "final_change_approval",
+        required: true,
+        decision: "Review and approve the final change if the fix is correct.",
+        reason: "Mutating target repo work requires a human final-change gate.",
+      }],
+      allowed_next_actions: ["tracking-to-change", "manual-review"],
+      final_outcome: {
+        observed: true,
+        status: "merged",
+        summary: "The governed change request was merged and verified.",
+        observed_at: "2026-05-28T00:00:00Z",
+        refs: [{
+          type: "change_request",
+          uri: "github://example/api/pulls/124",
+        }],
+      },
+      public_summary: "Escalation proposal prepared with tracking item and change request links.",
+    });
+
+    expect(proposal).toMatchObject({
+      proposal_kind: "escalation",
+      owner_route_id: "api-owner",
+      authority: {
+        proposal_only: true,
+        mutation_authority_granted: false,
+      },
+    });
+
+    expect(contractSchemaMatches(runxContractSchemas.operationalProposal, {
+      ...proposal,
+      authority: {
+        ...proposal.authority,
+        mutation_authority_granted: true,
+      },
+    })).toBe(false);
   });
 
   it("owns the runx harness spine and retires retired central artifacts", () => {

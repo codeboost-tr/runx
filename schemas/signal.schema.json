@@ -64,6 +64,34 @@
                     "type": "string"
                   },
                   {
+                    "const": "provider_thread",
+                    "type": "string"
+                  },
+                  {
+                    "const": "provider_event",
+                    "type": "string"
+                  },
+                  {
+                    "const": "provider_comment",
+                    "type": "string"
+                  },
+                  {
+                    "const": "tracking_item",
+                    "type": "string"
+                  },
+                  {
+                    "const": "change_request",
+                    "type": "string"
+                  },
+                  {
+                    "const": "repository",
+                    "type": "string"
+                  },
+                  {
+                    "const": "support_ticket",
+                    "type": "string"
+                  },
+                  {
                     "const": "signal",
                     "type": "string"
                   },
@@ -249,6 +277,34 @@
                 },
                 {
                   "const": "sentry_event",
+                  "type": "string"
+                },
+                {
+                  "const": "provider_thread",
+                  "type": "string"
+                },
+                {
+                  "const": "provider_event",
+                  "type": "string"
+                },
+                {
+                  "const": "provider_comment",
+                  "type": "string"
+                },
+                {
+                  "const": "tracking_item",
+                  "type": "string"
+                },
+                {
+                  "const": "change_request",
+                  "type": "string"
+                },
+                {
+                  "const": "repository",
+                  "type": "string"
+                },
+                {
+                  "const": "support_ticket",
                   "type": "string"
                 },
                 {
@@ -438,6 +494,34 @@
                   "type": "string"
                 },
                 {
+                  "const": "provider_thread",
+                  "type": "string"
+                },
+                {
+                  "const": "provider_event",
+                  "type": "string"
+                },
+                {
+                  "const": "provider_comment",
+                  "type": "string"
+                },
+                {
+                  "const": "tracking_item",
+                  "type": "string"
+                },
+                {
+                  "const": "change_request",
+                  "type": "string"
+                },
+                {
+                  "const": "repository",
+                  "type": "string"
+                },
+                {
+                  "const": "support_ticket",
+                  "type": "string"
+                },
+                {
                   "const": "signal",
                   "type": "string"
                 },
@@ -622,6 +706,34 @@
                   },
                   {
                     "const": "sentry_event",
+                    "type": "string"
+                  },
+                  {
+                    "const": "provider_thread",
+                    "type": "string"
+                  },
+                  {
+                    "const": "provider_event",
+                    "type": "string"
+                  },
+                  {
+                    "const": "provider_comment",
+                    "type": "string"
+                  },
+                  {
+                    "const": "tracking_item",
+                    "type": "string"
+                  },
+                  {
+                    "const": "change_request",
+                    "type": "string"
+                  },
+                  {
+                    "const": "repository",
+                    "type": "string"
+                  },
+                  {
+                    "const": "support_ticket",
                     "type": "string"
                   },
                   {
@@ -842,6 +954,34 @@
                   "type": "string"
                 },
                 {
+                  "const": "provider_thread",
+                  "type": "string"
+                },
+                {
+                  "const": "provider_event",
+                  "type": "string"
+                },
+                {
+                  "const": "provider_comment",
+                  "type": "string"
+                },
+                {
+                  "const": "tracking_item",
+                  "type": "string"
+                },
+                {
+                  "const": "change_request",
+                  "type": "string"
+                },
+                {
+                  "const": "repository",
+                  "type": "string"
+                },
+                {
+                  "const": "support_ticket",
+                  "type": "string"
+                },
+                {
                   "const": "signal",
                   "type": "string"
                 },
@@ -1037,6 +1177,34 @@
               },
               {
                 "const": "sentry_event",
+                "type": "string"
+              },
+              {
+                "const": "provider_thread",
+                "type": "string"
+              },
+              {
+                "const": "provider_event",
+                "type": "string"
+              },
+              {
+                "const": "provider_comment",
+                "type": "string"
+              },
+              {
+                "const": "tracking_item",
+                "type": "string"
+              },
+              {
+                "const": "change_request",
+                "type": "string"
+              },
+              {
+                "const": "repository",
+                "type": "string"
+              },
+              {
+                "const": "support_ticket",
                 "type": "string"
               },
               {
@@ -1248,6 +1416,34 @@
                     "type": "string"
                   },
                   {
+                    "const": "provider_thread",
+                    "type": "string"
+                  },
+                  {
+                    "const": "provider_event",
+                    "type": "string"
+                  },
+                  {
+                    "const": "provider_comment",
+                    "type": "string"
+                  },
+                  {
+                    "const": "tracking_item",
+                    "type": "string"
+                  },
+                  {
+                    "const": "change_request",
+                    "type": "string"
+                  },
+                  {
+                    "const": "repository",
+                    "type": "string"
+                  },
+                  {
+                    "const": "support_ticket",
+                    "type": "string"
+                  },
+                  {
                     "const": "signal",
                     "type": "string"
                   },
@@ -1456,6 +1652,34 @@
                         "type": "string"
                       },
                       {
+                        "const": "provider_thread",
+                        "type": "string"
+                      },
+                      {
+                        "const": "provider_event",
+                        "type": "string"
+                      },
+                      {
+                        "const": "provider_comment",
+                        "type": "string"
+                      },
+                      {
+                        "const": "tracking_item",
+                        "type": "string"
+                      },
+                      {
+                        "const": "change_request",
+                        "type": "string"
+                      },
+                      {
+                        "const": "repository",
+                        "type": "string"
+                      },
+                      {
+                        "const": "support_ticket",
+                        "type": "string"
+                      },
+                      {
                         "const": "signal",
                         "type": "string"
                       },
@@ -1643,6 +1867,34 @@
                         },
                         {
                           "const": "sentry_event",
+                          "type": "string"
+                        },
+                        {
+                          "const": "provider_thread",
+                          "type": "string"
+                        },
+                        {
+                          "const": "provider_event",
+                          "type": "string"
+                        },
+                        {
+                          "const": "provider_comment",
+                          "type": "string"
+                        },
+                        {
+                          "const": "tracking_item",
+                          "type": "string"
+                        },
+                        {
+                          "const": "change_request",
+                          "type": "string"
+                        },
+                        {
+                          "const": "repository",
+                          "type": "string"
+                        },
+                        {
+                          "const": "support_ticket",
                           "type": "string"
                         },
                         {
@@ -1837,6 +2089,34 @@
                         },
                         {
                           "const": "sentry_event",
+                          "type": "string"
+                        },
+                        {
+                          "const": "provider_thread",
+                          "type": "string"
+                        },
+                        {
+                          "const": "provider_event",
+                          "type": "string"
+                        },
+                        {
+                          "const": "provider_comment",
+                          "type": "string"
+                        },
+                        {
+                          "const": "tracking_item",
+                          "type": "string"
+                        },
+                        {
+                          "const": "change_request",
+                          "type": "string"
+                        },
+                        {
+                          "const": "repository",
+                          "type": "string"
+                        },
+                        {
+                          "const": "support_ticket",
                           "type": "string"
                         },
                         {
@@ -2038,6 +2318,34 @@
                   "type": "string"
                 },
                 {
+                  "const": "provider_thread",
+                  "type": "string"
+                },
+                {
+                  "const": "provider_event",
+                  "type": "string"
+                },
+                {
+                  "const": "provider_comment",
+                  "type": "string"
+                },
+                {
+                  "const": "tracking_item",
+                  "type": "string"
+                },
+                {
+                  "const": "change_request",
+                  "type": "string"
+                },
+                {
+                  "const": "repository",
+                  "type": "string"
+                },
+                {
+                  "const": "support_ticket",
+                  "type": "string"
+                },
+                {
                   "const": "signal",
                   "type": "string"
                 },
@@ -2222,6 +2530,34 @@
                   },
                   {
                     "const": "sentry_event",
+                    "type": "string"
+                  },
+                  {
+                    "const": "provider_thread",
+                    "type": "string"
+                  },
+                  {
+                    "const": "provider_event",
+                    "type": "string"
+                  },
+                  {
+                    "const": "provider_comment",
+                    "type": "string"
+                  },
+                  {
+                    "const": "tracking_item",
+                    "type": "string"
+                  },
+                  {
+                    "const": "change_request",
+                    "type": "string"
+                  },
+                  {
+                    "const": "repository",
+                    "type": "string"
+                  },
+                  {
+                    "const": "support_ticket",
                     "type": "string"
                   },
                   {
@@ -2414,6 +2750,34 @@
                     "type": "string"
                   },
                   {
+                    "const": "provider_thread",
+                    "type": "string"
+                  },
+                  {
+                    "const": "provider_event",
+                    "type": "string"
+                  },
+                  {
+                    "const": "provider_comment",
+                    "type": "string"
+                  },
+                  {
+                    "const": "tracking_item",
+                    "type": "string"
+                  },
+                  {
+                    "const": "change_request",
+                    "type": "string"
+                  },
+                  {
+                    "const": "repository",
+                    "type": "string"
+                  },
+                  {
+                    "const": "support_ticket",
+                    "type": "string"
+                  },
+                  {
                     "const": "signal",
                     "type": "string"
                   },
@@ -2600,6 +2964,34 @@
                   },
                   {
                     "const": "sentry_event",
+                    "type": "string"
+                  },
+                  {
+                    "const": "provider_thread",
+                    "type": "string"
+                  },
+                  {
+                    "const": "provider_event",
+                    "type": "string"
+                  },
+                  {
+                    "const": "provider_comment",
+                    "type": "string"
+                  },
+                  {
+                    "const": "tracking_item",
+                    "type": "string"
+                  },
+                  {
+                    "const": "change_request",
+                    "type": "string"
+                  },
+                  {
+                    "const": "repository",
+                    "type": "string"
+                  },
+                  {
+                    "const": "support_ticket",
                     "type": "string"
                   },
                   {
@@ -2856,6 +3248,34 @@
             },
             {
               "const": "sentry_event",
+              "type": "string"
+            },
+            {
+              "const": "provider_thread",
+              "type": "string"
+            },
+            {
+              "const": "provider_event",
+              "type": "string"
+            },
+            {
+              "const": "provider_comment",
+              "type": "string"
+            },
+            {
+              "const": "tracking_item",
+              "type": "string"
+            },
+            {
+              "const": "change_request",
+              "type": "string"
+            },
+            {
+              "const": "repository",
+              "type": "string"
+            },
+            {
+              "const": "support_ticket",
               "type": "string"
             },
             {

@@ -32,6 +32,9 @@ const evalBinEnv = {
     process.env.RUNX_RECEIPT_SIGN_ED25519_SEED_BASE64 ?? "QkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkI=",
   RUNX_RECEIPT_SIGN_ISSUER_TYPE: process.env.RUNX_RECEIPT_SIGN_ISSUER_TYPE ?? "hosted",
 };
+const rustBuildEnv = {
+  CARGO_BUILD_JOBS: process.env.CARGO_BUILD_JOBS ?? "1",
+};
 
 const results = [];
 
@@ -58,6 +61,7 @@ const cliBuild = await runStep(
     "--bin",
     "runx",
   ]),
+  rustBuildEnv,
 );
 const oracleBuild = await runStep(
   step("build harness fixture oracle binary", cargo, [
@@ -72,6 +76,7 @@ const oracleBuild = await runStep(
     "--bin",
     "runx-harness-fixture-oracles",
   ]),
+  rustBuildEnv,
 );
 
 if (cliBuild.status === 0 && oracleBuild.status === 0) {

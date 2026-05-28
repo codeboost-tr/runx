@@ -11,6 +11,13 @@ pub enum ReferenceType {
     GithubRepo,
     SlackThread,
     SentryEvent,
+    ProviderThread,
+    ProviderEvent,
+    ProviderComment,
+    TrackingItem,
+    ChangeRequest,
+    Repository,
+    SupportTicket,
     Signal,
     Act,
     Receipt,
@@ -52,6 +59,13 @@ impl ReferenceType {
             ReferenceType::GithubRepo => "github_repo",
             ReferenceType::SlackThread => "slack_thread",
             ReferenceType::SentryEvent => "sentry_event",
+            ReferenceType::ProviderThread => "provider_thread",
+            ReferenceType::ProviderEvent => "provider_event",
+            ReferenceType::ProviderComment => "provider_comment",
+            ReferenceType::TrackingItem => "tracking_item",
+            ReferenceType::ChangeRequest => "change_request",
+            ReferenceType::Repository => "repository",
+            ReferenceType::SupportTicket => "support_ticket",
             ReferenceType::Signal => "signal",
             ReferenceType::Act => "act",
             ReferenceType::Receipt => "receipt",
@@ -129,6 +143,15 @@ impl Reference {
         let uri = format!("runx:{}:{id}", reference_type.as_str());
         Self::with_uri(reference_type, uri)
     }
+}
+
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize, RunxSchema)]
+#[serde(deny_unknown_fields)]
+#[runx_schema(id = "runx.reference_link.v1")]
+pub struct ReferenceLink {
+    pub role: NonEmptyString,
+    #[serde(rename = "ref")]
+    pub reference: Reference,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize, RunxSchema)]

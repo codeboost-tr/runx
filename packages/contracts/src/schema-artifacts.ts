@@ -1187,6 +1187,34 @@ export const runxSchemaArtifacts = {
                   "type": "string"
                 },
                 {
+                  "const": "provider_thread",
+                  "type": "string"
+                },
+                {
+                  "const": "provider_event",
+                  "type": "string"
+                },
+                {
+                  "const": "provider_comment",
+                  "type": "string"
+                },
+                {
+                  "const": "tracking_item",
+                  "type": "string"
+                },
+                {
+                  "const": "change_request",
+                  "type": "string"
+                },
+                {
+                  "const": "repository",
+                  "type": "string"
+                },
+                {
+                  "const": "support_ticket",
+                  "type": "string"
+                },
+                {
                   "const": "signal",
                   "type": "string"
                 },
@@ -1445,6 +1473,34 @@ export const runxSchemaArtifacts = {
                         "type": "string"
                       },
                       {
+                        "const": "provider_thread",
+                        "type": "string"
+                      },
+                      {
+                        "const": "provider_event",
+                        "type": "string"
+                      },
+                      {
+                        "const": "provider_comment",
+                        "type": "string"
+                      },
+                      {
+                        "const": "tracking_item",
+                        "type": "string"
+                      },
+                      {
+                        "const": "change_request",
+                        "type": "string"
+                      },
+                      {
+                        "const": "repository",
+                        "type": "string"
+                      },
+                      {
+                        "const": "support_ticket",
+                        "type": "string"
+                      },
+                      {
                         "const": "signal",
                         "type": "string"
                       },
@@ -1659,6 +1715,34 @@ export const runxSchemaArtifacts = {
                       },
                       {
                         "const": "sentry_event",
+                        "type": "string"
+                      },
+                      {
+                        "const": "provider_thread",
+                        "type": "string"
+                      },
+                      {
+                        "const": "provider_event",
+                        "type": "string"
+                      },
+                      {
+                        "const": "provider_comment",
+                        "type": "string"
+                      },
+                      {
+                        "const": "tracking_item",
+                        "type": "string"
+                      },
+                      {
+                        "const": "change_request",
+                        "type": "string"
+                      },
+                      {
+                        "const": "repository",
+                        "type": "string"
+                      },
+                      {
+                        "const": "support_ticket",
                         "type": "string"
                       },
                       {
@@ -1884,6 +1968,34 @@ export const runxSchemaArtifacts = {
                   "type": "string"
                 },
                 {
+                  "const": "provider_thread",
+                  "type": "string"
+                },
+                {
+                  "const": "provider_event",
+                  "type": "string"
+                },
+                {
+                  "const": "provider_comment",
+                  "type": "string"
+                },
+                {
+                  "const": "tracking_item",
+                  "type": "string"
+                },
+                {
+                  "const": "change_request",
+                  "type": "string"
+                },
+                {
+                  "const": "repository",
+                  "type": "string"
+                },
+                {
+                  "const": "support_ticket",
+                  "type": "string"
+                },
+                {
                   "const": "signal",
                   "type": "string"
                 },
@@ -2080,6 +2192,34 @@ export const runxSchemaArtifacts = {
                     },
                     {
                       "const": "sentry_event",
+                      "type": "string"
+                    },
+                    {
+                      "const": "provider_thread",
+                      "type": "string"
+                    },
+                    {
+                      "const": "provider_event",
+                      "type": "string"
+                    },
+                    {
+                      "const": "provider_comment",
+                      "type": "string"
+                    },
+                    {
+                      "const": "tracking_item",
+                      "type": "string"
+                    },
+                    {
+                      "const": "change_request",
+                      "type": "string"
+                    },
+                    {
+                      "const": "repository",
+                      "type": "string"
+                    },
+                    {
+                      "const": "support_ticket",
                       "type": "string"
                     },
                     {
@@ -2398,6 +2538,34 @@ export const runxSchemaArtifacts = {
                               "type": "string"
                             },
                             {
+                              "const": "provider_thread",
+                              "type": "string"
+                            },
+                            {
+                              "const": "provider_event",
+                              "type": "string"
+                            },
+                            {
+                              "const": "provider_comment",
+                              "type": "string"
+                            },
+                            {
+                              "const": "tracking_item",
+                              "type": "string"
+                            },
+                            {
+                              "const": "change_request",
+                              "type": "string"
+                            },
+                            {
+                              "const": "repository",
+                              "type": "string"
+                            },
+                            {
+                              "const": "support_ticket",
+                              "type": "string"
+                            },
+                            {
                               "const": "signal",
                               "type": "string"
                             },
@@ -2601,6 +2769,34 @@ export const runxSchemaArtifacts = {
                       "type": "string"
                     },
                     {
+                      "const": "provider_thread",
+                      "type": "string"
+                    },
+                    {
+                      "const": "provider_event",
+                      "type": "string"
+                    },
+                    {
+                      "const": "provider_comment",
+                      "type": "string"
+                    },
+                    {
+                      "const": "tracking_item",
+                      "type": "string"
+                    },
+                    {
+                      "const": "change_request",
+                      "type": "string"
+                    },
+                    {
+                      "const": "repository",
+                      "type": "string"
+                    },
+                    {
+                      "const": "support_ticket",
+                      "type": "string"
+                    },
+                    {
                       "const": "signal",
                       "type": "string"
                     },
@@ -2794,6 +2990,34 @@ export const runxSchemaArtifacts = {
                     },
                     {
                       "const": "sentry_event",
+                      "type": "string"
+                    },
+                    {
+                      "const": "provider_thread",
+                      "type": "string"
+                    },
+                    {
+                      "const": "provider_event",
+                      "type": "string"
+                    },
+                    {
+                      "const": "provider_comment",
+                      "type": "string"
+                    },
+                    {
+                      "const": "tracking_item",
+                      "type": "string"
+                    },
+                    {
+                      "const": "change_request",
+                      "type": "string"
+                    },
+                    {
+                      "const": "repository",
+                      "type": "string"
+                    },
+                    {
+                      "const": "support_ticket",
                       "type": "string"
                     },
                     {
@@ -2993,6 +3217,34 @@ export const runxSchemaArtifacts = {
                         },
                         {
                           "const": "sentry_event",
+                          "type": "string"
+                        },
+                        {
+                          "const": "provider_thread",
+                          "type": "string"
+                        },
+                        {
+                          "const": "provider_event",
+                          "type": "string"
+                        },
+                        {
+                          "const": "provider_comment",
+                          "type": "string"
+                        },
+                        {
+                          "const": "tracking_item",
+                          "type": "string"
+                        },
+                        {
+                          "const": "change_request",
+                          "type": "string"
+                        },
+                        {
+                          "const": "repository",
+                          "type": "string"
+                        },
+                        {
+                          "const": "support_ticket",
                           "type": "string"
                         },
                         {
@@ -3205,6 +3457,34 @@ export const runxSchemaArtifacts = {
                                 "type": "string"
                               },
                               {
+                                "const": "provider_thread",
+                                "type": "string"
+                              },
+                              {
+                                "const": "provider_event",
+                                "type": "string"
+                              },
+                              {
+                                "const": "provider_comment",
+                                "type": "string"
+                              },
+                              {
+                                "const": "tracking_item",
+                                "type": "string"
+                              },
+                              {
+                                "const": "change_request",
+                                "type": "string"
+                              },
+                              {
+                                "const": "repository",
+                                "type": "string"
+                              },
+                              {
+                                "const": "support_ticket",
+                                "type": "string"
+                              },
+                              {
                                 "const": "signal",
                                 "type": "string"
                               },
@@ -3398,6 +3678,34 @@ export const runxSchemaArtifacts = {
                               },
                               {
                                 "const": "sentry_event",
+                                "type": "string"
+                              },
+                              {
+                                "const": "provider_thread",
+                                "type": "string"
+                              },
+                              {
+                                "const": "provider_event",
+                                "type": "string"
+                              },
+                              {
+                                "const": "provider_comment",
+                                "type": "string"
+                              },
+                              {
+                                "const": "tracking_item",
+                                "type": "string"
+                              },
+                              {
+                                "const": "change_request",
+                                "type": "string"
+                              },
+                              {
+                                "const": "repository",
+                                "type": "string"
+                              },
+                              {
+                                "const": "support_ticket",
                                 "type": "string"
                               },
                               {
@@ -3631,6 +3939,34 @@ export const runxSchemaArtifacts = {
                         },
                         {
                           "const": "sentry_event",
+                          "type": "string"
+                        },
+                        {
+                          "const": "provider_thread",
+                          "type": "string"
+                        },
+                        {
+                          "const": "provider_event",
+                          "type": "string"
+                        },
+                        {
+                          "const": "provider_comment",
+                          "type": "string"
+                        },
+                        {
+                          "const": "tracking_item",
+                          "type": "string"
+                        },
+                        {
+                          "const": "change_request",
+                          "type": "string"
+                        },
+                        {
+                          "const": "repository",
+                          "type": "string"
+                        },
+                        {
+                          "const": "support_ticket",
                           "type": "string"
                         },
                         {
@@ -3888,6 +4224,34 @@ export const runxSchemaArtifacts = {
                   "type": "string"
                 },
                 {
+                  "const": "provider_thread",
+                  "type": "string"
+                },
+                {
+                  "const": "provider_event",
+                  "type": "string"
+                },
+                {
+                  "const": "provider_comment",
+                  "type": "string"
+                },
+                {
+                  "const": "tracking_item",
+                  "type": "string"
+                },
+                {
+                  "const": "change_request",
+                  "type": "string"
+                },
+                {
+                  "const": "repository",
+                  "type": "string"
+                },
+                {
+                  "const": "support_ticket",
+                  "type": "string"
+                },
+                {
                   "const": "signal",
                   "type": "string"
                 },
@@ -4081,6 +4445,34 @@ export const runxSchemaArtifacts = {
                   "type": "string"
                 },
                 {
+                  "const": "provider_thread",
+                  "type": "string"
+                },
+                {
+                  "const": "provider_event",
+                  "type": "string"
+                },
+                {
+                  "const": "provider_comment",
+                  "type": "string"
+                },
+                {
+                  "const": "tracking_item",
+                  "type": "string"
+                },
+                {
+                  "const": "change_request",
+                  "type": "string"
+                },
+                {
+                  "const": "repository",
+                  "type": "string"
+                },
+                {
+                  "const": "support_ticket",
+                  "type": "string"
+                },
+                {
                   "const": "signal",
                   "type": "string"
                 },
@@ -4267,6 +4659,34 @@ export const runxSchemaArtifacts = {
                 },
                 {
                   "const": "sentry_event",
+                  "type": "string"
+                },
+                {
+                  "const": "provider_thread",
+                  "type": "string"
+                },
+                {
+                  "const": "provider_event",
+                  "type": "string"
+                },
+                {
+                  "const": "provider_comment",
+                  "type": "string"
+                },
+                {
+                  "const": "tracking_item",
+                  "type": "string"
+                },
+                {
+                  "const": "change_request",
+                  "type": "string"
+                },
+                {
+                  "const": "repository",
+                  "type": "string"
+                },
+                {
+                  "const": "support_ticket",
                   "type": "string"
                 },
                 {
@@ -4465,6 +4885,34 @@ export const runxSchemaArtifacts = {
                   },
                   {
                     "const": "sentry_event",
+                    "type": "string"
+                  },
+                  {
+                    "const": "provider_thread",
+                    "type": "string"
+                  },
+                  {
+                    "const": "provider_event",
+                    "type": "string"
+                  },
+                  {
+                    "const": "provider_comment",
+                    "type": "string"
+                  },
+                  {
+                    "const": "tracking_item",
+                    "type": "string"
+                  },
+                  {
+                    "const": "change_request",
+                    "type": "string"
+                  },
+                  {
+                    "const": "repository",
+                    "type": "string"
+                  },
+                  {
+                    "const": "support_ticket",
                     "type": "string"
                   },
                   {
@@ -4668,6 +5116,34 @@ export const runxSchemaArtifacts = {
                                 "type": "string"
                               },
                               {
+                                "const": "provider_thread",
+                                "type": "string"
+                              },
+                              {
+                                "const": "provider_event",
+                                "type": "string"
+                              },
+                              {
+                                "const": "provider_comment",
+                                "type": "string"
+                              },
+                              {
+                                "const": "tracking_item",
+                                "type": "string"
+                              },
+                              {
+                                "const": "change_request",
+                                "type": "string"
+                              },
+                              {
+                                "const": "repository",
+                                "type": "string"
+                              },
+                              {
+                                "const": "support_ticket",
+                                "type": "string"
+                              },
+                              {
                                 "const": "signal",
                                 "type": "string"
                               },
@@ -4861,6 +5337,34 @@ export const runxSchemaArtifacts = {
                               },
                               {
                                 "const": "sentry_event",
+                                "type": "string"
+                              },
+                              {
+                                "const": "provider_thread",
+                                "type": "string"
+                              },
+                              {
+                                "const": "provider_event",
+                                "type": "string"
+                              },
+                              {
+                                "const": "provider_comment",
+                                "type": "string"
+                              },
+                              {
+                                "const": "tracking_item",
+                                "type": "string"
+                              },
+                              {
+                                "const": "change_request",
+                                "type": "string"
+                              },
+                              {
+                                "const": "repository",
+                                "type": "string"
+                              },
+                              {
+                                "const": "support_ticket",
                                 "type": "string"
                               },
                               {
@@ -5094,6 +5598,34 @@ export const runxSchemaArtifacts = {
                         },
                         {
                           "const": "sentry_event",
+                          "type": "string"
+                        },
+                        {
+                          "const": "provider_thread",
+                          "type": "string"
+                        },
+                        {
+                          "const": "provider_event",
+                          "type": "string"
+                        },
+                        {
+                          "const": "provider_comment",
+                          "type": "string"
+                        },
+                        {
+                          "const": "tracking_item",
+                          "type": "string"
+                        },
+                        {
+                          "const": "change_request",
+                          "type": "string"
+                        },
+                        {
+                          "const": "repository",
+                          "type": "string"
+                        },
+                        {
+                          "const": "support_ticket",
                           "type": "string"
                         },
                         {
@@ -5340,6 +5872,34 @@ export const runxSchemaArtifacts = {
                 },
                 {
                   "const": "sentry_event",
+                  "type": "string"
+                },
+                {
+                  "const": "provider_thread",
+                  "type": "string"
+                },
+                {
+                  "const": "provider_event",
+                  "type": "string"
+                },
+                {
+                  "const": "provider_comment",
+                  "type": "string"
+                },
+                {
+                  "const": "tracking_item",
+                  "type": "string"
+                },
+                {
+                  "const": "change_request",
+                  "type": "string"
+                },
+                {
+                  "const": "repository",
+                  "type": "string"
+                },
+                {
+                  "const": "support_ticket",
                   "type": "string"
                 },
                 {
@@ -6744,6 +7304,34 @@ export const runxSchemaArtifacts = {
                 "type": "string"
               },
               {
+                "const": "provider_thread",
+                "type": "string"
+              },
+              {
+                "const": "provider_event",
+                "type": "string"
+              },
+              {
+                "const": "provider_comment",
+                "type": "string"
+              },
+              {
+                "const": "tracking_item",
+                "type": "string"
+              },
+              {
+                "const": "change_request",
+                "type": "string"
+              },
+              {
+                "const": "repository",
+                "type": "string"
+              },
+              {
+                "const": "support_ticket",
+                "type": "string"
+              },
+              {
                 "const": "signal",
                 "type": "string"
               },
@@ -6932,6 +7520,34 @@ export const runxSchemaArtifacts = {
               },
               {
                 "const": "sentry_event",
+                "type": "string"
+              },
+              {
+                "const": "provider_thread",
+                "type": "string"
+              },
+              {
+                "const": "provider_event",
+                "type": "string"
+              },
+              {
+                "const": "provider_comment",
+                "type": "string"
+              },
+              {
+                "const": "tracking_item",
+                "type": "string"
+              },
+              {
+                "const": "change_request",
+                "type": "string"
+              },
+              {
+                "const": "repository",
+                "type": "string"
+              },
+              {
+                "const": "support_ticket",
                 "type": "string"
               },
               {
@@ -7166,6 +7782,34 @@ export const runxSchemaArtifacts = {
                         "type": "string"
                       },
                       {
+                        "const": "provider_thread",
+                        "type": "string"
+                      },
+                      {
+                        "const": "provider_event",
+                        "type": "string"
+                      },
+                      {
+                        "const": "provider_comment",
+                        "type": "string"
+                      },
+                      {
+                        "const": "tracking_item",
+                        "type": "string"
+                      },
+                      {
+                        "const": "change_request",
+                        "type": "string"
+                      },
+                      {
+                        "const": "repository",
+                        "type": "string"
+                      },
+                      {
+                        "const": "support_ticket",
+                        "type": "string"
+                      },
+                      {
                         "const": "signal",
                         "type": "string"
                       },
@@ -7359,6 +8003,34 @@ export const runxSchemaArtifacts = {
                     "type": "string"
                   },
                   {
+                    "const": "provider_thread",
+                    "type": "string"
+                  },
+                  {
+                    "const": "provider_event",
+                    "type": "string"
+                  },
+                  {
+                    "const": "provider_comment",
+                    "type": "string"
+                  },
+                  {
+                    "const": "tracking_item",
+                    "type": "string"
+                  },
+                  {
+                    "const": "change_request",
+                    "type": "string"
+                  },
+                  {
+                    "const": "repository",
+                    "type": "string"
+                  },
+                  {
+                    "const": "support_ticket",
+                    "type": "string"
+                  },
+                  {
                     "const": "signal",
                     "type": "string"
                   },
@@ -7542,6 +8214,34 @@ export const runxSchemaArtifacts = {
                   },
                   {
                     "const": "sentry_event",
+                    "type": "string"
+                  },
+                  {
+                    "const": "provider_thread",
+                    "type": "string"
+                  },
+                  {
+                    "const": "provider_event",
+                    "type": "string"
+                  },
+                  {
+                    "const": "provider_comment",
+                    "type": "string"
+                  },
+                  {
+                    "const": "tracking_item",
+                    "type": "string"
+                  },
+                  {
+                    "const": "change_request",
+                    "type": "string"
+                  },
+                  {
+                    "const": "repository",
+                    "type": "string"
+                  },
+                  {
+                    "const": "support_ticket",
                     "type": "string"
                   },
                   {
@@ -7731,6 +8431,34 @@ export const runxSchemaArtifacts = {
                     "type": "string"
                   },
                   {
+                    "const": "provider_thread",
+                    "type": "string"
+                  },
+                  {
+                    "const": "provider_event",
+                    "type": "string"
+                  },
+                  {
+                    "const": "provider_comment",
+                    "type": "string"
+                  },
+                  {
+                    "const": "tracking_item",
+                    "type": "string"
+                  },
+                  {
+                    "const": "change_request",
+                    "type": "string"
+                  },
+                  {
+                    "const": "repository",
+                    "type": "string"
+                  },
+                  {
+                    "const": "support_ticket",
+                    "type": "string"
+                  },
+                  {
                     "const": "signal",
                     "type": "string"
                   },
@@ -7914,6 +8642,34 @@ export const runxSchemaArtifacts = {
                   },
                   {
                     "const": "sentry_event",
+                    "type": "string"
+                  },
+                  {
+                    "const": "provider_thread",
+                    "type": "string"
+                  },
+                  {
+                    "const": "provider_event",
+                    "type": "string"
+                  },
+                  {
+                    "const": "provider_comment",
+                    "type": "string"
+                  },
+                  {
+                    "const": "tracking_item",
+                    "type": "string"
+                  },
+                  {
+                    "const": "change_request",
+                    "type": "string"
+                  },
+                  {
+                    "const": "repository",
+                    "type": "string"
+                  },
+                  {
+                    "const": "support_ticket",
                     "type": "string"
                   },
                   {
@@ -8104,6 +8860,34 @@ export const runxSchemaArtifacts = {
                 },
                 {
                   "const": "sentry_event",
+                  "type": "string"
+                },
+                {
+                  "const": "provider_thread",
+                  "type": "string"
+                },
+                {
+                  "const": "provider_event",
+                  "type": "string"
+                },
+                {
+                  "const": "provider_comment",
+                  "type": "string"
+                },
+                {
+                  "const": "tracking_item",
+                  "type": "string"
+                },
+                {
+                  "const": "change_request",
+                  "type": "string"
+                },
+                {
+                  "const": "repository",
+                  "type": "string"
+                },
+                {
+                  "const": "support_ticket",
                   "type": "string"
                 },
                 {
@@ -8304,6 +9088,34 @@ export const runxSchemaArtifacts = {
                 },
                 {
                   "const": "sentry_event",
+                  "type": "string"
+                },
+                {
+                  "const": "provider_thread",
+                  "type": "string"
+                },
+                {
+                  "const": "provider_event",
+                  "type": "string"
+                },
+                {
+                  "const": "provider_comment",
+                  "type": "string"
+                },
+                {
+                  "const": "tracking_item",
+                  "type": "string"
+                },
+                {
+                  "const": "change_request",
+                  "type": "string"
+                },
+                {
+                  "const": "repository",
+                  "type": "string"
+                },
+                {
+                  "const": "support_ticket",
                   "type": "string"
                 },
                 {
@@ -8989,6 +9801,34 @@ export const runxSchemaArtifacts = {
                 "type": "string"
               },
               {
+                "const": "provider_thread",
+                "type": "string"
+              },
+              {
+                "const": "provider_event",
+                "type": "string"
+              },
+              {
+                "const": "provider_comment",
+                "type": "string"
+              },
+              {
+                "const": "tracking_item",
+                "type": "string"
+              },
+              {
+                "const": "change_request",
+                "type": "string"
+              },
+              {
+                "const": "repository",
+                "type": "string"
+              },
+              {
+                "const": "support_ticket",
+                "type": "string"
+              },
+              {
                 "const": "signal",
                 "type": "string"
               },
@@ -9172,6 +10012,34 @@ export const runxSchemaArtifacts = {
               },
               {
                 "const": "sentry_event",
+                "type": "string"
+              },
+              {
+                "const": "provider_thread",
+                "type": "string"
+              },
+              {
+                "const": "provider_event",
+                "type": "string"
+              },
+              {
+                "const": "provider_comment",
+                "type": "string"
+              },
+              {
+                "const": "tracking_item",
+                "type": "string"
+              },
+              {
+                "const": "change_request",
+                "type": "string"
+              },
+              {
+                "const": "repository",
+                "type": "string"
+              },
+              {
+                "const": "support_ticket",
                 "type": "string"
               },
               {
@@ -9389,6 +10257,34 @@ export const runxSchemaArtifacts = {
                 "type": "string"
               },
               {
+                "const": "provider_thread",
+                "type": "string"
+              },
+              {
+                "const": "provider_event",
+                "type": "string"
+              },
+              {
+                "const": "provider_comment",
+                "type": "string"
+              },
+              {
+                "const": "tracking_item",
+                "type": "string"
+              },
+              {
+                "const": "change_request",
+                "type": "string"
+              },
+              {
+                "const": "repository",
+                "type": "string"
+              },
+              {
+                "const": "support_ticket",
+                "type": "string"
+              },
+              {
                 "const": "signal",
                 "type": "string"
               },
@@ -9577,6 +10473,34 @@ export const runxSchemaArtifacts = {
                       },
                       {
                         "const": "sentry_event",
+                        "type": "string"
+                      },
+                      {
+                        "const": "provider_thread",
+                        "type": "string"
+                      },
+                      {
+                        "const": "provider_event",
+                        "type": "string"
+                      },
+                      {
+                        "const": "provider_comment",
+                        "type": "string"
+                      },
+                      {
+                        "const": "tracking_item",
+                        "type": "string"
+                      },
+                      {
+                        "const": "change_request",
+                        "type": "string"
+                      },
+                      {
+                        "const": "repository",
+                        "type": "string"
+                      },
+                      {
+                        "const": "support_ticket",
                         "type": "string"
                       },
                       {
@@ -9821,6 +10745,34 @@ export const runxSchemaArtifacts = {
                             "type": "string"
                           },
                           {
+                            "const": "provider_thread",
+                            "type": "string"
+                          },
+                          {
+                            "const": "provider_event",
+                            "type": "string"
+                          },
+                          {
+                            "const": "provider_comment",
+                            "type": "string"
+                          },
+                          {
+                            "const": "tracking_item",
+                            "type": "string"
+                          },
+                          {
+                            "const": "change_request",
+                            "type": "string"
+                          },
+                          {
+                            "const": "repository",
+                            "type": "string"
+                          },
+                          {
+                            "const": "support_ticket",
+                            "type": "string"
+                          },
+                          {
                             "const": "signal",
                             "type": "string"
                           },
@@ -10004,6 +10956,34 @@ export const runxSchemaArtifacts = {
                           },
                           {
                             "const": "sentry_event",
+                            "type": "string"
+                          },
+                          {
+                            "const": "provider_thread",
+                            "type": "string"
+                          },
+                          {
+                            "const": "provider_event",
+                            "type": "string"
+                          },
+                          {
+                            "const": "provider_comment",
+                            "type": "string"
+                          },
+                          {
+                            "const": "tracking_item",
+                            "type": "string"
+                          },
+                          {
+                            "const": "change_request",
+                            "type": "string"
+                          },
+                          {
+                            "const": "repository",
+                            "type": "string"
+                          },
+                          {
+                            "const": "support_ticket",
                             "type": "string"
                           },
                           {
@@ -10229,6 +11209,34 @@ export const runxSchemaArtifacts = {
                   "type": "string"
                 },
                 {
+                  "const": "provider_thread",
+                  "type": "string"
+                },
+                {
+                  "const": "provider_event",
+                  "type": "string"
+                },
+                {
+                  "const": "provider_comment",
+                  "type": "string"
+                },
+                {
+                  "const": "tracking_item",
+                  "type": "string"
+                },
+                {
+                  "const": "change_request",
+                  "type": "string"
+                },
+                {
+                  "const": "repository",
+                  "type": "string"
+                },
+                {
+                  "const": "support_ticket",
+                  "type": "string"
+                },
+                {
                   "const": "signal",
                   "type": "string"
                 },
@@ -10415,6 +11423,34 @@ export const runxSchemaArtifacts = {
                 },
                 {
                   "const": "sentry_event",
+                  "type": "string"
+                },
+                {
+                  "const": "provider_thread",
+                  "type": "string"
+                },
+                {
+                  "const": "provider_event",
+                  "type": "string"
+                },
+                {
+                  "const": "provider_comment",
+                  "type": "string"
+                },
+                {
+                  "const": "tracking_item",
+                  "type": "string"
+                },
+                {
+                  "const": "change_request",
+                  "type": "string"
+                },
+                {
+                  "const": "repository",
+                  "type": "string"
+                },
+                {
+                  "const": "support_ticket",
                   "type": "string"
                 },
                 {
@@ -10606,6 +11642,34 @@ export const runxSchemaArtifacts = {
                 "type": "string"
               },
               {
+                "const": "provider_thread",
+                "type": "string"
+              },
+              {
+                "const": "provider_event",
+                "type": "string"
+              },
+              {
+                "const": "provider_comment",
+                "type": "string"
+              },
+              {
+                "const": "tracking_item",
+                "type": "string"
+              },
+              {
+                "const": "change_request",
+                "type": "string"
+              },
+              {
+                "const": "repository",
+                "type": "string"
+              },
+              {
+                "const": "support_ticket",
+                "type": "string"
+              },
+              {
                 "const": "signal",
                 "type": "string"
               },
@@ -10790,6 +11854,34 @@ export const runxSchemaArtifacts = {
                 },
                 {
                   "const": "sentry_event",
+                  "type": "string"
+                },
+                {
+                  "const": "provider_thread",
+                  "type": "string"
+                },
+                {
+                  "const": "provider_event",
+                  "type": "string"
+                },
+                {
+                  "const": "provider_comment",
+                  "type": "string"
+                },
+                {
+                  "const": "tracking_item",
+                  "type": "string"
+                },
+                {
+                  "const": "change_request",
+                  "type": "string"
+                },
+                {
+                  "const": "repository",
+                  "type": "string"
+                },
+                {
+                  "const": "support_ticket",
                   "type": "string"
                 },
                 {
@@ -10990,6 +12082,34 @@ export const runxSchemaArtifacts = {
                   "type": "string"
                 },
                 {
+                  "const": "provider_thread",
+                  "type": "string"
+                },
+                {
+                  "const": "provider_event",
+                  "type": "string"
+                },
+                {
+                  "const": "provider_comment",
+                  "type": "string"
+                },
+                {
+                  "const": "tracking_item",
+                  "type": "string"
+                },
+                {
+                  "const": "change_request",
+                  "type": "string"
+                },
+                {
+                  "const": "repository",
+                  "type": "string"
+                },
+                {
+                  "const": "support_ticket",
+                  "type": "string"
+                },
+                {
                   "const": "signal",
                   "type": "string"
                 },
@@ -11186,6 +12306,34 @@ export const runxSchemaArtifacts = {
                             "type": "string"
                           },
                           {
+                            "const": "provider_thread",
+                            "type": "string"
+                          },
+                          {
+                            "const": "provider_event",
+                            "type": "string"
+                          },
+                          {
+                            "const": "provider_comment",
+                            "type": "string"
+                          },
+                          {
+                            "const": "tracking_item",
+                            "type": "string"
+                          },
+                          {
+                            "const": "change_request",
+                            "type": "string"
+                          },
+                          {
+                            "const": "repository",
+                            "type": "string"
+                          },
+                          {
+                            "const": "support_ticket",
+                            "type": "string"
+                          },
+                          {
                             "const": "signal",
                             "type": "string"
                           },
@@ -11374,6 +12522,34 @@ export const runxSchemaArtifacts = {
                           },
                           {
                             "const": "sentry_event",
+                            "type": "string"
+                          },
+                          {
+                            "const": "provider_thread",
+                            "type": "string"
+                          },
+                          {
+                            "const": "provider_event",
+                            "type": "string"
+                          },
+                          {
+                            "const": "provider_comment",
+                            "type": "string"
+                          },
+                          {
+                            "const": "tracking_item",
+                            "type": "string"
+                          },
+                          {
+                            "const": "change_request",
+                            "type": "string"
+                          },
+                          {
+                            "const": "repository",
+                            "type": "string"
+                          },
+                          {
+                            "const": "support_ticket",
                             "type": "string"
                           },
                           {
@@ -11812,6 +12988,34 @@ export const runxSchemaArtifacts = {
                               "type": "string"
                             },
                             {
+                              "const": "provider_thread",
+                              "type": "string"
+                            },
+                            {
+                              "const": "provider_event",
+                              "type": "string"
+                            },
+                            {
+                              "const": "provider_comment",
+                              "type": "string"
+                            },
+                            {
+                              "const": "tracking_item",
+                              "type": "string"
+                            },
+                            {
+                              "const": "change_request",
+                              "type": "string"
+                            },
+                            {
+                              "const": "repository",
+                              "type": "string"
+                            },
+                            {
+                              "const": "support_ticket",
+                              "type": "string"
+                            },
+                            {
                               "const": "signal",
                               "type": "string"
                             },
@@ -12009,6 +13213,34 @@ export const runxSchemaArtifacts = {
                       "type": "string"
                     },
                     {
+                      "const": "provider_thread",
+                      "type": "string"
+                    },
+                    {
+                      "const": "provider_event",
+                      "type": "string"
+                    },
+                    {
+                      "const": "provider_comment",
+                      "type": "string"
+                    },
+                    {
+                      "const": "tracking_item",
+                      "type": "string"
+                    },
+                    {
+                      "const": "change_request",
+                      "type": "string"
+                    },
+                    {
+                      "const": "repository",
+                      "type": "string"
+                    },
+                    {
+                      "const": "support_ticket",
+                      "type": "string"
+                    },
+                    {
                       "const": "signal",
                       "type": "string"
                     },
@@ -12200,6 +13432,34 @@ export const runxSchemaArtifacts = {
                       "type": "string"
                     },
                     {
+                      "const": "provider_thread",
+                      "type": "string"
+                    },
+                    {
+                      "const": "provider_event",
+                      "type": "string"
+                    },
+                    {
+                      "const": "provider_comment",
+                      "type": "string"
+                    },
+                    {
+                      "const": "tracking_item",
+                      "type": "string"
+                    },
+                    {
+                      "const": "change_request",
+                      "type": "string"
+                    },
+                    {
+                      "const": "repository",
+                      "type": "string"
+                    },
+                    {
+                      "const": "support_ticket",
+                      "type": "string"
+                    },
+                    {
                       "const": "signal",
                       "type": "string"
                     },
@@ -12383,6 +13643,34 @@ export const runxSchemaArtifacts = {
                     },
                     {
                       "const": "sentry_event",
+                      "type": "string"
+                    },
+                    {
+                      "const": "provider_thread",
+                      "type": "string"
+                    },
+                    {
+                      "const": "provider_event",
+                      "type": "string"
+                    },
+                    {
+                      "const": "provider_comment",
+                      "type": "string"
+                    },
+                    {
+                      "const": "tracking_item",
+                      "type": "string"
+                    },
+                    {
+                      "const": "change_request",
+                      "type": "string"
+                    },
+                    {
+                      "const": "repository",
+                      "type": "string"
+                    },
+                    {
+                      "const": "support_ticket",
                       "type": "string"
                     },
                     {
@@ -12613,6 +13901,34 @@ export const runxSchemaArtifacts = {
                     },
                     {
                       "const": "sentry_event",
+                      "type": "string"
+                    },
+                    {
+                      "const": "provider_thread",
+                      "type": "string"
+                    },
+                    {
+                      "const": "provider_event",
+                      "type": "string"
+                    },
+                    {
+                      "const": "provider_comment",
+                      "type": "string"
+                    },
+                    {
+                      "const": "tracking_item",
+                      "type": "string"
+                    },
+                    {
+                      "const": "change_request",
+                      "type": "string"
+                    },
+                    {
+                      "const": "repository",
+                      "type": "string"
+                    },
+                    {
+                      "const": "support_ticket",
                       "type": "string"
                     },
                     {
@@ -12909,6 +14225,34 @@ export const runxSchemaArtifacts = {
                   "type": "string"
                 },
                 {
+                  "const": "provider_thread",
+                  "type": "string"
+                },
+                {
+                  "const": "provider_event",
+                  "type": "string"
+                },
+                {
+                  "const": "provider_comment",
+                  "type": "string"
+                },
+                {
+                  "const": "tracking_item",
+                  "type": "string"
+                },
+                {
+                  "const": "change_request",
+                  "type": "string"
+                },
+                {
+                  "const": "repository",
+                  "type": "string"
+                },
+                {
+                  "const": "support_ticket",
+                  "type": "string"
+                },
+                {
                   "const": "signal",
                   "type": "string"
                 },
@@ -13128,6 +14472,34 @@ export const runxSchemaArtifacts = {
                 "type": "string"
               },
               {
+                "const": "provider_thread",
+                "type": "string"
+              },
+              {
+                "const": "provider_event",
+                "type": "string"
+              },
+              {
+                "const": "provider_comment",
+                "type": "string"
+              },
+              {
+                "const": "tracking_item",
+                "type": "string"
+              },
+              {
+                "const": "change_request",
+                "type": "string"
+              },
+              {
+                "const": "repository",
+                "type": "string"
+              },
+              {
+                "const": "support_ticket",
+                "type": "string"
+              },
+              {
                 "const": "signal",
                 "type": "string"
               },
@@ -13311,6 +14683,34 @@ export const runxSchemaArtifacts = {
               },
               {
                 "const": "sentry_event",
+                "type": "string"
+              },
+              {
+                "const": "provider_thread",
+                "type": "string"
+              },
+              {
+                "const": "provider_event",
+                "type": "string"
+              },
+              {
+                "const": "provider_comment",
+                "type": "string"
+              },
+              {
+                "const": "tracking_item",
+                "type": "string"
+              },
+              {
+                "const": "change_request",
+                "type": "string"
+              },
+              {
+                "const": "repository",
+                "type": "string"
+              },
+              {
+                "const": "support_ticket",
                 "type": "string"
               },
               {
@@ -13539,6 +14939,34 @@ export const runxSchemaArtifacts = {
                 },
                 {
                   "const": "sentry_event",
+                  "type": "string"
+                },
+                {
+                  "const": "provider_thread",
+                  "type": "string"
+                },
+                {
+                  "const": "provider_event",
+                  "type": "string"
+                },
+                {
+                  "const": "provider_comment",
+                  "type": "string"
+                },
+                {
+                  "const": "tracking_item",
+                  "type": "string"
+                },
+                {
+                  "const": "change_request",
+                  "type": "string"
+                },
+                {
+                  "const": "repository",
+                  "type": "string"
+                },
+                {
+                  "const": "support_ticket",
                   "type": "string"
                 },
                 {
@@ -13887,6 +15315,34 @@ export const runxSchemaArtifacts = {
                 "type": "string"
               },
               {
+                "const": "provider_thread",
+                "type": "string"
+              },
+              {
+                "const": "provider_event",
+                "type": "string"
+              },
+              {
+                "const": "provider_comment",
+                "type": "string"
+              },
+              {
+                "const": "tracking_item",
+                "type": "string"
+              },
+              {
+                "const": "change_request",
+                "type": "string"
+              },
+              {
+                "const": "repository",
+                "type": "string"
+              },
+              {
+                "const": "support_ticket",
+                "type": "string"
+              },
+              {
                 "const": "signal",
                 "type": "string"
               },
@@ -14101,6 +15557,34 @@ export const runxSchemaArtifacts = {
                 "type": "string"
               },
               {
+                "const": "provider_thread",
+                "type": "string"
+              },
+              {
+                "const": "provider_event",
+                "type": "string"
+              },
+              {
+                "const": "provider_comment",
+                "type": "string"
+              },
+              {
+                "const": "tracking_item",
+                "type": "string"
+              },
+              {
+                "const": "change_request",
+                "type": "string"
+              },
+              {
+                "const": "repository",
+                "type": "string"
+              },
+              {
+                "const": "support_ticket",
+                "type": "string"
+              },
+              {
                 "const": "signal",
                 "type": "string"
               },
@@ -14284,6 +15768,34 @@ export const runxSchemaArtifacts = {
               },
               {
                 "const": "sentry_event",
+                "type": "string"
+              },
+              {
+                "const": "provider_thread",
+                "type": "string"
+              },
+              {
+                "const": "provider_event",
+                "type": "string"
+              },
+              {
+                "const": "provider_comment",
+                "type": "string"
+              },
+              {
+                "const": "tracking_item",
+                "type": "string"
+              },
+              {
+                "const": "change_request",
+                "type": "string"
+              },
+              {
+                "const": "repository",
+                "type": "string"
+              },
+              {
+                "const": "support_ticket",
                 "type": "string"
               },
               {
@@ -14473,6 +15985,34 @@ export const runxSchemaArtifacts = {
                 "type": "string"
               },
               {
+                "const": "provider_thread",
+                "type": "string"
+              },
+              {
+                "const": "provider_event",
+                "type": "string"
+              },
+              {
+                "const": "provider_comment",
+                "type": "string"
+              },
+              {
+                "const": "tracking_item",
+                "type": "string"
+              },
+              {
+                "const": "change_request",
+                "type": "string"
+              },
+              {
+                "const": "repository",
+                "type": "string"
+              },
+              {
+                "const": "support_ticket",
+                "type": "string"
+              },
+              {
                 "const": "signal",
                 "type": "string"
               },
@@ -14656,6 +16196,34 @@ export const runxSchemaArtifacts = {
               },
               {
                 "const": "sentry_event",
+                "type": "string"
+              },
+              {
+                "const": "provider_thread",
+                "type": "string"
+              },
+              {
+                "const": "provider_event",
+                "type": "string"
+              },
+              {
+                "const": "provider_comment",
+                "type": "string"
+              },
+              {
+                "const": "tracking_item",
+                "type": "string"
+              },
+              {
+                "const": "change_request",
+                "type": "string"
+              },
+              {
+                "const": "repository",
+                "type": "string"
+              },
+              {
+                "const": "support_ticket",
                 "type": "string"
               },
               {
@@ -14936,6 +16504,34 @@ export const runxSchemaArtifacts = {
                   "type": "string"
                 },
                 {
+                  "const": "provider_thread",
+                  "type": "string"
+                },
+                {
+                  "const": "provider_event",
+                  "type": "string"
+                },
+                {
+                  "const": "provider_comment",
+                  "type": "string"
+                },
+                {
+                  "const": "tracking_item",
+                  "type": "string"
+                },
+                {
+                  "const": "change_request",
+                  "type": "string"
+                },
+                {
+                  "const": "repository",
+                  "type": "string"
+                },
+                {
+                  "const": "support_ticket",
+                  "type": "string"
+                },
+                {
                   "const": "signal",
                   "type": "string"
                 },
@@ -15145,6 +16741,34 @@ export const runxSchemaArtifacts = {
                     },
                     {
                       "const": "sentry_event",
+                      "type": "string"
+                    },
+                    {
+                      "const": "provider_thread",
+                      "type": "string"
+                    },
+                    {
+                      "const": "provider_event",
+                      "type": "string"
+                    },
+                    {
+                      "const": "provider_comment",
+                      "type": "string"
+                    },
+                    {
+                      "const": "tracking_item",
+                      "type": "string"
+                    },
+                    {
+                      "const": "change_request",
+                      "type": "string"
+                    },
+                    {
+                      "const": "repository",
+                      "type": "string"
+                    },
+                    {
+                      "const": "support_ticket",
                       "type": "string"
                     },
                     {
@@ -15529,6 +17153,34 @@ export const runxSchemaArtifacts = {
                   "type": "string"
                 },
                 {
+                  "const": "provider_thread",
+                  "type": "string"
+                },
+                {
+                  "const": "provider_event",
+                  "type": "string"
+                },
+                {
+                  "const": "provider_comment",
+                  "type": "string"
+                },
+                {
+                  "const": "tracking_item",
+                  "type": "string"
+                },
+                {
+                  "const": "change_request",
+                  "type": "string"
+                },
+                {
+                  "const": "repository",
+                  "type": "string"
+                },
+                {
+                  "const": "support_ticket",
+                  "type": "string"
+                },
+                {
                   "const": "signal",
                   "type": "string"
                 },
@@ -15829,6 +17481,34 @@ export const runxSchemaArtifacts = {
                       "type": "string"
                     },
                     {
+                      "const": "provider_thread",
+                      "type": "string"
+                    },
+                    {
+                      "const": "provider_event",
+                      "type": "string"
+                    },
+                    {
+                      "const": "provider_comment",
+                      "type": "string"
+                    },
+                    {
+                      "const": "tracking_item",
+                      "type": "string"
+                    },
+                    {
+                      "const": "change_request",
+                      "type": "string"
+                    },
+                    {
+                      "const": "repository",
+                      "type": "string"
+                    },
+                    {
+                      "const": "support_ticket",
+                      "type": "string"
+                    },
+                    {
                       "const": "signal",
                       "type": "string"
                     },
@@ -16016,6 +17696,34 @@ export const runxSchemaArtifacts = {
                       },
                       {
                         "const": "sentry_event",
+                        "type": "string"
+                      },
+                      {
+                        "const": "provider_thread",
+                        "type": "string"
+                      },
+                      {
+                        "const": "provider_event",
+                        "type": "string"
+                      },
+                      {
+                        "const": "provider_comment",
+                        "type": "string"
+                      },
+                      {
+                        "const": "tracking_item",
+                        "type": "string"
+                      },
+                      {
+                        "const": "change_request",
+                        "type": "string"
+                      },
+                      {
+                        "const": "repository",
+                        "type": "string"
+                      },
+                      {
+                        "const": "support_ticket",
                         "type": "string"
                       },
                       {
@@ -16211,6 +17919,34 @@ export const runxSchemaArtifacts = {
                       "type": "string"
                     },
                     {
+                      "const": "provider_thread",
+                      "type": "string"
+                    },
+                    {
+                      "const": "provider_event",
+                      "type": "string"
+                    },
+                    {
+                      "const": "provider_comment",
+                      "type": "string"
+                    },
+                    {
+                      "const": "tracking_item",
+                      "type": "string"
+                    },
+                    {
+                      "const": "change_request",
+                      "type": "string"
+                    },
+                    {
+                      "const": "repository",
+                      "type": "string"
+                    },
+                    {
+                      "const": "support_ticket",
+                      "type": "string"
+                    },
+                    {
                       "const": "signal",
                       "type": "string"
                     },
@@ -16398,6 +18134,34 @@ export const runxSchemaArtifacts = {
                       },
                       {
                         "const": "sentry_event",
+                        "type": "string"
+                      },
+                      {
+                        "const": "provider_thread",
+                        "type": "string"
+                      },
+                      {
+                        "const": "provider_event",
+                        "type": "string"
+                      },
+                      {
+                        "const": "provider_comment",
+                        "type": "string"
+                      },
+                      {
+                        "const": "tracking_item",
+                        "type": "string"
+                      },
+                      {
+                        "const": "change_request",
+                        "type": "string"
+                      },
+                      {
+                        "const": "repository",
+                        "type": "string"
+                      },
+                      {
+                        "const": "support_ticket",
                         "type": "string"
                       },
                       {
@@ -16600,6 +18364,34 @@ export const runxSchemaArtifacts = {
                     },
                     {
                       "const": "sentry_event",
+                      "type": "string"
+                    },
+                    {
+                      "const": "provider_thread",
+                      "type": "string"
+                    },
+                    {
+                      "const": "provider_event",
+                      "type": "string"
+                    },
+                    {
+                      "const": "provider_comment",
+                      "type": "string"
+                    },
+                    {
+                      "const": "tracking_item",
+                      "type": "string"
+                    },
+                    {
+                      "const": "change_request",
+                      "type": "string"
+                    },
+                    {
+                      "const": "repository",
+                      "type": "string"
+                    },
+                    {
+                      "const": "support_ticket",
                       "type": "string"
                     },
                     {
@@ -16809,6 +18601,34 @@ export const runxSchemaArtifacts = {
                     },
                     {
                       "const": "sentry_event",
+                      "type": "string"
+                    },
+                    {
+                      "const": "provider_thread",
+                      "type": "string"
+                    },
+                    {
+                      "const": "provider_event",
+                      "type": "string"
+                    },
+                    {
+                      "const": "provider_comment",
+                      "type": "string"
+                    },
+                    {
+                      "const": "tracking_item",
+                      "type": "string"
+                    },
+                    {
+                      "const": "change_request",
+                      "type": "string"
+                    },
+                    {
+                      "const": "repository",
+                      "type": "string"
+                    },
+                    {
+                      "const": "support_ticket",
                       "type": "string"
                     },
                     {
@@ -17054,6 +18874,34 @@ export const runxSchemaArtifacts = {
                   },
                   {
                     "const": "sentry_event",
+                    "type": "string"
+                  },
+                  {
+                    "const": "provider_thread",
+                    "type": "string"
+                  },
+                  {
+                    "const": "provider_event",
+                    "type": "string"
+                  },
+                  {
+                    "const": "provider_comment",
+                    "type": "string"
+                  },
+                  {
+                    "const": "tracking_item",
+                    "type": "string"
+                  },
+                  {
+                    "const": "change_request",
+                    "type": "string"
+                  },
+                  {
+                    "const": "repository",
+                    "type": "string"
+                  },
+                  {
+                    "const": "support_ticket",
                     "type": "string"
                   },
                   {
@@ -17932,6 +19780,34 @@ export const runxSchemaArtifacts = {
                     },
                     {
                       "const": "sentry_event",
+                      "type": "string"
+                    },
+                    {
+                      "const": "provider_thread",
+                      "type": "string"
+                    },
+                    {
+                      "const": "provider_event",
+                      "type": "string"
+                    },
+                    {
+                      "const": "provider_comment",
+                      "type": "string"
+                    },
+                    {
+                      "const": "tracking_item",
+                      "type": "string"
+                    },
+                    {
+                      "const": "change_request",
+                      "type": "string"
+                    },
+                    {
+                      "const": "repository",
+                      "type": "string"
+                    },
+                    {
+                      "const": "support_ticket",
                       "type": "string"
                     },
                     {
@@ -18987,6 +20863,34 @@ export const runxSchemaArtifacts = {
                       "type": "string"
                     },
                     {
+                      "const": "provider_thread",
+                      "type": "string"
+                    },
+                    {
+                      "const": "provider_event",
+                      "type": "string"
+                    },
+                    {
+                      "const": "provider_comment",
+                      "type": "string"
+                    },
+                    {
+                      "const": "tracking_item",
+                      "type": "string"
+                    },
+                    {
+                      "const": "change_request",
+                      "type": "string"
+                    },
+                    {
+                      "const": "repository",
+                      "type": "string"
+                    },
+                    {
+                      "const": "support_ticket",
+                      "type": "string"
+                    },
+                    {
                       "const": "signal",
                       "type": "string"
                     },
@@ -19215,6 +21119,34 @@ export const runxSchemaArtifacts = {
                 "type": "string"
               },
               {
+                "const": "provider_thread",
+                "type": "string"
+              },
+              {
+                "const": "provider_event",
+                "type": "string"
+              },
+              {
+                "const": "provider_comment",
+                "type": "string"
+              },
+              {
+                "const": "tracking_item",
+                "type": "string"
+              },
+              {
+                "const": "change_request",
+                "type": "string"
+              },
+              {
+                "const": "repository",
+                "type": "string"
+              },
+              {
+                "const": "support_ticket",
+                "type": "string"
+              },
+              {
                 "const": "signal",
                 "type": "string"
               },
@@ -19398,6 +21330,34 @@ export const runxSchemaArtifacts = {
               },
               {
                 "const": "sentry_event",
+                "type": "string"
+              },
+              {
+                "const": "provider_thread",
+                "type": "string"
+              },
+              {
+                "const": "provider_event",
+                "type": "string"
+              },
+              {
+                "const": "provider_comment",
+                "type": "string"
+              },
+              {
+                "const": "tracking_item",
+                "type": "string"
+              },
+              {
+                "const": "change_request",
+                "type": "string"
+              },
+              {
+                "const": "repository",
+                "type": "string"
+              },
+              {
+                "const": "support_ticket",
                 "type": "string"
               },
               {
@@ -19694,6 +21654,34 @@ export const runxSchemaArtifacts = {
                       },
                       {
                         "const": "sentry_event",
+                        "type": "string"
+                      },
+                      {
+                        "const": "provider_thread",
+                        "type": "string"
+                      },
+                      {
+                        "const": "provider_event",
+                        "type": "string"
+                      },
+                      {
+                        "const": "provider_comment",
+                        "type": "string"
+                      },
+                      {
+                        "const": "tracking_item",
+                        "type": "string"
+                      },
+                      {
+                        "const": "change_request",
+                        "type": "string"
+                      },
+                      {
+                        "const": "repository",
+                        "type": "string"
+                      },
+                      {
+                        "const": "support_ticket",
                         "type": "string"
                       },
                       {
@@ -20037,6 +22025,34 @@ export const runxSchemaArtifacts = {
                       "type": "string"
                     },
                     {
+                      "const": "provider_thread",
+                      "type": "string"
+                    },
+                    {
+                      "const": "provider_event",
+                      "type": "string"
+                    },
+                    {
+                      "const": "provider_comment",
+                      "type": "string"
+                    },
+                    {
+                      "const": "tracking_item",
+                      "type": "string"
+                    },
+                    {
+                      "const": "change_request",
+                      "type": "string"
+                    },
+                    {
+                      "const": "repository",
+                      "type": "string"
+                    },
+                    {
+                      "const": "support_ticket",
+                      "type": "string"
+                    },
+                    {
                       "const": "signal",
                       "type": "string"
                     },
@@ -20363,6 +22379,34 @@ export const runxSchemaArtifacts = {
                       "type": "string"
                     },
                     {
+                      "const": "provider_thread",
+                      "type": "string"
+                    },
+                    {
+                      "const": "provider_event",
+                      "type": "string"
+                    },
+                    {
+                      "const": "provider_comment",
+                      "type": "string"
+                    },
+                    {
+                      "const": "tracking_item",
+                      "type": "string"
+                    },
+                    {
+                      "const": "change_request",
+                      "type": "string"
+                    },
+                    {
+                      "const": "repository",
+                      "type": "string"
+                    },
+                    {
+                      "const": "support_ticket",
+                      "type": "string"
+                    },
+                    {
                       "const": "signal",
                       "type": "string"
                     },
@@ -20560,6 +22604,34 @@ export const runxSchemaArtifacts = {
                   "type": "string"
                 },
                 {
+                  "const": "provider_thread",
+                  "type": "string"
+                },
+                {
+                  "const": "provider_event",
+                  "type": "string"
+                },
+                {
+                  "const": "provider_comment",
+                  "type": "string"
+                },
+                {
+                  "const": "tracking_item",
+                  "type": "string"
+                },
+                {
+                  "const": "change_request",
+                  "type": "string"
+                },
+                {
+                  "const": "repository",
+                  "type": "string"
+                },
+                {
+                  "const": "support_ticket",
+                  "type": "string"
+                },
+                {
                   "const": "signal",
                   "type": "string"
                 },
@@ -20746,6 +22818,34 @@ export const runxSchemaArtifacts = {
                 },
                 {
                   "const": "sentry_event",
+                  "type": "string"
+                },
+                {
+                  "const": "provider_thread",
+                  "type": "string"
+                },
+                {
+                  "const": "provider_event",
+                  "type": "string"
+                },
+                {
+                  "const": "provider_comment",
+                  "type": "string"
+                },
+                {
+                  "const": "tracking_item",
+                  "type": "string"
+                },
+                {
+                  "const": "change_request",
+                  "type": "string"
+                },
+                {
+                  "const": "repository",
+                  "type": "string"
+                },
+                {
+                  "const": "support_ticket",
                   "type": "string"
                 },
                 {
@@ -20936,6 +23036,34 @@ export const runxSchemaArtifacts = {
                 },
                 {
                   "const": "sentry_event",
+                  "type": "string"
+                },
+                {
+                  "const": "provider_thread",
+                  "type": "string"
+                },
+                {
+                  "const": "provider_event",
+                  "type": "string"
+                },
+                {
+                  "const": "provider_comment",
+                  "type": "string"
+                },
+                {
+                  "const": "tracking_item",
+                  "type": "string"
+                },
+                {
+                  "const": "change_request",
+                  "type": "string"
+                },
+                {
+                  "const": "repository",
+                  "type": "string"
+                },
+                {
+                  "const": "support_ticket",
                   "type": "string"
                 },
                 {
@@ -21131,6 +23259,34 @@ export const runxSchemaArtifacts = {
                   },
                   {
                     "const": "sentry_event",
+                    "type": "string"
+                  },
+                  {
+                    "const": "provider_thread",
+                    "type": "string"
+                  },
+                  {
+                    "const": "provider_event",
+                    "type": "string"
+                  },
+                  {
+                    "const": "provider_comment",
+                    "type": "string"
+                  },
+                  {
+                    "const": "tracking_item",
+                    "type": "string"
+                  },
+                  {
+                    "const": "change_request",
+                    "type": "string"
+                  },
+                  {
+                    "const": "repository",
+                    "type": "string"
+                  },
+                  {
+                    "const": "support_ticket",
                     "type": "string"
                   },
                   {
@@ -21331,6 +23487,34 @@ export const runxSchemaArtifacts = {
                   "type": "string"
                 },
                 {
+                  "const": "provider_thread",
+                  "type": "string"
+                },
+                {
+                  "const": "provider_event",
+                  "type": "string"
+                },
+                {
+                  "const": "provider_comment",
+                  "type": "string"
+                },
+                {
+                  "const": "tracking_item",
+                  "type": "string"
+                },
+                {
+                  "const": "change_request",
+                  "type": "string"
+                },
+                {
+                  "const": "repository",
+                  "type": "string"
+                },
+                {
+                  "const": "support_ticket",
+                  "type": "string"
+                },
+                {
                   "const": "signal",
                   "type": "string"
                 },
@@ -21520,6 +23704,34 @@ export const runxSchemaArtifacts = {
                 "type": "string"
               },
               {
+                "const": "provider_thread",
+                "type": "string"
+              },
+              {
+                "const": "provider_event",
+                "type": "string"
+              },
+              {
+                "const": "provider_comment",
+                "type": "string"
+              },
+              {
+                "const": "tracking_item",
+                "type": "string"
+              },
+              {
+                "const": "change_request",
+                "type": "string"
+              },
+              {
+                "const": "repository",
+                "type": "string"
+              },
+              {
+                "const": "support_ticket",
+                "type": "string"
+              },
+              {
                 "const": "signal",
                 "type": "string"
               },
@@ -21704,6 +23916,34 @@ export const runxSchemaArtifacts = {
                 },
                 {
                   "const": "sentry_event",
+                  "type": "string"
+                },
+                {
+                  "const": "provider_thread",
+                  "type": "string"
+                },
+                {
+                  "const": "provider_event",
+                  "type": "string"
+                },
+                {
+                  "const": "provider_comment",
+                  "type": "string"
+                },
+                {
+                  "const": "tracking_item",
+                  "type": "string"
+                },
+                {
+                  "const": "change_request",
+                  "type": "string"
+                },
+                {
+                  "const": "repository",
+                  "type": "string"
+                },
+                {
+                  "const": "support_ticket",
                   "type": "string"
                 },
                 {
@@ -21905,6 +24145,34 @@ export const runxSchemaArtifacts = {
                     "type": "string"
                   },
                   {
+                    "const": "provider_thread",
+                    "type": "string"
+                  },
+                  {
+                    "const": "provider_event",
+                    "type": "string"
+                  },
+                  {
+                    "const": "provider_comment",
+                    "type": "string"
+                  },
+                  {
+                    "const": "tracking_item",
+                    "type": "string"
+                  },
+                  {
+                    "const": "change_request",
+                    "type": "string"
+                  },
+                  {
+                    "const": "repository",
+                    "type": "string"
+                  },
+                  {
+                    "const": "support_ticket",
+                    "type": "string"
+                  },
+                  {
                     "const": "signal",
                     "type": "string"
                   },
@@ -22102,6 +24370,34 @@ export const runxSchemaArtifacts = {
                     "type": "string"
                   },
                   {
+                    "const": "provider_thread",
+                    "type": "string"
+                  },
+                  {
+                    "const": "provider_event",
+                    "type": "string"
+                  },
+                  {
+                    "const": "provider_comment",
+                    "type": "string"
+                  },
+                  {
+                    "const": "tracking_item",
+                    "type": "string"
+                  },
+                  {
+                    "const": "change_request",
+                    "type": "string"
+                  },
+                  {
+                    "const": "repository",
+                    "type": "string"
+                  },
+                  {
+                    "const": "support_ticket",
+                    "type": "string"
+                  },
+                  {
                     "const": "signal",
                     "type": "string"
                   },
@@ -22295,6 +24591,34 @@ export const runxSchemaArtifacts = {
                 },
                 {
                   "const": "sentry_event",
+                  "type": "string"
+                },
+                {
+                  "const": "provider_thread",
+                  "type": "string"
+                },
+                {
+                  "const": "provider_event",
+                  "type": "string"
+                },
+                {
+                  "const": "provider_comment",
+                  "type": "string"
+                },
+                {
+                  "const": "tracking_item",
+                  "type": "string"
+                },
+                {
+                  "const": "change_request",
+                  "type": "string"
+                },
+                {
+                  "const": "repository",
+                  "type": "string"
+                },
+                {
+                  "const": "support_ticket",
                   "type": "string"
                 },
                 {
@@ -23818,6 +26142,2683 @@ export const runxSchemaArtifacts = {
     "type": "object",
     "x-runx-schema": "runx.operational_policy.v1"
   } as JsonSchema,
+  "operational-proposal.schema.json": {
+    "$id": "https://schemas.runx.dev/runx/operational-proposal/v1.json",
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "additionalProperties": false,
+    "properties": {
+      "allowed_next_actions": {
+        "items": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "type": "array"
+      },
+      "artifact_refs": {
+        "items": {
+          "$id": "https://schemas.runx.dev/runx/reference/v1.json",
+          "$schema": "https://json-schema.org/draft/2020-12/schema",
+          "additionalProperties": false,
+          "properties": {
+            "label": {
+              "minLength": 1,
+              "type": "string"
+            },
+            "locator": {
+              "minLength": 1,
+              "type": "string"
+            },
+            "observed_at": {
+              "minLength": 1,
+              "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(?:\\.\\d+)?Z$",
+              "type": "string"
+            },
+            "proof_kind": {
+              "anyOf": [
+                {
+                  "const": "payment_rail",
+                  "type": "string"
+                }
+              ]
+            },
+            "provider": {
+              "minLength": 1,
+              "type": "string"
+            },
+            "schema": {
+              "const": "runx.reference.v1",
+              "type": "string"
+            },
+            "type": {
+              "anyOf": [
+                {
+                  "const": "github_issue",
+                  "type": "string"
+                },
+                {
+                  "const": "github_pull_request",
+                  "type": "string"
+                },
+                {
+                  "const": "github_repo",
+                  "type": "string"
+                },
+                {
+                  "const": "slack_thread",
+                  "type": "string"
+                },
+                {
+                  "const": "sentry_event",
+                  "type": "string"
+                },
+                {
+                  "const": "provider_thread",
+                  "type": "string"
+                },
+                {
+                  "const": "provider_event",
+                  "type": "string"
+                },
+                {
+                  "const": "provider_comment",
+                  "type": "string"
+                },
+                {
+                  "const": "tracking_item",
+                  "type": "string"
+                },
+                {
+                  "const": "change_request",
+                  "type": "string"
+                },
+                {
+                  "const": "repository",
+                  "type": "string"
+                },
+                {
+                  "const": "support_ticket",
+                  "type": "string"
+                },
+                {
+                  "const": "signal",
+                  "type": "string"
+                },
+                {
+                  "const": "act",
+                  "type": "string"
+                },
+                {
+                  "const": "receipt",
+                  "type": "string"
+                },
+                {
+                  "const": "graph_receipt",
+                  "type": "string"
+                },
+                {
+                  "const": "artifact",
+                  "type": "string"
+                },
+                {
+                  "const": "verification",
+                  "type": "string"
+                },
+                {
+                  "const": "harness",
+                  "type": "string"
+                },
+                {
+                  "const": "host",
+                  "type": "string"
+                },
+                {
+                  "const": "deployment",
+                  "type": "string"
+                },
+                {
+                  "const": "surface",
+                  "type": "string"
+                },
+                {
+                  "const": "target",
+                  "type": "string"
+                },
+                {
+                  "const": "opportunity",
+                  "type": "string"
+                },
+                {
+                  "const": "thesis_assessment",
+                  "type": "string"
+                },
+                {
+                  "const": "selection",
+                  "type": "string"
+                },
+                {
+                  "const": "skill_binding",
+                  "type": "string"
+                },
+                {
+                  "const": "target_transition_entry",
+                  "type": "string"
+                },
+                {
+                  "const": "selection_cycle",
+                  "type": "string"
+                },
+                {
+                  "const": "decision",
+                  "type": "string"
+                },
+                {
+                  "const": "reflection_entry",
+                  "type": "string"
+                },
+                {
+                  "const": "feed_entry",
+                  "type": "string"
+                },
+                {
+                  "const": "principal",
+                  "type": "string"
+                },
+                {
+                  "const": "authority_proof",
+                  "type": "string"
+                },
+                {
+                  "const": "scope_admission",
+                  "type": "string"
+                },
+                {
+                  "const": "grant",
+                  "type": "string"
+                },
+                {
+                  "const": "mandate",
+                  "type": "string"
+                },
+                {
+                  "const": "credential",
+                  "type": "string"
+                },
+                {
+                  "const": "webhook_delivery",
+                  "type": "string"
+                },
+                {
+                  "const": "redaction_policy",
+                  "type": "string"
+                },
+                {
+                  "const": "external_url",
+                  "type": "string"
+                }
+              ]
+            },
+            "uri": {
+              "minLength": 1,
+              "type": "string"
+            }
+          },
+          "required": [
+            "type",
+            "uri"
+          ],
+          "type": "object",
+          "x-runx-schema": "runx.reference.v1"
+        },
+        "type": "array"
+      },
+      "authority": {
+        "additionalProperties": false,
+        "properties": {
+          "final_decision_authority_granted": {
+            "const": false,
+            "type": "boolean"
+          },
+          "mutation_authority_granted": {
+            "const": false,
+            "type": "boolean"
+          },
+          "notes": {
+            "items": {
+              "minLength": 1,
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "proposal_only": {
+            "const": true,
+            "type": "boolean"
+          },
+          "publication_authority_granted": {
+            "const": false,
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "proposal_only",
+          "mutation_authority_granted",
+          "publication_authority_granted",
+          "final_decision_authority_granted"
+        ],
+        "type": "object"
+      },
+      "caveats": {
+        "items": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "type": "array"
+      },
+      "confidence": {
+        "maximum": 1,
+        "minimum": 0,
+        "type": "number"
+      },
+      "decision_summary": {
+        "minLength": 1,
+        "type": "string"
+      },
+      "evidence_refs": {
+        "items": {
+          "$id": "https://schemas.runx.dev/runx/reference/v1.json",
+          "$schema": "https://json-schema.org/draft/2020-12/schema",
+          "additionalProperties": false,
+          "properties": {
+            "label": {
+              "minLength": 1,
+              "type": "string"
+            },
+            "locator": {
+              "minLength": 1,
+              "type": "string"
+            },
+            "observed_at": {
+              "minLength": 1,
+              "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(?:\\.\\d+)?Z$",
+              "type": "string"
+            },
+            "proof_kind": {
+              "anyOf": [
+                {
+                  "const": "payment_rail",
+                  "type": "string"
+                }
+              ]
+            },
+            "provider": {
+              "minLength": 1,
+              "type": "string"
+            },
+            "schema": {
+              "const": "runx.reference.v1",
+              "type": "string"
+            },
+            "type": {
+              "anyOf": [
+                {
+                  "const": "github_issue",
+                  "type": "string"
+                },
+                {
+                  "const": "github_pull_request",
+                  "type": "string"
+                },
+                {
+                  "const": "github_repo",
+                  "type": "string"
+                },
+                {
+                  "const": "slack_thread",
+                  "type": "string"
+                },
+                {
+                  "const": "sentry_event",
+                  "type": "string"
+                },
+                {
+                  "const": "provider_thread",
+                  "type": "string"
+                },
+                {
+                  "const": "provider_event",
+                  "type": "string"
+                },
+                {
+                  "const": "provider_comment",
+                  "type": "string"
+                },
+                {
+                  "const": "tracking_item",
+                  "type": "string"
+                },
+                {
+                  "const": "change_request",
+                  "type": "string"
+                },
+                {
+                  "const": "repository",
+                  "type": "string"
+                },
+                {
+                  "const": "support_ticket",
+                  "type": "string"
+                },
+                {
+                  "const": "signal",
+                  "type": "string"
+                },
+                {
+                  "const": "act",
+                  "type": "string"
+                },
+                {
+                  "const": "receipt",
+                  "type": "string"
+                },
+                {
+                  "const": "graph_receipt",
+                  "type": "string"
+                },
+                {
+                  "const": "artifact",
+                  "type": "string"
+                },
+                {
+                  "const": "verification",
+                  "type": "string"
+                },
+                {
+                  "const": "harness",
+                  "type": "string"
+                },
+                {
+                  "const": "host",
+                  "type": "string"
+                },
+                {
+                  "const": "deployment",
+                  "type": "string"
+                },
+                {
+                  "const": "surface",
+                  "type": "string"
+                },
+                {
+                  "const": "target",
+                  "type": "string"
+                },
+                {
+                  "const": "opportunity",
+                  "type": "string"
+                },
+                {
+                  "const": "thesis_assessment",
+                  "type": "string"
+                },
+                {
+                  "const": "selection",
+                  "type": "string"
+                },
+                {
+                  "const": "skill_binding",
+                  "type": "string"
+                },
+                {
+                  "const": "target_transition_entry",
+                  "type": "string"
+                },
+                {
+                  "const": "selection_cycle",
+                  "type": "string"
+                },
+                {
+                  "const": "decision",
+                  "type": "string"
+                },
+                {
+                  "const": "reflection_entry",
+                  "type": "string"
+                },
+                {
+                  "const": "feed_entry",
+                  "type": "string"
+                },
+                {
+                  "const": "principal",
+                  "type": "string"
+                },
+                {
+                  "const": "authority_proof",
+                  "type": "string"
+                },
+                {
+                  "const": "scope_admission",
+                  "type": "string"
+                },
+                {
+                  "const": "grant",
+                  "type": "string"
+                },
+                {
+                  "const": "mandate",
+                  "type": "string"
+                },
+                {
+                  "const": "credential",
+                  "type": "string"
+                },
+                {
+                  "const": "webhook_delivery",
+                  "type": "string"
+                },
+                {
+                  "const": "redaction_policy",
+                  "type": "string"
+                },
+                {
+                  "const": "external_url",
+                  "type": "string"
+                }
+              ]
+            },
+            "uri": {
+              "minLength": 1,
+              "type": "string"
+            }
+          },
+          "required": [
+            "type",
+            "uri"
+          ],
+          "type": "object",
+          "x-runx-schema": "runx.reference.v1"
+        },
+        "type": "array"
+      },
+      "extensions": {
+        "additionalProperties": {},
+        "type": "object"
+      },
+      "final_outcome": {
+        "additionalProperties": false,
+        "properties": {
+          "observed": {
+            "type": "boolean"
+          },
+          "observed_at": {
+            "minLength": 1,
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(?:\\.\\d+)?Z$",
+            "type": "string"
+          },
+          "refs": {
+            "items": {
+              "$id": "https://schemas.runx.dev/runx/reference/v1.json",
+              "$schema": "https://json-schema.org/draft/2020-12/schema",
+              "additionalProperties": false,
+              "properties": {
+                "label": {
+                  "minLength": 1,
+                  "type": "string"
+                },
+                "locator": {
+                  "minLength": 1,
+                  "type": "string"
+                },
+                "observed_at": {
+                  "minLength": 1,
+                  "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(?:\\.\\d+)?Z$",
+                  "type": "string"
+                },
+                "proof_kind": {
+                  "anyOf": [
+                    {
+                      "const": "payment_rail",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "provider": {
+                  "minLength": 1,
+                  "type": "string"
+                },
+                "schema": {
+                  "const": "runx.reference.v1",
+                  "type": "string"
+                },
+                "type": {
+                  "anyOf": [
+                    {
+                      "const": "github_issue",
+                      "type": "string"
+                    },
+                    {
+                      "const": "github_pull_request",
+                      "type": "string"
+                    },
+                    {
+                      "const": "github_repo",
+                      "type": "string"
+                    },
+                    {
+                      "const": "slack_thread",
+                      "type": "string"
+                    },
+                    {
+                      "const": "sentry_event",
+                      "type": "string"
+                    },
+                    {
+                      "const": "provider_thread",
+                      "type": "string"
+                    },
+                    {
+                      "const": "provider_event",
+                      "type": "string"
+                    },
+                    {
+                      "const": "provider_comment",
+                      "type": "string"
+                    },
+                    {
+                      "const": "tracking_item",
+                      "type": "string"
+                    },
+                    {
+                      "const": "change_request",
+                      "type": "string"
+                    },
+                    {
+                      "const": "repository",
+                      "type": "string"
+                    },
+                    {
+                      "const": "support_ticket",
+                      "type": "string"
+                    },
+                    {
+                      "const": "signal",
+                      "type": "string"
+                    },
+                    {
+                      "const": "act",
+                      "type": "string"
+                    },
+                    {
+                      "const": "receipt",
+                      "type": "string"
+                    },
+                    {
+                      "const": "graph_receipt",
+                      "type": "string"
+                    },
+                    {
+                      "const": "artifact",
+                      "type": "string"
+                    },
+                    {
+                      "const": "verification",
+                      "type": "string"
+                    },
+                    {
+                      "const": "harness",
+                      "type": "string"
+                    },
+                    {
+                      "const": "host",
+                      "type": "string"
+                    },
+                    {
+                      "const": "deployment",
+                      "type": "string"
+                    },
+                    {
+                      "const": "surface",
+                      "type": "string"
+                    },
+                    {
+                      "const": "target",
+                      "type": "string"
+                    },
+                    {
+                      "const": "opportunity",
+                      "type": "string"
+                    },
+                    {
+                      "const": "thesis_assessment",
+                      "type": "string"
+                    },
+                    {
+                      "const": "selection",
+                      "type": "string"
+                    },
+                    {
+                      "const": "skill_binding",
+                      "type": "string"
+                    },
+                    {
+                      "const": "target_transition_entry",
+                      "type": "string"
+                    },
+                    {
+                      "const": "selection_cycle",
+                      "type": "string"
+                    },
+                    {
+                      "const": "decision",
+                      "type": "string"
+                    },
+                    {
+                      "const": "reflection_entry",
+                      "type": "string"
+                    },
+                    {
+                      "const": "feed_entry",
+                      "type": "string"
+                    },
+                    {
+                      "const": "principal",
+                      "type": "string"
+                    },
+                    {
+                      "const": "authority_proof",
+                      "type": "string"
+                    },
+                    {
+                      "const": "scope_admission",
+                      "type": "string"
+                    },
+                    {
+                      "const": "grant",
+                      "type": "string"
+                    },
+                    {
+                      "const": "mandate",
+                      "type": "string"
+                    },
+                    {
+                      "const": "credential",
+                      "type": "string"
+                    },
+                    {
+                      "const": "webhook_delivery",
+                      "type": "string"
+                    },
+                    {
+                      "const": "redaction_policy",
+                      "type": "string"
+                    },
+                    {
+                      "const": "external_url",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "uri": {
+                  "minLength": 1,
+                  "type": "string"
+                }
+              },
+              "required": [
+                "type",
+                "uri"
+              ],
+              "type": "object",
+              "x-runx-schema": "runx.reference.v1"
+            },
+            "type": "array"
+          },
+          "status": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "summary": {
+            "minLength": 1,
+            "type": "string"
+          }
+        },
+        "required": [
+          "observed",
+          "status",
+          "summary"
+        ],
+        "type": "object"
+      },
+      "human_gates": {
+        "items": {
+          "additionalProperties": false,
+          "properties": {
+            "decision": {
+              "minLength": 1,
+              "type": "string"
+            },
+            "gate_id": {
+              "minLength": 1,
+              "type": "string"
+            },
+            "gate_kind": {
+              "minLength": 1,
+              "type": "string"
+            },
+            "reason": {
+              "minLength": 1,
+              "type": "string"
+            },
+            "required": {
+              "type": "boolean"
+            }
+          },
+          "required": [
+            "gate_id",
+            "gate_kind",
+            "required",
+            "decision",
+            "reason"
+          ],
+          "type": "object"
+        },
+        "type": "array"
+      },
+      "hydrated_context_ref": {
+        "$id": "https://schemas.runx.dev/runx/reference/v1.json",
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "additionalProperties": false,
+        "properties": {
+          "label": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "locator": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "observed_at": {
+            "minLength": 1,
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(?:\\.\\d+)?Z$",
+            "type": "string"
+          },
+          "proof_kind": {
+            "anyOf": [
+              {
+                "const": "payment_rail",
+                "type": "string"
+              }
+            ]
+          },
+          "provider": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "schema": {
+            "const": "runx.reference.v1",
+            "type": "string"
+          },
+          "type": {
+            "anyOf": [
+              {
+                "const": "github_issue",
+                "type": "string"
+              },
+              {
+                "const": "github_pull_request",
+                "type": "string"
+              },
+              {
+                "const": "github_repo",
+                "type": "string"
+              },
+              {
+                "const": "slack_thread",
+                "type": "string"
+              },
+              {
+                "const": "sentry_event",
+                "type": "string"
+              },
+              {
+                "const": "provider_thread",
+                "type": "string"
+              },
+              {
+                "const": "provider_event",
+                "type": "string"
+              },
+              {
+                "const": "provider_comment",
+                "type": "string"
+              },
+              {
+                "const": "tracking_item",
+                "type": "string"
+              },
+              {
+                "const": "change_request",
+                "type": "string"
+              },
+              {
+                "const": "repository",
+                "type": "string"
+              },
+              {
+                "const": "support_ticket",
+                "type": "string"
+              },
+              {
+                "const": "signal",
+                "type": "string"
+              },
+              {
+                "const": "act",
+                "type": "string"
+              },
+              {
+                "const": "receipt",
+                "type": "string"
+              },
+              {
+                "const": "graph_receipt",
+                "type": "string"
+              },
+              {
+                "const": "artifact",
+                "type": "string"
+              },
+              {
+                "const": "verification",
+                "type": "string"
+              },
+              {
+                "const": "harness",
+                "type": "string"
+              },
+              {
+                "const": "host",
+                "type": "string"
+              },
+              {
+                "const": "deployment",
+                "type": "string"
+              },
+              {
+                "const": "surface",
+                "type": "string"
+              },
+              {
+                "const": "target",
+                "type": "string"
+              },
+              {
+                "const": "opportunity",
+                "type": "string"
+              },
+              {
+                "const": "thesis_assessment",
+                "type": "string"
+              },
+              {
+                "const": "selection",
+                "type": "string"
+              },
+              {
+                "const": "skill_binding",
+                "type": "string"
+              },
+              {
+                "const": "target_transition_entry",
+                "type": "string"
+              },
+              {
+                "const": "selection_cycle",
+                "type": "string"
+              },
+              {
+                "const": "decision",
+                "type": "string"
+              },
+              {
+                "const": "reflection_entry",
+                "type": "string"
+              },
+              {
+                "const": "feed_entry",
+                "type": "string"
+              },
+              {
+                "const": "principal",
+                "type": "string"
+              },
+              {
+                "const": "authority_proof",
+                "type": "string"
+              },
+              {
+                "const": "scope_admission",
+                "type": "string"
+              },
+              {
+                "const": "grant",
+                "type": "string"
+              },
+              {
+                "const": "mandate",
+                "type": "string"
+              },
+              {
+                "const": "credential",
+                "type": "string"
+              },
+              {
+                "const": "webhook_delivery",
+                "type": "string"
+              },
+              {
+                "const": "redaction_policy",
+                "type": "string"
+              },
+              {
+                "const": "external_url",
+                "type": "string"
+              }
+            ]
+          },
+          "uri": {
+            "minLength": 1,
+            "type": "string"
+          }
+        },
+        "required": [
+          "type",
+          "uri"
+        ],
+        "type": "object",
+        "x-runx-schema": "runx.reference.v1"
+      },
+      "idempotency": {
+        "additionalProperties": false,
+        "properties": {
+          "fingerprint": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "key": {
+            "minLength": 1,
+            "type": "string"
+          }
+        },
+        "required": [
+          "key",
+          "fingerprint"
+        ],
+        "type": "object"
+      },
+      "missing_context": {
+        "items": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "type": "array"
+      },
+      "owner_route_id": {
+        "minLength": 1,
+        "pattern": "^[A-Za-z0-9_.:-]+$",
+        "type": "string"
+      },
+      "proposal_id": {
+        "minLength": 1,
+        "pattern": "^[A-Za-z0-9_.:-]+$",
+        "type": "string"
+      },
+      "proposal_kind": {
+        "minLength": 1,
+        "type": "string"
+      },
+      "public_summary": {
+        "minLength": 1,
+        "type": "string"
+      },
+      "publication_refs": {
+        "items": {
+          "$id": "https://schemas.runx.dev/runx/reference-link/v1.json",
+          "$schema": "https://json-schema.org/draft/2020-12/schema",
+          "additionalProperties": false,
+          "properties": {
+            "ref": {
+              "$id": "https://schemas.runx.dev/runx/reference/v1.json",
+              "$schema": "https://json-schema.org/draft/2020-12/schema",
+              "additionalProperties": false,
+              "properties": {
+                "label": {
+                  "minLength": 1,
+                  "type": "string"
+                },
+                "locator": {
+                  "minLength": 1,
+                  "type": "string"
+                },
+                "observed_at": {
+                  "minLength": 1,
+                  "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(?:\\.\\d+)?Z$",
+                  "type": "string"
+                },
+                "proof_kind": {
+                  "anyOf": [
+                    {
+                      "const": "payment_rail",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "provider": {
+                  "minLength": 1,
+                  "type": "string"
+                },
+                "schema": {
+                  "const": "runx.reference.v1",
+                  "type": "string"
+                },
+                "type": {
+                  "anyOf": [
+                    {
+                      "const": "github_issue",
+                      "type": "string"
+                    },
+                    {
+                      "const": "github_pull_request",
+                      "type": "string"
+                    },
+                    {
+                      "const": "github_repo",
+                      "type": "string"
+                    },
+                    {
+                      "const": "slack_thread",
+                      "type": "string"
+                    },
+                    {
+                      "const": "sentry_event",
+                      "type": "string"
+                    },
+                    {
+                      "const": "provider_thread",
+                      "type": "string"
+                    },
+                    {
+                      "const": "provider_event",
+                      "type": "string"
+                    },
+                    {
+                      "const": "provider_comment",
+                      "type": "string"
+                    },
+                    {
+                      "const": "tracking_item",
+                      "type": "string"
+                    },
+                    {
+                      "const": "change_request",
+                      "type": "string"
+                    },
+                    {
+                      "const": "repository",
+                      "type": "string"
+                    },
+                    {
+                      "const": "support_ticket",
+                      "type": "string"
+                    },
+                    {
+                      "const": "signal",
+                      "type": "string"
+                    },
+                    {
+                      "const": "act",
+                      "type": "string"
+                    },
+                    {
+                      "const": "receipt",
+                      "type": "string"
+                    },
+                    {
+                      "const": "graph_receipt",
+                      "type": "string"
+                    },
+                    {
+                      "const": "artifact",
+                      "type": "string"
+                    },
+                    {
+                      "const": "verification",
+                      "type": "string"
+                    },
+                    {
+                      "const": "harness",
+                      "type": "string"
+                    },
+                    {
+                      "const": "host",
+                      "type": "string"
+                    },
+                    {
+                      "const": "deployment",
+                      "type": "string"
+                    },
+                    {
+                      "const": "surface",
+                      "type": "string"
+                    },
+                    {
+                      "const": "target",
+                      "type": "string"
+                    },
+                    {
+                      "const": "opportunity",
+                      "type": "string"
+                    },
+                    {
+                      "const": "thesis_assessment",
+                      "type": "string"
+                    },
+                    {
+                      "const": "selection",
+                      "type": "string"
+                    },
+                    {
+                      "const": "skill_binding",
+                      "type": "string"
+                    },
+                    {
+                      "const": "target_transition_entry",
+                      "type": "string"
+                    },
+                    {
+                      "const": "selection_cycle",
+                      "type": "string"
+                    },
+                    {
+                      "const": "decision",
+                      "type": "string"
+                    },
+                    {
+                      "const": "reflection_entry",
+                      "type": "string"
+                    },
+                    {
+                      "const": "feed_entry",
+                      "type": "string"
+                    },
+                    {
+                      "const": "principal",
+                      "type": "string"
+                    },
+                    {
+                      "const": "authority_proof",
+                      "type": "string"
+                    },
+                    {
+                      "const": "scope_admission",
+                      "type": "string"
+                    },
+                    {
+                      "const": "grant",
+                      "type": "string"
+                    },
+                    {
+                      "const": "mandate",
+                      "type": "string"
+                    },
+                    {
+                      "const": "credential",
+                      "type": "string"
+                    },
+                    {
+                      "const": "webhook_delivery",
+                      "type": "string"
+                    },
+                    {
+                      "const": "redaction_policy",
+                      "type": "string"
+                    },
+                    {
+                      "const": "external_url",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "uri": {
+                  "minLength": 1,
+                  "type": "string"
+                }
+              },
+              "required": [
+                "type",
+                "uri"
+              ],
+              "type": "object",
+              "x-runx-schema": "runx.reference.v1"
+            },
+            "role": {
+              "minLength": 1,
+              "type": "string"
+            },
+            "schema": {
+              "const": "runx.reference_link.v1",
+              "type": "string"
+            }
+          },
+          "required": [
+            "role",
+            "ref"
+          ],
+          "type": "object",
+          "x-runx-schema": "runx.reference_link.v1"
+        },
+        "type": "array"
+      },
+      "rationale": {
+        "minLength": 1,
+        "type": "string"
+      },
+      "receipt_refs": {
+        "items": {
+          "$id": "https://schemas.runx.dev/runx/reference/v1.json",
+          "$schema": "https://json-schema.org/draft/2020-12/schema",
+          "additionalProperties": false,
+          "properties": {
+            "label": {
+              "minLength": 1,
+              "type": "string"
+            },
+            "locator": {
+              "minLength": 1,
+              "type": "string"
+            },
+            "observed_at": {
+              "minLength": 1,
+              "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(?:\\.\\d+)?Z$",
+              "type": "string"
+            },
+            "proof_kind": {
+              "anyOf": [
+                {
+                  "const": "payment_rail",
+                  "type": "string"
+                }
+              ]
+            },
+            "provider": {
+              "minLength": 1,
+              "type": "string"
+            },
+            "schema": {
+              "const": "runx.reference.v1",
+              "type": "string"
+            },
+            "type": {
+              "anyOf": [
+                {
+                  "const": "github_issue",
+                  "type": "string"
+                },
+                {
+                  "const": "github_pull_request",
+                  "type": "string"
+                },
+                {
+                  "const": "github_repo",
+                  "type": "string"
+                },
+                {
+                  "const": "slack_thread",
+                  "type": "string"
+                },
+                {
+                  "const": "sentry_event",
+                  "type": "string"
+                },
+                {
+                  "const": "provider_thread",
+                  "type": "string"
+                },
+                {
+                  "const": "provider_event",
+                  "type": "string"
+                },
+                {
+                  "const": "provider_comment",
+                  "type": "string"
+                },
+                {
+                  "const": "tracking_item",
+                  "type": "string"
+                },
+                {
+                  "const": "change_request",
+                  "type": "string"
+                },
+                {
+                  "const": "repository",
+                  "type": "string"
+                },
+                {
+                  "const": "support_ticket",
+                  "type": "string"
+                },
+                {
+                  "const": "signal",
+                  "type": "string"
+                },
+                {
+                  "const": "act",
+                  "type": "string"
+                },
+                {
+                  "const": "receipt",
+                  "type": "string"
+                },
+                {
+                  "const": "graph_receipt",
+                  "type": "string"
+                },
+                {
+                  "const": "artifact",
+                  "type": "string"
+                },
+                {
+                  "const": "verification",
+                  "type": "string"
+                },
+                {
+                  "const": "harness",
+                  "type": "string"
+                },
+                {
+                  "const": "host",
+                  "type": "string"
+                },
+                {
+                  "const": "deployment",
+                  "type": "string"
+                },
+                {
+                  "const": "surface",
+                  "type": "string"
+                },
+                {
+                  "const": "target",
+                  "type": "string"
+                },
+                {
+                  "const": "opportunity",
+                  "type": "string"
+                },
+                {
+                  "const": "thesis_assessment",
+                  "type": "string"
+                },
+                {
+                  "const": "selection",
+                  "type": "string"
+                },
+                {
+                  "const": "skill_binding",
+                  "type": "string"
+                },
+                {
+                  "const": "target_transition_entry",
+                  "type": "string"
+                },
+                {
+                  "const": "selection_cycle",
+                  "type": "string"
+                },
+                {
+                  "const": "decision",
+                  "type": "string"
+                },
+                {
+                  "const": "reflection_entry",
+                  "type": "string"
+                },
+                {
+                  "const": "feed_entry",
+                  "type": "string"
+                },
+                {
+                  "const": "principal",
+                  "type": "string"
+                },
+                {
+                  "const": "authority_proof",
+                  "type": "string"
+                },
+                {
+                  "const": "scope_admission",
+                  "type": "string"
+                },
+                {
+                  "const": "grant",
+                  "type": "string"
+                },
+                {
+                  "const": "mandate",
+                  "type": "string"
+                },
+                {
+                  "const": "credential",
+                  "type": "string"
+                },
+                {
+                  "const": "webhook_delivery",
+                  "type": "string"
+                },
+                {
+                  "const": "redaction_policy",
+                  "type": "string"
+                },
+                {
+                  "const": "external_url",
+                  "type": "string"
+                }
+              ]
+            },
+            "uri": {
+              "minLength": 1,
+              "type": "string"
+            }
+          },
+          "required": [
+            "type",
+            "uri"
+          ],
+          "type": "object",
+          "x-runx-schema": "runx.reference.v1"
+        },
+        "type": "array"
+      },
+      "recommended_actions": {
+        "items": {
+          "additionalProperties": false,
+          "properties": {
+            "action_intent": {
+              "minLength": 1,
+              "type": "string"
+            },
+            "mutating": {
+              "type": "boolean"
+            },
+            "summary": {
+              "minLength": 1,
+              "type": "string"
+            },
+            "target_refs": {
+              "items": {
+                "$id": "https://schemas.runx.dev/runx/reference/v1.json",
+                "$schema": "https://json-schema.org/draft/2020-12/schema",
+                "additionalProperties": false,
+                "properties": {
+                  "label": {
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "locator": {
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "observed_at": {
+                    "minLength": 1,
+                    "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(?:\\.\\d+)?Z$",
+                    "type": "string"
+                  },
+                  "proof_kind": {
+                    "anyOf": [
+                      {
+                        "const": "payment_rail",
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "provider": {
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "schema": {
+                    "const": "runx.reference.v1",
+                    "type": "string"
+                  },
+                  "type": {
+                    "anyOf": [
+                      {
+                        "const": "github_issue",
+                        "type": "string"
+                      },
+                      {
+                        "const": "github_pull_request",
+                        "type": "string"
+                      },
+                      {
+                        "const": "github_repo",
+                        "type": "string"
+                      },
+                      {
+                        "const": "slack_thread",
+                        "type": "string"
+                      },
+                      {
+                        "const": "sentry_event",
+                        "type": "string"
+                      },
+                      {
+                        "const": "provider_thread",
+                        "type": "string"
+                      },
+                      {
+                        "const": "provider_event",
+                        "type": "string"
+                      },
+                      {
+                        "const": "provider_comment",
+                        "type": "string"
+                      },
+                      {
+                        "const": "tracking_item",
+                        "type": "string"
+                      },
+                      {
+                        "const": "change_request",
+                        "type": "string"
+                      },
+                      {
+                        "const": "repository",
+                        "type": "string"
+                      },
+                      {
+                        "const": "support_ticket",
+                        "type": "string"
+                      },
+                      {
+                        "const": "signal",
+                        "type": "string"
+                      },
+                      {
+                        "const": "act",
+                        "type": "string"
+                      },
+                      {
+                        "const": "receipt",
+                        "type": "string"
+                      },
+                      {
+                        "const": "graph_receipt",
+                        "type": "string"
+                      },
+                      {
+                        "const": "artifact",
+                        "type": "string"
+                      },
+                      {
+                        "const": "verification",
+                        "type": "string"
+                      },
+                      {
+                        "const": "harness",
+                        "type": "string"
+                      },
+                      {
+                        "const": "host",
+                        "type": "string"
+                      },
+                      {
+                        "const": "deployment",
+                        "type": "string"
+                      },
+                      {
+                        "const": "surface",
+                        "type": "string"
+                      },
+                      {
+                        "const": "target",
+                        "type": "string"
+                      },
+                      {
+                        "const": "opportunity",
+                        "type": "string"
+                      },
+                      {
+                        "const": "thesis_assessment",
+                        "type": "string"
+                      },
+                      {
+                        "const": "selection",
+                        "type": "string"
+                      },
+                      {
+                        "const": "skill_binding",
+                        "type": "string"
+                      },
+                      {
+                        "const": "target_transition_entry",
+                        "type": "string"
+                      },
+                      {
+                        "const": "selection_cycle",
+                        "type": "string"
+                      },
+                      {
+                        "const": "decision",
+                        "type": "string"
+                      },
+                      {
+                        "const": "reflection_entry",
+                        "type": "string"
+                      },
+                      {
+                        "const": "feed_entry",
+                        "type": "string"
+                      },
+                      {
+                        "const": "principal",
+                        "type": "string"
+                      },
+                      {
+                        "const": "authority_proof",
+                        "type": "string"
+                      },
+                      {
+                        "const": "scope_admission",
+                        "type": "string"
+                      },
+                      {
+                        "const": "grant",
+                        "type": "string"
+                      },
+                      {
+                        "const": "mandate",
+                        "type": "string"
+                      },
+                      {
+                        "const": "credential",
+                        "type": "string"
+                      },
+                      {
+                        "const": "webhook_delivery",
+                        "type": "string"
+                      },
+                      {
+                        "const": "redaction_policy",
+                        "type": "string"
+                      },
+                      {
+                        "const": "external_url",
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "uri": {
+                    "minLength": 1,
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "type",
+                  "uri"
+                ],
+                "type": "object",
+                "x-runx-schema": "runx.reference.v1"
+              },
+              "type": "array"
+            }
+          },
+          "required": [
+            "action_intent",
+            "summary",
+            "mutating"
+          ],
+          "type": "object"
+        },
+        "type": "array"
+      },
+      "redaction_status": {
+        "anyOf": [
+          {
+            "const": "redacted",
+            "type": "string"
+          },
+          {
+            "const": "summary_only",
+            "type": "string"
+          },
+          {
+            "const": "blocked",
+            "type": "string"
+          }
+        ]
+      },
+      "result_refs": {
+        "items": {
+          "$id": "https://schemas.runx.dev/runx/reference-link/v1.json",
+          "$schema": "https://json-schema.org/draft/2020-12/schema",
+          "additionalProperties": false,
+          "properties": {
+            "ref": {
+              "$id": "https://schemas.runx.dev/runx/reference/v1.json",
+              "$schema": "https://json-schema.org/draft/2020-12/schema",
+              "additionalProperties": false,
+              "properties": {
+                "label": {
+                  "minLength": 1,
+                  "type": "string"
+                },
+                "locator": {
+                  "minLength": 1,
+                  "type": "string"
+                },
+                "observed_at": {
+                  "minLength": 1,
+                  "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(?:\\.\\d+)?Z$",
+                  "type": "string"
+                },
+                "proof_kind": {
+                  "anyOf": [
+                    {
+                      "const": "payment_rail",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "provider": {
+                  "minLength": 1,
+                  "type": "string"
+                },
+                "schema": {
+                  "const": "runx.reference.v1",
+                  "type": "string"
+                },
+                "type": {
+                  "anyOf": [
+                    {
+                      "const": "github_issue",
+                      "type": "string"
+                    },
+                    {
+                      "const": "github_pull_request",
+                      "type": "string"
+                    },
+                    {
+                      "const": "github_repo",
+                      "type": "string"
+                    },
+                    {
+                      "const": "slack_thread",
+                      "type": "string"
+                    },
+                    {
+                      "const": "sentry_event",
+                      "type": "string"
+                    },
+                    {
+                      "const": "provider_thread",
+                      "type": "string"
+                    },
+                    {
+                      "const": "provider_event",
+                      "type": "string"
+                    },
+                    {
+                      "const": "provider_comment",
+                      "type": "string"
+                    },
+                    {
+                      "const": "tracking_item",
+                      "type": "string"
+                    },
+                    {
+                      "const": "change_request",
+                      "type": "string"
+                    },
+                    {
+                      "const": "repository",
+                      "type": "string"
+                    },
+                    {
+                      "const": "support_ticket",
+                      "type": "string"
+                    },
+                    {
+                      "const": "signal",
+                      "type": "string"
+                    },
+                    {
+                      "const": "act",
+                      "type": "string"
+                    },
+                    {
+                      "const": "receipt",
+                      "type": "string"
+                    },
+                    {
+                      "const": "graph_receipt",
+                      "type": "string"
+                    },
+                    {
+                      "const": "artifact",
+                      "type": "string"
+                    },
+                    {
+                      "const": "verification",
+                      "type": "string"
+                    },
+                    {
+                      "const": "harness",
+                      "type": "string"
+                    },
+                    {
+                      "const": "host",
+                      "type": "string"
+                    },
+                    {
+                      "const": "deployment",
+                      "type": "string"
+                    },
+                    {
+                      "const": "surface",
+                      "type": "string"
+                    },
+                    {
+                      "const": "target",
+                      "type": "string"
+                    },
+                    {
+                      "const": "opportunity",
+                      "type": "string"
+                    },
+                    {
+                      "const": "thesis_assessment",
+                      "type": "string"
+                    },
+                    {
+                      "const": "selection",
+                      "type": "string"
+                    },
+                    {
+                      "const": "skill_binding",
+                      "type": "string"
+                    },
+                    {
+                      "const": "target_transition_entry",
+                      "type": "string"
+                    },
+                    {
+                      "const": "selection_cycle",
+                      "type": "string"
+                    },
+                    {
+                      "const": "decision",
+                      "type": "string"
+                    },
+                    {
+                      "const": "reflection_entry",
+                      "type": "string"
+                    },
+                    {
+                      "const": "feed_entry",
+                      "type": "string"
+                    },
+                    {
+                      "const": "principal",
+                      "type": "string"
+                    },
+                    {
+                      "const": "authority_proof",
+                      "type": "string"
+                    },
+                    {
+                      "const": "scope_admission",
+                      "type": "string"
+                    },
+                    {
+                      "const": "grant",
+                      "type": "string"
+                    },
+                    {
+                      "const": "mandate",
+                      "type": "string"
+                    },
+                    {
+                      "const": "credential",
+                      "type": "string"
+                    },
+                    {
+                      "const": "webhook_delivery",
+                      "type": "string"
+                    },
+                    {
+                      "const": "redaction_policy",
+                      "type": "string"
+                    },
+                    {
+                      "const": "external_url",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "uri": {
+                  "minLength": 1,
+                  "type": "string"
+                }
+              },
+              "required": [
+                "type",
+                "uri"
+              ],
+              "type": "object",
+              "x-runx-schema": "runx.reference.v1"
+            },
+            "role": {
+              "minLength": 1,
+              "type": "string"
+            },
+            "schema": {
+              "const": "runx.reference_link.v1",
+              "type": "string"
+            }
+          },
+          "required": [
+            "role",
+            "ref"
+          ],
+          "type": "object",
+          "x-runx-schema": "runx.reference_link.v1"
+        },
+        "type": "array"
+      },
+      "risks": {
+        "items": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "type": "array"
+      },
+      "schema": {
+        "anyOf": [
+          {
+            "const": "runx.operational_proposal.v1",
+            "type": "string"
+          }
+        ]
+      },
+      "source_event_id": {
+        "minLength": 1,
+        "pattern": "^[A-Za-z0-9_.:-]+$",
+        "type": "string"
+      },
+      "source_ref": {
+        "$id": "https://schemas.runx.dev/runx/reference/v1.json",
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "additionalProperties": false,
+        "properties": {
+          "label": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "locator": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "observed_at": {
+            "minLength": 1,
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(?:\\.\\d+)?Z$",
+            "type": "string"
+          },
+          "proof_kind": {
+            "anyOf": [
+              {
+                "const": "payment_rail",
+                "type": "string"
+              }
+            ]
+          },
+          "provider": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "schema": {
+            "const": "runx.reference.v1",
+            "type": "string"
+          },
+          "type": {
+            "anyOf": [
+              {
+                "const": "github_issue",
+                "type": "string"
+              },
+              {
+                "const": "github_pull_request",
+                "type": "string"
+              },
+              {
+                "const": "github_repo",
+                "type": "string"
+              },
+              {
+                "const": "slack_thread",
+                "type": "string"
+              },
+              {
+                "const": "sentry_event",
+                "type": "string"
+              },
+              {
+                "const": "provider_thread",
+                "type": "string"
+              },
+              {
+                "const": "provider_event",
+                "type": "string"
+              },
+              {
+                "const": "provider_comment",
+                "type": "string"
+              },
+              {
+                "const": "tracking_item",
+                "type": "string"
+              },
+              {
+                "const": "change_request",
+                "type": "string"
+              },
+              {
+                "const": "repository",
+                "type": "string"
+              },
+              {
+                "const": "support_ticket",
+                "type": "string"
+              },
+              {
+                "const": "signal",
+                "type": "string"
+              },
+              {
+                "const": "act",
+                "type": "string"
+              },
+              {
+                "const": "receipt",
+                "type": "string"
+              },
+              {
+                "const": "graph_receipt",
+                "type": "string"
+              },
+              {
+                "const": "artifact",
+                "type": "string"
+              },
+              {
+                "const": "verification",
+                "type": "string"
+              },
+              {
+                "const": "harness",
+                "type": "string"
+              },
+              {
+                "const": "host",
+                "type": "string"
+              },
+              {
+                "const": "deployment",
+                "type": "string"
+              },
+              {
+                "const": "surface",
+                "type": "string"
+              },
+              {
+                "const": "target",
+                "type": "string"
+              },
+              {
+                "const": "opportunity",
+                "type": "string"
+              },
+              {
+                "const": "thesis_assessment",
+                "type": "string"
+              },
+              {
+                "const": "selection",
+                "type": "string"
+              },
+              {
+                "const": "skill_binding",
+                "type": "string"
+              },
+              {
+                "const": "target_transition_entry",
+                "type": "string"
+              },
+              {
+                "const": "selection_cycle",
+                "type": "string"
+              },
+              {
+                "const": "decision",
+                "type": "string"
+              },
+              {
+                "const": "reflection_entry",
+                "type": "string"
+              },
+              {
+                "const": "feed_entry",
+                "type": "string"
+              },
+              {
+                "const": "principal",
+                "type": "string"
+              },
+              {
+                "const": "authority_proof",
+                "type": "string"
+              },
+              {
+                "const": "scope_admission",
+                "type": "string"
+              },
+              {
+                "const": "grant",
+                "type": "string"
+              },
+              {
+                "const": "mandate",
+                "type": "string"
+              },
+              {
+                "const": "credential",
+                "type": "string"
+              },
+              {
+                "const": "webhook_delivery",
+                "type": "string"
+              },
+              {
+                "const": "redaction_policy",
+                "type": "string"
+              },
+              {
+                "const": "external_url",
+                "type": "string"
+              }
+            ]
+          },
+          "uri": {
+            "minLength": 1,
+            "type": "string"
+          }
+        },
+        "required": [
+          "type",
+          "uri"
+        ],
+        "type": "object",
+        "x-runx-schema": "runx.reference.v1"
+      },
+      "source_thread_ref": {
+        "$id": "https://schemas.runx.dev/runx/reference/v1.json",
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "additionalProperties": false,
+        "properties": {
+          "label": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "locator": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "observed_at": {
+            "minLength": 1,
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(?:\\.\\d+)?Z$",
+            "type": "string"
+          },
+          "proof_kind": {
+            "anyOf": [
+              {
+                "const": "payment_rail",
+                "type": "string"
+              }
+            ]
+          },
+          "provider": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "schema": {
+            "const": "runx.reference.v1",
+            "type": "string"
+          },
+          "type": {
+            "anyOf": [
+              {
+                "const": "github_issue",
+                "type": "string"
+              },
+              {
+                "const": "github_pull_request",
+                "type": "string"
+              },
+              {
+                "const": "github_repo",
+                "type": "string"
+              },
+              {
+                "const": "slack_thread",
+                "type": "string"
+              },
+              {
+                "const": "sentry_event",
+                "type": "string"
+              },
+              {
+                "const": "provider_thread",
+                "type": "string"
+              },
+              {
+                "const": "provider_event",
+                "type": "string"
+              },
+              {
+                "const": "provider_comment",
+                "type": "string"
+              },
+              {
+                "const": "tracking_item",
+                "type": "string"
+              },
+              {
+                "const": "change_request",
+                "type": "string"
+              },
+              {
+                "const": "repository",
+                "type": "string"
+              },
+              {
+                "const": "support_ticket",
+                "type": "string"
+              },
+              {
+                "const": "signal",
+                "type": "string"
+              },
+              {
+                "const": "act",
+                "type": "string"
+              },
+              {
+                "const": "receipt",
+                "type": "string"
+              },
+              {
+                "const": "graph_receipt",
+                "type": "string"
+              },
+              {
+                "const": "artifact",
+                "type": "string"
+              },
+              {
+                "const": "verification",
+                "type": "string"
+              },
+              {
+                "const": "harness",
+                "type": "string"
+              },
+              {
+                "const": "host",
+                "type": "string"
+              },
+              {
+                "const": "deployment",
+                "type": "string"
+              },
+              {
+                "const": "surface",
+                "type": "string"
+              },
+              {
+                "const": "target",
+                "type": "string"
+              },
+              {
+                "const": "opportunity",
+                "type": "string"
+              },
+              {
+                "const": "thesis_assessment",
+                "type": "string"
+              },
+              {
+                "const": "selection",
+                "type": "string"
+              },
+              {
+                "const": "skill_binding",
+                "type": "string"
+              },
+              {
+                "const": "target_transition_entry",
+                "type": "string"
+              },
+              {
+                "const": "selection_cycle",
+                "type": "string"
+              },
+              {
+                "const": "decision",
+                "type": "string"
+              },
+              {
+                "const": "reflection_entry",
+                "type": "string"
+              },
+              {
+                "const": "feed_entry",
+                "type": "string"
+              },
+              {
+                "const": "principal",
+                "type": "string"
+              },
+              {
+                "const": "authority_proof",
+                "type": "string"
+              },
+              {
+                "const": "scope_admission",
+                "type": "string"
+              },
+              {
+                "const": "grant",
+                "type": "string"
+              },
+              {
+                "const": "mandate",
+                "type": "string"
+              },
+              {
+                "const": "credential",
+                "type": "string"
+              },
+              {
+                "const": "webhook_delivery",
+                "type": "string"
+              },
+              {
+                "const": "redaction_policy",
+                "type": "string"
+              },
+              {
+                "const": "external_url",
+                "type": "string"
+              }
+            ]
+          },
+          "uri": {
+            "minLength": 1,
+            "type": "string"
+          }
+        },
+        "required": [
+          "type",
+          "uri"
+        ],
+        "type": "object",
+        "x-runx-schema": "runx.reference.v1"
+      },
+      "story_refs": {
+        "items": {
+          "$id": "https://schemas.runx.dev/runx/reference/v1.json",
+          "$schema": "https://json-schema.org/draft/2020-12/schema",
+          "additionalProperties": false,
+          "properties": {
+            "label": {
+              "minLength": 1,
+              "type": "string"
+            },
+            "locator": {
+              "minLength": 1,
+              "type": "string"
+            },
+            "observed_at": {
+              "minLength": 1,
+              "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(?:\\.\\d+)?Z$",
+              "type": "string"
+            },
+            "proof_kind": {
+              "anyOf": [
+                {
+                  "const": "payment_rail",
+                  "type": "string"
+                }
+              ]
+            },
+            "provider": {
+              "minLength": 1,
+              "type": "string"
+            },
+            "schema": {
+              "const": "runx.reference.v1",
+              "type": "string"
+            },
+            "type": {
+              "anyOf": [
+                {
+                  "const": "github_issue",
+                  "type": "string"
+                },
+                {
+                  "const": "github_pull_request",
+                  "type": "string"
+                },
+                {
+                  "const": "github_repo",
+                  "type": "string"
+                },
+                {
+                  "const": "slack_thread",
+                  "type": "string"
+                },
+                {
+                  "const": "sentry_event",
+                  "type": "string"
+                },
+                {
+                  "const": "provider_thread",
+                  "type": "string"
+                },
+                {
+                  "const": "provider_event",
+                  "type": "string"
+                },
+                {
+                  "const": "provider_comment",
+                  "type": "string"
+                },
+                {
+                  "const": "tracking_item",
+                  "type": "string"
+                },
+                {
+                  "const": "change_request",
+                  "type": "string"
+                },
+                {
+                  "const": "repository",
+                  "type": "string"
+                },
+                {
+                  "const": "support_ticket",
+                  "type": "string"
+                },
+                {
+                  "const": "signal",
+                  "type": "string"
+                },
+                {
+                  "const": "act",
+                  "type": "string"
+                },
+                {
+                  "const": "receipt",
+                  "type": "string"
+                },
+                {
+                  "const": "graph_receipt",
+                  "type": "string"
+                },
+                {
+                  "const": "artifact",
+                  "type": "string"
+                },
+                {
+                  "const": "verification",
+                  "type": "string"
+                },
+                {
+                  "const": "harness",
+                  "type": "string"
+                },
+                {
+                  "const": "host",
+                  "type": "string"
+                },
+                {
+                  "const": "deployment",
+                  "type": "string"
+                },
+                {
+                  "const": "surface",
+                  "type": "string"
+                },
+                {
+                  "const": "target",
+                  "type": "string"
+                },
+                {
+                  "const": "opportunity",
+                  "type": "string"
+                },
+                {
+                  "const": "thesis_assessment",
+                  "type": "string"
+                },
+                {
+                  "const": "selection",
+                  "type": "string"
+                },
+                {
+                  "const": "skill_binding",
+                  "type": "string"
+                },
+                {
+                  "const": "target_transition_entry",
+                  "type": "string"
+                },
+                {
+                  "const": "selection_cycle",
+                  "type": "string"
+                },
+                {
+                  "const": "decision",
+                  "type": "string"
+                },
+                {
+                  "const": "reflection_entry",
+                  "type": "string"
+                },
+                {
+                  "const": "feed_entry",
+                  "type": "string"
+                },
+                {
+                  "const": "principal",
+                  "type": "string"
+                },
+                {
+                  "const": "authority_proof",
+                  "type": "string"
+                },
+                {
+                  "const": "scope_admission",
+                  "type": "string"
+                },
+                {
+                  "const": "grant",
+                  "type": "string"
+                },
+                {
+                  "const": "mandate",
+                  "type": "string"
+                },
+                {
+                  "const": "credential",
+                  "type": "string"
+                },
+                {
+                  "const": "webhook_delivery",
+                  "type": "string"
+                },
+                {
+                  "const": "redaction_policy",
+                  "type": "string"
+                },
+                {
+                  "const": "external_url",
+                  "type": "string"
+                }
+              ]
+            },
+            "uri": {
+              "minLength": 1,
+              "type": "string"
+            }
+          },
+          "required": [
+            "type",
+            "uri"
+          ],
+          "type": "object",
+          "x-runx-schema": "runx.reference.v1"
+        },
+        "type": "array"
+      }
+    },
+    "required": [
+      "schema",
+      "proposal_id",
+      "proposal_kind",
+      "source_event_id",
+      "idempotency",
+      "source_ref",
+      "hydrated_context_ref",
+      "redaction_status",
+      "decision_summary",
+      "rationale",
+      "owner_route_id",
+      "confidence",
+      "authority",
+      "public_summary"
+    ],
+    "type": "object",
+    "x-runx-schema": "runx.operational_proposal.v1"
+  } as JsonSchema,
   "opportunity.schema.json": {
     "$id": "https://schemas.runx.dev/runx/opportunity/v1.json",
     "$schema": "https://json-schema.org/draft/2020-12/schema",
@@ -23883,6 +28884,34 @@ export const runxSchemaArtifacts = {
                 },
                 {
                   "const": "sentry_event",
+                  "type": "string"
+                },
+                {
+                  "const": "provider_thread",
+                  "type": "string"
+                },
+                {
+                  "const": "provider_event",
+                  "type": "string"
+                },
+                {
+                  "const": "provider_comment",
+                  "type": "string"
+                },
+                {
+                  "const": "tracking_item",
+                  "type": "string"
+                },
+                {
+                  "const": "change_request",
+                  "type": "string"
+                },
+                {
+                  "const": "repository",
+                  "type": "string"
+                },
+                {
+                  "const": "support_ticket",
                   "type": "string"
                 },
                 {
@@ -24087,6 +29116,34 @@ export const runxSchemaArtifacts = {
                     },
                     {
                       "const": "sentry_event",
+                      "type": "string"
+                    },
+                    {
+                      "const": "provider_thread",
+                      "type": "string"
+                    },
+                    {
+                      "const": "provider_event",
+                      "type": "string"
+                    },
+                    {
+                      "const": "provider_comment",
+                      "type": "string"
+                    },
+                    {
+                      "const": "tracking_item",
+                      "type": "string"
+                    },
+                    {
+                      "const": "change_request",
+                      "type": "string"
+                    },
+                    {
+                      "const": "repository",
+                      "type": "string"
+                    },
+                    {
+                      "const": "support_ticket",
                       "type": "string"
                     },
                     {
@@ -24303,6 +29360,34 @@ export const runxSchemaArtifacts = {
                           "type": "string"
                         },
                         {
+                          "const": "provider_thread",
+                          "type": "string"
+                        },
+                        {
+                          "const": "provider_event",
+                          "type": "string"
+                        },
+                        {
+                          "const": "provider_comment",
+                          "type": "string"
+                        },
+                        {
+                          "const": "tracking_item",
+                          "type": "string"
+                        },
+                        {
+                          "const": "change_request",
+                          "type": "string"
+                        },
+                        {
+                          "const": "repository",
+                          "type": "string"
+                        },
+                        {
+                          "const": "support_ticket",
+                          "type": "string"
+                        },
+                        {
                           "const": "signal",
                           "type": "string"
                         },
@@ -24490,6 +29575,34 @@ export const runxSchemaArtifacts = {
                           },
                           {
                             "const": "sentry_event",
+                            "type": "string"
+                          },
+                          {
+                            "const": "provider_thread",
+                            "type": "string"
+                          },
+                          {
+                            "const": "provider_event",
+                            "type": "string"
+                          },
+                          {
+                            "const": "provider_comment",
+                            "type": "string"
+                          },
+                          {
+                            "const": "tracking_item",
+                            "type": "string"
+                          },
+                          {
+                            "const": "change_request",
+                            "type": "string"
+                          },
+                          {
+                            "const": "repository",
+                            "type": "string"
+                          },
+                          {
+                            "const": "support_ticket",
                             "type": "string"
                           },
                           {
@@ -24684,6 +29797,34 @@ export const runxSchemaArtifacts = {
                           },
                           {
                             "const": "sentry_event",
+                            "type": "string"
+                          },
+                          {
+                            "const": "provider_thread",
+                            "type": "string"
+                          },
+                          {
+                            "const": "provider_event",
+                            "type": "string"
+                          },
+                          {
+                            "const": "provider_comment",
+                            "type": "string"
+                          },
+                          {
+                            "const": "tracking_item",
+                            "type": "string"
+                          },
+                          {
+                            "const": "change_request",
+                            "type": "string"
+                          },
+                          {
+                            "const": "repository",
+                            "type": "string"
+                          },
+                          {
+                            "const": "support_ticket",
                             "type": "string"
                           },
                           {
@@ -24885,6 +30026,34 @@ export const runxSchemaArtifacts = {
                     "type": "string"
                   },
                   {
+                    "const": "provider_thread",
+                    "type": "string"
+                  },
+                  {
+                    "const": "provider_event",
+                    "type": "string"
+                  },
+                  {
+                    "const": "provider_comment",
+                    "type": "string"
+                  },
+                  {
+                    "const": "tracking_item",
+                    "type": "string"
+                  },
+                  {
+                    "const": "change_request",
+                    "type": "string"
+                  },
+                  {
+                    "const": "repository",
+                    "type": "string"
+                  },
+                  {
+                    "const": "support_ticket",
+                    "type": "string"
+                  },
+                  {
                     "const": "signal",
                     "type": "string"
                   },
@@ -25069,6 +30238,34 @@ export const runxSchemaArtifacts = {
                     },
                     {
                       "const": "sentry_event",
+                      "type": "string"
+                    },
+                    {
+                      "const": "provider_thread",
+                      "type": "string"
+                    },
+                    {
+                      "const": "provider_event",
+                      "type": "string"
+                    },
+                    {
+                      "const": "provider_comment",
+                      "type": "string"
+                    },
+                    {
+                      "const": "tracking_item",
+                      "type": "string"
+                    },
+                    {
+                      "const": "change_request",
+                      "type": "string"
+                    },
+                    {
+                      "const": "repository",
+                      "type": "string"
+                    },
+                    {
+                      "const": "support_ticket",
                       "type": "string"
                     },
                     {
@@ -25261,6 +30458,34 @@ export const runxSchemaArtifacts = {
                       "type": "string"
                     },
                     {
+                      "const": "provider_thread",
+                      "type": "string"
+                    },
+                    {
+                      "const": "provider_event",
+                      "type": "string"
+                    },
+                    {
+                      "const": "provider_comment",
+                      "type": "string"
+                    },
+                    {
+                      "const": "tracking_item",
+                      "type": "string"
+                    },
+                    {
+                      "const": "change_request",
+                      "type": "string"
+                    },
+                    {
+                      "const": "repository",
+                      "type": "string"
+                    },
+                    {
+                      "const": "support_ticket",
+                      "type": "string"
+                    },
+                    {
                       "const": "signal",
                       "type": "string"
                     },
@@ -25447,6 +30672,34 @@ export const runxSchemaArtifacts = {
                     },
                     {
                       "const": "sentry_event",
+                      "type": "string"
+                    },
+                    {
+                      "const": "provider_thread",
+                      "type": "string"
+                    },
+                    {
+                      "const": "provider_event",
+                      "type": "string"
+                    },
+                    {
+                      "const": "provider_comment",
+                      "type": "string"
+                    },
+                    {
+                      "const": "tracking_item",
+                      "type": "string"
+                    },
+                    {
+                      "const": "change_request",
+                      "type": "string"
+                    },
+                    {
+                      "const": "repository",
+                      "type": "string"
+                    },
+                    {
+                      "const": "support_ticket",
                       "type": "string"
                     },
                     {
@@ -25681,6 +30934,34 @@ export const runxSchemaArtifacts = {
                   "type": "string"
                 },
                 {
+                  "const": "provider_thread",
+                  "type": "string"
+                },
+                {
+                  "const": "provider_event",
+                  "type": "string"
+                },
+                {
+                  "const": "provider_comment",
+                  "type": "string"
+                },
+                {
+                  "const": "tracking_item",
+                  "type": "string"
+                },
+                {
+                  "const": "change_request",
+                  "type": "string"
+                },
+                {
+                  "const": "repository",
+                  "type": "string"
+                },
+                {
+                  "const": "support_ticket",
+                  "type": "string"
+                },
+                {
                   "const": "signal",
                   "type": "string"
                 },
@@ -25870,6 +31151,34 @@ export const runxSchemaArtifacts = {
               },
               {
                 "const": "sentry_event",
+                "type": "string"
+              },
+              {
+                "const": "provider_thread",
+                "type": "string"
+              },
+              {
+                "const": "provider_event",
+                "type": "string"
+              },
+              {
+                "const": "provider_comment",
+                "type": "string"
+              },
+              {
+                "const": "tracking_item",
+                "type": "string"
+              },
+              {
+                "const": "change_request",
+                "type": "string"
+              },
+              {
+                "const": "repository",
+                "type": "string"
+              },
+              {
+                "const": "support_ticket",
                 "type": "string"
               },
               {
@@ -26269,6 +31578,34 @@ export const runxSchemaArtifacts = {
                         "type": "string"
                       },
                       {
+                        "const": "provider_thread",
+                        "type": "string"
+                      },
+                      {
+                        "const": "provider_event",
+                        "type": "string"
+                      },
+                      {
+                        "const": "provider_comment",
+                        "type": "string"
+                      },
+                      {
+                        "const": "tracking_item",
+                        "type": "string"
+                      },
+                      {
+                        "const": "change_request",
+                        "type": "string"
+                      },
+                      {
+                        "const": "repository",
+                        "type": "string"
+                      },
+                      {
+                        "const": "support_ticket",
+                        "type": "string"
+                      },
+                      {
                         "const": "signal",
                         "type": "string"
                       },
@@ -26559,6 +31896,34 @@ export const runxSchemaArtifacts = {
                       "type": "string"
                     },
                     {
+                      "const": "provider_thread",
+                      "type": "string"
+                    },
+                    {
+                      "const": "provider_event",
+                      "type": "string"
+                    },
+                    {
+                      "const": "provider_comment",
+                      "type": "string"
+                    },
+                    {
+                      "const": "tracking_item",
+                      "type": "string"
+                    },
+                    {
+                      "const": "change_request",
+                      "type": "string"
+                    },
+                    {
+                      "const": "repository",
+                      "type": "string"
+                    },
+                    {
+                      "const": "support_ticket",
+                      "type": "string"
+                    },
+                    {
                       "const": "signal",
                       "type": "string"
                     },
@@ -26751,6 +32116,34 @@ export const runxSchemaArtifacts = {
                             },
                             {
                               "const": "sentry_event",
+                              "type": "string"
+                            },
+                            {
+                              "const": "provider_thread",
+                              "type": "string"
+                            },
+                            {
+                              "const": "provider_event",
+                              "type": "string"
+                            },
+                            {
+                              "const": "provider_comment",
+                              "type": "string"
+                            },
+                            {
+                              "const": "tracking_item",
+                              "type": "string"
+                            },
+                            {
+                              "const": "change_request",
+                              "type": "string"
+                            },
+                            {
+                              "const": "repository",
+                              "type": "string"
+                            },
+                            {
+                              "const": "support_ticket",
                               "type": "string"
                             },
                             {
@@ -26968,6 +32361,34 @@ export const runxSchemaArtifacts = {
                             },
                             {
                               "const": "sentry_event",
+                              "type": "string"
+                            },
+                            {
+                              "const": "provider_thread",
+                              "type": "string"
+                            },
+                            {
+                              "const": "provider_event",
+                              "type": "string"
+                            },
+                            {
+                              "const": "provider_comment",
+                              "type": "string"
+                            },
+                            {
+                              "const": "tracking_item",
+                              "type": "string"
+                            },
+                            {
+                              "const": "change_request",
+                              "type": "string"
+                            },
+                            {
+                              "const": "repository",
+                              "type": "string"
+                            },
+                            {
+                              "const": "support_ticket",
                               "type": "string"
                             },
                             {
@@ -27204,6 +32625,34 @@ export const runxSchemaArtifacts = {
                           },
                           {
                             "const": "sentry_event",
+                            "type": "string"
+                          },
+                          {
+                            "const": "provider_thread",
+                            "type": "string"
+                          },
+                          {
+                            "const": "provider_event",
+                            "type": "string"
+                          },
+                          {
+                            "const": "provider_comment",
+                            "type": "string"
+                          },
+                          {
+                            "const": "tracking_item",
+                            "type": "string"
+                          },
+                          {
+                            "const": "change_request",
+                            "type": "string"
+                          },
+                          {
+                            "const": "repository",
+                            "type": "string"
+                          },
+                          {
+                            "const": "support_ticket",
                             "type": "string"
                           },
                           {
@@ -27517,6 +32966,34 @@ export const runxSchemaArtifacts = {
                                     "type": "string"
                                   },
                                   {
+                                    "const": "provider_thread",
+                                    "type": "string"
+                                  },
+                                  {
+                                    "const": "provider_event",
+                                    "type": "string"
+                                  },
+                                  {
+                                    "const": "provider_comment",
+                                    "type": "string"
+                                  },
+                                  {
+                                    "const": "tracking_item",
+                                    "type": "string"
+                                  },
+                                  {
+                                    "const": "change_request",
+                                    "type": "string"
+                                  },
+                                  {
+                                    "const": "repository",
+                                    "type": "string"
+                                  },
+                                  {
+                                    "const": "support_ticket",
+                                    "type": "string"
+                                  },
+                                  {
                                     "const": "signal",
                                     "type": "string"
                                   },
@@ -27720,6 +33197,34 @@ export const runxSchemaArtifacts = {
                             "type": "string"
                           },
                           {
+                            "const": "provider_thread",
+                            "type": "string"
+                          },
+                          {
+                            "const": "provider_event",
+                            "type": "string"
+                          },
+                          {
+                            "const": "provider_comment",
+                            "type": "string"
+                          },
+                          {
+                            "const": "tracking_item",
+                            "type": "string"
+                          },
+                          {
+                            "const": "change_request",
+                            "type": "string"
+                          },
+                          {
+                            "const": "repository",
+                            "type": "string"
+                          },
+                          {
+                            "const": "support_ticket",
+                            "type": "string"
+                          },
+                          {
                             "const": "signal",
                             "type": "string"
                           },
@@ -27913,6 +33418,34 @@ export const runxSchemaArtifacts = {
                           },
                           {
                             "const": "sentry_event",
+                            "type": "string"
+                          },
+                          {
+                            "const": "provider_thread",
+                            "type": "string"
+                          },
+                          {
+                            "const": "provider_event",
+                            "type": "string"
+                          },
+                          {
+                            "const": "provider_comment",
+                            "type": "string"
+                          },
+                          {
+                            "const": "tracking_item",
+                            "type": "string"
+                          },
+                          {
+                            "const": "change_request",
+                            "type": "string"
+                          },
+                          {
+                            "const": "repository",
+                            "type": "string"
+                          },
+                          {
+                            "const": "support_ticket",
                             "type": "string"
                           },
                           {
@@ -28112,6 +33645,34 @@ export const runxSchemaArtifacts = {
                               },
                               {
                                 "const": "sentry_event",
+                                "type": "string"
+                              },
+                              {
+                                "const": "provider_thread",
+                                "type": "string"
+                              },
+                              {
+                                "const": "provider_event",
+                                "type": "string"
+                              },
+                              {
+                                "const": "provider_comment",
+                                "type": "string"
+                              },
+                              {
+                                "const": "tracking_item",
+                                "type": "string"
+                              },
+                              {
+                                "const": "change_request",
+                                "type": "string"
+                              },
+                              {
+                                "const": "repository",
+                                "type": "string"
+                              },
+                              {
+                                "const": "support_ticket",
                                 "type": "string"
                               },
                               {
@@ -28324,6 +33885,34 @@ export const runxSchemaArtifacts = {
                                       "type": "string"
                                     },
                                     {
+                                      "const": "provider_thread",
+                                      "type": "string"
+                                    },
+                                    {
+                                      "const": "provider_event",
+                                      "type": "string"
+                                    },
+                                    {
+                                      "const": "provider_comment",
+                                      "type": "string"
+                                    },
+                                    {
+                                      "const": "tracking_item",
+                                      "type": "string"
+                                    },
+                                    {
+                                      "const": "change_request",
+                                      "type": "string"
+                                    },
+                                    {
+                                      "const": "repository",
+                                      "type": "string"
+                                    },
+                                    {
+                                      "const": "support_ticket",
+                                      "type": "string"
+                                    },
+                                    {
                                       "const": "signal",
                                       "type": "string"
                                     },
@@ -28517,6 +34106,34 @@ export const runxSchemaArtifacts = {
                                     },
                                     {
                                       "const": "sentry_event",
+                                      "type": "string"
+                                    },
+                                    {
+                                      "const": "provider_thread",
+                                      "type": "string"
+                                    },
+                                    {
+                                      "const": "provider_event",
+                                      "type": "string"
+                                    },
+                                    {
+                                      "const": "provider_comment",
+                                      "type": "string"
+                                    },
+                                    {
+                                      "const": "tracking_item",
+                                      "type": "string"
+                                    },
+                                    {
+                                      "const": "change_request",
+                                      "type": "string"
+                                    },
+                                    {
+                                      "const": "repository",
+                                      "type": "string"
+                                    },
+                                    {
+                                      "const": "support_ticket",
                                       "type": "string"
                                     },
                                     {
@@ -28750,6 +34367,34 @@ export const runxSchemaArtifacts = {
                               },
                               {
                                 "const": "sentry_event",
+                                "type": "string"
+                              },
+                              {
+                                "const": "provider_thread",
+                                "type": "string"
+                              },
+                              {
+                                "const": "provider_event",
+                                "type": "string"
+                              },
+                              {
+                                "const": "provider_comment",
+                                "type": "string"
+                              },
+                              {
+                                "const": "tracking_item",
+                                "type": "string"
+                              },
+                              {
+                                "const": "change_request",
+                                "type": "string"
+                              },
+                              {
+                                "const": "repository",
+                                "type": "string"
+                              },
+                              {
+                                "const": "support_ticket",
                                 "type": "string"
                               },
                               {
@@ -28999,6 +34644,34 @@ export const runxSchemaArtifacts = {
                         "type": "string"
                       },
                       {
+                        "const": "provider_thread",
+                        "type": "string"
+                      },
+                      {
+                        "const": "provider_event",
+                        "type": "string"
+                      },
+                      {
+                        "const": "provider_comment",
+                        "type": "string"
+                      },
+                      {
+                        "const": "tracking_item",
+                        "type": "string"
+                      },
+                      {
+                        "const": "change_request",
+                        "type": "string"
+                      },
+                      {
+                        "const": "repository",
+                        "type": "string"
+                      },
+                      {
+                        "const": "support_ticket",
+                        "type": "string"
+                      },
+                      {
                         "const": "signal",
                         "type": "string"
                       },
@@ -29189,6 +34862,34 @@ export const runxSchemaArtifacts = {
                       },
                       {
                         "const": "sentry_event",
+                        "type": "string"
+                      },
+                      {
+                        "const": "provider_thread",
+                        "type": "string"
+                      },
+                      {
+                        "const": "provider_event",
+                        "type": "string"
+                      },
+                      {
+                        "const": "provider_comment",
+                        "type": "string"
+                      },
+                      {
+                        "const": "tracking_item",
+                        "type": "string"
+                      },
+                      {
+                        "const": "change_request",
+                        "type": "string"
+                      },
+                      {
+                        "const": "repository",
+                        "type": "string"
+                      },
+                      {
+                        "const": "support_ticket",
                         "type": "string"
                       },
                       {
@@ -29387,6 +35088,34 @@ export const runxSchemaArtifacts = {
                         },
                         {
                           "const": "sentry_event",
+                          "type": "string"
+                        },
+                        {
+                          "const": "provider_thread",
+                          "type": "string"
+                        },
+                        {
+                          "const": "provider_event",
+                          "type": "string"
+                        },
+                        {
+                          "const": "provider_comment",
+                          "type": "string"
+                        },
+                        {
+                          "const": "tracking_item",
+                          "type": "string"
+                        },
+                        {
+                          "const": "change_request",
+                          "type": "string"
+                        },
+                        {
+                          "const": "repository",
+                          "type": "string"
+                        },
+                        {
+                          "const": "support_ticket",
                           "type": "string"
                         },
                         {
@@ -29590,6 +35319,34 @@ export const runxSchemaArtifacts = {
                                       "type": "string"
                                     },
                                     {
+                                      "const": "provider_thread",
+                                      "type": "string"
+                                    },
+                                    {
+                                      "const": "provider_event",
+                                      "type": "string"
+                                    },
+                                    {
+                                      "const": "provider_comment",
+                                      "type": "string"
+                                    },
+                                    {
+                                      "const": "tracking_item",
+                                      "type": "string"
+                                    },
+                                    {
+                                      "const": "change_request",
+                                      "type": "string"
+                                    },
+                                    {
+                                      "const": "repository",
+                                      "type": "string"
+                                    },
+                                    {
+                                      "const": "support_ticket",
+                                      "type": "string"
+                                    },
+                                    {
                                       "const": "signal",
                                       "type": "string"
                                     },
@@ -29783,6 +35540,34 @@ export const runxSchemaArtifacts = {
                                     },
                                     {
                                       "const": "sentry_event",
+                                      "type": "string"
+                                    },
+                                    {
+                                      "const": "provider_thread",
+                                      "type": "string"
+                                    },
+                                    {
+                                      "const": "provider_event",
+                                      "type": "string"
+                                    },
+                                    {
+                                      "const": "provider_comment",
+                                      "type": "string"
+                                    },
+                                    {
+                                      "const": "tracking_item",
+                                      "type": "string"
+                                    },
+                                    {
+                                      "const": "change_request",
+                                      "type": "string"
+                                    },
+                                    {
+                                      "const": "repository",
+                                      "type": "string"
+                                    },
+                                    {
+                                      "const": "support_ticket",
                                       "type": "string"
                                     },
                                     {
@@ -30016,6 +35801,34 @@ export const runxSchemaArtifacts = {
                               },
                               {
                                 "const": "sentry_event",
+                                "type": "string"
+                              },
+                              {
+                                "const": "provider_thread",
+                                "type": "string"
+                              },
+                              {
+                                "const": "provider_event",
+                                "type": "string"
+                              },
+                              {
+                                "const": "provider_comment",
+                                "type": "string"
+                              },
+                              {
+                                "const": "tracking_item",
+                                "type": "string"
+                              },
+                              {
+                                "const": "change_request",
+                                "type": "string"
+                              },
+                              {
+                                "const": "repository",
+                                "type": "string"
+                              },
+                              {
+                                "const": "support_ticket",
                                 "type": "string"
                               },
                               {
@@ -30279,6 +36092,34 @@ export const runxSchemaArtifacts = {
                     "type": "string"
                   },
                   {
+                    "const": "provider_thread",
+                    "type": "string"
+                  },
+                  {
+                    "const": "provider_event",
+                    "type": "string"
+                  },
+                  {
+                    "const": "provider_comment",
+                    "type": "string"
+                  },
+                  {
+                    "const": "tracking_item",
+                    "type": "string"
+                  },
+                  {
+                    "const": "change_request",
+                    "type": "string"
+                  },
+                  {
+                    "const": "repository",
+                    "type": "string"
+                  },
+                  {
+                    "const": "support_ticket",
+                    "type": "string"
+                  },
+                  {
                     "const": "signal",
                     "type": "string"
                   },
@@ -30467,6 +36308,34 @@ export const runxSchemaArtifacts = {
                           },
                           {
                             "const": "sentry_event",
+                            "type": "string"
+                          },
+                          {
+                            "const": "provider_thread",
+                            "type": "string"
+                          },
+                          {
+                            "const": "provider_event",
+                            "type": "string"
+                          },
+                          {
+                            "const": "provider_comment",
+                            "type": "string"
+                          },
+                          {
+                            "const": "tracking_item",
+                            "type": "string"
+                          },
+                          {
+                            "const": "change_request",
+                            "type": "string"
+                          },
+                          {
+                            "const": "repository",
+                            "type": "string"
+                          },
+                          {
+                            "const": "support_ticket",
                             "type": "string"
                           },
                           {
@@ -30711,6 +36580,34 @@ export const runxSchemaArtifacts = {
                                 "type": "string"
                               },
                               {
+                                "const": "provider_thread",
+                                "type": "string"
+                              },
+                              {
+                                "const": "provider_event",
+                                "type": "string"
+                              },
+                              {
+                                "const": "provider_comment",
+                                "type": "string"
+                              },
+                              {
+                                "const": "tracking_item",
+                                "type": "string"
+                              },
+                              {
+                                "const": "change_request",
+                                "type": "string"
+                              },
+                              {
+                                "const": "repository",
+                                "type": "string"
+                              },
+                              {
+                                "const": "support_ticket",
+                                "type": "string"
+                              },
+                              {
                                 "const": "signal",
                                 "type": "string"
                               },
@@ -30894,6 +36791,34 @@ export const runxSchemaArtifacts = {
                               },
                               {
                                 "const": "sentry_event",
+                                "type": "string"
+                              },
+                              {
+                                "const": "provider_thread",
+                                "type": "string"
+                              },
+                              {
+                                "const": "provider_event",
+                                "type": "string"
+                              },
+                              {
+                                "const": "provider_comment",
+                                "type": "string"
+                              },
+                              {
+                                "const": "tracking_item",
+                                "type": "string"
+                              },
+                              {
+                                "const": "change_request",
+                                "type": "string"
+                              },
+                              {
+                                "const": "repository",
+                                "type": "string"
+                              },
+                              {
+                                "const": "support_ticket",
                                 "type": "string"
                               },
                               {
@@ -31119,6 +37044,34 @@ export const runxSchemaArtifacts = {
                       "type": "string"
                     },
                     {
+                      "const": "provider_thread",
+                      "type": "string"
+                    },
+                    {
+                      "const": "provider_event",
+                      "type": "string"
+                    },
+                    {
+                      "const": "provider_comment",
+                      "type": "string"
+                    },
+                    {
+                      "const": "tracking_item",
+                      "type": "string"
+                    },
+                    {
+                      "const": "change_request",
+                      "type": "string"
+                    },
+                    {
+                      "const": "repository",
+                      "type": "string"
+                    },
+                    {
+                      "const": "support_ticket",
+                      "type": "string"
+                    },
+                    {
                       "const": "signal",
                       "type": "string"
                     },
@@ -31315,6 +37268,34 @@ export const runxSchemaArtifacts = {
                           "type": "string"
                         },
                         {
+                          "const": "provider_thread",
+                          "type": "string"
+                        },
+                        {
+                          "const": "provider_event",
+                          "type": "string"
+                        },
+                        {
+                          "const": "provider_comment",
+                          "type": "string"
+                        },
+                        {
+                          "const": "tracking_item",
+                          "type": "string"
+                        },
+                        {
+                          "const": "change_request",
+                          "type": "string"
+                        },
+                        {
+                          "const": "repository",
+                          "type": "string"
+                        },
+                        {
+                          "const": "support_ticket",
+                          "type": "string"
+                        },
+                        {
                           "const": "signal",
                           "type": "string"
                         },
@@ -31504,6 +37485,34 @@ export const runxSchemaArtifacts = {
                           "type": "string"
                         },
                         {
+                          "const": "provider_thread",
+                          "type": "string"
+                        },
+                        {
+                          "const": "provider_event",
+                          "type": "string"
+                        },
+                        {
+                          "const": "provider_comment",
+                          "type": "string"
+                        },
+                        {
+                          "const": "tracking_item",
+                          "type": "string"
+                        },
+                        {
+                          "const": "change_request",
+                          "type": "string"
+                        },
+                        {
+                          "const": "repository",
+                          "type": "string"
+                        },
+                        {
+                          "const": "support_ticket",
+                          "type": "string"
+                        },
+                        {
                           "const": "signal",
                           "type": "string"
                         },
@@ -31690,6 +37699,34 @@ export const runxSchemaArtifacts = {
                         },
                         {
                           "const": "sentry_event",
+                          "type": "string"
+                        },
+                        {
+                          "const": "provider_thread",
+                          "type": "string"
+                        },
+                        {
+                          "const": "provider_event",
+                          "type": "string"
+                        },
+                        {
+                          "const": "provider_comment",
+                          "type": "string"
+                        },
+                        {
+                          "const": "tracking_item",
+                          "type": "string"
+                        },
+                        {
+                          "const": "change_request",
+                          "type": "string"
+                        },
+                        {
+                          "const": "repository",
+                          "type": "string"
+                        },
+                        {
+                          "const": "support_ticket",
                           "type": "string"
                         },
                         {
@@ -31888,6 +37925,34 @@ export const runxSchemaArtifacts = {
                       "type": "string"
                     },
                     {
+                      "const": "provider_thread",
+                      "type": "string"
+                    },
+                    {
+                      "const": "provider_event",
+                      "type": "string"
+                    },
+                    {
+                      "const": "provider_comment",
+                      "type": "string"
+                    },
+                    {
+                      "const": "tracking_item",
+                      "type": "string"
+                    },
+                    {
+                      "const": "change_request",
+                      "type": "string"
+                    },
+                    {
+                      "const": "repository",
+                      "type": "string"
+                    },
+                    {
+                      "const": "support_ticket",
+                      "type": "string"
+                    },
+                    {
                       "const": "signal",
                       "type": "string"
                     },
@@ -32076,6 +38141,34 @@ export const runxSchemaArtifacts = {
                     "type": "string"
                   },
                   {
+                    "const": "provider_thread",
+                    "type": "string"
+                  },
+                  {
+                    "const": "provider_event",
+                    "type": "string"
+                  },
+                  {
+                    "const": "provider_comment",
+                    "type": "string"
+                  },
+                  {
+                    "const": "tracking_item",
+                    "type": "string"
+                  },
+                  {
+                    "const": "change_request",
+                    "type": "string"
+                  },
+                  {
+                    "const": "repository",
+                    "type": "string"
+                  },
+                  {
+                    "const": "support_ticket",
+                    "type": "string"
+                  },
+                  {
                     "const": "signal",
                     "type": "string"
                   },
@@ -32260,6 +38353,34 @@ export const runxSchemaArtifacts = {
                     },
                     {
                       "const": "sentry_event",
+                      "type": "string"
+                    },
+                    {
+                      "const": "provider_thread",
+                      "type": "string"
+                    },
+                    {
+                      "const": "provider_event",
+                      "type": "string"
+                    },
+                    {
+                      "const": "provider_comment",
+                      "type": "string"
+                    },
+                    {
+                      "const": "tracking_item",
+                      "type": "string"
+                    },
+                    {
+                      "const": "change_request",
+                      "type": "string"
+                    },
+                    {
+                      "const": "repository",
+                      "type": "string"
+                    },
+                    {
+                      "const": "support_ticket",
                       "type": "string"
                     },
                     {
@@ -32459,6 +38580,34 @@ export const runxSchemaArtifacts = {
                                 "type": "string"
                               },
                               {
+                                "const": "provider_thread",
+                                "type": "string"
+                              },
+                              {
+                                "const": "provider_event",
+                                "type": "string"
+                              },
+                              {
+                                "const": "provider_comment",
+                                "type": "string"
+                              },
+                              {
+                                "const": "tracking_item",
+                                "type": "string"
+                              },
+                              {
+                                "const": "change_request",
+                                "type": "string"
+                              },
+                              {
+                                "const": "repository",
+                                "type": "string"
+                              },
+                              {
+                                "const": "support_ticket",
+                                "type": "string"
+                              },
+                              {
                                 "const": "signal",
                                 "type": "string"
                               },
@@ -32647,6 +38796,34 @@ export const runxSchemaArtifacts = {
                               },
                               {
                                 "const": "sentry_event",
+                                "type": "string"
+                              },
+                              {
+                                "const": "provider_thread",
+                                "type": "string"
+                              },
+                              {
+                                "const": "provider_event",
+                                "type": "string"
+                              },
+                              {
+                                "const": "provider_comment",
+                                "type": "string"
+                              },
+                              {
+                                "const": "tracking_item",
+                                "type": "string"
+                              },
+                              {
+                                "const": "change_request",
+                                "type": "string"
+                              },
+                              {
+                                "const": "repository",
+                                "type": "string"
+                              },
+                              {
+                                "const": "support_ticket",
                                 "type": "string"
                               },
                               {
@@ -33085,6 +39262,34 @@ export const runxSchemaArtifacts = {
                                   "type": "string"
                                 },
                                 {
+                                  "const": "provider_thread",
+                                  "type": "string"
+                                },
+                                {
+                                  "const": "provider_event",
+                                  "type": "string"
+                                },
+                                {
+                                  "const": "provider_comment",
+                                  "type": "string"
+                                },
+                                {
+                                  "const": "tracking_item",
+                                  "type": "string"
+                                },
+                                {
+                                  "const": "change_request",
+                                  "type": "string"
+                                },
+                                {
+                                  "const": "repository",
+                                  "type": "string"
+                                },
+                                {
+                                  "const": "support_ticket",
+                                  "type": "string"
+                                },
+                                {
                                   "const": "signal",
                                   "type": "string"
                                 },
@@ -33282,6 +39487,34 @@ export const runxSchemaArtifacts = {
                           "type": "string"
                         },
                         {
+                          "const": "provider_thread",
+                          "type": "string"
+                        },
+                        {
+                          "const": "provider_event",
+                          "type": "string"
+                        },
+                        {
+                          "const": "provider_comment",
+                          "type": "string"
+                        },
+                        {
+                          "const": "tracking_item",
+                          "type": "string"
+                        },
+                        {
+                          "const": "change_request",
+                          "type": "string"
+                        },
+                        {
+                          "const": "repository",
+                          "type": "string"
+                        },
+                        {
+                          "const": "support_ticket",
+                          "type": "string"
+                        },
+                        {
                           "const": "signal",
                           "type": "string"
                         },
@@ -33473,6 +39706,34 @@ export const runxSchemaArtifacts = {
                           "type": "string"
                         },
                         {
+                          "const": "provider_thread",
+                          "type": "string"
+                        },
+                        {
+                          "const": "provider_event",
+                          "type": "string"
+                        },
+                        {
+                          "const": "provider_comment",
+                          "type": "string"
+                        },
+                        {
+                          "const": "tracking_item",
+                          "type": "string"
+                        },
+                        {
+                          "const": "change_request",
+                          "type": "string"
+                        },
+                        {
+                          "const": "repository",
+                          "type": "string"
+                        },
+                        {
+                          "const": "support_ticket",
+                          "type": "string"
+                        },
+                        {
                           "const": "signal",
                           "type": "string"
                         },
@@ -33656,6 +39917,34 @@ export const runxSchemaArtifacts = {
                         },
                         {
                           "const": "sentry_event",
+                          "type": "string"
+                        },
+                        {
+                          "const": "provider_thread",
+                          "type": "string"
+                        },
+                        {
+                          "const": "provider_event",
+                          "type": "string"
+                        },
+                        {
+                          "const": "provider_comment",
+                          "type": "string"
+                        },
+                        {
+                          "const": "tracking_item",
+                          "type": "string"
+                        },
+                        {
+                          "const": "change_request",
+                          "type": "string"
+                        },
+                        {
+                          "const": "repository",
+                          "type": "string"
+                        },
+                        {
+                          "const": "support_ticket",
                           "type": "string"
                         },
                         {
@@ -33886,6 +40175,34 @@ export const runxSchemaArtifacts = {
                         },
                         {
                           "const": "sentry_event",
+                          "type": "string"
+                        },
+                        {
+                          "const": "provider_thread",
+                          "type": "string"
+                        },
+                        {
+                          "const": "provider_event",
+                          "type": "string"
+                        },
+                        {
+                          "const": "provider_comment",
+                          "type": "string"
+                        },
+                        {
+                          "const": "tracking_item",
+                          "type": "string"
+                        },
+                        {
+                          "const": "change_request",
+                          "type": "string"
+                        },
+                        {
+                          "const": "repository",
+                          "type": "string"
+                        },
+                        {
+                          "const": "support_ticket",
                           "type": "string"
                         },
                         {
@@ -34192,6 +40509,34 @@ export const runxSchemaArtifacts = {
                         "type": "string"
                       },
                       {
+                        "const": "provider_thread",
+                        "type": "string"
+                      },
+                      {
+                        "const": "provider_event",
+                        "type": "string"
+                      },
+                      {
+                        "const": "provider_comment",
+                        "type": "string"
+                      },
+                      {
+                        "const": "tracking_item",
+                        "type": "string"
+                      },
+                      {
+                        "const": "change_request",
+                        "type": "string"
+                      },
+                      {
+                        "const": "repository",
+                        "type": "string"
+                      },
+                      {
+                        "const": "support_ticket",
+                        "type": "string"
+                      },
+                      {
                         "const": "signal",
                         "type": "string"
                       },
@@ -34492,6 +40837,34 @@ export const runxSchemaArtifacts = {
                             "type": "string"
                           },
                           {
+                            "const": "provider_thread",
+                            "type": "string"
+                          },
+                          {
+                            "const": "provider_event",
+                            "type": "string"
+                          },
+                          {
+                            "const": "provider_comment",
+                            "type": "string"
+                          },
+                          {
+                            "const": "tracking_item",
+                            "type": "string"
+                          },
+                          {
+                            "const": "change_request",
+                            "type": "string"
+                          },
+                          {
+                            "const": "repository",
+                            "type": "string"
+                          },
+                          {
+                            "const": "support_ticket",
+                            "type": "string"
+                          },
+                          {
                             "const": "signal",
                             "type": "string"
                           },
@@ -34679,6 +41052,34 @@ export const runxSchemaArtifacts = {
                             },
                             {
                               "const": "sentry_event",
+                              "type": "string"
+                            },
+                            {
+                              "const": "provider_thread",
+                              "type": "string"
+                            },
+                            {
+                              "const": "provider_event",
+                              "type": "string"
+                            },
+                            {
+                              "const": "provider_comment",
+                              "type": "string"
+                            },
+                            {
+                              "const": "tracking_item",
+                              "type": "string"
+                            },
+                            {
+                              "const": "change_request",
+                              "type": "string"
+                            },
+                            {
+                              "const": "repository",
+                              "type": "string"
+                            },
+                            {
+                              "const": "support_ticket",
                               "type": "string"
                             },
                             {
@@ -34874,6 +41275,34 @@ export const runxSchemaArtifacts = {
                             "type": "string"
                           },
                           {
+                            "const": "provider_thread",
+                            "type": "string"
+                          },
+                          {
+                            "const": "provider_event",
+                            "type": "string"
+                          },
+                          {
+                            "const": "provider_comment",
+                            "type": "string"
+                          },
+                          {
+                            "const": "tracking_item",
+                            "type": "string"
+                          },
+                          {
+                            "const": "change_request",
+                            "type": "string"
+                          },
+                          {
+                            "const": "repository",
+                            "type": "string"
+                          },
+                          {
+                            "const": "support_ticket",
+                            "type": "string"
+                          },
+                          {
                             "const": "signal",
                             "type": "string"
                           },
@@ -35061,6 +41490,34 @@ export const runxSchemaArtifacts = {
                             },
                             {
                               "const": "sentry_event",
+                              "type": "string"
+                            },
+                            {
+                              "const": "provider_thread",
+                              "type": "string"
+                            },
+                            {
+                              "const": "provider_event",
+                              "type": "string"
+                            },
+                            {
+                              "const": "provider_comment",
+                              "type": "string"
+                            },
+                            {
+                              "const": "tracking_item",
+                              "type": "string"
+                            },
+                            {
+                              "const": "change_request",
+                              "type": "string"
+                            },
+                            {
+                              "const": "repository",
+                              "type": "string"
+                            },
+                            {
+                              "const": "support_ticket",
                               "type": "string"
                             },
                             {
@@ -35263,6 +41720,34 @@ export const runxSchemaArtifacts = {
                           },
                           {
                             "const": "sentry_event",
+                            "type": "string"
+                          },
+                          {
+                            "const": "provider_thread",
+                            "type": "string"
+                          },
+                          {
+                            "const": "provider_event",
+                            "type": "string"
+                          },
+                          {
+                            "const": "provider_comment",
+                            "type": "string"
+                          },
+                          {
+                            "const": "tracking_item",
+                            "type": "string"
+                          },
+                          {
+                            "const": "change_request",
+                            "type": "string"
+                          },
+                          {
+                            "const": "repository",
+                            "type": "string"
+                          },
+                          {
+                            "const": "support_ticket",
                             "type": "string"
                           },
                           {
@@ -35472,6 +41957,34 @@ export const runxSchemaArtifacts = {
                           },
                           {
                             "const": "sentry_event",
+                            "type": "string"
+                          },
+                          {
+                            "const": "provider_thread",
+                            "type": "string"
+                          },
+                          {
+                            "const": "provider_event",
+                            "type": "string"
+                          },
+                          {
+                            "const": "provider_comment",
+                            "type": "string"
+                          },
+                          {
+                            "const": "tracking_item",
+                            "type": "string"
+                          },
+                          {
+                            "const": "change_request",
+                            "type": "string"
+                          },
+                          {
+                            "const": "repository",
+                            "type": "string"
+                          },
+                          {
+                            "const": "support_ticket",
                             "type": "string"
                           },
                           {
@@ -35717,6 +42230,34 @@ export const runxSchemaArtifacts = {
                         },
                         {
                           "const": "sentry_event",
+                          "type": "string"
+                        },
+                        {
+                          "const": "provider_thread",
+                          "type": "string"
+                        },
+                        {
+                          "const": "provider_event",
+                          "type": "string"
+                        },
+                        {
+                          "const": "provider_comment",
+                          "type": "string"
+                        },
+                        {
+                          "const": "tracking_item",
+                          "type": "string"
+                        },
+                        {
+                          "const": "change_request",
+                          "type": "string"
+                        },
+                        {
+                          "const": "repository",
+                          "type": "string"
+                        },
+                        {
+                          "const": "support_ticket",
                           "type": "string"
                         },
                         {
@@ -36001,6 +42542,34 @@ export const runxSchemaArtifacts = {
                       "type": "string"
                     },
                     {
+                      "const": "provider_thread",
+                      "type": "string"
+                    },
+                    {
+                      "const": "provider_event",
+                      "type": "string"
+                    },
+                    {
+                      "const": "provider_comment",
+                      "type": "string"
+                    },
+                    {
+                      "const": "tracking_item",
+                      "type": "string"
+                    },
+                    {
+                      "const": "change_request",
+                      "type": "string"
+                    },
+                    {
+                      "const": "repository",
+                      "type": "string"
+                    },
+                    {
+                      "const": "support_ticket",
+                      "type": "string"
+                    },
+                    {
                       "const": "signal",
                       "type": "string"
                     },
@@ -36186,6 +42755,34 @@ export const runxSchemaArtifacts = {
                   },
                   {
                     "const": "sentry_event",
+                    "type": "string"
+                  },
+                  {
+                    "const": "provider_thread",
+                    "type": "string"
+                  },
+                  {
+                    "const": "provider_event",
+                    "type": "string"
+                  },
+                  {
+                    "const": "provider_comment",
+                    "type": "string"
+                  },
+                  {
+                    "const": "tracking_item",
+                    "type": "string"
+                  },
+                  {
+                    "const": "change_request",
+                    "type": "string"
+                  },
+                  {
+                    "const": "repository",
+                    "type": "string"
+                  },
+                  {
+                    "const": "support_ticket",
                     "type": "string"
                   },
                   {
@@ -36375,6 +42972,34 @@ export const runxSchemaArtifacts = {
                     "type": "string"
                   },
                   {
+                    "const": "provider_thread",
+                    "type": "string"
+                  },
+                  {
+                    "const": "provider_event",
+                    "type": "string"
+                  },
+                  {
+                    "const": "provider_comment",
+                    "type": "string"
+                  },
+                  {
+                    "const": "tracking_item",
+                    "type": "string"
+                  },
+                  {
+                    "const": "change_request",
+                    "type": "string"
+                  },
+                  {
+                    "const": "repository",
+                    "type": "string"
+                  },
+                  {
+                    "const": "support_ticket",
+                    "type": "string"
+                  },
+                  {
                     "const": "signal",
                     "type": "string"
                   },
@@ -36558,6 +43183,34 @@ export const runxSchemaArtifacts = {
                   },
                   {
                     "const": "sentry_event",
+                    "type": "string"
+                  },
+                  {
+                    "const": "provider_thread",
+                    "type": "string"
+                  },
+                  {
+                    "const": "provider_event",
+                    "type": "string"
+                  },
+                  {
+                    "const": "provider_comment",
+                    "type": "string"
+                  },
+                  {
+                    "const": "tracking_item",
+                    "type": "string"
+                  },
+                  {
+                    "const": "change_request",
+                    "type": "string"
+                  },
+                  {
+                    "const": "repository",
+                    "type": "string"
+                  },
+                  {
+                    "const": "support_ticket",
                     "type": "string"
                   },
                   {
@@ -36870,6 +43523,34 @@ export const runxSchemaArtifacts = {
                             "type": "string"
                           },
                           {
+                            "const": "provider_thread",
+                            "type": "string"
+                          },
+                          {
+                            "const": "provider_event",
+                            "type": "string"
+                          },
+                          {
+                            "const": "provider_comment",
+                            "type": "string"
+                          },
+                          {
+                            "const": "tracking_item",
+                            "type": "string"
+                          },
+                          {
+                            "const": "change_request",
+                            "type": "string"
+                          },
+                          {
+                            "const": "repository",
+                            "type": "string"
+                          },
+                          {
+                            "const": "support_ticket",
+                            "type": "string"
+                          },
+                          {
                             "const": "signal",
                             "type": "string"
                           },
@@ -37084,6 +43765,34 @@ export const runxSchemaArtifacts = {
                           },
                           {
                             "const": "sentry_event",
+                            "type": "string"
+                          },
+                          {
+                            "const": "provider_thread",
+                            "type": "string"
+                          },
+                          {
+                            "const": "provider_event",
+                            "type": "string"
+                          },
+                          {
+                            "const": "provider_comment",
+                            "type": "string"
+                          },
+                          {
+                            "const": "tracking_item",
+                            "type": "string"
+                          },
+                          {
+                            "const": "change_request",
+                            "type": "string"
+                          },
+                          {
+                            "const": "repository",
+                            "type": "string"
+                          },
+                          {
+                            "const": "support_ticket",
                             "type": "string"
                           },
                           {
@@ -37341,6 +44050,34 @@ export const runxSchemaArtifacts = {
                 },
                 {
                   "const": "sentry_event",
+                  "type": "string"
+                },
+                {
+                  "const": "provider_thread",
+                  "type": "string"
+                },
+                {
+                  "const": "provider_event",
+                  "type": "string"
+                },
+                {
+                  "const": "provider_comment",
+                  "type": "string"
+                },
+                {
+                  "const": "tracking_item",
+                  "type": "string"
+                },
+                {
+                  "const": "change_request",
+                  "type": "string"
+                },
+                {
+                  "const": "repository",
+                  "type": "string"
+                },
+                {
+                  "const": "support_ticket",
                   "type": "string"
                 },
                 {
@@ -37646,6 +44383,34 @@ export const runxSchemaArtifacts = {
                     "type": "string"
                   },
                   {
+                    "const": "provider_thread",
+                    "type": "string"
+                  },
+                  {
+                    "const": "provider_event",
+                    "type": "string"
+                  },
+                  {
+                    "const": "provider_comment",
+                    "type": "string"
+                  },
+                  {
+                    "const": "tracking_item",
+                    "type": "string"
+                  },
+                  {
+                    "const": "change_request",
+                    "type": "string"
+                  },
+                  {
+                    "const": "repository",
+                    "type": "string"
+                  },
+                  {
+                    "const": "support_ticket",
+                    "type": "string"
+                  },
+                  {
                     "const": "signal",
                     "type": "string"
                   },
@@ -37900,6 +44665,34 @@ export const runxSchemaArtifacts = {
                 "type": "string"
               },
               {
+                "const": "provider_thread",
+                "type": "string"
+              },
+              {
+                "const": "provider_event",
+                "type": "string"
+              },
+              {
+                "const": "provider_comment",
+                "type": "string"
+              },
+              {
+                "const": "tracking_item",
+                "type": "string"
+              },
+              {
+                "const": "change_request",
+                "type": "string"
+              },
+              {
+                "const": "repository",
+                "type": "string"
+              },
+              {
+                "const": "support_ticket",
+                "type": "string"
+              },
+              {
                 "const": "signal",
                 "type": "string"
               },
@@ -38086,6 +44879,34 @@ export const runxSchemaArtifacts = {
                 "type": "string"
               },
               {
+                "const": "provider_thread",
+                "type": "string"
+              },
+              {
+                "const": "provider_event",
+                "type": "string"
+              },
+              {
+                "const": "provider_comment",
+                "type": "string"
+              },
+              {
+                "const": "tracking_item",
+                "type": "string"
+              },
+              {
+                "const": "change_request",
+                "type": "string"
+              },
+              {
+                "const": "repository",
+                "type": "string"
+              },
+              {
+                "const": "support_ticket",
+                "type": "string"
+              },
+              {
                 "const": "signal",
                 "type": "string"
               },
@@ -38246,6 +45067,241 @@ export const runxSchemaArtifacts = {
     "type": "object",
     "x-runx-schema": "runx.redaction.v1"
   } as JsonSchema,
+  "reference-link.schema.json": {
+    "$id": "https://schemas.runx.dev/runx/reference-link/v1.json",
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "additionalProperties": false,
+    "properties": {
+      "ref": {
+        "$id": "https://schemas.runx.dev/runx/reference/v1.json",
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "additionalProperties": false,
+        "properties": {
+          "label": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "locator": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "observed_at": {
+            "minLength": 1,
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(?:\\.\\d+)?Z$",
+            "type": "string"
+          },
+          "proof_kind": {
+            "anyOf": [
+              {
+                "const": "payment_rail",
+                "type": "string"
+              }
+            ]
+          },
+          "provider": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "schema": {
+            "const": "runx.reference.v1",
+            "type": "string"
+          },
+          "type": {
+            "anyOf": [
+              {
+                "const": "github_issue",
+                "type": "string"
+              },
+              {
+                "const": "github_pull_request",
+                "type": "string"
+              },
+              {
+                "const": "github_repo",
+                "type": "string"
+              },
+              {
+                "const": "slack_thread",
+                "type": "string"
+              },
+              {
+                "const": "sentry_event",
+                "type": "string"
+              },
+              {
+                "const": "provider_thread",
+                "type": "string"
+              },
+              {
+                "const": "provider_event",
+                "type": "string"
+              },
+              {
+                "const": "provider_comment",
+                "type": "string"
+              },
+              {
+                "const": "tracking_item",
+                "type": "string"
+              },
+              {
+                "const": "change_request",
+                "type": "string"
+              },
+              {
+                "const": "repository",
+                "type": "string"
+              },
+              {
+                "const": "support_ticket",
+                "type": "string"
+              },
+              {
+                "const": "signal",
+                "type": "string"
+              },
+              {
+                "const": "act",
+                "type": "string"
+              },
+              {
+                "const": "receipt",
+                "type": "string"
+              },
+              {
+                "const": "graph_receipt",
+                "type": "string"
+              },
+              {
+                "const": "artifact",
+                "type": "string"
+              },
+              {
+                "const": "verification",
+                "type": "string"
+              },
+              {
+                "const": "harness",
+                "type": "string"
+              },
+              {
+                "const": "host",
+                "type": "string"
+              },
+              {
+                "const": "deployment",
+                "type": "string"
+              },
+              {
+                "const": "surface",
+                "type": "string"
+              },
+              {
+                "const": "target",
+                "type": "string"
+              },
+              {
+                "const": "opportunity",
+                "type": "string"
+              },
+              {
+                "const": "thesis_assessment",
+                "type": "string"
+              },
+              {
+                "const": "selection",
+                "type": "string"
+              },
+              {
+                "const": "skill_binding",
+                "type": "string"
+              },
+              {
+                "const": "target_transition_entry",
+                "type": "string"
+              },
+              {
+                "const": "selection_cycle",
+                "type": "string"
+              },
+              {
+                "const": "decision",
+                "type": "string"
+              },
+              {
+                "const": "reflection_entry",
+                "type": "string"
+              },
+              {
+                "const": "feed_entry",
+                "type": "string"
+              },
+              {
+                "const": "principal",
+                "type": "string"
+              },
+              {
+                "const": "authority_proof",
+                "type": "string"
+              },
+              {
+                "const": "scope_admission",
+                "type": "string"
+              },
+              {
+                "const": "grant",
+                "type": "string"
+              },
+              {
+                "const": "mandate",
+                "type": "string"
+              },
+              {
+                "const": "credential",
+                "type": "string"
+              },
+              {
+                "const": "webhook_delivery",
+                "type": "string"
+              },
+              {
+                "const": "redaction_policy",
+                "type": "string"
+              },
+              {
+                "const": "external_url",
+                "type": "string"
+              }
+            ]
+          },
+          "uri": {
+            "minLength": 1,
+            "type": "string"
+          }
+        },
+        "required": [
+          "type",
+          "uri"
+        ],
+        "type": "object",
+        "x-runx-schema": "runx.reference.v1"
+      },
+      "role": {
+        "minLength": 1,
+        "type": "string"
+      },
+      "schema": {
+        "const": "runx.reference_link.v1",
+        "type": "string"
+      }
+    },
+    "required": [
+      "role",
+      "ref"
+    ],
+    "type": "object",
+    "x-runx-schema": "runx.reference_link.v1"
+  } as JsonSchema,
   "reference.schema.json": {
     "$id": "https://schemas.runx.dev/runx/reference/v1.json",
     "$schema": "https://json-schema.org/draft/2020-12/schema",
@@ -38300,6 +45356,34 @@ export const runxSchemaArtifacts = {
           },
           {
             "const": "sentry_event",
+            "type": "string"
+          },
+          {
+            "const": "provider_thread",
+            "type": "string"
+          },
+          {
+            "const": "provider_event",
+            "type": "string"
+          },
+          {
+            "const": "provider_comment",
+            "type": "string"
+          },
+          {
+            "const": "tracking_item",
+            "type": "string"
+          },
+          {
+            "const": "change_request",
+            "type": "string"
+          },
+          {
+            "const": "repository",
+            "type": "string"
+          },
+          {
+            "const": "support_ticket",
             "type": "string"
           },
           {
@@ -38502,6 +45586,34 @@ export const runxSchemaArtifacts = {
                       "type": "string"
                     },
                     {
+                      "const": "provider_thread",
+                      "type": "string"
+                    },
+                    {
+                      "const": "provider_event",
+                      "type": "string"
+                    },
+                    {
+                      "const": "provider_comment",
+                      "type": "string"
+                    },
+                    {
+                      "const": "tracking_item",
+                      "type": "string"
+                    },
+                    {
+                      "const": "change_request",
+                      "type": "string"
+                    },
+                    {
+                      "const": "repository",
+                      "type": "string"
+                    },
+                    {
+                      "const": "support_ticket",
+                      "type": "string"
+                    },
+                    {
                       "const": "signal",
                       "type": "string"
                     },
@@ -38699,6 +45811,34 @@ export const runxSchemaArtifacts = {
                     "type": "string"
                   },
                   {
+                    "const": "provider_thread",
+                    "type": "string"
+                  },
+                  {
+                    "const": "provider_event",
+                    "type": "string"
+                  },
+                  {
+                    "const": "provider_comment",
+                    "type": "string"
+                  },
+                  {
+                    "const": "tracking_item",
+                    "type": "string"
+                  },
+                  {
+                    "const": "change_request",
+                    "type": "string"
+                  },
+                  {
+                    "const": "repository",
+                    "type": "string"
+                  },
+                  {
+                    "const": "support_ticket",
+                    "type": "string"
+                  },
+                  {
                     "const": "signal",
                     "type": "string"
                   },
@@ -38891,6 +46031,34 @@ export const runxSchemaArtifacts = {
                   "type": "string"
                 },
                 {
+                  "const": "provider_thread",
+                  "type": "string"
+                },
+                {
+                  "const": "provider_event",
+                  "type": "string"
+                },
+                {
+                  "const": "provider_comment",
+                  "type": "string"
+                },
+                {
+                  "const": "tracking_item",
+                  "type": "string"
+                },
+                {
+                  "const": "change_request",
+                  "type": "string"
+                },
+                {
+                  "const": "repository",
+                  "type": "string"
+                },
+                {
+                  "const": "support_ticket",
+                  "type": "string"
+                },
+                {
                   "const": "signal",
                   "type": "string"
                 },
@@ -39077,6 +46245,34 @@ export const runxSchemaArtifacts = {
                 },
                 {
                   "const": "sentry_event",
+                  "type": "string"
+                },
+                {
+                  "const": "provider_thread",
+                  "type": "string"
+                },
+                {
+                  "const": "provider_event",
+                  "type": "string"
+                },
+                {
+                  "const": "provider_comment",
+                  "type": "string"
+                },
+                {
+                  "const": "tracking_item",
+                  "type": "string"
+                },
+                {
+                  "const": "change_request",
+                  "type": "string"
+                },
+                {
+                  "const": "repository",
+                  "type": "string"
+                },
+                {
+                  "const": "support_ticket",
                   "type": "string"
                 },
                 {
@@ -39277,6 +46473,34 @@ export const runxSchemaArtifacts = {
                     "type": "string"
                   },
                   {
+                    "const": "provider_thread",
+                    "type": "string"
+                  },
+                  {
+                    "const": "provider_event",
+                    "type": "string"
+                  },
+                  {
+                    "const": "provider_comment",
+                    "type": "string"
+                  },
+                  {
+                    "const": "tracking_item",
+                    "type": "string"
+                  },
+                  {
+                    "const": "change_request",
+                    "type": "string"
+                  },
+                  {
+                    "const": "repository",
+                    "type": "string"
+                  },
+                  {
+                    "const": "support_ticket",
+                    "type": "string"
+                  },
+                  {
                     "const": "signal",
                     "type": "string"
                   },
@@ -39466,6 +46690,34 @@ export const runxSchemaArtifacts = {
                 },
                 {
                   "const": "sentry_event",
+                  "type": "string"
+                },
+                {
+                  "const": "provider_thread",
+                  "type": "string"
+                },
+                {
+                  "const": "provider_event",
+                  "type": "string"
+                },
+                {
+                  "const": "provider_comment",
+                  "type": "string"
+                },
+                {
+                  "const": "tracking_item",
+                  "type": "string"
+                },
+                {
+                  "const": "change_request",
+                  "type": "string"
+                },
+                {
+                  "const": "repository",
+                  "type": "string"
+                },
+                {
+                  "const": "support_ticket",
                   "type": "string"
                 },
                 {
@@ -39676,6 +46928,34 @@ export const runxSchemaArtifacts = {
                     "type": "string"
                   },
                   {
+                    "const": "provider_thread",
+                    "type": "string"
+                  },
+                  {
+                    "const": "provider_event",
+                    "type": "string"
+                  },
+                  {
+                    "const": "provider_comment",
+                    "type": "string"
+                  },
+                  {
+                    "const": "tracking_item",
+                    "type": "string"
+                  },
+                  {
+                    "const": "change_request",
+                    "type": "string"
+                  },
+                  {
+                    "const": "repository",
+                    "type": "string"
+                  },
+                  {
+                    "const": "support_ticket",
+                    "type": "string"
+                  },
+                  {
                     "const": "signal",
                     "type": "string"
                   },
@@ -39870,6 +47150,34 @@ export const runxSchemaArtifacts = {
                   },
                   {
                     "const": "sentry_event",
+                    "type": "string"
+                  },
+                  {
+                    "const": "provider_thread",
+                    "type": "string"
+                  },
+                  {
+                    "const": "provider_event",
+                    "type": "string"
+                  },
+                  {
+                    "const": "provider_comment",
+                    "type": "string"
+                  },
+                  {
+                    "const": "tracking_item",
+                    "type": "string"
+                  },
+                  {
+                    "const": "change_request",
+                    "type": "string"
+                  },
+                  {
+                    "const": "repository",
+                    "type": "string"
+                  },
+                  {
+                    "const": "support_ticket",
                     "type": "string"
                   },
                   {
@@ -41228,6 +48536,34 @@ export const runxSchemaArtifacts = {
                     "type": "string"
                   },
                   {
+                    "const": "provider_thread",
+                    "type": "string"
+                  },
+                  {
+                    "const": "provider_event",
+                    "type": "string"
+                  },
+                  {
+                    "const": "provider_comment",
+                    "type": "string"
+                  },
+                  {
+                    "const": "tracking_item",
+                    "type": "string"
+                  },
+                  {
+                    "const": "change_request",
+                    "type": "string"
+                  },
+                  {
+                    "const": "repository",
+                    "type": "string"
+                  },
+                  {
+                    "const": "support_ticket",
+                    "type": "string"
+                  },
+                  {
                     "const": "signal",
                     "type": "string"
                   },
@@ -41434,6 +48770,34 @@ export const runxSchemaArtifacts = {
                   },
                   {
                     "const": "sentry_event",
+                    "type": "string"
+                  },
+                  {
+                    "const": "provider_thread",
+                    "type": "string"
+                  },
+                  {
+                    "const": "provider_event",
+                    "type": "string"
+                  },
+                  {
+                    "const": "provider_comment",
+                    "type": "string"
+                  },
+                  {
+                    "const": "tracking_item",
+                    "type": "string"
+                  },
+                  {
+                    "const": "change_request",
+                    "type": "string"
+                  },
+                  {
+                    "const": "repository",
+                    "type": "string"
+                  },
+                  {
+                    "const": "support_ticket",
                     "type": "string"
                   },
                   {
@@ -41644,6 +49008,34 @@ export const runxSchemaArtifacts = {
                       "type": "string"
                     },
                     {
+                      "const": "provider_thread",
+                      "type": "string"
+                    },
+                    {
+                      "const": "provider_event",
+                      "type": "string"
+                    },
+                    {
+                      "const": "provider_comment",
+                      "type": "string"
+                    },
+                    {
+                      "const": "tracking_item",
+                      "type": "string"
+                    },
+                    {
+                      "const": "change_request",
+                      "type": "string"
+                    },
+                    {
+                      "const": "repository",
+                      "type": "string"
+                    },
+                    {
+                      "const": "support_ticket",
+                      "type": "string"
+                    },
+                    {
                       "const": "signal",
                       "type": "string"
                     },
@@ -41843,6 +49235,34 @@ export const runxSchemaArtifacts = {
                 },
                 {
                   "const": "sentry_event",
+                  "type": "string"
+                },
+                {
+                  "const": "provider_thread",
+                  "type": "string"
+                },
+                {
+                  "const": "provider_event",
+                  "type": "string"
+                },
+                {
+                  "const": "provider_comment",
+                  "type": "string"
+                },
+                {
+                  "const": "tracking_item",
+                  "type": "string"
+                },
+                {
+                  "const": "change_request",
+                  "type": "string"
+                },
+                {
+                  "const": "repository",
+                  "type": "string"
+                },
+                {
+                  "const": "support_ticket",
                   "type": "string"
                 },
                 {
@@ -42103,6 +49523,34 @@ export const runxSchemaArtifacts = {
                   "type": "string"
                 },
                 {
+                  "const": "provider_thread",
+                  "type": "string"
+                },
+                {
+                  "const": "provider_event",
+                  "type": "string"
+                },
+                {
+                  "const": "provider_comment",
+                  "type": "string"
+                },
+                {
+                  "const": "tracking_item",
+                  "type": "string"
+                },
+                {
+                  "const": "change_request",
+                  "type": "string"
+                },
+                {
+                  "const": "repository",
+                  "type": "string"
+                },
+                {
+                  "const": "support_ticket",
+                  "type": "string"
+                },
+                {
                   "const": "signal",
                   "type": "string"
                 },
@@ -42289,6 +49737,34 @@ export const runxSchemaArtifacts = {
                 },
                 {
                   "const": "sentry_event",
+                  "type": "string"
+                },
+                {
+                  "const": "provider_thread",
+                  "type": "string"
+                },
+                {
+                  "const": "provider_event",
+                  "type": "string"
+                },
+                {
+                  "const": "provider_comment",
+                  "type": "string"
+                },
+                {
+                  "const": "tracking_item",
+                  "type": "string"
+                },
+                {
+                  "const": "change_request",
+                  "type": "string"
+                },
+                {
+                  "const": "repository",
+                  "type": "string"
+                },
+                {
+                  "const": "support_ticket",
                   "type": "string"
                 },
                 {
@@ -42479,6 +49955,34 @@ export const runxSchemaArtifacts = {
                   },
                   {
                     "const": "sentry_event",
+                    "type": "string"
+                  },
+                  {
+                    "const": "provider_thread",
+                    "type": "string"
+                  },
+                  {
+                    "const": "provider_event",
+                    "type": "string"
+                  },
+                  {
+                    "const": "provider_comment",
+                    "type": "string"
+                  },
+                  {
+                    "const": "tracking_item",
+                    "type": "string"
+                  },
+                  {
+                    "const": "change_request",
+                    "type": "string"
+                  },
+                  {
+                    "const": "repository",
+                    "type": "string"
+                  },
+                  {
+                    "const": "support_ticket",
                     "type": "string"
                   },
                   {
@@ -42707,6 +50211,34 @@ export const runxSchemaArtifacts = {
                   "type": "string"
                 },
                 {
+                  "const": "provider_thread",
+                  "type": "string"
+                },
+                {
+                  "const": "provider_event",
+                  "type": "string"
+                },
+                {
+                  "const": "provider_comment",
+                  "type": "string"
+                },
+                {
+                  "const": "tracking_item",
+                  "type": "string"
+                },
+                {
+                  "const": "change_request",
+                  "type": "string"
+                },
+                {
+                  "const": "repository",
+                  "type": "string"
+                },
+                {
+                  "const": "support_ticket",
+                  "type": "string"
+                },
+                {
                   "const": "signal",
                   "type": "string"
                 },
@@ -42917,6 +50449,34 @@ export const runxSchemaArtifacts = {
                   "type": "string"
                 },
                 {
+                  "const": "provider_thread",
+                  "type": "string"
+                },
+                {
+                  "const": "provider_event",
+                  "type": "string"
+                },
+                {
+                  "const": "provider_comment",
+                  "type": "string"
+                },
+                {
+                  "const": "tracking_item",
+                  "type": "string"
+                },
+                {
+                  "const": "change_request",
+                  "type": "string"
+                },
+                {
+                  "const": "repository",
+                  "type": "string"
+                },
+                {
+                  "const": "support_ticket",
+                  "type": "string"
+                },
+                {
                   "const": "signal",
                   "type": "string"
                 },
@@ -43110,6 +50670,34 @@ export const runxSchemaArtifacts = {
                 "type": "string"
               },
               {
+                "const": "provider_thread",
+                "type": "string"
+              },
+              {
+                "const": "provider_event",
+                "type": "string"
+              },
+              {
+                "const": "provider_comment",
+                "type": "string"
+              },
+              {
+                "const": "tracking_item",
+                "type": "string"
+              },
+              {
+                "const": "change_request",
+                "type": "string"
+              },
+              {
+                "const": "repository",
+                "type": "string"
+              },
+              {
+                "const": "support_ticket",
+                "type": "string"
+              },
+              {
                 "const": "signal",
                 "type": "string"
               },
@@ -43295,6 +50883,34 @@ export const runxSchemaArtifacts = {
                   },
                   {
                     "const": "sentry_event",
+                    "type": "string"
+                  },
+                  {
+                    "const": "provider_thread",
+                    "type": "string"
+                  },
+                  {
+                    "const": "provider_event",
+                    "type": "string"
+                  },
+                  {
+                    "const": "provider_comment",
+                    "type": "string"
+                  },
+                  {
+                    "const": "tracking_item",
+                    "type": "string"
+                  },
+                  {
+                    "const": "change_request",
+                    "type": "string"
+                  },
+                  {
+                    "const": "repository",
+                    "type": "string"
+                  },
+                  {
+                    "const": "support_ticket",
                     "type": "string"
                   },
                   {
@@ -43490,6 +51106,34 @@ export const runxSchemaArtifacts = {
                   "type": "string"
                 },
                 {
+                  "const": "provider_thread",
+                  "type": "string"
+                },
+                {
+                  "const": "provider_event",
+                  "type": "string"
+                },
+                {
+                  "const": "provider_comment",
+                  "type": "string"
+                },
+                {
+                  "const": "tracking_item",
+                  "type": "string"
+                },
+                {
+                  "const": "change_request",
+                  "type": "string"
+                },
+                {
+                  "const": "repository",
+                  "type": "string"
+                },
+                {
+                  "const": "support_ticket",
+                  "type": "string"
+                },
+                {
                   "const": "signal",
                   "type": "string"
                 },
@@ -43675,6 +51319,34 @@ export const runxSchemaArtifacts = {
               },
               {
                 "const": "sentry_event",
+                "type": "string"
+              },
+              {
+                "const": "provider_thread",
+                "type": "string"
+              },
+              {
+                "const": "provider_event",
+                "type": "string"
+              },
+              {
+                "const": "provider_comment",
+                "type": "string"
+              },
+              {
+                "const": "tracking_item",
+                "type": "string"
+              },
+              {
+                "const": "change_request",
+                "type": "string"
+              },
+              {
+                "const": "repository",
+                "type": "string"
+              },
+              {
+                "const": "support_ticket",
                 "type": "string"
               },
               {
@@ -43919,6 +51591,34 @@ export const runxSchemaArtifacts = {
                       "type": "string"
                     },
                     {
+                      "const": "provider_thread",
+                      "type": "string"
+                    },
+                    {
+                      "const": "provider_event",
+                      "type": "string"
+                    },
+                    {
+                      "const": "provider_comment",
+                      "type": "string"
+                    },
+                    {
+                      "const": "tracking_item",
+                      "type": "string"
+                    },
+                    {
+                      "const": "change_request",
+                      "type": "string"
+                    },
+                    {
+                      "const": "repository",
+                      "type": "string"
+                    },
+                    {
+                      "const": "support_ticket",
+                      "type": "string"
+                    },
+                    {
                       "const": "signal",
                       "type": "string"
                     },
@@ -44104,6 +51804,34 @@ export const runxSchemaArtifacts = {
                   },
                   {
                     "const": "sentry_event",
+                    "type": "string"
+                  },
+                  {
+                    "const": "provider_thread",
+                    "type": "string"
+                  },
+                  {
+                    "const": "provider_event",
+                    "type": "string"
+                  },
+                  {
+                    "const": "provider_comment",
+                    "type": "string"
+                  },
+                  {
+                    "const": "tracking_item",
+                    "type": "string"
+                  },
+                  {
+                    "const": "change_request",
+                    "type": "string"
+                  },
+                  {
+                    "const": "repository",
+                    "type": "string"
+                  },
+                  {
+                    "const": "support_ticket",
                     "type": "string"
                   },
                   {
@@ -44293,6 +52021,34 @@ export const runxSchemaArtifacts = {
                     "type": "string"
                   },
                   {
+                    "const": "provider_thread",
+                    "type": "string"
+                  },
+                  {
+                    "const": "provider_event",
+                    "type": "string"
+                  },
+                  {
+                    "const": "provider_comment",
+                    "type": "string"
+                  },
+                  {
+                    "const": "tracking_item",
+                    "type": "string"
+                  },
+                  {
+                    "const": "change_request",
+                    "type": "string"
+                  },
+                  {
+                    "const": "repository",
+                    "type": "string"
+                  },
+                  {
+                    "const": "support_ticket",
+                    "type": "string"
+                  },
+                  {
                     "const": "signal",
                     "type": "string"
                   },
@@ -44477,6 +52233,34 @@ export const runxSchemaArtifacts = {
                     },
                     {
                       "const": "sentry_event",
+                      "type": "string"
+                    },
+                    {
+                      "const": "provider_thread",
+                      "type": "string"
+                    },
+                    {
+                      "const": "provider_event",
+                      "type": "string"
+                    },
+                    {
+                      "const": "provider_comment",
+                      "type": "string"
+                    },
+                    {
+                      "const": "tracking_item",
+                      "type": "string"
+                    },
+                    {
+                      "const": "change_request",
+                      "type": "string"
+                    },
+                    {
+                      "const": "repository",
+                      "type": "string"
+                    },
+                    {
+                      "const": "support_ticket",
                       "type": "string"
                     },
                     {
@@ -44697,6 +52481,34 @@ export const runxSchemaArtifacts = {
                     "type": "string"
                   },
                   {
+                    "const": "provider_thread",
+                    "type": "string"
+                  },
+                  {
+                    "const": "provider_event",
+                    "type": "string"
+                  },
+                  {
+                    "const": "provider_comment",
+                    "type": "string"
+                  },
+                  {
+                    "const": "tracking_item",
+                    "type": "string"
+                  },
+                  {
+                    "const": "change_request",
+                    "type": "string"
+                  },
+                  {
+                    "const": "repository",
+                    "type": "string"
+                  },
+                  {
+                    "const": "support_ticket",
+                    "type": "string"
+                  },
+                  {
                     "const": "signal",
                     "type": "string"
                   },
@@ -44892,6 +52704,34 @@ export const runxSchemaArtifacts = {
                 },
                 {
                   "const": "sentry_event",
+                  "type": "string"
+                },
+                {
+                  "const": "provider_thread",
+                  "type": "string"
+                },
+                {
+                  "const": "provider_event",
+                  "type": "string"
+                },
+                {
+                  "const": "provider_comment",
+                  "type": "string"
+                },
+                {
+                  "const": "tracking_item",
+                  "type": "string"
+                },
+                {
+                  "const": "change_request",
+                  "type": "string"
+                },
+                {
+                  "const": "repository",
+                  "type": "string"
+                },
+                {
+                  "const": "support_ticket",
                   "type": "string"
                 },
                 {
@@ -45103,6 +52943,34 @@ export const runxSchemaArtifacts = {
                       "type": "string"
                     },
                     {
+                      "const": "provider_thread",
+                      "type": "string"
+                    },
+                    {
+                      "const": "provider_event",
+                      "type": "string"
+                    },
+                    {
+                      "const": "provider_comment",
+                      "type": "string"
+                    },
+                    {
+                      "const": "tracking_item",
+                      "type": "string"
+                    },
+                    {
+                      "const": "change_request",
+                      "type": "string"
+                    },
+                    {
+                      "const": "repository",
+                      "type": "string"
+                    },
+                    {
+                      "const": "support_ticket",
+                      "type": "string"
+                    },
+                    {
                       "const": "signal",
                       "type": "string"
                     },
@@ -45311,6 +53179,34 @@ export const runxSchemaArtifacts = {
                           "type": "string"
                         },
                         {
+                          "const": "provider_thread",
+                          "type": "string"
+                        },
+                        {
+                          "const": "provider_event",
+                          "type": "string"
+                        },
+                        {
+                          "const": "provider_comment",
+                          "type": "string"
+                        },
+                        {
+                          "const": "tracking_item",
+                          "type": "string"
+                        },
+                        {
+                          "const": "change_request",
+                          "type": "string"
+                        },
+                        {
+                          "const": "repository",
+                          "type": "string"
+                        },
+                        {
+                          "const": "support_ticket",
+                          "type": "string"
+                        },
+                        {
                           "const": "signal",
                           "type": "string"
                         },
@@ -45498,6 +53394,34 @@ export const runxSchemaArtifacts = {
                           },
                           {
                             "const": "sentry_event",
+                            "type": "string"
+                          },
+                          {
+                            "const": "provider_thread",
+                            "type": "string"
+                          },
+                          {
+                            "const": "provider_event",
+                            "type": "string"
+                          },
+                          {
+                            "const": "provider_comment",
+                            "type": "string"
+                          },
+                          {
+                            "const": "tracking_item",
+                            "type": "string"
+                          },
+                          {
+                            "const": "change_request",
+                            "type": "string"
+                          },
+                          {
+                            "const": "repository",
+                            "type": "string"
+                          },
+                          {
+                            "const": "support_ticket",
                             "type": "string"
                           },
                           {
@@ -45692,6 +53616,34 @@ export const runxSchemaArtifacts = {
                           },
                           {
                             "const": "sentry_event",
+                            "type": "string"
+                          },
+                          {
+                            "const": "provider_thread",
+                            "type": "string"
+                          },
+                          {
+                            "const": "provider_event",
+                            "type": "string"
+                          },
+                          {
+                            "const": "provider_comment",
+                            "type": "string"
+                          },
+                          {
+                            "const": "tracking_item",
+                            "type": "string"
+                          },
+                          {
+                            "const": "change_request",
+                            "type": "string"
+                          },
+                          {
+                            "const": "repository",
+                            "type": "string"
+                          },
+                          {
+                            "const": "support_ticket",
                             "type": "string"
                           },
                           {
@@ -45893,6 +53845,34 @@ export const runxSchemaArtifacts = {
                     "type": "string"
                   },
                   {
+                    "const": "provider_thread",
+                    "type": "string"
+                  },
+                  {
+                    "const": "provider_event",
+                    "type": "string"
+                  },
+                  {
+                    "const": "provider_comment",
+                    "type": "string"
+                  },
+                  {
+                    "const": "tracking_item",
+                    "type": "string"
+                  },
+                  {
+                    "const": "change_request",
+                    "type": "string"
+                  },
+                  {
+                    "const": "repository",
+                    "type": "string"
+                  },
+                  {
+                    "const": "support_ticket",
+                    "type": "string"
+                  },
+                  {
                     "const": "signal",
                     "type": "string"
                   },
@@ -46077,6 +54057,34 @@ export const runxSchemaArtifacts = {
                     },
                     {
                       "const": "sentry_event",
+                      "type": "string"
+                    },
+                    {
+                      "const": "provider_thread",
+                      "type": "string"
+                    },
+                    {
+                      "const": "provider_event",
+                      "type": "string"
+                    },
+                    {
+                      "const": "provider_comment",
+                      "type": "string"
+                    },
+                    {
+                      "const": "tracking_item",
+                      "type": "string"
+                    },
+                    {
+                      "const": "change_request",
+                      "type": "string"
+                    },
+                    {
+                      "const": "repository",
+                      "type": "string"
+                    },
+                    {
+                      "const": "support_ticket",
                       "type": "string"
                     },
                     {
@@ -46269,6 +54277,34 @@ export const runxSchemaArtifacts = {
                       "type": "string"
                     },
                     {
+                      "const": "provider_thread",
+                      "type": "string"
+                    },
+                    {
+                      "const": "provider_event",
+                      "type": "string"
+                    },
+                    {
+                      "const": "provider_comment",
+                      "type": "string"
+                    },
+                    {
+                      "const": "tracking_item",
+                      "type": "string"
+                    },
+                    {
+                      "const": "change_request",
+                      "type": "string"
+                    },
+                    {
+                      "const": "repository",
+                      "type": "string"
+                    },
+                    {
+                      "const": "support_ticket",
+                      "type": "string"
+                    },
+                    {
                       "const": "signal",
                       "type": "string"
                     },
@@ -46455,6 +54491,34 @@ export const runxSchemaArtifacts = {
                     },
                     {
                       "const": "sentry_event",
+                      "type": "string"
+                    },
+                    {
+                      "const": "provider_thread",
+                      "type": "string"
+                    },
+                    {
+                      "const": "provider_event",
+                      "type": "string"
+                    },
+                    {
+                      "const": "provider_comment",
+                      "type": "string"
+                    },
+                    {
+                      "const": "tracking_item",
+                      "type": "string"
+                    },
+                    {
+                      "const": "change_request",
+                      "type": "string"
+                    },
+                    {
+                      "const": "repository",
+                      "type": "string"
+                    },
+                    {
+                      "const": "support_ticket",
                       "type": "string"
                     },
                     {
@@ -46714,6 +54778,34 @@ export const runxSchemaArtifacts = {
                 "type": "string"
               },
               {
+                "const": "provider_thread",
+                "type": "string"
+              },
+              {
+                "const": "provider_event",
+                "type": "string"
+              },
+              {
+                "const": "provider_comment",
+                "type": "string"
+              },
+              {
+                "const": "tracking_item",
+                "type": "string"
+              },
+              {
+                "const": "change_request",
+                "type": "string"
+              },
+              {
+                "const": "repository",
+                "type": "string"
+              },
+              {
+                "const": "support_ticket",
+                "type": "string"
+              },
+              {
                 "const": "signal",
                 "type": "string"
               },
@@ -46952,6 +55044,34 @@ export const runxSchemaArtifacts = {
                   "type": "string"
                 },
                 {
+                  "const": "provider_thread",
+                  "type": "string"
+                },
+                {
+                  "const": "provider_event",
+                  "type": "string"
+                },
+                {
+                  "const": "provider_comment",
+                  "type": "string"
+                },
+                {
+                  "const": "tracking_item",
+                  "type": "string"
+                },
+                {
+                  "const": "change_request",
+                  "type": "string"
+                },
+                {
+                  "const": "repository",
+                  "type": "string"
+                },
+                {
+                  "const": "support_ticket",
+                  "type": "string"
+                },
+                {
                   "const": "signal",
                   "type": "string"
                 },
@@ -47151,6 +55271,34 @@ export const runxSchemaArtifacts = {
                     "type": "string"
                   },
                   {
+                    "const": "provider_thread",
+                    "type": "string"
+                  },
+                  {
+                    "const": "provider_event",
+                    "type": "string"
+                  },
+                  {
+                    "const": "provider_comment",
+                    "type": "string"
+                  },
+                  {
+                    "const": "tracking_item",
+                    "type": "string"
+                  },
+                  {
+                    "const": "change_request",
+                    "type": "string"
+                  },
+                  {
+                    "const": "repository",
+                    "type": "string"
+                  },
+                  {
+                    "const": "support_ticket",
+                    "type": "string"
+                  },
+                  {
                     "const": "signal",
                     "type": "string"
                   },
@@ -47340,6 +55488,34 @@ export const runxSchemaArtifacts = {
                 },
                 {
                   "const": "sentry_event",
+                  "type": "string"
+                },
+                {
+                  "const": "provider_thread",
+                  "type": "string"
+                },
+                {
+                  "const": "provider_event",
+                  "type": "string"
+                },
+                {
+                  "const": "provider_comment",
+                  "type": "string"
+                },
+                {
+                  "const": "tracking_item",
+                  "type": "string"
+                },
+                {
+                  "const": "change_request",
+                  "type": "string"
+                },
+                {
+                  "const": "repository",
+                  "type": "string"
+                },
+                {
+                  "const": "support_ticket",
                   "type": "string"
                 },
                 {
@@ -47580,6 +55756,34 @@ export const runxSchemaArtifacts = {
               },
               {
                 "const": "sentry_event",
+                "type": "string"
+              },
+              {
+                "const": "provider_thread",
+                "type": "string"
+              },
+              {
+                "const": "provider_event",
+                "type": "string"
+              },
+              {
+                "const": "provider_comment",
+                "type": "string"
+              },
+              {
+                "const": "tracking_item",
+                "type": "string"
+              },
+              {
+                "const": "change_request",
+                "type": "string"
+              },
+              {
+                "const": "repository",
+                "type": "string"
+              },
+              {
+                "const": "support_ticket",
                 "type": "string"
               },
               {
@@ -47885,6 +56089,34 @@ export const runxSchemaArtifacts = {
                     "type": "string"
                   },
                   {
+                    "const": "provider_thread",
+                    "type": "string"
+                  },
+                  {
+                    "const": "provider_event",
+                    "type": "string"
+                  },
+                  {
+                    "const": "provider_comment",
+                    "type": "string"
+                  },
+                  {
+                    "const": "tracking_item",
+                    "type": "string"
+                  },
+                  {
+                    "const": "change_request",
+                    "type": "string"
+                  },
+                  {
+                    "const": "repository",
+                    "type": "string"
+                  },
+                  {
+                    "const": "support_ticket",
+                    "type": "string"
+                  },
+                  {
                     "const": "signal",
                     "type": "string"
                   },
@@ -48121,6 +56353,34 @@ export const runxSchemaArtifacts = {
                     "type": "string"
                   },
                   {
+                    "const": "provider_thread",
+                    "type": "string"
+                  },
+                  {
+                    "const": "provider_event",
+                    "type": "string"
+                  },
+                  {
+                    "const": "provider_comment",
+                    "type": "string"
+                  },
+                  {
+                    "const": "tracking_item",
+                    "type": "string"
+                  },
+                  {
+                    "const": "change_request",
+                    "type": "string"
+                  },
+                  {
+                    "const": "repository",
+                    "type": "string"
+                  },
+                  {
+                    "const": "support_ticket",
+                    "type": "string"
+                  },
+                  {
                     "const": "signal",
                     "type": "string"
                   },
@@ -48326,6 +56586,34 @@ export const runxSchemaArtifacts = {
                   "type": "string"
                 },
                 {
+                  "const": "provider_thread",
+                  "type": "string"
+                },
+                {
+                  "const": "provider_event",
+                  "type": "string"
+                },
+                {
+                  "const": "provider_comment",
+                  "type": "string"
+                },
+                {
+                  "const": "tracking_item",
+                  "type": "string"
+                },
+                {
+                  "const": "change_request",
+                  "type": "string"
+                },
+                {
+                  "const": "repository",
+                  "type": "string"
+                },
+                {
+                  "const": "support_ticket",
+                  "type": "string"
+                },
+                {
                   "const": "signal",
                   "type": "string"
                 },
@@ -48515,6 +56803,34 @@ export const runxSchemaArtifacts = {
               },
               {
                 "const": "sentry_event",
+                "type": "string"
+              },
+              {
+                "const": "provider_thread",
+                "type": "string"
+              },
+              {
+                "const": "provider_event",
+                "type": "string"
+              },
+              {
+                "const": "provider_comment",
+                "type": "string"
+              },
+              {
+                "const": "tracking_item",
+                "type": "string"
+              },
+              {
+                "const": "change_request",
+                "type": "string"
+              },
+              {
+                "const": "repository",
+                "type": "string"
+              },
+              {
+                "const": "support_ticket",
                 "type": "string"
               },
               {
@@ -48751,6 +57067,34 @@ export const runxSchemaArtifacts = {
                 },
                 {
                   "const": "sentry_event",
+                  "type": "string"
+                },
+                {
+                  "const": "provider_thread",
+                  "type": "string"
+                },
+                {
+                  "const": "provider_event",
+                  "type": "string"
+                },
+                {
+                  "const": "provider_comment",
+                  "type": "string"
+                },
+                {
+                  "const": "tracking_item",
+                  "type": "string"
+                },
+                {
+                  "const": "change_request",
+                  "type": "string"
+                },
+                {
+                  "const": "repository",
+                  "type": "string"
+                },
+                {
+                  "const": "support_ticket",
                   "type": "string"
                 },
                 {
@@ -48993,6 +57337,34 @@ export const runxSchemaArtifacts = {
                       "type": "string"
                     },
                     {
+                      "const": "provider_thread",
+                      "type": "string"
+                    },
+                    {
+                      "const": "provider_event",
+                      "type": "string"
+                    },
+                    {
+                      "const": "provider_comment",
+                      "type": "string"
+                    },
+                    {
+                      "const": "tracking_item",
+                      "type": "string"
+                    },
+                    {
+                      "const": "change_request",
+                      "type": "string"
+                    },
+                    {
+                      "const": "repository",
+                      "type": "string"
+                    },
+                    {
+                      "const": "support_ticket",
+                      "type": "string"
+                    },
+                    {
                       "const": "signal",
                       "type": "string"
                     },
@@ -49229,6 +57601,34 @@ export const runxSchemaArtifacts = {
                           "type": "string"
                         },
                         {
+                          "const": "provider_thread",
+                          "type": "string"
+                        },
+                        {
+                          "const": "provider_event",
+                          "type": "string"
+                        },
+                        {
+                          "const": "provider_comment",
+                          "type": "string"
+                        },
+                        {
+                          "const": "tracking_item",
+                          "type": "string"
+                        },
+                        {
+                          "const": "change_request",
+                          "type": "string"
+                        },
+                        {
+                          "const": "repository",
+                          "type": "string"
+                        },
+                        {
+                          "const": "support_ticket",
+                          "type": "string"
+                        },
+                        {
                           "const": "signal",
                           "type": "string"
                         },
@@ -49416,6 +57816,34 @@ export const runxSchemaArtifacts = {
                           },
                           {
                             "const": "sentry_event",
+                            "type": "string"
+                          },
+                          {
+                            "const": "provider_thread",
+                            "type": "string"
+                          },
+                          {
+                            "const": "provider_event",
+                            "type": "string"
+                          },
+                          {
+                            "const": "provider_comment",
+                            "type": "string"
+                          },
+                          {
+                            "const": "tracking_item",
+                            "type": "string"
+                          },
+                          {
+                            "const": "change_request",
+                            "type": "string"
+                          },
+                          {
+                            "const": "repository",
+                            "type": "string"
+                          },
+                          {
+                            "const": "support_ticket",
                             "type": "string"
                           },
                           {
@@ -49610,6 +58038,34 @@ export const runxSchemaArtifacts = {
                           },
                           {
                             "const": "sentry_event",
+                            "type": "string"
+                          },
+                          {
+                            "const": "provider_thread",
+                            "type": "string"
+                          },
+                          {
+                            "const": "provider_event",
+                            "type": "string"
+                          },
+                          {
+                            "const": "provider_comment",
+                            "type": "string"
+                          },
+                          {
+                            "const": "tracking_item",
+                            "type": "string"
+                          },
+                          {
+                            "const": "change_request",
+                            "type": "string"
+                          },
+                          {
+                            "const": "repository",
+                            "type": "string"
+                          },
+                          {
+                            "const": "support_ticket",
                             "type": "string"
                           },
                           {
@@ -49811,6 +58267,34 @@ export const runxSchemaArtifacts = {
                     "type": "string"
                   },
                   {
+                    "const": "provider_thread",
+                    "type": "string"
+                  },
+                  {
+                    "const": "provider_event",
+                    "type": "string"
+                  },
+                  {
+                    "const": "provider_comment",
+                    "type": "string"
+                  },
+                  {
+                    "const": "tracking_item",
+                    "type": "string"
+                  },
+                  {
+                    "const": "change_request",
+                    "type": "string"
+                  },
+                  {
+                    "const": "repository",
+                    "type": "string"
+                  },
+                  {
+                    "const": "support_ticket",
+                    "type": "string"
+                  },
+                  {
                     "const": "signal",
                     "type": "string"
                   },
@@ -49995,6 +58479,34 @@ export const runxSchemaArtifacts = {
                     },
                     {
                       "const": "sentry_event",
+                      "type": "string"
+                    },
+                    {
+                      "const": "provider_thread",
+                      "type": "string"
+                    },
+                    {
+                      "const": "provider_event",
+                      "type": "string"
+                    },
+                    {
+                      "const": "provider_comment",
+                      "type": "string"
+                    },
+                    {
+                      "const": "tracking_item",
+                      "type": "string"
+                    },
+                    {
+                      "const": "change_request",
+                      "type": "string"
+                    },
+                    {
+                      "const": "repository",
+                      "type": "string"
+                    },
+                    {
+                      "const": "support_ticket",
                       "type": "string"
                     },
                     {
@@ -50187,6 +58699,34 @@ export const runxSchemaArtifacts = {
                       "type": "string"
                     },
                     {
+                      "const": "provider_thread",
+                      "type": "string"
+                    },
+                    {
+                      "const": "provider_event",
+                      "type": "string"
+                    },
+                    {
+                      "const": "provider_comment",
+                      "type": "string"
+                    },
+                    {
+                      "const": "tracking_item",
+                      "type": "string"
+                    },
+                    {
+                      "const": "change_request",
+                      "type": "string"
+                    },
+                    {
+                      "const": "repository",
+                      "type": "string"
+                    },
+                    {
+                      "const": "support_ticket",
+                      "type": "string"
+                    },
+                    {
                       "const": "signal",
                       "type": "string"
                     },
@@ -50373,6 +58913,34 @@ export const runxSchemaArtifacts = {
                     },
                     {
                       "const": "sentry_event",
+                      "type": "string"
+                    },
+                    {
+                      "const": "provider_thread",
+                      "type": "string"
+                    },
+                    {
+                      "const": "provider_event",
+                      "type": "string"
+                    },
+                    {
+                      "const": "provider_comment",
+                      "type": "string"
+                    },
+                    {
+                      "const": "tracking_item",
+                      "type": "string"
+                    },
+                    {
+                      "const": "change_request",
+                      "type": "string"
+                    },
+                    {
+                      "const": "repository",
+                      "type": "string"
+                    },
+                    {
+                      "const": "support_ticket",
                       "type": "string"
                     },
                     {
@@ -50565,6 +59133,34 @@ export const runxSchemaArtifacts = {
                 },
                 {
                   "const": "sentry_event",
+                  "type": "string"
+                },
+                {
+                  "const": "provider_thread",
+                  "type": "string"
+                },
+                {
+                  "const": "provider_event",
+                  "type": "string"
+                },
+                {
+                  "const": "provider_comment",
+                  "type": "string"
+                },
+                {
+                  "const": "tracking_item",
+                  "type": "string"
+                },
+                {
+                  "const": "change_request",
+                  "type": "string"
+                },
+                {
+                  "const": "repository",
+                  "type": "string"
+                },
+                {
+                  "const": "support_ticket",
                   "type": "string"
                 },
                 {
@@ -50772,6 +59368,34 @@ export const runxSchemaArtifacts = {
                 "type": "string"
               },
               {
+                "const": "provider_thread",
+                "type": "string"
+              },
+              {
+                "const": "provider_event",
+                "type": "string"
+              },
+              {
+                "const": "provider_comment",
+                "type": "string"
+              },
+              {
+                "const": "tracking_item",
+                "type": "string"
+              },
+              {
+                "const": "change_request",
+                "type": "string"
+              },
+              {
+                "const": "repository",
+                "type": "string"
+              },
+              {
+                "const": "support_ticket",
+                "type": "string"
+              },
+              {
                 "const": "signal",
                 "type": "string"
               },
@@ -50965,6 +59589,34 @@ export const runxSchemaArtifacts = {
                 },
                 {
                   "const": "sentry_event",
+                  "type": "string"
+                },
+                {
+                  "const": "provider_thread",
+                  "type": "string"
+                },
+                {
+                  "const": "provider_event",
+                  "type": "string"
+                },
+                {
+                  "const": "provider_comment",
+                  "type": "string"
+                },
+                {
+                  "const": "tracking_item",
+                  "type": "string"
+                },
+                {
+                  "const": "change_request",
+                  "type": "string"
+                },
+                {
+                  "const": "repository",
+                  "type": "string"
+                },
+                {
+                  "const": "support_ticket",
                   "type": "string"
                 },
                 {
@@ -51206,6 +59858,34 @@ export const runxSchemaArtifacts = {
                   "type": "string"
                 },
                 {
+                  "const": "provider_thread",
+                  "type": "string"
+                },
+                {
+                  "const": "provider_event",
+                  "type": "string"
+                },
+                {
+                  "const": "provider_comment",
+                  "type": "string"
+                },
+                {
+                  "const": "tracking_item",
+                  "type": "string"
+                },
+                {
+                  "const": "change_request",
+                  "type": "string"
+                },
+                {
+                  "const": "repository",
+                  "type": "string"
+                },
+                {
+                  "const": "support_ticket",
+                  "type": "string"
+                },
+                {
                   "const": "signal",
                   "type": "string"
                 },
@@ -51391,6 +60071,34 @@ export const runxSchemaArtifacts = {
               },
               {
                 "const": "sentry_event",
+                "type": "string"
+              },
+              {
+                "const": "provider_thread",
+                "type": "string"
+              },
+              {
+                "const": "provider_event",
+                "type": "string"
+              },
+              {
+                "const": "provider_comment",
+                "type": "string"
+              },
+              {
+                "const": "tracking_item",
+                "type": "string"
+              },
+              {
+                "const": "change_request",
+                "type": "string"
+              },
+              {
+                "const": "repository",
+                "type": "string"
+              },
+              {
+                "const": "support_ticket",
                 "type": "string"
               },
               {
@@ -51601,6 +60309,34 @@ export const runxSchemaArtifacts = {
                   "type": "string"
                 },
                 {
+                  "const": "provider_thread",
+                  "type": "string"
+                },
+                {
+                  "const": "provider_event",
+                  "type": "string"
+                },
+                {
+                  "const": "provider_comment",
+                  "type": "string"
+                },
+                {
+                  "const": "tracking_item",
+                  "type": "string"
+                },
+                {
+                  "const": "change_request",
+                  "type": "string"
+                },
+                {
+                  "const": "repository",
+                  "type": "string"
+                },
+                {
+                  "const": "support_ticket",
+                  "type": "string"
+                },
+                {
                   "const": "signal",
                   "type": "string"
                 },
@@ -51800,6 +60536,34 @@ export const runxSchemaArtifacts = {
                 "type": "string"
               },
               {
+                "const": "provider_thread",
+                "type": "string"
+              },
+              {
+                "const": "provider_event",
+                "type": "string"
+              },
+              {
+                "const": "provider_comment",
+                "type": "string"
+              },
+              {
+                "const": "tracking_item",
+                "type": "string"
+              },
+              {
+                "const": "change_request",
+                "type": "string"
+              },
+              {
+                "const": "repository",
+                "type": "string"
+              },
+              {
+                "const": "support_ticket",
+                "type": "string"
+              },
+              {
                 "const": "signal",
                 "type": "string"
               },
@@ -51983,6 +60747,34 @@ export const runxSchemaArtifacts = {
               },
               {
                 "const": "sentry_event",
+                "type": "string"
+              },
+              {
+                "const": "provider_thread",
+                "type": "string"
+              },
+              {
+                "const": "provider_event",
+                "type": "string"
+              },
+              {
+                "const": "provider_comment",
+                "type": "string"
+              },
+              {
+                "const": "tracking_item",
+                "type": "string"
+              },
+              {
+                "const": "change_request",
+                "type": "string"
+              },
+              {
+                "const": "repository",
+                "type": "string"
+              },
+              {
+                "const": "support_ticket",
                 "type": "string"
               },
               {
@@ -52195,6 +60987,34 @@ export const runxSchemaArtifacts = {
                 },
                 {
                   "const": "sentry_event",
+                  "type": "string"
+                },
+                {
+                  "const": "provider_thread",
+                  "type": "string"
+                },
+                {
+                  "const": "provider_event",
+                  "type": "string"
+                },
+                {
+                  "const": "provider_comment",
+                  "type": "string"
+                },
+                {
+                  "const": "tracking_item",
+                  "type": "string"
+                },
+                {
+                  "const": "change_request",
+                  "type": "string"
+                },
+                {
+                  "const": "repository",
+                  "type": "string"
+                },
+                {
+                  "const": "support_ticket",
                   "type": "string"
                 },
                 {
@@ -52420,6 +61240,34 @@ export const runxSchemaArtifacts = {
                     },
                     {
                       "const": "sentry_event",
+                      "type": "string"
+                    },
+                    {
+                      "const": "provider_thread",
+                      "type": "string"
+                    },
+                    {
+                      "const": "provider_event",
+                      "type": "string"
+                    },
+                    {
+                      "const": "provider_comment",
+                      "type": "string"
+                    },
+                    {
+                      "const": "tracking_item",
+                      "type": "string"
+                    },
+                    {
+                      "const": "change_request",
+                      "type": "string"
+                    },
+                    {
+                      "const": "repository",
+                      "type": "string"
+                    },
+                    {
+                      "const": "support_ticket",
                       "type": "string"
                     },
                     {
@@ -52665,6 +61513,34 @@ export const runxSchemaArtifacts = {
                       "type": "string"
                     },
                     {
+                      "const": "provider_thread",
+                      "type": "string"
+                    },
+                    {
+                      "const": "provider_event",
+                      "type": "string"
+                    },
+                    {
+                      "const": "provider_comment",
+                      "type": "string"
+                    },
+                    {
+                      "const": "tracking_item",
+                      "type": "string"
+                    },
+                    {
+                      "const": "change_request",
+                      "type": "string"
+                    },
+                    {
+                      "const": "repository",
+                      "type": "string"
+                    },
+                    {
+                      "const": "support_ticket",
+                      "type": "string"
+                    },
+                    {
                       "const": "signal",
                       "type": "string"
                     },
@@ -52850,6 +61726,34 @@ export const runxSchemaArtifacts = {
                   },
                   {
                     "const": "sentry_event",
+                    "type": "string"
+                  },
+                  {
+                    "const": "provider_thread",
+                    "type": "string"
+                  },
+                  {
+                    "const": "provider_event",
+                    "type": "string"
+                  },
+                  {
+                    "const": "provider_comment",
+                    "type": "string"
+                  },
+                  {
+                    "const": "tracking_item",
+                    "type": "string"
+                  },
+                  {
+                    "const": "change_request",
+                    "type": "string"
+                  },
+                  {
+                    "const": "repository",
+                    "type": "string"
+                  },
+                  {
+                    "const": "support_ticket",
                     "type": "string"
                   },
                   {
@@ -53039,6 +61943,34 @@ export const runxSchemaArtifacts = {
                     "type": "string"
                   },
                   {
+                    "const": "provider_thread",
+                    "type": "string"
+                  },
+                  {
+                    "const": "provider_event",
+                    "type": "string"
+                  },
+                  {
+                    "const": "provider_comment",
+                    "type": "string"
+                  },
+                  {
+                    "const": "tracking_item",
+                    "type": "string"
+                  },
+                  {
+                    "const": "change_request",
+                    "type": "string"
+                  },
+                  {
+                    "const": "repository",
+                    "type": "string"
+                  },
+                  {
+                    "const": "support_ticket",
+                    "type": "string"
+                  },
+                  {
                     "const": "signal",
                     "type": "string"
                   },
@@ -53223,6 +62155,34 @@ export const runxSchemaArtifacts = {
                     },
                     {
                       "const": "sentry_event",
+                      "type": "string"
+                    },
+                    {
+                      "const": "provider_thread",
+                      "type": "string"
+                    },
+                    {
+                      "const": "provider_event",
+                      "type": "string"
+                    },
+                    {
+                      "const": "provider_comment",
+                      "type": "string"
+                    },
+                    {
+                      "const": "tracking_item",
+                      "type": "string"
+                    },
+                    {
+                      "const": "change_request",
+                      "type": "string"
+                    },
+                    {
+                      "const": "repository",
+                      "type": "string"
+                    },
+                    {
+                      "const": "support_ticket",
                       "type": "string"
                     },
                     {
@@ -53450,6 +62410,34 @@ export const runxSchemaArtifacts = {
                             "type": "string"
                           },
                           {
+                            "const": "provider_thread",
+                            "type": "string"
+                          },
+                          {
+                            "const": "provider_event",
+                            "type": "string"
+                          },
+                          {
+                            "const": "provider_comment",
+                            "type": "string"
+                          },
+                          {
+                            "const": "tracking_item",
+                            "type": "string"
+                          },
+                          {
+                            "const": "change_request",
+                            "type": "string"
+                          },
+                          {
+                            "const": "repository",
+                            "type": "string"
+                          },
+                          {
+                            "const": "support_ticket",
+                            "type": "string"
+                          },
+                          {
                             "const": "signal",
                             "type": "string"
                           },
@@ -53661,6 +62649,34 @@ export const runxSchemaArtifacts = {
                           },
                           {
                             "const": "sentry_event",
+                            "type": "string"
+                          },
+                          {
+                            "const": "provider_thread",
+                            "type": "string"
+                          },
+                          {
+                            "const": "provider_event",
+                            "type": "string"
+                          },
+                          {
+                            "const": "provider_comment",
+                            "type": "string"
+                          },
+                          {
+                            "const": "tracking_item",
+                            "type": "string"
+                          },
+                          {
+                            "const": "change_request",
+                            "type": "string"
+                          },
+                          {
+                            "const": "repository",
+                            "type": "string"
+                          },
+                          {
+                            "const": "support_ticket",
                             "type": "string"
                           },
                           {
@@ -53932,6 +62948,34 @@ export const runxSchemaArtifacts = {
                       },
                       {
                         "const": "sentry_event",
+                        "type": "string"
+                      },
+                      {
+                        "const": "provider_thread",
+                        "type": "string"
+                      },
+                      {
+                        "const": "provider_event",
+                        "type": "string"
+                      },
+                      {
+                        "const": "provider_comment",
+                        "type": "string"
+                      },
+                      {
+                        "const": "tracking_item",
+                        "type": "string"
+                      },
+                      {
+                        "const": "change_request",
+                        "type": "string"
+                      },
+                      {
+                        "const": "repository",
+                        "type": "string"
+                      },
+                      {
+                        "const": "support_ticket",
                         "type": "string"
                       },
                       {
@@ -54281,6 +63325,34 @@ export const runxSchemaArtifacts = {
                         "type": "string"
                       },
                       {
+                        "const": "provider_thread",
+                        "type": "string"
+                      },
+                      {
+                        "const": "provider_event",
+                        "type": "string"
+                      },
+                      {
+                        "const": "provider_comment",
+                        "type": "string"
+                      },
+                      {
+                        "const": "tracking_item",
+                        "type": "string"
+                      },
+                      {
+                        "const": "change_request",
+                        "type": "string"
+                      },
+                      {
+                        "const": "repository",
+                        "type": "string"
+                      },
+                      {
+                        "const": "support_ticket",
+                        "type": "string"
+                      },
+                      {
                         "const": "signal",
                         "type": "string"
                       },
@@ -54500,6 +63572,34 @@ export const runxSchemaArtifacts = {
                       "type": "string"
                     },
                     {
+                      "const": "provider_thread",
+                      "type": "string"
+                    },
+                    {
+                      "const": "provider_event",
+                      "type": "string"
+                    },
+                    {
+                      "const": "provider_comment",
+                      "type": "string"
+                    },
+                    {
+                      "const": "tracking_item",
+                      "type": "string"
+                    },
+                    {
+                      "const": "change_request",
+                      "type": "string"
+                    },
+                    {
+                      "const": "repository",
+                      "type": "string"
+                    },
+                    {
+                      "const": "support_ticket",
+                      "type": "string"
+                    },
+                    {
                       "const": "signal",
                       "type": "string"
                     },
@@ -54683,6 +63783,34 @@ export const runxSchemaArtifacts = {
                     },
                     {
                       "const": "sentry_event",
+                      "type": "string"
+                    },
+                    {
+                      "const": "provider_thread",
+                      "type": "string"
+                    },
+                    {
+                      "const": "provider_event",
+                      "type": "string"
+                    },
+                    {
+                      "const": "provider_comment",
+                      "type": "string"
+                    },
+                    {
+                      "const": "tracking_item",
+                      "type": "string"
+                    },
+                    {
+                      "const": "change_request",
+                      "type": "string"
+                    },
+                    {
+                      "const": "repository",
+                      "type": "string"
+                    },
+                    {
+                      "const": "support_ticket",
                       "type": "string"
                     },
                     {
@@ -54911,6 +64039,34 @@ export const runxSchemaArtifacts = {
                       },
                       {
                         "const": "sentry_event",
+                        "type": "string"
+                      },
+                      {
+                        "const": "provider_thread",
+                        "type": "string"
+                      },
+                      {
+                        "const": "provider_event",
+                        "type": "string"
+                      },
+                      {
+                        "const": "provider_comment",
+                        "type": "string"
+                      },
+                      {
+                        "const": "tracking_item",
+                        "type": "string"
+                      },
+                      {
+                        "const": "change_request",
+                        "type": "string"
+                      },
+                      {
+                        "const": "repository",
+                        "type": "string"
+                      },
+                      {
+                        "const": "support_ticket",
                         "type": "string"
                       },
                       {
@@ -55185,6 +64341,34 @@ export const runxSchemaArtifacts = {
                     "type": "string"
                   },
                   {
+                    "const": "provider_thread",
+                    "type": "string"
+                  },
+                  {
+                    "const": "provider_event",
+                    "type": "string"
+                  },
+                  {
+                    "const": "provider_comment",
+                    "type": "string"
+                  },
+                  {
+                    "const": "tracking_item",
+                    "type": "string"
+                  },
+                  {
+                    "const": "change_request",
+                    "type": "string"
+                  },
+                  {
+                    "const": "repository",
+                    "type": "string"
+                  },
+                  {
+                    "const": "support_ticket",
+                    "type": "string"
+                  },
+                  {
                     "const": "signal",
                     "type": "string"
                   },
@@ -55446,6 +64630,34 @@ export const runxSchemaArtifacts = {
                     "type": "string"
                   },
                   {
+                    "const": "provider_thread",
+                    "type": "string"
+                  },
+                  {
+                    "const": "provider_event",
+                    "type": "string"
+                  },
+                  {
+                    "const": "provider_comment",
+                    "type": "string"
+                  },
+                  {
+                    "const": "tracking_item",
+                    "type": "string"
+                  },
+                  {
+                    "const": "change_request",
+                    "type": "string"
+                  },
+                  {
+                    "const": "repository",
+                    "type": "string"
+                  },
+                  {
+                    "const": "support_ticket",
+                    "type": "string"
+                  },
+                  {
                     "const": "signal",
                     "type": "string"
                   },
@@ -55657,6 +64869,34 @@ export const runxSchemaArtifacts = {
                 },
                 {
                   "const": "sentry_event",
+                  "type": "string"
+                },
+                {
+                  "const": "provider_thread",
+                  "type": "string"
+                },
+                {
+                  "const": "provider_event",
+                  "type": "string"
+                },
+                {
+                  "const": "provider_comment",
+                  "type": "string"
+                },
+                {
+                  "const": "tracking_item",
+                  "type": "string"
+                },
+                {
+                  "const": "change_request",
+                  "type": "string"
+                },
+                {
+                  "const": "repository",
+                  "type": "string"
+                },
+                {
+                  "const": "support_ticket",
                   "type": "string"
                 },
                 {
@@ -55902,6 +65142,34 @@ export const runxSchemaArtifacts = {
                   "type": "string"
                 },
                 {
+                  "const": "provider_thread",
+                  "type": "string"
+                },
+                {
+                  "const": "provider_event",
+                  "type": "string"
+                },
+                {
+                  "const": "provider_comment",
+                  "type": "string"
+                },
+                {
+                  "const": "tracking_item",
+                  "type": "string"
+                },
+                {
+                  "const": "change_request",
+                  "type": "string"
+                },
+                {
+                  "const": "repository",
+                  "type": "string"
+                },
+                {
+                  "const": "support_ticket",
+                  "type": "string"
+                },
+                {
                   "const": "signal",
                   "type": "string"
                 },
@@ -56139,6 +65407,34 @@ export const runxSchemaArtifacts = {
                       "type": "string"
                     },
                     {
+                      "const": "provider_thread",
+                      "type": "string"
+                    },
+                    {
+                      "const": "provider_event",
+                      "type": "string"
+                    },
+                    {
+                      "const": "provider_comment",
+                      "type": "string"
+                    },
+                    {
+                      "const": "tracking_item",
+                      "type": "string"
+                    },
+                    {
+                      "const": "change_request",
+                      "type": "string"
+                    },
+                    {
+                      "const": "repository",
+                      "type": "string"
+                    },
+                    {
+                      "const": "support_ticket",
+                      "type": "string"
+                    },
+                    {
                       "const": "signal",
                       "type": "string"
                     },
@@ -56347,6 +65643,34 @@ export const runxSchemaArtifacts = {
                     },
                     {
                       "const": "sentry_event",
+                      "type": "string"
+                    },
+                    {
+                      "const": "provider_thread",
+                      "type": "string"
+                    },
+                    {
+                      "const": "provider_event",
+                      "type": "string"
+                    },
+                    {
+                      "const": "provider_comment",
+                      "type": "string"
+                    },
+                    {
+                      "const": "tracking_item",
+                      "type": "string"
+                    },
+                    {
+                      "const": "change_request",
+                      "type": "string"
+                    },
+                    {
+                      "const": "repository",
+                      "type": "string"
+                    },
+                    {
+                      "const": "support_ticket",
                       "type": "string"
                     },
                     {
@@ -56592,6 +65916,34 @@ export const runxSchemaArtifacts = {
                       "type": "string"
                     },
                     {
+                      "const": "provider_thread",
+                      "type": "string"
+                    },
+                    {
+                      "const": "provider_event",
+                      "type": "string"
+                    },
+                    {
+                      "const": "provider_comment",
+                      "type": "string"
+                    },
+                    {
+                      "const": "tracking_item",
+                      "type": "string"
+                    },
+                    {
+                      "const": "change_request",
+                      "type": "string"
+                    },
+                    {
+                      "const": "repository",
+                      "type": "string"
+                    },
+                    {
+                      "const": "support_ticket",
+                      "type": "string"
+                    },
+                    {
                       "const": "signal",
                       "type": "string"
                     },
@@ -56777,6 +66129,34 @@ export const runxSchemaArtifacts = {
                   },
                   {
                     "const": "sentry_event",
+                    "type": "string"
+                  },
+                  {
+                    "const": "provider_thread",
+                    "type": "string"
+                  },
+                  {
+                    "const": "provider_event",
+                    "type": "string"
+                  },
+                  {
+                    "const": "provider_comment",
+                    "type": "string"
+                  },
+                  {
+                    "const": "tracking_item",
+                    "type": "string"
+                  },
+                  {
+                    "const": "change_request",
+                    "type": "string"
+                  },
+                  {
+                    "const": "repository",
+                    "type": "string"
+                  },
+                  {
+                    "const": "support_ticket",
                     "type": "string"
                   },
                   {
@@ -56966,6 +66346,34 @@ export const runxSchemaArtifacts = {
                     "type": "string"
                   },
                   {
+                    "const": "provider_thread",
+                    "type": "string"
+                  },
+                  {
+                    "const": "provider_event",
+                    "type": "string"
+                  },
+                  {
+                    "const": "provider_comment",
+                    "type": "string"
+                  },
+                  {
+                    "const": "tracking_item",
+                    "type": "string"
+                  },
+                  {
+                    "const": "change_request",
+                    "type": "string"
+                  },
+                  {
+                    "const": "repository",
+                    "type": "string"
+                  },
+                  {
+                    "const": "support_ticket",
+                    "type": "string"
+                  },
+                  {
                     "const": "signal",
                     "type": "string"
                   },
@@ -57150,6 +66558,34 @@ export const runxSchemaArtifacts = {
                     },
                     {
                       "const": "sentry_event",
+                      "type": "string"
+                    },
+                    {
+                      "const": "provider_thread",
+                      "type": "string"
+                    },
+                    {
+                      "const": "provider_event",
+                      "type": "string"
+                    },
+                    {
+                      "const": "provider_comment",
+                      "type": "string"
+                    },
+                    {
+                      "const": "tracking_item",
+                      "type": "string"
+                    },
+                    {
+                      "const": "change_request",
+                      "type": "string"
+                    },
+                    {
+                      "const": "repository",
+                      "type": "string"
+                    },
+                    {
+                      "const": "support_ticket",
                       "type": "string"
                     },
                     {
@@ -57369,6 +66805,34 @@ export const runxSchemaArtifacts = {
                   },
                   {
                     "const": "sentry_event",
+                    "type": "string"
+                  },
+                  {
+                    "const": "provider_thread",
+                    "type": "string"
+                  },
+                  {
+                    "const": "provider_event",
+                    "type": "string"
+                  },
+                  {
+                    "const": "provider_comment",
+                    "type": "string"
+                  },
+                  {
+                    "const": "tracking_item",
+                    "type": "string"
+                  },
+                  {
+                    "const": "change_request",
+                    "type": "string"
+                  },
+                  {
+                    "const": "repository",
+                    "type": "string"
+                  },
+                  {
+                    "const": "support_ticket",
                     "type": "string"
                   },
                   {
@@ -57900,6 +67364,34 @@ export const runxSchemaArtifacts = {
                         "type": "string"
                       },
                       {
+                        "const": "provider_thread",
+                        "type": "string"
+                      },
+                      {
+                        "const": "provider_event",
+                        "type": "string"
+                      },
+                      {
+                        "const": "provider_comment",
+                        "type": "string"
+                      },
+                      {
+                        "const": "tracking_item",
+                        "type": "string"
+                      },
+                      {
+                        "const": "change_request",
+                        "type": "string"
+                      },
+                      {
+                        "const": "repository",
+                        "type": "string"
+                      },
+                      {
+                        "const": "support_ticket",
+                        "type": "string"
+                      },
+                      {
                         "const": "signal",
                         "type": "string"
                       },
@@ -58093,6 +67585,34 @@ export const runxSchemaArtifacts = {
                       },
                       {
                         "const": "sentry_event",
+                        "type": "string"
+                      },
+                      {
+                        "const": "provider_thread",
+                        "type": "string"
+                      },
+                      {
+                        "const": "provider_event",
+                        "type": "string"
+                      },
+                      {
+                        "const": "provider_comment",
+                        "type": "string"
+                      },
+                      {
+                        "const": "tracking_item",
+                        "type": "string"
+                      },
+                      {
+                        "const": "change_request",
+                        "type": "string"
+                      },
+                      {
+                        "const": "repository",
+                        "type": "string"
+                      },
+                      {
+                        "const": "support_ticket",
                         "type": "string"
                       },
                       {
@@ -58326,6 +67846,34 @@ export const runxSchemaArtifacts = {
                 },
                 {
                   "const": "sentry_event",
+                  "type": "string"
+                },
+                {
+                  "const": "provider_thread",
+                  "type": "string"
+                },
+                {
+                  "const": "provider_event",
+                  "type": "string"
+                },
+                {
+                  "const": "provider_comment",
+                  "type": "string"
+                },
+                {
+                  "const": "tracking_item",
+                  "type": "string"
+                },
+                {
+                  "const": "change_request",
+                  "type": "string"
+                },
+                {
+                  "const": "repository",
+                  "type": "string"
+                },
+                {
+                  "const": "support_ticket",
                   "type": "string"
                 },
                 {

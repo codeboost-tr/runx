@@ -28,12 +28,13 @@ use runx_contracts::host_protocol::{
 use runx_contracts::ledger::LedgerEntry;
 use runx_contracts::list::RunxListReport;
 use runx_contracts::operational_policy::OperationalPolicy;
+use runx_contracts::operational_proposal::OperationalProposal;
 use runx_contracts::output::Output;
 use runx_contracts::packet_index::PacketIndex;
 use runx_contracts::policy_proof::{AuthorityProof, CredentialEnvelope, ScopeAdmission};
 use runx_contracts::receipt::Receipt;
 use runx_contracts::redaction::Redaction;
-use runx_contracts::reference::Reference;
+use runx_contracts::reference::{Reference, ReferenceLink};
 use runx_contracts::registry_binding::RegistryBinding;
 use runx_contracts::review::ReviewReceiptOutput;
 use runx_contracts::run_summary::RunSummary;
@@ -63,6 +64,11 @@ pub(super) fn covered() -> Vec<Covered> {
             file_name: "reference.schema.json",
             emitted: Reference::json_schema(),
             corpus: reference_corpus(),
+        },
+        Covered {
+            file_name: "reference-link.schema.json",
+            emitted: ReferenceLink::json_schema(),
+            corpus: reference_link_corpus(),
         },
         Covered {
             file_name: "doctor.schema.json",
@@ -248,6 +254,11 @@ pub(super) fn covered() -> Vec<Covered> {
             file_name: "operational-policy.schema.json",
             emitted: OperationalPolicy::json_schema(),
             corpus: operational_policy_corpus(),
+        },
+        Covered {
+            file_name: "operational-proposal.schema.json",
+            emitted: OperationalProposal::json_schema(),
+            corpus: operational_proposal_corpus(),
         },
         Covered {
             file_name: "act.schema.json",

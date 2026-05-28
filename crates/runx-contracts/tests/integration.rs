@@ -15,6 +15,7 @@ mod harness_spine_fixtures;
 mod host_protocol_fixtures;
 mod nitrosend_external_fixture;
 mod operational_policy;
+mod operational_proposal_fixtures;
 mod post_merge_observer;
 mod reference;
 mod schema_generator_check;

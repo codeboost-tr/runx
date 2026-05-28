@@ -59,6 +59,10 @@ export type ReferenceContract = DeepReadonly<{
   observed_at?: string;
   proof_kind?: ProofKindContract;
 }>;
+export type ReferenceLinkContract = DeepReadonly<{
+  role: string;
+  ref: ReferenceContract;
+}>;
 export type ActReferenceContract = DeepReadonly<{
   receipt_ref: ReferenceContract;
   act_id: string;
@@ -156,6 +160,7 @@ export type ReflectionEntryContract = ContractObject;
 export type FeedEntryContract = ContractObject;
 
 export const referenceSchema = generatedSchema<ReferenceContract>("reference.schema.json");
+export const referenceLinkSchema = generatedSchema<ReferenceLinkContract>("reference-link.schema.json");
 export const redactionSchema = generatedSchema<RedactionContract>("redaction.schema.json");
 export const signalSchema = generatedSchema<SignalContract>("signal.schema.json");
 export const authoritySubsetProofSchema = generatedSchema<AuthoritySubsetProofContract>(

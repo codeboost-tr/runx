@@ -13,9 +13,16 @@ const forbiddenBrokerageTerm = "authorize" + "_url";
 try {
   writeMinimalWorkspace(fixtureRoot);
 
-  mkdirSync(path.join(fixtureRoot, ".build", "runtime"), { recursive: true });
+  const ignoredBuildDir = path.join(
+    fixtureRoot,
+    "packages",
+    "source-test",
+    ".build",
+    "runtime",
+  );
+  mkdirSync(ignoredBuildDir, { recursive: true });
   writeFileSync(
-    path.join(fixtureRoot, ".build", "runtime", "cached.js"),
+    path.join(ignoredBuildDir, "cached.ts"),
     `export const stale = "${forbiddenBrokerageTerm}";\n`,
   );
   runBoundary(fixtureRoot, true, "boundary check should ignore stale build output");
@@ -34,7 +41,7 @@ try {
   if (!combinedOutput.includes("packages/source-test/src/index.ts")) {
     throw new Error(`boundary finding did not cite source file:\n${combinedOutput}`);
   }
-  if (combinedOutput.includes(".build/runtime/cached.js")) {
+  if (combinedOutput.includes(".build/runtime/cached.ts")) {
     throw new Error(`boundary finding cited ignored build output:\n${combinedOutput}`);
   }
 

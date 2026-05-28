@@ -261,6 +261,19 @@ export {
 } from "./schemas/operational-policy.js";
 
 export {
+  operationalProposalSchema,
+  operationalProposalSchemaVersion,
+  validateOperationalProposalContract,
+  type OperationalProposalAuthorityContract,
+  type OperationalProposalContract,
+  type OperationalProposalHumanGateContract,
+  type OperationalProposalIdempotencyContract,
+  type OperationalProposalOutcomeContract,
+  type OperationalProposalRecommendedActionContract,
+  type OperationalProposalRedactionStatusContract,
+} from "./schemas/operational-proposal.js";
+
+export {
   validateArtifactEnvelopeContract,
 } from "./schemas/artifact.js";
 
@@ -392,6 +405,7 @@ export {
   proofKindSchema,
   redactionCommitmentAlgorithmSchema,
   referenceSchema,
+  referenceLinkSchema,
   nullableReferenceSchema,
   actReferenceSchema,
   hashCommitmentSchema,
@@ -475,6 +489,7 @@ export {
   type PaymentCredentialFormContract,
   type ProofKindContract,
   type ReferenceContract,
+  type ReferenceLinkContract,
   type ActReferenceContract,
   type HashCommitmentContract,
   type RedactionContract,
@@ -588,6 +603,7 @@ import {
 import { ledgerRecordSchema } from "./schemas/ledger.js";
 import { handoffSignalV1Schema, handoffStateV1Schema, suppressionRecordV1Schema } from "./schemas/handoff.js";
 import { operationalPolicySchema } from "./schemas/operational-policy.js";
+import { operationalProposalSchema } from "./schemas/operational-proposal.js";
 import { runxSchemaArtifacts } from "./schema-artifacts.js";
 
 export const runxContractSchemas = {
@@ -626,6 +642,7 @@ export const runxContractSchemas = {
   externalAdapterCancellation: runxSchemaArtifacts["external-adapter-cancellation.schema.json"],
   externalAdapterCredentialRequest: runxSchemaArtifacts["external-adapter-credential-request.schema.json"],
   reference: runxSchemaArtifacts["reference.schema.json"],
+  referenceLink: runxSchemaArtifacts["reference-link.schema.json"],
   authority: runxSchemaArtifacts["authority.schema.json"],
   authoritySubsetProof: runxSchemaArtifacts["authority-subset-proof.schema.json"],
   signal: runxSchemaArtifacts["signal.schema.json"],
@@ -648,6 +665,7 @@ export const runxContractSchemas = {
   handoffState: runxSchemaArtifacts["handoff-state.schema.json"],
   suppressionRecord: runxSchemaArtifacts["suppression-record.schema.json"],
   operationalPolicy: runxSchemaArtifacts["operational-policy.schema.json"],
+  operationalProposal: runxSchemaArtifacts["operational-proposal.schema.json"],
 } as const;
 
 export const runxAuxiliarySchemas = {
