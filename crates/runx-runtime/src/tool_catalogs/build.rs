@@ -240,9 +240,7 @@ fn tool_output_payload(output: &ToolOutput) -> JsonPayload {
     JsonPayload::Object(object)
 }
 
-fn tool_output_binding_payload(
-    binding: &runx_contracts::tools::ToolOutputBinding,
-) -> JsonPayload {
+fn tool_output_binding_payload(binding: &runx_contracts::tools::ToolOutputBinding) -> JsonPayload {
     let mut object = binding.extra.clone();
     if let Some(packet) = &binding.packet {
         object.insert("packet".to_owned(), JsonPayload::String(packet.clone()));

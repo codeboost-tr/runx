@@ -4,12 +4,34 @@
 // only with receipt parity gates beside them.
 //! Runtime support for target-repo runner execution.
 
+mod adapter;
+mod commands;
+mod projection;
 mod provider;
 
-use std::fmt::{self, Write as _};
+use std::fmt::Write as _;
 
-use serde::Serialize;
 use sha2::{Digest, Sha256};
+
+pub use adapter::{
+    TargetRepoRunnerAdapter, TargetRepoRunnerAdapterError, TargetRepoRunnerRuntimeError,
+};
+pub use commands::{
+    TargetRepoRunnerCheckoutCommand, TargetRepoRunnerFixtureExecution,
+    TargetRepoRunnerFixtureExecutionInput, TargetRepoRunnerGitMutationCommand,
+    TargetRepoRunnerGitMutationObservation, TargetRepoRunnerGovernedRunnerInvocation,
+    TargetRepoRunnerGovernedRunnerObservation, TargetRepoRunnerLiveExecution,
+    TargetRepoRunnerProviderDedupeLookupCommand, TargetRepoRunnerPullRequestCreateCommand,
+    TargetRepoRunnerPullRequestMutation, TargetRepoRunnerPullRequestMutationCommand,
+    TargetRepoRunnerPullRequestObservation, TargetRepoRunnerPullRequestObservationRequest,
+    TargetRepoRunnerPullRequestReuseCommand, TargetRepoRunnerRevisionReceiptProjection,
+    TargetRepoRunnerSourcePublicationCommand, TargetRepoRunnerSourcePublicationObservation,
+    TargetRepoRunnerSourcePublicationProjection, TargetRepoRunnerSourcePublicationRequest,
+};
+pub use projection::{
+    project_target_repo_runner_revision_receipt,
+    project_target_repo_runner_source_publication_receipt,
+};
 
 use runx_contracts::{
     ActForm, AuthorityAttenuation, AuthoritySubsetProof, AuthoritySubsetResult, ChangePlan,
@@ -20,8 +42,7 @@ use runx_contracts::{
     TargetRepoRunnerDedupeLookupExecution, TargetRepoRunnerDedupeLookupObservation,
     TargetRepoRunnerDedupeLookupPlan, TargetRepoRunnerDedupeResult, TargetRepoRunnerExecutionPlan,
     TargetRepoRunnerExistingPullRequest, TargetRepoRunnerPlan, TargetRepoRunnerPlanError,
-    TargetRepoRunnerProvider, TargetRepoRunnerProviderPullRequest,
-    TargetRepoRunnerPullRequestDisposition, TargetRepoRunnerPullRequestReceiptPlan,
+    TargetRepoRunnerProviderPullRequest, TargetRepoRunnerPullRequestDisposition,
     TargetRepoRunnerReadinessObservation, TargetRepoRunnerSourcePublicationReceiptPlan,
     TargetSurface, apply_target_repo_runner_dedupe_lookup_execution,
     execute_target_repo_runner_dedupe_lookup, plan_target_repo_runner_execution,
@@ -46,240 +67,6 @@ use provider::{
     github_pull_request_number, github_repository, github_search_exact_term,
     validate_provider_lookup_term,
 };
-
-#[derive(Clone, Debug, PartialEq)]
-pub struct TargetRepoRunnerFixtureExecutionInput {
-    pub plan: TargetRepoRunnerPlan,
-    pub readiness: TargetRepoRunnerReadinessObservation,
-    pub dedupe: TargetRepoRunnerDedupeLookupObservation,
-    pub created_pull_request: Option<TargetRepoRunnerExistingPullRequest>,
-}
-
-#[derive(Clone, Debug, PartialEq, Serialize)]
-pub struct TargetRepoRunnerFixtureExecution {
-    pub execution_plan: TargetRepoRunnerExecutionPlan,
-    pub dedupe_execution: TargetRepoRunnerDedupeLookupExecution,
-    pub deduped_plan: TargetRepoRunnerPlan,
-    pub disposition: TargetRepoRunnerPullRequestDisposition,
-    pub pull_request: TargetRepoRunnerExistingPullRequest,
-    pub pull_request_receipt: TargetRepoRunnerPullRequestReceiptPlan,
-    pub source_publication_receipt: TargetRepoRunnerSourcePublicationReceiptPlan,
-}
-
-#[derive(Clone, Debug, PartialEq, Serialize)]
-pub struct TargetRepoRunnerLiveExecution {
-    pub checkout_command: TargetRepoRunnerCheckoutCommand,
-    pub readiness: TargetRepoRunnerReadinessObservation,
-    pub provider_lookup_command: TargetRepoRunnerProviderDedupeLookupCommand,
-    pub dedupe_observation: TargetRepoRunnerDedupeLookupObservation,
-    pub runner_observation: Option<TargetRepoRunnerGovernedRunnerObservation>,
-    pub git_mutation_command: Option<TargetRepoRunnerGitMutationCommand>,
-    pub git_mutation_observation: Option<TargetRepoRunnerGitMutationObservation>,
-    pub pull_request_request: TargetRepoRunnerPullRequestObservationRequest,
-    pub pull_request_observation: TargetRepoRunnerPullRequestObservation,
-    pub execution: TargetRepoRunnerFixtureExecution,
-    pub revision_receipt: Receipt,
-    pub revision_projection: TargetRepoRunnerRevisionReceiptProjection,
-    pub source_publication_request: TargetRepoRunnerSourcePublicationRequest,
-    pub source_publication_observation: TargetRepoRunnerSourcePublicationObservation,
-    pub source_publication_receipt: Receipt,
-    pub source_publication_projection: TargetRepoRunnerSourcePublicationProjection,
-}
-
-#[derive(Clone, Debug, PartialEq, Serialize)]
-pub struct TargetRepoRunnerGovernedRunnerInvocation {
-    pub execution_plan: TargetRepoRunnerExecutionPlan,
-    pub deduped_plan: TargetRepoRunnerPlan,
-    pub disposition: TargetRepoRunnerPullRequestDisposition,
-}
-
-#[derive(Clone, Debug, PartialEq, Eq, Serialize)]
-pub struct TargetRepoRunnerGovernedRunnerObservation {
-    pub runner_id: String,
-    pub target_repo: String,
-    pub summary: String,
-    pub revision_refs: Vec<Reference>,
-    pub artifact_refs: Vec<Reference>,
-    pub verification_refs: Vec<Reference>,
-}
-
-#[derive(Clone, Debug, PartialEq, Serialize)]
-pub struct TargetRepoRunnerGitMutationCommand {
-    pub provider: TargetRepoRunnerProvider,
-    pub target_repo: String,
-    pub repository: TargetRepoRunnerGithubRepository,
-    pub target_repo_ref: Reference,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub base_branch: Option<String>,
-    pub branch: String,
-    pub dedupe_key: String,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub source_issue_ref: Option<Reference>,
-    pub source_thread_ref: Reference,
-    pub runner_id: String,
-    pub runner_summary: String,
-    pub runner_revision_refs: Vec<Reference>,
-    pub artifact_refs: Vec<Reference>,
-    pub verification_refs: Vec<Reference>,
-    pub human_merge_gate_required: bool,
-    pub local_path_hidden: bool,
-}
-
-#[derive(Clone, Debug, PartialEq, Eq, Serialize)]
-pub struct TargetRepoRunnerGitMutationObservation {
-    pub target_repo: String,
-    pub branch: String,
-    pub head_sha: String,
-    pub revision_refs: Vec<Reference>,
-    pub verification_refs: Vec<Reference>,
-}
-
-#[derive(Clone, Debug, Eq, PartialEq, Serialize)]
-pub struct TargetRepoRunnerCheckoutCommand {
-    pub target_repo: String,
-    pub public_repo_ref: Reference,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub base_branch: Option<String>,
-    pub runner_id: String,
-    pub runner_kind: runx_contracts::schema::NonEmptyString,
-    pub target_scafld_required: bool,
-    pub runner_scafld_required: bool,
-    pub mutate_target_repo: bool,
-    pub local_path_hidden: bool,
-}
-
-#[derive(Clone, Debug, Eq, PartialEq, Serialize)]
-pub struct TargetRepoRunnerProviderDedupeLookupCommand {
-    pub provider: TargetRepoRunnerProvider,
-    pub target_repo: String,
-    pub repository: TargetRepoRunnerGithubRepository,
-    pub dedupe_key: String,
-    pub result_limit: u16,
-    pub query: TargetRepoRunnerGithubPullRequestSearchCommand,
-    pub markers: Vec<String>,
-    pub required_refs: Vec<Reference>,
-}
-
-#[derive(Clone, Debug, PartialEq, Serialize)]
-pub struct TargetRepoRunnerPullRequestObservationRequest {
-    pub command: TargetRepoRunnerPullRequestMutationCommand,
-    pub disposition: TargetRepoRunnerPullRequestDisposition,
-    pub target_repo: String,
-    pub dedupe_key: String,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub existing_pull_request: Option<TargetRepoRunnerExistingPullRequest>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub runner_observation: Option<TargetRepoRunnerGovernedRunnerObservation>,
-}
-
-#[derive(Clone, Debug, PartialEq, Serialize)]
-pub struct TargetRepoRunnerPullRequestMutationCommand {
-    pub provider: TargetRepoRunnerProvider,
-    pub disposition: TargetRepoRunnerPullRequestDisposition,
-    pub target_repo: String,
-    pub repository: TargetRepoRunnerGithubRepository,
-    pub target_repo_ref: Reference,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub base_branch: Option<String>,
-    pub dedupe_key: String,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub source_issue_ref: Option<Reference>,
-    pub source_thread_ref: Reference,
-    pub mutation: TargetRepoRunnerPullRequestMutation,
-    pub human_merge_gate_required: bool,
-    pub local_path_hidden: bool,
-}
-
-#[derive(Clone, Debug, PartialEq, Serialize)]
-#[serde(tag = "kind", rename_all = "snake_case")]
-pub enum TargetRepoRunnerPullRequestMutation {
-    Create(TargetRepoRunnerPullRequestCreateCommand),
-    Reuse(TargetRepoRunnerPullRequestReuseCommand),
-}
-
-#[derive(Clone, Debug, PartialEq, Serialize)]
-pub struct TargetRepoRunnerPullRequestCreateCommand {
-    pub title: String,
-    pub body: String,
-    pub head_branch: String,
-    pub head_sha: String,
-    pub runner_id: String,
-    pub runner_summary: String,
-    pub runner_revision_refs: Vec<Reference>,
-    pub git_revision_refs: Vec<Reference>,
-    pub artifact_refs: Vec<Reference>,
-    pub verification_refs: Vec<Reference>,
-    pub git_verification_refs: Vec<Reference>,
-}
-
-#[derive(Clone, Debug, Eq, PartialEq, Serialize)]
-pub struct TargetRepoRunnerPullRequestReuseCommand {
-    pub existing_pull_request: TargetRepoRunnerExistingPullRequest,
-    pub reason: String,
-}
-
-#[derive(Clone, Debug, PartialEq, Serialize)]
-pub struct TargetRepoRunnerPullRequestObservation {
-    pub provider: TargetRepoRunnerProvider,
-    pub target_repo: String,
-    pub pull_request: TargetRepoRunnerExistingPullRequest,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub head_branch: Option<String>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub head_sha: Option<String>,
-}
-
-#[derive(Clone, Debug, PartialEq, Serialize)]
-pub struct TargetRepoRunnerSourcePublicationRequest {
-    pub publication: TargetRepoRunnerSourcePublicationReceiptPlan,
-    pub revision_receipt_ref: Reference,
-    pub revision_projection: TargetRepoRunnerRevisionReceiptProjection,
-    pub commands: Vec<TargetRepoRunnerSourcePublicationCommand>,
-}
-
-#[derive(Clone, Debug, Eq, PartialEq, Serialize)]
-#[serde(tag = "kind", rename_all = "snake_case")]
-pub enum TargetRepoRunnerSourcePublicationCommand {
-    SourceIssueComment { target: Reference, body: String },
-    SourceThreadReply { target: Reference, body: String },
-}
-
-#[derive(Clone, Debug, PartialEq, Serialize)]
-pub struct TargetRepoRunnerSourcePublicationObservation {
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub source_issue_ref: Option<Reference>,
-    pub source_thread_ref: Reference,
-    pub pull_request_ref: Reference,
-    pub revision_receipt_ref: Reference,
-    pub published_refs: Vec<Reference>,
-    pub metadata: JsonObject,
-}
-
-#[derive(Clone, Debug, PartialEq, Serialize)]
-pub struct TargetRepoRunnerRevisionReceiptProjection {
-    pub receipt_ref: Reference,
-    pub act_id: String,
-    pub disposition: TargetRepoRunnerPullRequestDisposition,
-    pub target_repo_ref: Reference,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub source_issue_ref: Option<Reference>,
-    pub source_thread_ref: Reference,
-    pub pull_request_ref: Reference,
-    pub summary: String,
-    pub metadata: JsonObject,
-}
-
-#[derive(Clone, Debug, PartialEq, Serialize)]
-pub struct TargetRepoRunnerSourcePublicationProjection {
-    pub receipt_ref: Reference,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub source_issue_ref: Option<Reference>,
-    pub source_thread_ref: Reference,
-    pub pull_request_ref: Reference,
-    pub published_refs: Vec<Reference>,
-    pub summary: String,
-    pub metadata: JsonObject,
-}
 
 pub fn target_repo_runner_checkout_command(
     plan: &TargetRepoRunnerPlan,
@@ -422,158 +209,6 @@ pub fn target_repo_runner_provider_dedupe_observation_from_pull_requests(
         key: command.dedupe_key.clone(),
         pull_requests,
     })
-}
-
-#[derive(Clone, Debug, Eq, PartialEq)]
-pub struct TargetRepoRunnerAdapterError {
-    pub operation: &'static str,
-    pub message: String,
-}
-
-impl TargetRepoRunnerAdapterError {
-    pub fn new(operation: &'static str, message: impl Into<String>) -> Self {
-        Self {
-            operation,
-            message: message.into(),
-        }
-    }
-}
-
-impl fmt::Display for TargetRepoRunnerAdapterError {
-    fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(formatter, "{} failed: {}", self.operation, self.message)
-    }
-}
-
-impl std::error::Error for TargetRepoRunnerAdapterError {}
-
-pub trait TargetRepoRunnerAdapter {
-    fn checkout_readiness(
-        &mut self,
-        command: &TargetRepoRunnerCheckoutCommand,
-    ) -> Result<TargetRepoRunnerReadinessObservation, TargetRepoRunnerAdapterError>;
-
-    fn provider_dedupe_lookup(
-        &mut self,
-        command: &TargetRepoRunnerProviderDedupeLookupCommand,
-    ) -> Result<TargetRepoRunnerDedupeLookupObservation, TargetRepoRunnerAdapterError>;
-
-    fn invoke_governed_runner(
-        &mut self,
-        invocation: &TargetRepoRunnerGovernedRunnerInvocation,
-    ) -> Result<TargetRepoRunnerGovernedRunnerObservation, TargetRepoRunnerAdapterError>;
-
-    fn apply_git_mutation(
-        &mut self,
-        _command: &TargetRepoRunnerGitMutationCommand,
-    ) -> Result<TargetRepoRunnerGitMutationObservation, TargetRepoRunnerAdapterError> {
-        Err(TargetRepoRunnerAdapterError::new(
-            "git_mutation",
-            "adapter does not implement target git mutation readback",
-        ))
-    }
-
-    fn observe_pull_request(
-        &mut self,
-        request: &TargetRepoRunnerPullRequestObservationRequest,
-    ) -> Result<TargetRepoRunnerPullRequestObservation, TargetRepoRunnerAdapterError>;
-
-    fn publish_source_update(
-        &mut self,
-        _request: &TargetRepoRunnerSourcePublicationRequest,
-    ) -> Result<TargetRepoRunnerSourcePublicationObservation, TargetRepoRunnerAdapterError> {
-        Err(TargetRepoRunnerAdapterError::new(
-            "source_publication",
-            "adapter does not implement source publication readback",
-        ))
-    }
-}
-
-#[derive(Clone, Debug, PartialEq)]
-pub enum TargetRepoRunnerRuntimeError {
-    Plan(TargetRepoRunnerPlanError),
-    Adapter(TargetRepoRunnerAdapterError),
-    CommandValidation {
-        operation: &'static str,
-        message: String,
-    },
-    Receipt(String),
-    ReceiptProjection(String),
-    SourcePublicationMismatch(String),
-    ReadinessMismatch(String),
-    CheckoutNotScafldReady {
-        target_repo: String,
-    },
-    CreatedPullRequestRequired {
-        target_repo: String,
-    },
-}
-
-impl fmt::Display for TargetRepoRunnerRuntimeError {
-    fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
-        match self {
-            Self::Plan(error) => write!(formatter, "{error}"),
-            Self::Adapter(error) => write!(formatter, "{error}"),
-            Self::CommandValidation { operation, message } => {
-                write!(
-                    formatter,
-                    "target repo runner {operation} command is invalid: {message}"
-                )
-            }
-            Self::Receipt(message) => {
-                write!(formatter, "target repo runner receipt failed: {message}")
-            }
-            Self::ReceiptProjection(message) => {
-                write!(
-                    formatter,
-                    "target repo runner receipt projection failed: {message}"
-                )
-            }
-            Self::SourcePublicationMismatch(message) => {
-                write!(
-                    formatter,
-                    "target repo runner source publication failed: {message}"
-                )
-            }
-            Self::ReadinessMismatch(message) => formatter.write_str(message),
-            Self::CheckoutNotScafldReady { target_repo } => write!(
-                formatter,
-                "target repo runner fixture requires scafld-ready checkout for '{target_repo}'"
-            ),
-            Self::CreatedPullRequestRequired { target_repo } => write!(
-                formatter,
-                "target repo runner fixture needs a created pull request for '{target_repo}'"
-            ),
-        }
-    }
-}
-
-impl std::error::Error for TargetRepoRunnerRuntimeError {
-    fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
-        match self {
-            Self::Plan(error) => Some(error),
-            Self::Adapter(error) => Some(error),
-            Self::CommandValidation { .. }
-            | Self::Receipt(_)
-            | Self::ReceiptProjection(_)
-            | Self::SourcePublicationMismatch(_)
-            | Self::ReadinessMismatch(_)
-            | Self::CheckoutNotScafldReady { .. }
-            | Self::CreatedPullRequestRequired { .. } => None,
-        }
-    }
-}
-
-impl From<TargetRepoRunnerPlanError> for TargetRepoRunnerRuntimeError {
-    fn from(error: TargetRepoRunnerPlanError) -> Self {
-        Self::Plan(error)
-    }
-}
-
-impl From<TargetRepoRunnerAdapterError> for TargetRepoRunnerRuntimeError {
-    fn from(error: TargetRepoRunnerAdapterError) -> Self {
-        Self::Adapter(error)
-    }
 }
 
 // rust-style-allow: long-function because this is the live target-runner
@@ -1809,126 +1444,6 @@ fn seal_revision_receipt(receipt: &mut Receipt) -> Result<(), TargetRepoRunnerRu
         .map_err(|verification| TargetRepoRunnerRuntimeError::Receipt(format!("{verification:?}")))
 }
 
-// rust-style-allow: long-function because projection validates a sealed receipt
-// and reconstructs the public target-runner view without partial helpers.
-pub fn project_target_repo_runner_revision_receipt(
-    receipt: &Receipt,
-) -> Result<TargetRepoRunnerRevisionReceiptProjection, TargetRepoRunnerRuntimeError> {
-    if matches!(receipt.seal.disposition, ClosureDisposition::Deferred) {
-        return Err(TargetRepoRunnerRuntimeError::ReceiptProjection(
-            "receipt is not sealed".to_owned(),
-        ));
-    }
-    let act = receipt
-        .acts
-        .iter()
-        .find(|act| act.form == ActForm::Revision)
-        .ok_or_else(|| {
-            TargetRepoRunnerRuntimeError::ReceiptProjection("revision act is required".to_owned())
-        })?;
-    let metadata = receipt.metadata.clone().ok_or_else(|| {
-        TargetRepoRunnerRuntimeError::ReceiptProjection(
-            "target runner metadata is required".to_owned(),
-        )
-    })?;
-    let pull_request_ref = find_ref(&act.artifact_refs, ReferenceType::GithubPullRequest)
-        .ok_or_else(|| {
-            TargetRepoRunnerRuntimeError::ReceiptProjection(
-                "pull request ref is required".to_owned(),
-            )
-        })?;
-    let target_repo_ref =
-        find_ref(&act.artifact_refs, ReferenceType::GithubRepo).ok_or_else(|| {
-            TargetRepoRunnerRuntimeError::ReceiptProjection(
-                "target repo ref is required".to_owned(),
-            )
-        })?;
-    let source_thread_ref = find_ref(&act.artifact_refs, ReferenceType::SlackThread)
-        .or_else(|| act.artifact_refs.first().cloned())
-        .ok_or_else(|| {
-            TargetRepoRunnerRuntimeError::ReceiptProjection(
-                "source thread ref is required".to_owned(),
-            )
-        })?;
-    let source_issue_ref = find_ref(&act.artifact_refs, ReferenceType::GithubIssue);
-    Ok(TargetRepoRunnerRevisionReceiptProjection {
-        receipt_ref: Reference::runx(ReferenceType::Receipt, &receipt.id),
-        act_id: act.id.to_string(),
-        disposition: projection_disposition(&metadata)?,
-        target_repo_ref,
-        source_issue_ref,
-        source_thread_ref,
-        pull_request_ref,
-        summary: receipt.seal.summary.to_string(),
-        metadata,
-    })
-}
-
-pub fn project_target_repo_runner_source_publication_receipt(
-    receipt: &Receipt,
-) -> Result<TargetRepoRunnerSourcePublicationProjection, TargetRepoRunnerRuntimeError> {
-    if matches!(receipt.seal.disposition, ClosureDisposition::Deferred) {
-        return Err(TargetRepoRunnerRuntimeError::ReceiptProjection(
-            "source publication receipt is not sealed".to_owned(),
-        ));
-    }
-    let act = receipt
-        .acts
-        .iter()
-        .find(|act| act.form == ActForm::Reply)
-        .ok_or_else(|| {
-            TargetRepoRunnerRuntimeError::ReceiptProjection(
-                "source publication reply act is required".to_owned(),
-            )
-        })?;
-    let metadata = receipt.metadata.clone().ok_or_else(|| {
-        TargetRepoRunnerRuntimeError::ReceiptProjection(
-            "source publication metadata is required".to_owned(),
-        )
-    })?;
-    let pull_request_ref = find_ref(&act.artifact_refs, ReferenceType::GithubPullRequest)
-        .ok_or_else(|| {
-            TargetRepoRunnerRuntimeError::ReceiptProjection(
-                "source publication pull request ref is required".to_owned(),
-            )
-        })?;
-    let source_thread_ref =
-        find_ref(&act.artifact_refs, ReferenceType::SlackThread).ok_or_else(|| {
-            TargetRepoRunnerRuntimeError::ReceiptProjection(
-                "source publication thread ref is required".to_owned(),
-            )
-        })?;
-    let source_issue_ref = find_ref(&act.artifact_refs, ReferenceType::GithubIssue);
-    let published_refs = act
-        .artifact_refs
-        .iter()
-        .filter(|reference| {
-            !matches!(
-                reference.reference_type,
-                ReferenceType::GithubPullRequest
-                    | ReferenceType::SlackThread
-                    | ReferenceType::GithubIssue
-            )
-        })
-        .cloned()
-        .collect();
-    Ok(TargetRepoRunnerSourcePublicationProjection {
-        receipt_ref: Reference::runx(ReferenceType::Receipt, &receipt.id),
-        source_issue_ref,
-        source_thread_ref,
-        pull_request_ref,
-        published_refs,
-        summary: receipt.seal.summary.to_string(),
-        metadata,
-    })
-}
-
-fn find_ref(refs: &[Reference], reference_type: ReferenceType) -> Option<Reference> {
-    refs.iter()
-        .find(|reference| reference.reference_type == reference_type)
-        .cloned()
-}
-
 fn revision_receipt_metadata(execution: &TargetRepoRunnerFixtureExecution) -> JsonObject {
     let mut target_runner = JsonObject::new();
     target_runner.insert(
@@ -1950,23 +1465,6 @@ fn revision_receipt_metadata(execution: &TargetRepoRunnerFixtureExecution) -> Js
     let mut metadata = execution.pull_request_receipt.metadata.clone();
     metadata.insert("target_runner".to_owned(), JsonValue::Object(target_runner));
     metadata
-}
-
-fn projection_disposition(
-    metadata: &JsonObject,
-) -> Result<TargetRepoRunnerPullRequestDisposition, TargetRepoRunnerRuntimeError> {
-    let Some(JsonValue::Object(target_runner)) = metadata.get("target_runner") else {
-        return Err(TargetRepoRunnerRuntimeError::ReceiptProjection(
-            "target runner metadata object is required".to_owned(),
-        ));
-    };
-    match target_runner.get("disposition").and_then(JsonValue::as_str) {
-        Some("created") => Ok(TargetRepoRunnerPullRequestDisposition::Create),
-        Some("reused") => Ok(TargetRepoRunnerPullRequestDisposition::Reuse),
-        _ => Err(TargetRepoRunnerRuntimeError::ReceiptProjection(
-            "target runner disposition is invalid".to_owned(),
-        )),
-    }
 }
 
 fn disposition_name(disposition: TargetRepoRunnerPullRequestDisposition) -> &'static str {
