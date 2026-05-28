@@ -336,10 +336,14 @@ function selectorTopology(selectorPackage: string): unknown {
 }
 
 function packFiles(packageDir: string): Set<string> {
+  // Node.js on Windows refuses to execFileSync a `.cmd` shim directly
+  // (EINVAL) unless shell: true is set. The arguments are hardcoded literals
+  // so escaping is not a concern.
   const pack = execFileSync(npm, ["pack", "--dry-run", "--json"], {
     cwd: packageDir,
     encoding: "utf8",
     maxBuffer: 1024 * 1024,
+    shell: process.platform === "win32",
   });
   const [packReport] = JSON.parse(pack) as [{ readonly files?: readonly { readonly path: string }[] }];
   return new Set((packReport.files ?? []).map((entry) => entry.path));
