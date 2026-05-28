@@ -41,8 +41,11 @@ for (const doc of ["LICENSE", "README.md"]) {
 
 const archivePath = path.join(outDir, archiveName);
 if (isWindows) {
-  // ditto/zip availability varies; use `zip -r` which exists on the runners.
-  execFileSync("zip", ["-r", "-q", archivePath, stem], { cwd: outDir });
+  // GitHub windows-latest runners ship 7-Zip preinstalled but not `zip`.
+  // Force the zip container with -tzip and run quietly with -bso0 -bsp0.
+  execFileSync("7z", ["a", "-tzip", "-bso0", "-bsp0", archivePath, stem], {
+    cwd: outDir,
+  });
 } else {
   execFileSync("tar", ["-czf", archivePath, "-C", outDir, stem]);
 }
