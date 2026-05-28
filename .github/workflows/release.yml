@@ -280,6 +280,14 @@ jobs:
           pattern: npm-*
           merge-multiple: true
           path: .runx/rust-cli-artifacts
+      - name: Restore executable bits on native binaries
+        # actions/upload-artifact stores via a zip-on-the-wire path that does
+        # not preserve POSIX exec bits; re-apply them before verify.
+        run: |
+          find .runx/rust-cli-artifacts -path '*/bin/runx' -type f -print0 \
+            | xargs -0 -r chmod +x
+          find .runx/rust-cli-artifacts -path '*/bin/runx.exe' -type f -print0 \
+            | xargs -0 -r chmod +x
       - name: Verify release artifacts
         run: |
           pnpm exec tsx scripts/check-rust-cli-release-artifacts.ts \
