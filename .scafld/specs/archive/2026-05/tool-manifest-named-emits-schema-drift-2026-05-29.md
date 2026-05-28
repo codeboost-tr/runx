@@ -2,14 +2,26 @@
 spec_version: '2.0'
 task_id: tool-manifest-named-emits-schema-drift
 created: '2026-05-28T23:55:00Z'
-updated: '2026-05-28T23:55:00Z'
-status: draft
+updated: '2026-05-29T00:00:00Z'
+status: archived
 harden_status: not_run
 size: small
 risk_level: low
 ---
 
 # Tool manifest schema drift: `named_emits` and `artifact`
+
+## Archive note (2026-05-29)
+
+Shipped at `fc11c528`. `ToolOutput` now models `named_emits: BTreeMap<String,
+String>` and `outputs: BTreeMap<String, ToolOutputBinding>`. `ToolInput`
+gained `artifact: Option<bool>`. The Rust schema-hash computation was
+extended to include the new fields so it agrees byte-for-byte with the
+typescript `sha256Stable` shape; tool manifests were regenerated and the
+official-skills lock refreshed. One unrelated yaml-parse fix on the
+run-history-analyst skill profile travelled in the same commit. After this
+commit `pnpm verify:fast` is fully green for the first time in this
+campaign.
 
 ## Current State
 

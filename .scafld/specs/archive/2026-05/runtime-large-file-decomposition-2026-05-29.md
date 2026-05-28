@@ -2,14 +2,37 @@
 spec_version: '2.0'
 task_id: runtime-large-file-decomposition
 created: '2026-05-28T23:55:00Z'
-updated: '2026-05-28T23:55:00Z'
-status: draft
+updated: '2026-05-29T00:00:00Z'
+status: archived
 harden_status: not_run
 size: large
 risk_level: medium
 ---
 
 # Runtime large-file decomposition
+
+## Archive note (2026-05-29)
+
+All five phases shipped as first slices, each behavior-preserving with full
+verify:fast gate green:
+
+- Phase 1 target_runner.rs: 2020 → 1204 lines via 5 submodules (`commands`,
+  `adapter`, `projection`, `pull_request`, plus existing `provider`).
+  Commits 3c75f243 and 345306b5.
+- Phase 2 harness/runner.rs: 1417 → 1304 lines via `dispositions`. Commit
+  7879d039.
+- Phase 3 runner/steps.rs: 1402 → 1273 lines via `output`. Commit eba78b93.
+- Phase 4 payment_authority.rs: 1130 → 988 lines via `subset`. Commit
+  d80d533d.
+- Phase 5 external_adapter.rs: 1072 → 1005 lines via `redaction`. Commit
+  f67aa17b.
+
+Each phase extracted the most clearly bounded slice as the first carve. The
+remaining residues all still carry their original `rust-style-allow:
+large-file` reason and remain candidates for additional carves in future
+sessions (each phase's spec body lists the planned per-concern submodules).
+
+The original full per-phase plan stays below for the deferred follow-up work.
 
 ## Current State
 
