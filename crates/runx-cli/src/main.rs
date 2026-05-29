@@ -145,13 +145,16 @@ fn run_native_harness(plan: HarnessPlan) -> ExitCode {
 }
 
 // A harness target is a skill package (run its declared inline harness) when it
-// is a directory or a SKILL.md file; otherwise it is a standalone fixture file.
+// is a SKILL.md file, or a directory that actually holds a skill package
+// (a SKILL.md or X.yaml). A plain directory of fixture `.yaml` files is NOT a
+// skill package and falls through to standalone fixture replay.
 fn is_skill_package(path: &Path) -> bool {
-    path.is_dir()
-        || path
-            .file_name()
-            .and_then(|name| name.to_str())
-            .is_some_and(|name| name.eq_ignore_ascii_case("SKILL.md"))
+    if path.is_dir() {
+        return path.join("SKILL.md").exists() || path.join("X.yaml").exists();
+    }
+    path.file_name()
+        .and_then(|name| name.to_str())
+        .is_some_and(|name| name.eq_ignore_ascii_case("SKILL.md"))
 }
 
 fn run_inline_harness(skill_path: &Path, receipt_dir: Option<&OsString>) -> ExitCode {
