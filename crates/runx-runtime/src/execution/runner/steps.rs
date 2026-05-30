@@ -649,11 +649,97 @@ where
     match run_type.as_str() {
         "approval" => run_approval_step(runtime, graph_name, step, attempt, inputs, host),
         "agent-task" => run_agent_task(runtime, graph_dir, graph_name, step, attempt, inputs, host),
+        "cli-tool" => run_cli_tool_step(runtime, graph_dir, graph_name, step, attempt, inputs, host),
         other => Err(RuntimeError::UnsupportedRunStep {
             step_id: step.id.clone(),
             run_type: other.to_owned(),
         }),
     }
+}
+
+// An inline `run: { type: cli-tool, command, args }` step runs a local process
+// (e.g. `node ./script.mjs` relative to the graph directory) through the same
+// adapter + projection + sealing path as a subskill cli-tool step.
+fn run_cli_tool_step<A>(
+    runtime: &Runtime<A>,
+    graph_dir: &Path,
+    graph_name: &str,
+    step: &GraphStep,
+    attempt: u32,
+    inputs: JsonObject,
+    host: &mut dyn Host,
+) -> Result<StepRun, RuntimeError>
+where
+    A: SkillAdapter,
+{
+    let source = cli_tool_source(step)?;
+    let invocation = SkillInvocation {
+        skill_name: step.id.clone(),
+        source,
+        inputs,
+        resolved_inputs: JsonObject::new(),
+        skill_directory: graph_dir.to_path_buf(),
+        env: runtime.options.env.clone(),
+        credential_delivery: crate::credentials::CredentialDelivery::none(),
+    };
+    let regular = invoke_regular_skill_step(runtime, step, invocation, None, host)?;
+    seal_regular_skill_step(
+        RegularSkillSeal {
+            runtime,
+            graph_dir,
+            graph_name,
+            step,
+            attempt,
+            skill_name: step.id.clone(),
+            authority: None,
+        },
+        regular,
+    )
+}
+
+fn cli_tool_source(step: &GraphStep) -> Result<SkillSource, RuntimeError> {
+    let Some(run) = &step.run else {
+        return Err(RuntimeError::InvalidRunStep {
+            step_id: step.id.clone(),
+            reason: "missing run configuration".to_owned(),
+        });
+    };
+    let command = optional_string(run, "command").ok_or_else(|| RuntimeError::InvalidRunStep {
+        step_id: step.id.clone(),
+        reason: "run.command is required for a cli-tool step".to_owned(),
+    })?;
+    let args = run
+        .get("args")
+        .and_then(JsonValue::as_array)
+        .map(|values| {
+            values
+                .iter()
+                .filter_map(JsonValue::as_str)
+                .map(str::to_owned)
+                .collect::<Vec<_>>()
+        })
+        .unwrap_or_default();
+    Ok(SkillSource {
+        source_type: SourceKind::CliTool,
+        command: Some(command),
+        args,
+        cwd: optional_string(run, "cwd"),
+        timeout_seconds: None,
+        input_mode: None,
+        sandbox: None,
+        server: None,
+        catalog_ref: None,
+        tool: None,
+        arguments: None,
+        agent_card_url: None,
+        agent_identity: None,
+        agent: None,
+        task: None,
+        hook: None,
+        outputs: optional_object(run, "outputs"),
+        graph: None,
+        raw: run.clone(),
+    })
 }
 
 // rust-style-allow: long-function because agent-task execution is one
