@@ -1055,7 +1055,11 @@ where
     A: SkillAdapter,
 {
     let gate = approval_gate(step, &inputs)?;
-    let request_id = format!("{}_approval", step.id);
+    // Route resolution by the declared gate_id (the gate's identity), not the
+    // step id. A caller's seeded approval is keyed by gate_id, and the standalone
+    // fixture host already resolves approvals by gate_id; keying the request id
+    // the same way lets a seeded graph run drive an approval gate to a decision.
+    let request_id = gate.id.to_string();
     let resolution = resolve_step_approval(step, host, request_id, gate.clone())?;
     let outputs = approval_outputs(step, &gate, &resolution)?;
     let stdout = serde_json::to_string(&outputs)
