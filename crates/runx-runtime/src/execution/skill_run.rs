@@ -102,7 +102,9 @@ pub(crate) fn execute_skill_run_with_overrides(
         );
     }
     if runner.source.source_type == runx_parser::SourceKind::Graph {
-        return execute_graph_skill_run(request, overrides, &workspace, &receipts, &manifest, runner);
+        return execute_graph_skill_run(
+            request, overrides, &workspace, &receipts, &manifest, runner,
+        );
     }
 
     execute_agent_skill_run(
@@ -367,7 +369,7 @@ fn execute_graph_skill_run(
     let skill_dir = resolve_skill_dir(&request.skill_path)?;
     let env = workspace.graph_env_for_skill(&skill_dir);
     let runtime = Runtime::new(
-        SkillRunGraphAdapter,
+        SkillRunGraphAdapter::default(),
         RuntimeOptions {
             created_at: crate::time::now_iso8601(),
             env,
@@ -469,8 +471,88 @@ struct GraphSkillRunState {
     checkpoint: GraphCheckpoint,
 }
 
-#[derive(Clone, Copy, Debug, Default)]
-struct SkillRunGraphAdapter;
+type SourceHandlerFn = fn(SkillInvocation) -> Result<SkillOutput, RuntimeError>;
+
+#[derive(Clone, Copy, Debug)]
+struct SourceHandler {
+    source_type: &'static str,
+    handler: SourceHandlerFn,
+}
+
+#[derive(Clone, Copy, Debug)]
+struct SourceAdapterRegistry {
+    handlers: &'static [SourceHandler],
+}
+
+impl SourceAdapterRegistry {
+    fn builtins() -> Self {
+        Self {
+            handlers: builtin_source_handlers(),
+        }
+    }
+
+    fn invoke(&self, request: SkillInvocation) -> Result<SkillOutput, RuntimeError> {
+        let source_type = request.source.source_type.as_str();
+        let Some(handler) = self
+            .handlers
+            .iter()
+            .find(|registered| registered.source_type == source_type)
+            .map(|registered| registered.handler)
+        else {
+            return Err(RuntimeError::UnsupportedSource {
+                source_kind: source_type.to_owned(),
+            });
+        };
+        handler(request)
+    }
+}
+
+fn builtin_source_handlers() -> &'static [SourceHandler] {
+    #[cfg(all(feature = "cli-tool", feature = "catalog"))]
+    {
+        &[
+            SourceHandler {
+                source_type: "cli-tool",
+                handler: invoke_graph_cli_tool,
+            },
+            SourceHandler {
+                source_type: "catalog",
+                handler: invoke_graph_catalog_tool,
+            },
+        ]
+    }
+    #[cfg(all(feature = "cli-tool", not(feature = "catalog")))]
+    {
+        &[SourceHandler {
+            source_type: "cli-tool",
+            handler: invoke_graph_cli_tool,
+        }]
+    }
+    #[cfg(all(not(feature = "cli-tool"), feature = "catalog"))]
+    {
+        &[SourceHandler {
+            source_type: "catalog",
+            handler: invoke_graph_catalog_tool,
+        }]
+    }
+    #[cfg(all(not(feature = "cli-tool"), not(feature = "catalog")))]
+    {
+        &[]
+    }
+}
+
+#[derive(Clone, Debug)]
+struct SkillRunGraphAdapter {
+    sources: SourceAdapterRegistry,
+}
+
+impl Default for SkillRunGraphAdapter {
+    fn default() -> Self {
+        Self {
+            sources: SourceAdapterRegistry::builtins(),
+        }
+    }
+}
 
 impl crate::adapter::SkillAdapter for SkillRunGraphAdapter {
     fn adapter_type(&self) -> &'static str {
@@ -478,13 +560,7 @@ impl crate::adapter::SkillAdapter for SkillRunGraphAdapter {
     }
 
     fn invoke(&self, request: SkillInvocation) -> Result<SkillOutput, RuntimeError> {
-        match request.source.source_type.as_str() {
-            "cli-tool" => invoke_graph_cli_tool(request),
-            "catalog" => invoke_graph_catalog_tool(request),
-            other => Err(RuntimeError::UnsupportedAdapter {
-                adapter_type: other.to_owned(),
-            }),
-        }
+        self.sources.invoke(request)
     }
 }
 
@@ -493,23 +569,9 @@ fn invoke_graph_cli_tool(request: SkillInvocation) -> Result<SkillOutput, Runtim
     CliToolAdapter.invoke(request)
 }
 
-#[cfg(not(feature = "cli-tool"))]
-fn invoke_graph_cli_tool(request: SkillInvocation) -> Result<SkillOutput, RuntimeError> {
-    Err(RuntimeError::UnsupportedAdapter {
-        adapter_type: request.source.source_type.as_str().to_owned(),
-    })
-}
-
 #[cfg(feature = "catalog")]
 fn invoke_graph_catalog_tool(request: SkillInvocation) -> Result<SkillOutput, RuntimeError> {
     crate::adapters::catalog::CatalogAdapter::default().invoke(request)
-}
-
-#[cfg(not(feature = "catalog"))]
-fn invoke_graph_catalog_tool(request: SkillInvocation) -> Result<SkillOutput, RuntimeError> {
-    Err(RuntimeError::UnsupportedAdapter {
-        adapter_type: request.source.source_type.as_str().to_owned(),
-    })
 }
 
 #[derive(Default)]
@@ -1310,4 +1372,57 @@ fn contract_json_value(value: &impl serde::Serialize) -> Result<JsonValue, Skill
 
 fn invalid(message: impl Into<String>) -> SkillRunError {
     SkillRunError::Invalid(message.into())
+}
+
+#[cfg(test)]
+mod tests {
+    use std::path::PathBuf;
+
+    use runx_parser::{SkillSource, SourceKind};
+
+    use super::*;
+    use crate::adapter::SkillAdapter;
+
+    #[test]
+    fn graph_source_registry_fails_closed_on_unregistered_source() {
+        let mut raw = JsonObject::new();
+        raw.insert("type".to_owned(), JsonValue::String("mcp".to_owned()));
+        let invocation = SkillInvocation {
+            skill_name: "fixture-mcp".to_owned(),
+            source: SkillSource {
+                source_type: SourceKind::Mcp,
+                command: None,
+                args: Vec::new(),
+                cwd: None,
+                timeout_seconds: None,
+                input_mode: None,
+                sandbox: None,
+                server: None,
+                catalog_ref: None,
+                tool: None,
+                arguments: None,
+                agent_card_url: None,
+                agent_identity: None,
+                agent: None,
+                task: None,
+                hook: None,
+                outputs: None,
+                graph: None,
+                raw,
+            },
+            inputs: JsonObject::new(),
+            resolved_inputs: JsonObject::new(),
+            skill_directory: PathBuf::from("."),
+            env: BTreeMap::new(),
+            credential_delivery: crate::credentials::CredentialDelivery::none(),
+        };
+
+        match SkillRunGraphAdapter::default().invoke(invocation) {
+            Err(RuntimeError::UnsupportedSource { source_kind }) => {
+                assert_eq!(source_kind, "mcp");
+            }
+            Ok(_) => panic!("unregistered graph source unexpectedly succeeded"),
+            Err(other) => panic!("unexpected error: {other}"),
+        }
+    }
 }

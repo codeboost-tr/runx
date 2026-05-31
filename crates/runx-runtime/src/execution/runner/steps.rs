@@ -60,7 +60,7 @@ struct RegularSkillStepOutput {
     projection: StepOutputProjection,
 }
 
-pub(super) struct StepRunRequest<'a, A: SkillAdapter> {
+pub(super) struct StepRunRequest<'a, A> {
     pub(super) runtime: &'a Runtime<A>,
     pub(super) graph_dir: &'a Path,
     pub(super) graph_name: &'a str,
@@ -70,7 +70,69 @@ pub(super) struct StepRunRequest<'a, A: SkillAdapter> {
     pub(super) host: &'a mut dyn Host,
 }
 
-struct RegularSkillSeal<'a, A: SkillAdapter> {
+struct StepHandlerCtx<'a, A> {
+    runtime: &'a Runtime<A>,
+    graph_dir: &'a Path,
+    graph_name: &'a str,
+    step: &'a GraphStep,
+    attempt: u32,
+    inputs: JsonObject,
+    host: &'a mut dyn Host,
+    authority: Option<StepAuthorityContext>,
+    loaded_skill: Option<LoadedStepSkill>,
+}
+
+type StepHandlerFn<A> = fn(StepHandlerCtx<'_, A>) -> Result<StepRun, RuntimeError>;
+
+struct StepTypeHandler<A> {
+    step_type: &'static str,
+    handler: StepHandlerFn<A>,
+}
+
+pub(super) struct StepTypeRegistry<A> {
+    handlers: [StepTypeHandler<A>; 5],
+}
+
+impl<A> StepTypeRegistry<A>
+where
+    A: SkillAdapter,
+{
+    pub(super) fn builtins() -> Self {
+        Self {
+            handlers: [
+                StepTypeHandler {
+                    step_type: "approval",
+                    handler: run_approval_step_handler::<A>,
+                },
+                StepTypeHandler {
+                    step_type: "agent-task",
+                    handler: run_agent_task_handler::<A>,
+                },
+                StepTypeHandler {
+                    step_type: "cli-tool",
+                    handler: run_cli_tool_step_handler::<A>,
+                },
+                StepTypeHandler {
+                    step_type: "tool",
+                    handler: run_tool_step_handler::<A>,
+                },
+                StepTypeHandler {
+                    step_type: "subskill",
+                    handler: run_subskill_step_handler::<A>,
+                },
+            ],
+        }
+    }
+
+    fn handler(&self, step_type: &str) -> Option<StepHandlerFn<A>> {
+        self.handlers
+            .iter()
+            .find(|registered| registered.step_type == step_type)
+            .map(|registered| registered.handler)
+    }
+}
+
+struct RegularSkillSeal<'a, A> {
     runtime: &'a Runtime<A>,
     graph_dir: &'a Path,
     graph_name: &'a str,
@@ -136,71 +198,54 @@ fn run_step_with_optional_loaded_skill<A>(
 where
     A: SkillAdapter,
 {
-    if let Some(replay) = sealed_payment_replay(
-        request.step,
-        &request.inputs,
-        &request.runtime.options.env,
-        request.graph_dir,
-    )? {
+    let StepRunRequest {
+        runtime,
+        graph_dir,
+        graph_name,
+        step,
+        attempt,
+        inputs,
+        host,
+    } = request;
+    if let Some(replay) = sealed_payment_replay(step, &inputs, &runtime.options.env, graph_dir)? {
         return run_replayed_payment_step(
-            request.runtime,
-            request.graph_dir,
-            request.graph_name,
-            request.step,
-            request.attempt,
+            runtime,
+            graph_dir,
+            graph_name,
+            step,
+            attempt,
             loaded_skill,
             replay,
         );
     }
-    escalate_in_flight_payment_recovery(
-        request.step,
-        &request.inputs,
-        &request.runtime.options.env,
-        request.graph_dir,
-    )?;
-    let authority = enforce_step_authority_admission(
-        request.step,
-        &request.inputs,
-        &request.runtime.options.env,
-        request.graph_dir,
-    )?;
-    if request.step.run.is_some() {
-        return run_native_step(
-            request.runtime,
-            request.graph_dir,
-            request.graph_name,
-            request.step,
-            request.attempt,
-            request.inputs,
-            request.host,
-        );
-    }
-    if request.step.tool.is_some() {
-        return run_tool_step(
-            request.runtime,
-            request.graph_dir,
-            request.graph_name,
-            request.step,
-            request.attempt,
-            request.inputs,
-        );
-    }
-
-    run_loaded_skill_step(
-        loaded_skill_or_load(loaded_skill, request.graph_dir, request.step)?,
-        authority.as_ref(),
-        request,
+    escalate_in_flight_payment_recovery(step, &inputs, &runtime.options.env, graph_dir)?;
+    let authority =
+        enforce_step_authority_admission(step, &inputs, &runtime.options.env, graph_dir)?;
+    let step_type = registered_step_type(step)?;
+    run_registered_step(
+        step_type,
+        StepHandlerCtx {
+            runtime,
+            graph_dir,
+            graph_name,
+            step,
+            attempt,
+            inputs,
+            host,
+            authority,
+            loaded_skill,
+        },
     )
 }
 
 fn run_loaded_skill_step<A>(
     skill: LoadedStepSkill,
-    authority: Option<&StepAuthorityContext>,
-    request: StepRunRequest<'_, A>,
+    request: StepHandlerCtx<'_, A>,
 ) -> Result<StepRun, RuntimeError>
 where
     A: SkillAdapter,
 {
+    let authority = request.authority.as_ref();
     let (skill_name, invocation) =
         loaded_skill_invocation(skill, request.inputs, &request.runtime.options.env);
     if let Some(source_type) = agent_skill_source_type(invocation.source.source_type) {
@@ -633,28 +678,98 @@ fn receipt_has_payment_rail_proof(receipt: &runx_contracts::Receipt, rail_proof_
     })
 }
 
-pub(super) fn run_native_step<A>(
-    runtime: &Runtime<A>,
-    graph_dir: &Path,
-    graph_name: &str,
-    step: &GraphStep,
-    attempt: u32,
-    inputs: JsonObject,
-    host: &mut dyn Host,
+fn run_registered_step<A>(
+    step_type: &str,
+    request: StepHandlerCtx<'_, A>,
 ) -> Result<StepRun, RuntimeError>
 where
     A: SkillAdapter,
 {
-    let run_type = run_type(step)?;
-    match run_type.as_str() {
-        "approval" => run_approval_step(runtime, graph_name, step, attempt, inputs, host),
-        "agent-task" => run_agent_task(runtime, graph_dir, graph_name, step, attempt, inputs, host),
-        "cli-tool" => run_cli_tool_step(runtime, graph_dir, graph_name, step, attempt, inputs, host),
-        other => Err(RuntimeError::UnsupportedRunStep {
-            step_id: step.id.clone(),
-            run_type: other.to_owned(),
-        }),
+    let handler = request
+        .runtime
+        .step_types
+        .handler(step_type)
+        .ok_or_else(|| RuntimeError::UnsupportedRunStep {
+            step_id: request.step.id.clone(),
+            run_type: step_type.to_owned(),
+        })?;
+    handler(request)
+}
+
+fn registered_step_type(step: &GraphStep) -> Result<&str, RuntimeError> {
+    if step.run.is_some() {
+        return run_type_ref(step);
     }
+    if step.tool.is_some() {
+        return Ok("tool");
+    }
+    Ok("subskill")
+}
+
+fn run_approval_step_handler<A>(request: StepHandlerCtx<'_, A>) -> Result<StepRun, RuntimeError>
+where
+    A: SkillAdapter,
+{
+    run_approval_step(
+        request.runtime,
+        request.graph_name,
+        request.step,
+        request.attempt,
+        request.inputs,
+        request.host,
+    )
+}
+
+fn run_agent_task_handler<A>(request: StepHandlerCtx<'_, A>) -> Result<StepRun, RuntimeError>
+where
+    A: SkillAdapter,
+{
+    run_agent_task(
+        request.runtime,
+        request.graph_dir,
+        request.graph_name,
+        request.step,
+        request.attempt,
+        request.inputs,
+        request.host,
+    )
+}
+
+fn run_cli_tool_step_handler<A>(request: StepHandlerCtx<'_, A>) -> Result<StepRun, RuntimeError>
+where
+    A: SkillAdapter,
+{
+    run_cli_tool_step(
+        request.runtime,
+        request.graph_dir,
+        request.graph_name,
+        request.step,
+        request.attempt,
+        request.inputs,
+        request.host,
+    )
+}
+
+fn run_tool_step_handler<A>(request: StepHandlerCtx<'_, A>) -> Result<StepRun, RuntimeError>
+where
+    A: SkillAdapter,
+{
+    run_tool_step(
+        request.runtime,
+        request.graph_dir,
+        request.graph_name,
+        request.step,
+        request.attempt,
+        request.inputs,
+    )
+}
+
+fn run_subskill_step_handler<A>(mut request: StepHandlerCtx<'_, A>) -> Result<StepRun, RuntimeError>
+where
+    A: SkillAdapter,
+{
+    let skill = loaded_skill_or_load(request.loaded_skill.take(), request.graph_dir, request.step)?;
+    run_loaded_skill_step(skill, request)
 }
 
 // An inline `run: { type: cli-tool, command, args }` step runs a local process
@@ -1182,7 +1297,7 @@ where
     })
 }
 
-pub(super) fn run_type(step: &GraphStep) -> Result<String, RuntimeError> {
+fn run_type_ref(step: &GraphStep) -> Result<&str, RuntimeError> {
     let Some(run) = &step.run else {
         return Err(RuntimeError::InvalidRunStep {
             step_id: step.id.clone(),
@@ -1195,7 +1310,7 @@ pub(super) fn run_type(step: &GraphStep) -> Result<String, RuntimeError> {
             reason: "run.type is required".to_owned(),
         });
     };
-    string_value(step, "run.type", value)
+    string_value_ref(step, "run.type", value)
 }
 
 pub(super) fn approval_gate(

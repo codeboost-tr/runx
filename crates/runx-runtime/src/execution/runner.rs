@@ -146,6 +146,7 @@ pub struct GraphCheckpoint {
 pub struct Runtime<A> {
     adapter: A,
     options: RuntimeOptions,
+    step_types: steps::StepTypeRegistry<A>,
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -159,7 +160,11 @@ where
     A: SkillAdapter,
 {
     pub fn new(adapter: A, options: RuntimeOptions) -> Self {
-        Self { adapter, options }
+        Self {
+            adapter,
+            options,
+            step_types: steps::StepTypeRegistry::builtins(),
+        }
     }
 
     pub(crate) fn options(&self) -> &RuntimeOptions {

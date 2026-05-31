@@ -104,7 +104,6 @@ pub use orchestrator::{
     GraphRunRequest, HarnessRunRequest, InlineHarnessRequest, LocalOrchestrator, OrchestratorError,
     RunContinuation, RunRequest, RunResult, RunStatus, SkillRunRequest,
 };
-pub use skill_run::InlineHarnessReport;
 pub use outbox_provider::{
     ThreadOutboxProviderProcessOutcome, ThreadOutboxProviderProcessSupervisor,
     ThreadOutboxProviderSupervisorError, ThreadOutboxProviderSupervisorOptions,
@@ -141,6 +140,7 @@ pub use scaffold::{
     InitAction, InitGeneratedValues, RunxInitOptions, RunxInitResult, RunxNewOptions,
     RunxNewResult, ScaffoldError, runx_init, sanitize_runx_package_name, scaffold_runx_package,
 };
+pub use skill_run::InlineHarnessReport;
 pub use tool_catalogs::{
     ToolBuildOptions, ToolCatalogError, ToolInspectOptions, ToolSearchOptions, build_tool_catalogs,
     inspect_tool, search_tools,
