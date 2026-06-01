@@ -1,7 +1,7 @@
 // rust-style-allow: large-file because receipt construction, explicit
 // signature policy, and local proof sealing stay together until the runtime
 // receipt builder is split out.
-use crate::adapter::SkillOutput;
+use crate::adapter::{CREDENTIAL_DELIVERY_OBSERVATIONS_METADATA, SkillOutput};
 use crate::effects::{RuntimeEffectRegistry, effect_verification_refs};
 use crate::execution::output_projection::{
     StepOutputProjection, StepOutputRefs, project_step_output,
@@ -10,8 +10,8 @@ use crate::{RuntimeError, StepRun};
 use runx_contracts::schema::NonEmptyString;
 use runx_contracts::{
     ActForm, AuthorityAttenuation, AuthoritySubsetResult, Closure, ClosureDisposition,
-    CriterionBinding, CriterionStatus, Decision, DecisionChoice, DecisionInputs,
-    DecisionJustification, FanoutReceiptSyncPoint, Intent, JsonObject, Lineage,
+    CredentialDeliveryObservation, CriterionBinding, CriterionStatus, Decision, DecisionChoice,
+    DecisionInputs, DecisionJustification, FanoutReceiptSyncPoint, Intent, JsonObject, Lineage,
     RECEIPT_CANONICALIZATION, Receipt, ReceiptAct, ReceiptAuthority, ReceiptEnforcement,
     ReceiptIdempotency, ReceiptIssuer, ReceiptSchema, Reference, ReferenceType, Seal,
     SignatureAlgorithm, Subject, SuccessCriterion, json_string_field, receipt_subject_kind,
@@ -599,6 +599,7 @@ fn output_refs(output: &SkillOutput, projected_refs: &StepOutputRefs) -> StepOut
         refs.evidence_refs.insert(0, reference);
     }
     collect_supervisor_metadata_refs(&output.metadata, &mut refs);
+    collect_credential_delivery_refs(&output.metadata, &mut refs);
     refs
 }
 
@@ -607,6 +608,30 @@ fn collect_supervisor_metadata_refs(metadata: &JsonObject, refs: &mut StepOutput
         return;
     };
     refs.verification_refs.append(&mut verification_refs);
+}
+
+fn collect_credential_delivery_refs(metadata: &JsonObject, refs: &mut StepOutputRefs) {
+    let Some(value) = metadata.get(CREDENTIAL_DELIVERY_OBSERVATIONS_METADATA) else {
+        return;
+    };
+    let Ok(observations) = serde_json::to_value(value)
+        .and_then(serde_json::from_value::<Vec<CredentialDeliveryObservation>>)
+    else {
+        return;
+    };
+
+    for reference in observations
+        .into_iter()
+        .flat_map(|observation| observation.credential_refs)
+    {
+        if !refs
+            .verification_refs
+            .iter()
+            .any(|existing| existing == &reference)
+        {
+            refs.verification_refs.push(reference);
+        }
+    }
 }
 
 fn disposition(output: &SkillOutput) -> ClosureDisposition {
@@ -922,5 +947,105 @@ fn authority_attenuation_verified(attenuation: &AuthorityAttenuation) -> bool {
 fn receipt_error(verification: runx_receipts::ReceiptVerification) -> RuntimeError {
     RuntimeError::ReceiptInvalid {
         message: format!("{:?}", verification.findings),
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::adapter::InvocationStatus;
+    use runx_contracts::{
+        CredentialDeliveryMode, CredentialDeliveryObservationSchema,
+        CredentialDeliveryObservationStatus, CredentialDeliveryPurpose, CredentialMaterialRole,
+        JsonValue, ProofKind,
+    };
+
+    #[test]
+    fn credential_delivery_refs_are_sealed_as_verification_refs()
+    -> Result<(), Box<dyn std::error::Error>> {
+        let receipt = step_receipt(
+            "credential_graph",
+            "credential_step",
+            1,
+            &credential_output()?,
+            "2026-05-28T00:00:00Z",
+        )?;
+
+        let verification_refs = &receipt.acts[0].criterion_bindings[0].verification_refs;
+        assert_eq!(verification_refs.len(), 1);
+        assert_eq!(
+            verification_refs[0].reference_type,
+            ReferenceType::Credential
+        );
+        assert_eq!(
+            verification_refs[0].uri.as_str(),
+            "runx:credential:grant_github_main"
+        );
+        assert_eq!(
+            verification_refs[0].proof_kind,
+            Some(ProofKind::CredentialResolution)
+        );
+        assert_eq!(
+            receipt.seal.criteria[0].verification_refs,
+            *verification_refs
+        );
+
+        let sealed_digest = canonical_receipt_body_digest(&receipt)?;
+        let mut without_credential_ref = receipt.clone();
+        without_credential_ref.acts[0].criterion_bindings[0]
+            .verification_refs
+            .clear();
+        without_credential_ref.seal.criteria[0]
+            .verification_refs
+            .clear();
+        let unsealed_digest = canonical_receipt_body_digest(&without_credential_ref)?;
+        assert_ne!(sealed_digest, unsealed_digest);
+        Ok(())
+    }
+
+    fn credential_output() -> Result<SkillOutput, Box<dyn std::error::Error>> {
+        let observation = CredentialDeliveryObservation {
+            schema: CredentialDeliveryObservationSchema::V1,
+            observation_id: "credential_delivery_observation_1".into(),
+            request_id: "credential_delivery_request_1".into(),
+            response_id: Some("credential_delivery_response_1".into()),
+            status: CredentialDeliveryObservationStatus::Delivered,
+            harness_ref: Reference::with_uri(ReferenceType::Harness, "runx:harness:hrn_123"),
+            host_ref: Some(Reference::with_uri(
+                ReferenceType::Host,
+                "runx:host:local-cli",
+            )),
+            profile_id: "github-api-key-env".into(),
+            provider: "github".into(),
+            purpose: CredentialDeliveryPurpose::ProviderApi,
+            delivery_mode: Some(CredentialDeliveryMode::ProcessEnv),
+            credential_refs: vec![Reference {
+                reference_type: ReferenceType::Credential,
+                uri: "runx:credential:grant_github_main".into(),
+                provider: Some("github".into()),
+                locator: None,
+                label: None,
+                observed_at: None,
+                proof_kind: Some(ProofKind::CredentialResolution),
+            }],
+            material_ref_hash: Some("sha256:material-ref-hash".into()),
+            delivered_roles: vec![CredentialMaterialRole::ApiKey],
+            redaction_refs: None,
+            observed_at: "2026-05-28T00:00:00Z".into(),
+        };
+        let mut metadata = JsonObject::new();
+        metadata.insert(
+            CREDENTIAL_DELIVERY_OBSERVATIONS_METADATA.to_owned(),
+            serde_json::to_value(vec![observation])
+                .and_then(serde_json::from_value::<JsonValue>)?,
+        );
+        Ok(SkillOutput {
+            status: InvocationStatus::Success,
+            stdout: "ok".to_owned(),
+            stderr: String::new(),
+            exit_code: Some(0),
+            duration_ms: 1,
+            metadata,
+        })
     }
 }
