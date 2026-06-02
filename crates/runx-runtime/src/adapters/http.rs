@@ -216,8 +216,8 @@ fn resolve_headers(
 }
 
 /// Parse a manifest method string into an [`HttpMethod`], defaulting to GET. The
-/// parser already restricts `source.method` to GET, POST, or DELETE, so this is a
-/// total mapping with a fail-closed arm.
+/// parser already restricts `source.method` to GET, POST, PUT, PATCH, or DELETE,
+/// so this is a total mapping with a fail-closed arm.
 fn parse_method(raw: Option<&str>) -> Result<HttpMethod, RuntimeError> {
     match raw.map(str::to_ascii_uppercase).as_deref() {
         None | Some("GET") => Ok(HttpMethod::Get),
@@ -399,6 +399,10 @@ mod tests {
             execute_http_call(&transport, &call, &inputs(&[("id", "a/b")])).is_err(),
             "a path value with a path separator must fail closed"
         );
+        assert!(
+            execute_http_call(&transport, &call, &inputs(&[("id", "a#b")])).is_err(),
+            "a path value with a fragment delimiter must fail closed"
+        );
     }
 
     #[test]
@@ -418,6 +422,48 @@ mod tests {
                     .as_deref()
                     .is_some_and(|body| body.contains(r#""name":"rex""#)),
             "PUT must carry the inputs as a JSON body; got: {:?}",
+            sent.first()
+        );
+        Ok(())
+    }
+
+    #[test]
+    fn patch_carries_a_json_body_and_the_method_reaches_the_wire() -> Result<(), RuntimeError> {
+        let transport = stub(200, "{}");
+        let call = HttpCall {
+            method: HttpMethod::Patch,
+            url: "https://api.example.test/v1/pets/p-7".to_owned(),
+            headers: Vec::new(),
+        };
+        execute_http_call(&transport, &call, &inputs(&[("name", "rex")]))?;
+        let sent = transport.requests.borrow();
+        assert!(
+            sent[0].method == HttpMethod::Patch
+                && sent[0]
+                    .body
+                    .as_deref()
+                    .is_some_and(|body| body.contains(r#""name":"rex""#)),
+            "PATCH must carry the inputs as a JSON body; got: {:?}",
+            sent.first()
+        );
+        Ok(())
+    }
+
+    #[test]
+    fn delete_maps_inputs_to_the_query_with_no_body() -> Result<(), RuntimeError> {
+        let transport = stub(200, "{}");
+        let call = HttpCall {
+            method: HttpMethod::Delete,
+            url: "https://api.example.test/v1/pets".to_owned(),
+            headers: Vec::new(),
+        };
+        execute_http_call(&transport, &call, &inputs(&[("id", "p-7")]))?;
+        let sent = transport.requests.borrow();
+        assert!(
+            sent[0].method == HttpMethod::Delete
+                && sent[0].url.contains("id=p-7")
+                && sent[0].body.is_none(),
+            "DELETE inputs must go on the query string with no body; got: {:?}",
             sent.first()
         );
         Ok(())
@@ -488,6 +534,23 @@ mod tests {
         let output = execute_http_call(&transport, &call, &JsonObject::new())?;
         assert_eq!(output.status, InvocationStatus::Failure);
         assert_eq!(output.stdout, "not found");
+        Ok(())
+    }
+
+    #[test]
+    fn status_300_is_the_failure_boundary() -> Result<(), RuntimeError> {
+        let transport = stub(300, "multiple choices");
+        let call = HttpCall {
+            method: HttpMethod::Get,
+            url: "https://api.example.test/v1/pets".to_owned(),
+            headers: Vec::new(),
+        };
+        let output = execute_http_call(&transport, &call, &JsonObject::new())?;
+        assert_eq!(
+            output.status,
+            InvocationStatus::Failure,
+            "the 2xx success range excludes 300; it must seal as a failure"
+        );
         Ok(())
     }
 }

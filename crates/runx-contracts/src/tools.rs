@@ -199,8 +199,8 @@ pub struct ToolHttpSource {
     pub url: String,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub method: Option<String>,
-    #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
-    pub headers: BTreeMap<String, String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub headers: Option<BTreeMap<String, String>>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub allow_private_network: Option<bool>,
 }
