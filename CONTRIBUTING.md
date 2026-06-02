@@ -1,23 +1,16 @@
 # Contributing to runx
 
-Thanks for considering a contribution. This document covers the contribution
-workflow and the sign-off required on every commit.
+Thanks for considering a contribution. This document covers the contribution workflow and the sign-off required on every commit.
 
 ## Licensing
 
-runx is licensed under the Apache License, Version 2.0. By contributing, you
-agree that your contributions will be licensed under the same license. See
-[LICENSE](./LICENSE) for the full text.
+runx is licensed under the MIT License, Copyright (c) 2026 nilstate. By contributing, you agree that your contributions will be licensed under the same license. See [LICENSE](./LICENSE) for the full text.
 
 ## Developer Certificate of Origin (DCO)
 
-All commits to this repository must be signed off under the
-[Developer Certificate of Origin](https://developercertificate.org/). The DCO
-is a lightweight affirmation that you have the right to submit the contribution
-under the project's license. There is no separate CLA to sign.
+All commits to this repository must be signed off under the [Developer Certificate of Origin](https://developercertificate.org/). The DCO is a lightweight affirmation that you have the right to submit the contribution under the project's license. There is no separate CLA to sign.
 
-Sign off on every commit by adding a `Signed-off-by:` trailer. The easiest way
-is to pass `-s` to `git commit`:
+Sign off on every commit by adding a `Signed-off-by:` trailer. The easiest way is to pass `-s` to `git commit`:
 
 ```
 git commit -s -m "your commit message"
@@ -29,8 +22,7 @@ This appends a trailer that looks like:
 Signed-off-by: Your Name <your.email@example.com>
 ```
 
-The name and email must match the real identity you wish to be associated
-with the contribution. Pseudonymous sign-offs are not accepted.
+The name and email must match the real identity you wish to be associated with the contribution. Pseudonymous sign-offs are not accepted.
 
 The full DCO text (reproduced here for reference):
 
@@ -58,23 +50,22 @@ The full DCO text (reproduced here for reference):
 
 ## Contribution workflow
 
-1. Open an issue describing the change before sending a PR for anything
-   non-trivial. Small fixes can go straight to a PR.
+1. Open an issue describing the change before sending a PR for anything non-trivial. Small fixes can go straight to a PR.
 2. Fork the repo and create a topic branch from `main`.
-3. Make your change. Keep commits focused and conventional (`feat:`, `fix:`,
-   `docs:`, `chore:`, etc.).
+3. Make your change. Keep commits focused and conventional (`feat:`, `fix:`, `docs:`, `chore:`, etc.).
 4. Run the workspace checks locally:
    - `pnpm install`
    - `pnpm build`
    - `pnpm typecheck`
    - `pnpm test`
 5. Sign off your commits with `git commit -s` (see DCO above).
-6. Open a pull request against `main` with a clear description of the change
-   and any test or validation evidence.
+6. Open a pull request against `main` with a clear description of the change and any test or validation evidence.
 
 ## Development setup
 
-Use Node.js 20 or newer and pnpm 10 or newer. From the OSS workspace:
+The native Rust CLI needs Rust 1.85 or newer and stays useful without Node, pnpm, tsx, or TypeScript installed. The workspace and the npm wrapper need Node.js 20 or newer and pnpm 10 or newer.
+
+From the OSS workspace:
 
 ```bash
 cd oss
@@ -101,27 +92,16 @@ For Rust kernel parity work, run:
 pnpm rust:check
 ```
 
-This is blocking evidence for Rust-owned kernel and contract surfaces. The
-command uses `cargo-deny` and `cargo-public-api`; if they are missing, install
-them with:
+This is blocking evidence for Rust-owned kernel and contract surfaces. The command uses `cargo-deny` and `cargo-public-api`; if they are missing, install them with:
 
 ```bash
 cargo install cargo-deny cargo-public-api
 rustup toolchain install nightly --profile minimal
 ```
 
-`test:fast` uses `vitest.fast.config.ts` and is intended for package-adjacent
-iteration. `pnpm test` remains the full workspace suite and includes the
-isolated CLI package contract check.
+`test:fast` uses `vitest.fast.config.ts` and is intended for package-adjacent iteration. `pnpm test` remains the full workspace suite and includes the isolated CLI package contract check.
 
-See [docs/how-we-test.md](docs/how-we-test.md) for the full test lane split,
-including the `RUNX_VITEST_BATCH=cli-package` batch.
-
-To run one test file:
-
-```bash
-pnpm vitest run tests/examples/hello-world.test.ts
-```
+See [docs/how-we-test.md](docs/how-we-test.md) for the full test lane split.
 
 To use the local CLI from any directory:
 
@@ -134,8 +114,7 @@ Re-run `pnpm build` after source changes that affect compiled package output.
 
 ## Skill authoring paths
 
-Use `runx new <name>` when you already have the runx CLI available locally and
-want a standalone skill package:
+Use `runx new <name>` when you already have the runx CLI available locally and want a standalone skill package:
 
 ```bash
 runx new docs-demo
@@ -147,29 +126,18 @@ Use `npm create @runxhq/skill@latest <name>` for a cold start from npm:
 npm create @runxhq/skill@latest docs-demo
 ```
 
-Both entry points go through the same scaffolder. Community skills should be
-authored as standalone packages; the runx repo itself is the first-party lane
-for official skills, runtime code, tests, and examples.
+Both entry points go through the same scaffolder. Community skills should be authored as standalone packages; the runx repo itself is the first-party lane for official skills, runtime code, tests, and examples.
 
-The first runnable example is documented in
-[docs/getting-started.md](docs/getting-started.md). The generated package
-export index is in [docs/api-surface.md](docs/api-surface.md).
+The first runnable example is documented in [docs/getting-started.md](docs/getting-started.md). The generated package export index is in [docs/api-surface.md](docs/api-surface.md).
 
 ## Releasing
 
-The CLI ships from a single `cli-vX.Y.Z` tag to every channel (GitHub Release,
-npm, crates.io, Homebrew, Scoop, winget, AUR, Docker) plus the `runx.ai/install`
-one-liner. The tag is the only source of truth; release jobs stamp the version,
-they are never hand-committed. Full pipeline, versioning model, required secrets,
-and how to cut a release are in [docs/releasing.md](docs/releasing.md).
+The CLI ships from a single `cli-vX.Y.Z` tag to every channel (GitHub Release, npm, crates.io, Homebrew, Scoop, winget, AUR, Docker) plus the `runx.ai/install` one-liner. The tag is the only source of truth; release jobs stamp the version, they are never hand-committed. Full pipeline, versioning model, required secrets, and how to cut a release are in [docs/releasing.md](docs/releasing.md).
 
 ## Code of conduct
 
-Be respectful. Assume good faith. Disagreement on technical direction is
-welcome; personal attacks are not.
+This project follows the [Code of Conduct](./CODE_OF_CONDUCT.md). Report conduct concerns privately through GitHub's private report flow on the repository; they are handled in confidence.
 
 ## Reporting security issues
 
-Do not open a public issue for security vulnerabilities. Email the maintainers
-privately instead. Once a fix is ready, the issue and fix can be disclosed
-publicly.
+Do not open a public issue for a vulnerability. Use GitHub's private vulnerability reporting on the repo (Security tab, "Report a vulnerability"). Disclosure is coordinated: a fix is prepared privately, then the issue and fix are disclosed together. Full details are in [SECURITY.md](./SECURITY.md).
