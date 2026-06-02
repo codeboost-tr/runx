@@ -1,0 +1,17 @@
+{
+  "openapi": "3.1.0",
+  "info": { "title": "Pets", "version": "1.0.0" },
+  "servers": [{ "url": "https://api.example.test/v1" }],
+  "paths": {
+    "/pets/{petId}": {
+      "get": {
+        "operationId": "getPet",
+        "summary": "Fetch one pet by id.",
+        "parameters": [
+          { "name": "petId", "in": "path", "required": true, "schema": { "type": "string" } },
+          { "name": "fields", "in": "query", "required": false, "schema": { "type": "string" } }
+        ]
+      }
+    }
+  }
+}
