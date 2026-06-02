@@ -273,6 +273,7 @@ where
                 source_type,
             },
             request.host,
+            authority,
         );
     }
 
@@ -666,6 +667,7 @@ where
         request.attempt,
         request.inputs,
         request.host,
+        request.authority.as_ref(),
     )
 }
 
@@ -681,6 +683,7 @@ where
         request.attempt,
         request.inputs,
         request.host,
+        request.authority.as_ref(),
     )
 }
 
@@ -696,6 +699,7 @@ where
         request.attempt,
         request.inputs,
         request.host,
+        request.authority.as_ref(),
     )
 }
 
@@ -710,6 +714,7 @@ where
         request.step,
         request.attempt,
         request.inputs,
+        request.authority.as_ref(),
     )
 }
 
@@ -732,6 +737,7 @@ fn run_cli_tool_step<A>(
     attempt: u32,
     inputs: JsonObject,
     host: &mut dyn Host,
+    authority: Option<&StepAuthorityContext>,
 ) -> Result<StepRun, RuntimeError>
 where
     A: SkillAdapter,
@@ -746,7 +752,7 @@ where
         env: runtime.options.env.clone(),
         credential_delivery: crate::credentials::CredentialDelivery::none(),
     };
-    let regular = invoke_regular_skill_step(runtime, step, invocation, None, host)?;
+    let regular = invoke_regular_skill_step(runtime, step, invocation, authority, host)?;
     seal_regular_skill_step(
         RegularSkillSeal {
             runtime,
@@ -755,7 +761,7 @@ where
             step,
             attempt,
             skill_name: step.id.clone(),
-            authority: None,
+            authority,
         },
         regular,
     )
@@ -816,6 +822,7 @@ fn run_agent_task<A>(
     attempt: u32,
     inputs: JsonObject,
     host: &mut dyn Host,
+    authority: Option<&StepAuthorityContext>,
 ) -> Result<StepRun, RuntimeError>
 where
     A: SkillAdapter,
@@ -862,7 +869,7 @@ where
         &projection,
         runtime.options.signature_policy(),
     )?;
-    let admission_witness = StepAdmissionWitness::local_runtime(&step.id, receipt.id.as_str());
+    let admission_witness = step_admission_witness(&step.id, receipt.id.as_str(), authority);
     Ok(StepRun {
         step_id: step.id.clone(),
         attempt,
@@ -883,6 +890,7 @@ fn run_agent_skill_step<A>(
     attempt: u32,
     agent_task: AgentSkillStepInvocation,
     host: &mut dyn Host,
+    authority: Option<&StepAuthorityContext>,
 ) -> Result<StepRun, RuntimeError>
 where
     A: SkillAdapter,
@@ -923,7 +931,7 @@ where
         &projection,
         runtime.options.signature_policy(),
     )?;
-    let admission_witness = StepAdmissionWitness::local_runtime(&step.id, receipt.id.as_str());
+    let admission_witness = step_admission_witness(&step.id, receipt.id.as_str(), authority);
     Ok(StepRun {
         step_id: step.id.clone(),
         attempt,
@@ -1021,13 +1029,14 @@ fn run_tool_step<A>(
     step: &GraphStep,
     attempt: u32,
     inputs: JsonObject,
+    authority: Option<&StepAuthorityContext>,
 ) -> Result<StepRun, RuntimeError>
 where
     A: SkillAdapter,
 {
     #[cfg(not(feature = "catalog"))]
     {
-        let _ = (runtime, graph_dir, graph_name, step, attempt, inputs);
+        let _ = (runtime, graph_dir, graph_name, step, attempt, inputs, authority);
         Err(RuntimeError::UnsupportedAdapter {
             adapter_type: "catalog".to_owned(),
         })
@@ -1062,7 +1071,7 @@ where
             &runtime.options.created_at,
             runtime.options.signature_policy(),
         )?;
-        let admission_witness = StepAdmissionWitness::local_runtime(&step.id, receipt.id.as_str());
+        let admission_witness = step_admission_witness(&step.id, receipt.id.as_str(), authority);
         Ok(StepRun {
             step_id: step.id.clone(),
             attempt,
@@ -1200,6 +1209,7 @@ pub(super) fn run_approval_step<A>(
     attempt: u32,
     inputs: JsonObject,
     host: &mut dyn Host,
+    authority: Option<&StepAuthorityContext>,
 ) -> Result<StepRun, RuntimeError>
 where
     A: SkillAdapter,
@@ -1232,7 +1242,7 @@ where
         &runtime.options.created_at,
         runtime.options.signature_policy(),
     )?;
-    let admission_witness = StepAdmissionWitness::local_runtime(&step.id, receipt.id.as_str());
+    let admission_witness = step_admission_witness(&step.id, receipt.id.as_str(), authority);
     Ok(StepRun {
         step_id: step.id.clone(),
         attempt,
@@ -1424,4 +1434,53 @@ fn step_admission_witness(
             )
         },
     )
+}
+
+#[cfg(test)]
+mod governance_witness_tests {
+    use super::*;
+    use crate::effects::EffectAdmission;
+    use runx_contracts::AuthorityVerb;
+    use runx_core::state_machine::AuthorityAdmissionWitness;
+
+    fn admitted_authority() -> StepAuthorityContext {
+        let witness = AuthorityAdmissionWitness {
+            verb: AuthorityVerb::Spend,
+            parent_term_id: "parent-term".to_owned(),
+            child_term_id: "child-term".to_owned(),
+            idempotency_key: None,
+            capability_ref: None,
+        };
+        StepAuthorityContext::new(EffectAdmission::new(
+            "test-effect",
+            AuthorityVerb::Spend,
+            witness,
+            (),
+        ))
+    }
+
+    // Every live step type (approval, agent-task, cli-tool, tool, agent-skill, and
+    // the loaded-skill path) now seals through this one helper. With an admitted
+    // authority it must record which authority admitted the act in the witness, not
+    // a generic local-runtime witness; without one it falls back to local-runtime.
+    // This guards the uniform-governance invariant uniformly across step types.
+    #[test]
+    fn admitted_step_records_authority_in_witness() {
+        let authority = admitted_authority();
+        let witness = step_admission_witness("step-1", "runx:receipt:abc", Some(&authority));
+        let recorded = witness
+            .authority
+            .expect("an admitted step must record its authority in the witness");
+        assert_eq!(recorded.child_term_id, "child-term");
+        assert_eq!(recorded.verb, AuthorityVerb::Spend);
+    }
+
+    #[test]
+    fn unadmitted_step_falls_back_to_local_runtime() {
+        let witness = step_admission_witness("step-1", "runx:receipt:abc", None);
+        assert!(
+            witness.authority.is_none(),
+            "a step with no admitted authority records a local-runtime witness"
+        );
+    }
 }

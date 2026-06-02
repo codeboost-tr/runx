@@ -200,7 +200,7 @@ pub(super) struct StepAuthorityContext {
 }
 
 impl StepAuthorityContext {
-    fn new(admission: EffectAdmission) -> Self {
+    pub(super) fn new(admission: EffectAdmission) -> Self {
         Self { admission }
     }
 
