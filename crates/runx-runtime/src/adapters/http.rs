@@ -6,7 +6,10 @@
 //! timeouts), and maps the response to the universal [`SkillOutput`]. GET and DELETE
 //! map inputs to the query string; POST, PUT, and PATCH map them to a JSON body. It reuses the same
 //! transport the Anthropic resolver and the registry client use, so there is one
-//! governed HTTP path, not a parallel one.
+//! governed HTTP path, not a parallel one. The URL may carry `{name}` path
+//! placeholders that are filled from matching scalar inputs (and then dropped from
+//! the query/body), so REST resource paths like `/v1/pets/{id}` are expressible
+//! directly.
 
 use std::collections::BTreeMap;
 
@@ -65,6 +68,51 @@ fn with_query(url: &str, inputs: &JsonObject) -> String {
     format!("{url}{separator}{}", serializer.finish())
 }
 
+/// Substitute `{name}` path placeholders in the URL with matching scalar inputs,
+/// returning the resolved URL and the inputs with the consumed path parameters
+/// removed (so a path parameter is not also sent as a query parameter or body
+/// field). A placeholder with no matching scalar input, or a value that is not a
+/// safe path segment (empty or containing URL-significant characters), fails
+/// closed. This lets the http source express REST resource paths like
+/// `/v1/pets/{id}` without a separate spec resolver.
+fn resolve_path_template(
+    url: &str,
+    inputs: &JsonObject,
+) -> Result<(String, JsonObject), RuntimeError> {
+    if !url.contains('{') {
+        return Ok((url.to_owned(), inputs.clone()));
+    }
+    let mut out = String::with_capacity(url.len());
+    let mut remaining = inputs.clone();
+    let mut rest = url;
+    while let Some(start) = rest.find('{') {
+        out.push_str(&rest[..start]);
+        let after = &rest[start + 1..];
+        let end = after
+            .find('}')
+            .ok_or_else(|| failure("http url has an unclosed '{' path placeholder".to_owned()))?;
+        let name = &after[..end];
+        let value = inputs
+            .get(name)
+            .and_then(|value| scalar(&serde_json::to_value(value).unwrap_or(WireValue::Null)))
+            .ok_or_else(|| {
+                failure(format!(
+                    "http url path placeholder {{{name}}} has no matching scalar input"
+                ))
+            })?;
+        if value.is_empty() || value.contains(['/', '?', '#', '{', '}', ' ']) {
+            return Err(failure(format!(
+                "http url path placeholder {{{name}}} value is not a safe path segment: {value:?}"
+            )));
+        }
+        out.push_str(&value);
+        remaining.remove(name);
+        rest = &after[end + 1..];
+    }
+    out.push_str(rest);
+    Ok((out, remaining))
+}
+
 fn json_body(inputs: &JsonObject) -> Result<String, RuntimeError> {
     serde_json::to_string(&serde_json::to_value(inputs).unwrap_or(WireValue::Null))
         .map_err(|error| failure(format!("serializing http request body: {error}")))
@@ -77,6 +125,7 @@ pub fn execute_http_call<T: RuntimeHttpTransport>(
     call: &HttpCall,
     inputs: &JsonObject,
 ) -> Result<SkillOutput, RuntimeError> {
+    let (resolved_url, query_inputs) = resolve_path_template(&call.url, inputs)?;
     let mut headers = call.headers.clone();
     let (url, body) = match call.method {
         HttpMethod::Post | HttpMethod::Put | HttpMethod::Patch => {
@@ -86,9 +135,9 @@ pub fn execute_http_call<T: RuntimeHttpTransport>(
             {
                 headers.push(RuntimeHttpHeader::new("content-type", "application/json"));
             }
-            (call.url.clone(), Some(json_body(inputs)?))
+            (resolved_url, Some(json_body(&query_inputs)?))
         }
-        HttpMethod::Get | HttpMethod::Delete => (with_query(&call.url, inputs), None),
+        HttpMethod::Get | HttpMethod::Delete => (with_query(&resolved_url, &query_inputs), None),
     };
     let response = transport
         .send(RuntimeHttpRequest {
@@ -312,6 +361,44 @@ mod tests {
             sent[0].body
         );
         Ok(())
+    }
+
+    #[test]
+    fn path_template_substitutes_inputs_and_drops_them_from_the_query() -> Result<(), RuntimeError> {
+        let transport = stub(200, "{}");
+        let call = HttpCall {
+            method: HttpMethod::Get,
+            url: "https://api.example.test/v1/pets/{id}".to_owned(),
+            headers: Vec::new(),
+        };
+        execute_http_call(&transport, &call, &inputs(&[("id", "p-7"), ("fields", "name")]))?;
+        let sent = transport.requests.borrow();
+        assert!(
+            sent[0].url.contains("/v1/pets/p-7")
+                && sent[0].url.contains("fields=name")
+                && !sent[0].url.contains("id=p-7"),
+            "the path param must fill the placeholder and not also appear in the query; got: {}",
+            sent[0].url
+        );
+        Ok(())
+    }
+
+    #[test]
+    fn path_template_fails_closed_on_a_missing_or_unsafe_placeholder_value() {
+        let transport = stub(200, "{}");
+        let call = HttpCall {
+            method: HttpMethod::Get,
+            url: "https://api.example.test/v1/pets/{id}".to_owned(),
+            headers: Vec::new(),
+        };
+        assert!(
+            execute_http_call(&transport, &call, &JsonObject::new()).is_err(),
+            "a placeholder with no matching input must fail closed"
+        );
+        assert!(
+            execute_http_call(&transport, &call, &inputs(&[("id", "a/b")])).is_err(),
+            "a path value with a path separator must fail closed"
+        );
     }
 
     #[test]
