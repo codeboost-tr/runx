@@ -1,7 +1,7 @@
 {
   "openapi": "3.1.0",
   "info": { "title": "Pets", "version": "1.0.0" },
-  "servers": [{ "url": "https://api.example.test/v1" }],
+  "servers": [{ "url": "http://127.0.0.1:8732/v1" }],
   "paths": {
     "/pets/{petId}": {
       "get": {
