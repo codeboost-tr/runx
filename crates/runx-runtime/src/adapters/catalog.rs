@@ -11,6 +11,7 @@ use crate::adapter::{
 };
 use crate::adapter_pipeline::{AdapterCapture, AdapterProjection};
 use crate::adapters::cli_tool::CliToolAdapter;
+use crate::credentials::CredentialDelivery;
 use crate::json_render::json_number_string;
 use crate::tool_catalogs::search::{FixtureTool, fixture_tool};
 use crate::tool_catalogs::{ToolCatalogError, ToolInspectOptions, resolve_local_tool};
@@ -82,22 +83,57 @@ impl SkillAdapter for CatalogAdapter {
     }
 }
 
+/// The context needed to resolve a local tool by reference and invoke it. Borrowed
+/// so both the catalog adapter (from its `SkillInvocation`) and the managed-agent
+/// tool executor (from its run context) can share one resolve-and-invoke path.
+pub(crate) struct LocalToolRequest<'a> {
+    pub tool_ref: &'a str,
+    pub inputs: &'a JsonObject,
+    pub resolved_inputs: &'a JsonObject,
+    pub env: &'a BTreeMap<String, String>,
+    pub skill_directory: &'a Path,
+    pub credential_delivery: &'a CredentialDelivery,
+    pub skill_name: &'a str,
+}
+
 fn invoke_local_tool(
     catalog_ref: &str,
     request: &SkillInvocation,
     started: Instant,
 ) -> Result<Option<SkillOutput>, RuntimeError> {
+    resolve_and_invoke_local_tool(
+        &LocalToolRequest {
+            tool_ref: catalog_ref,
+            inputs: &request.inputs,
+            resolved_inputs: &request.resolved_inputs,
+            env: &request.env,
+            skill_directory: &request.skill_directory,
+            credential_delivery: &request.credential_delivery,
+            skill_name: &request.skill_name,
+        },
+        started,
+    )
+}
+
+/// Resolve a local tool by reference and invoke it through the governed CLI-tool
+/// adapter, applying any artifact wrappers. This is the single resolve-and-invoke
+/// path shared by the catalog adapter and the managed-agent tool executor.
+/// Returns `Ok(None)` when the reference does not resolve to a local tool.
+pub(crate) fn resolve_and_invoke_local_tool(
+    request: &LocalToolRequest<'_>,
+    started: Instant,
+) -> Result<Option<SkillOutput>, RuntimeError> {
     let resolution = match resolve_local_tool(&ToolInspectOptions {
-        root: workspace_root(&request.env, &request.skill_directory),
-        tool_ref: catalog_ref.to_owned(),
+        root: workspace_root(request.env, request.skill_directory),
+        tool_ref: request.tool_ref.to_owned(),
         source: None,
-        search_from_directory: request.skill_directory.clone(),
-        tool_roots: configured_tool_roots(&request.env),
+        search_from_directory: request.skill_directory.to_path_buf(),
+        tool_roots: configured_tool_roots(request.env),
         fixture_catalog_enabled: false,
     }) {
         Ok(resolution) => resolution,
         Err(error) if local_lookup_miss(&error) => return Ok(None),
-        Err(error) => return Err(catalog_error(&request.skill_name, error)),
+        Err(error) => return Err(catalog_error(request.skill_name, error)),
     };
 
     if resolution.tool.source.source_type != runx_parser::SourceKind::CliTool {
@@ -112,14 +148,14 @@ fn invoke_local_tool(
 
     let artifacts = resolution.tool.artifacts.clone();
     let mut source = resolution.tool.source;
-    let skill_directory = manifest_directory(&resolution.manifest_path, &request.skill_directory);
-    normalize_local_cli_source(&mut source, &skill_directory);
+    let tool_directory = manifest_directory(&resolution.manifest_path, request.skill_directory);
+    normalize_local_cli_source(&mut source, &tool_directory);
     let invocation = SkillInvocation {
         skill_name: resolution.tool.name,
         source,
         inputs: request.inputs.clone(),
         resolved_inputs: request.resolved_inputs.clone(),
-        skill_directory,
+        skill_directory: tool_directory,
         env: request.env.clone(),
         credential_delivery: request.credential_delivery.clone(),
     };

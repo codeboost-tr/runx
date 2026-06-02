@@ -26,7 +26,7 @@ payment-rails = ["async-http"]
 cli-tool = ["async-http"]
 mcp = ["dep:rmcp", "dep:tokio", "tokio/process", "tokio/io-util", "tokio/sync", "tokio/rt-multi-thread"]
 a2a = []
-agent = ["async-http"]
+agent = ["async-http", "catalog"]
 catalog = ["cli-tool"]
 external-adapter = []
 
