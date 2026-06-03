@@ -40,7 +40,7 @@ runx-contracts.workspace = true
 runx-core.workspace = true
 runx-parser.workspace = true
 runx-receipts.workspace = true
-reqwest = { version = "=0.13.3", default-features = false, features = ["rustls-no-provider", "json"], optional = true }
+reqwest = { version = "=0.13.4", default-features = false, features = ["rustls-no-provider", "json"], optional = true }
 ring = "0.17.14"
 # Drive rustls with the ring provider (already linked via `ring`) instead of
 # reqwest's default aws-lc-rs, so the vendored aws-lc-sys C crypto blob is not
