@@ -2,8 +2,8 @@
 spec_version: '2.0'
 task_id: oracle-fixture-numeric-coverage-v1
 created: '2026-05-29T00:00:00Z'
-updated: '2026-05-29T00:00:00Z'
-status: active
+updated: '2026-06-04T20:49:23Z'
+status: completed
 harden_status: not_run
 size: small
 risk_level: low
@@ -13,18 +13,14 @@ risk_level: low
 
 ## Current State
 
-Status: active
-Current phase: phase1
-Next: implement
-Reason: The shared oracle file
-`fixtures/contracts/canonical-json/runx-stable-json-v1.cases.json` is the only
-standing artifact that future contract changes get compared against for
-cross-language byte parity. It has five cases. The number domain in the
-existing `covered-number-domain` case is `{0, ±integer, ±0.x}`, which covers
-none of the float range where Rust and JS canonical writers disagree. String
-and container coverage is similarly thin.
-Blockers: depends on `canonical-json-float-parity-v1` Phase 1 landing first
-so the Rust writer is JS-faithful for floats.
+Status: completed
+Current phase: final
+Next: done
+Reason: task completed
+Blockers: none
+Allowed follow-up command: `none`
+Latest runner update: 2026-06-04T20:49:23Z
+Review gate: pass
 
 ## Summary
 
@@ -113,3 +109,22 @@ implementation is right and the oracle was misgenerated).
 Lands after `canonical-json-float-parity-v1` Phase 1. Otherwise the
 `float-tiny-sci`, `float-large-sci`, `float-large`, `float-subnormal`,
 and `float-near-msi` cases would fail on Rust.
+
+## Review
+
+Status: completed
+Verdict: pass
+Mode: verify
+Provider: command
+Output: command.stdout
+Summary: Oracle coverage expansion is implemented and verified. The stable JSON oracle now has 35 cases including float, string escape, and container edge categories; the fixture digest fields were checked; cargo test -p runx-receipts passed; and pnpm --filter @runxhq/contracts test passed against the expanded oracle.
+
+Attack log:
+- `fixtures/contracts/canonical-json/runx-stable-json-v1.cases.json`: verify expanded oracle count and representative required edge-case names -> clean
+- `oracle digest fields`: verify expected_utf8_hex and sha256 fields match canonical strings -> clean
+- `packages/contracts/src/canonical-json.test.ts`: verify TS test consumes expanded oracle without count pin -> clean
+- `cargo test -p runx-receipts`: verify Rust canonical tests consume the oracle -> clean
+
+Findings:
+- none
+
