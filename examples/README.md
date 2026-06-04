@@ -22,6 +22,7 @@ export RUNX_RECEIPT_SIGN_ISSUER_TYPE=hosted
 | `managed-agent` | agent (host-drives default; yields `needs_agent` to the calling agent) | `runx harness examples/managed-agent` |
 | `external-adapter-graph` + `external-adapter-tool` | external-adapter (graph-step source; a governed subprocess adapter) | `runx harness examples/external-adapter-graph` |
 | `openapi-graph` + `openapi-tool` | OpenAPI via external-adapter (an OpenAPI operation executed and sealed) | `sh examples/openapi-graph/run.sh` (real call against a local fixture) |
+| `byo-http-graph` + `byo-http-tool` | BYO local credential over the governed HTTP front | `sh examples/byo-http-graph/run.sh` (credentialed local fixture read) |
 
 `external-adapter` is a graph-step source, not a top-level runner, so its examples
 are driven by a one-step graph. Graph input values reach a step with the
