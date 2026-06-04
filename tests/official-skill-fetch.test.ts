@@ -1,18 +1,13 @@
-import { createHash } from "node:crypto";
-import { mkdtemp, readFile, rm, stat } from "node:fs/promises";
+import { generateKeyPairSync, sign } from "node:crypto";
+import { existsSync, readFileSync, readdirSync, statSync, writeFileSync } from "node:fs";
+import { mkdir, mkdtemp, readFile, rm, stat, writeFile } from "node:fs/promises";
+import { spawnSync } from "node:child_process";
 import os from "node:os";
 import path from "node:path";
 
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { describe, expect, it } from "vitest";
 
 import { resolveRunnableSkillReference } from "../packages/cli/src/index.js";
-
-const originalFetch = globalThis.fetch;
-
-afterEach(() => {
-  vi.restoreAllMocks();
-  globalThis.fetch = originalFetch;
-});
 
 describe("official skill fetch", () => {
   it("acquires, caches, and reruns an official skill offline from cache", async () => {
@@ -24,9 +19,8 @@ describe("official skill fetch", () => {
       RUNX_CWD: projectDir,
       RUNX_HOME: globalHomeDir,
       RUNX_REGISTRY_URL: "https://runx.example.test",
+      RUNX_DEV_RUST_CLI_BIN: nativeRunxBinaryForTest(),
     };
-    const markdown = await readFile(path.resolve("skills/sourcey/SKILL.md"), "utf8");
-    const profileDocument = await readFile(path.resolve("skills/sourcey/X.yaml"), "utf8");
     const officialLock = JSON.parse(
       await readFile(path.resolve("packages/cli/src/official-skills.lock.json"), "utf8"),
     ) as ReadonlyArray<{
@@ -40,44 +34,21 @@ describe("official skill fetch", () => {
     }
 
     try {
-      globalThis.fetch = vi.fn(async () => new Response(JSON.stringify({
-        status: "success",
-        install_count: 1,
-        acquisition: {
-          skill_id: "runx/sourcey",
-          owner: "runx",
-          name: "sourcey",
-          version: sourceyLock.version,
-          digest: sourceyLock.digest,
-          markdown,
-          profile_document: profileDocument,
-          profile_digest: sha256Hex(profileDocument),
-          trust_tier: "first_party",
-          publisher: {
-            id: "runx",
-            kind: "organization",
-            handle: "runx",
-          },
-          attestations: [
-            {
-              kind: "publisher",
-              id: "publisher:runx",
-              status: "verified",
-              summary: "runx",
-            },
-          ],
-          runner_names: ["agent", "sourcey"],
-        },
-      }), { status: 200 })) as typeof fetch;
+      const registryDir = path.join(tempDir, "registry");
+      publishLocalRegistrySkill({
+        registryDir,
+        subject: path.resolve("skills/sourcey/SKILL.md"),
+        profile: path.resolve("skills/sourcey/X.yaml"),
+        owner: "runx",
+        version: sourceyLock.version,
+        env,
+      });
 
+      env.RUNX_REGISTRY_URL = registryDir;
       const firstPath = await resolveRunnableSkillReference("sourcey", env);
-      expect(firstPath).toBe(path.join(globalHomeDir, "official-skills", "runx", "sourcey", sourceyLock.version));
+      expect(firstPath).toBe(path.join(globalHomeDir, "official-skills", "runx", "sourcey"));
       expect((await stat(path.join(globalHomeDir, "install.json"))).isFile()).toBe(true);
       expect((await stat(path.join(firstPath, "SKILL.md"))).isFile()).toBe(true);
-
-      globalThis.fetch = vi.fn(async () => {
-        throw new Error("network should not be used");
-      }) as typeof fetch;
 
       const secondPath = await resolveRunnableSkillReference("sourcey", env);
       expect(secondPath).toBe(firstPath);
@@ -93,6 +64,7 @@ describe("official skill fetch", () => {
       RUNX_CWD: path.join(tempDir, "project"),
       RUNX_HOME: path.join(tempDir, "home"),
       RUNX_REGISTRY_URL: "https://runx.example.test",
+      RUNX_DEV_RUST_CLI_BIN: nativeRunxBinaryForTest(),
     };
     const officialLock = JSON.parse(
       await readFile(path.resolve("packages/cli/src/official-skills.lock.json"), "utf8"),
@@ -107,35 +79,28 @@ describe("official skill fetch", () => {
     }
 
     try {
-      globalThis.fetch = vi.fn(async () => new Response(JSON.stringify({
-        status: "success",
-        install_count: 1,
-        acquisition: {
-          skill_id: "runx/sourcey",
-          owner: "runx",
-          name: "sourcey",
-          version: sourceyLock.version,
-          digest: sourceyLock.digest,
-          markdown: "---\nname: sourcey\ndescription: wrong\nsource:\n  type: prompt\ninstructions: []\n---\n",
-          trust_tier: "first_party",
-          publisher: {
-            id: "runx",
-            kind: "organization",
-            handle: "runx",
-          },
-          attestations: [
-            {
-              kind: "publisher",
-              id: "publisher:runx",
-              status: "verified",
-              summary: "runx",
-            },
-          ],
-          runner_names: [],
-        },
-      }), { status: 200 })) as typeof fetch;
+      const registryDir = path.join(tempDir, "registry");
+      const wrongSkillDir = path.join(tempDir, "wrong-sourcey");
+      const wrongSkillPath = path.join(wrongSkillDir, "SKILL.md");
+      const originalMarkdown = await readFile(path.resolve("skills/sourcey/SKILL.md"), "utf8");
+      await writeTestFile(
+        wrongSkillPath,
+        originalMarkdown.replace(
+          "description: Generate documentation for a project using Sourcey.",
+          "description: Generate different documentation for a project using Sourcey.",
+        ),
+      );
+      publishLocalRegistrySkill({
+        registryDir,
+        subject: wrongSkillPath,
+        profile: path.resolve("skills/sourcey/X.yaml"),
+        owner: "runx",
+        version: sourceyLock.version,
+        env,
+      });
+      env.RUNX_REGISTRY_URL = registryDir;
 
-      await expect(resolveRunnableSkillReference("sourcey", env)).rejects.toThrow("Official skill verification failed");
+      await expect(resolveRunnableSkillReference("sourcey", env)).rejects.toThrow("digest_mismatch");
     } finally {
       await rm(tempDir, { recursive: true, force: true });
     }
@@ -148,9 +113,8 @@ describe("official skill fetch", () => {
       RUNX_CWD: path.join(tempDir, "project"),
       RUNX_HOME: path.join(tempDir, "home"),
       RUNX_REGISTRY_URL: "https://runx.example.test",
+      RUNX_DEV_RUST_CLI_BIN: nativeRunxBinaryForTest(),
     };
-    const markdown = await readFile(path.resolve("skills/scafld/SKILL.md"), "utf8");
-    const profileDocument = await readFile(path.resolve("skills/scafld/X.yaml"), "utf8");
     const officialLock = JSON.parse(
       await readFile(path.resolve("packages/cli/src/official-skills.lock.json"), "utf8"),
     ) as ReadonlyArray<{
@@ -164,35 +128,17 @@ describe("official skill fetch", () => {
     }
 
     try {
-      globalThis.fetch = vi.fn(async () => new Response(JSON.stringify({
-        status: "success",
-        install_count: 1,
-        acquisition: {
-          skill_id: "runx/scafld",
-          owner: "runx",
-          name: "scafld",
-          version: lockEntry.version,
-          digest: lockEntry.digest,
-          markdown,
-          profile_document: profileDocument,
-          trust_tier: "first_party",
-          publisher: {
-            id: "runx",
-            kind: "organization",
-            handle: "runx",
-          },
-          attestations: [
-            {
-              kind: "publisher",
-              id: "publisher:runx",
-              status: "verified",
-              summary: "runx",
-            },
-          ],
-          runner_names: ["agent", "scafld-cli"],
-        },
-      }), { status: 200 })) as typeof fetch;
+      const registryDir = path.join(tempDir, "registry");
+      publishLocalRegistrySkill({
+        registryDir,
+        subject: path.resolve("skills/scafld/SKILL.md"),
+        profile: path.resolve("skills/scafld/X.yaml"),
+        owner: "runx",
+        version: lockEntry.version,
+        env,
+      });
 
+      env.RUNX_REGISTRY_URL = registryDir;
       const skillPath = await resolveRunnableSkillReference("scafld", env);
       expect((await stat(path.join(skillPath, "run.mjs"))).isFile()).toBe(true);
     } finally {
@@ -201,6 +147,135 @@ describe("official skill fetch", () => {
   });
 });
 
-function sha256Hex(value: string): string {
-  return createHash("sha256").update(value).digest("hex");
+function publishLocalRegistrySkill(input: {
+  readonly registryDir: string;
+  readonly subject: string;
+  readonly owner: string;
+  readonly version: string;
+  readonly env: NodeJS.ProcessEnv;
+  readonly profile?: string;
+}): void {
+  const signingKey = testManifestSigningKey();
+  input.env.RUNX_REGISTRY_MANIFEST_TRUST_KEY_ID = signingKey.keyId;
+  input.env.RUNX_REGISTRY_MANIFEST_TRUST_KEY_BASE64 = signingKey.publicKeyBase64;
+  const args = [
+    "registry",
+    "publish",
+    input.subject,
+    "--registry-dir",
+    input.registryDir,
+    "--owner",
+    input.owner,
+    "--version",
+    input.version,
+    "--upsert",
+    "--json",
+  ];
+  if (input.profile) {
+    args.push("--profile", input.profile);
+  }
+  const result = spawnSync(input.env.RUNX_DEV_RUST_CLI_BIN ?? "runx", args, {
+    cwd: process.cwd(),
+    env: input.env,
+    encoding: "utf8",
+  });
+  if (result.status !== 0) {
+    throw new Error(`failed to publish local registry fixture: ${result.stderr || result.stdout}`);
+  }
+  signPublishedRegistryEntry(input.registryDir, signingKey);
+}
+
+async function writeTestFile(filePath: string, contents: string): Promise<void> {
+  await rm(path.dirname(filePath), { recursive: true, force: true });
+  await mkdir(path.dirname(filePath), { recursive: true });
+  await writeFile(filePath, contents, "utf8");
+}
+
+function nativeRunxBinaryForTest(): string {
+  const existing = process.env.RUNX_DEV_RUST_CLI_BIN;
+  if (existing) {
+    return existing;
+  }
+  const candidate = path.resolve("crates/target/debug/runx");
+  return existsSync(candidate) ? candidate : "runx";
+}
+
+interface TestManifestSigningKey {
+  readonly keyId: string;
+  readonly signerId: string;
+  readonly publicKeyBase64: string;
+  readonly privateKey: ReturnType<typeof generateKeyPairSync>["privateKey"];
+}
+
+let cachedManifestSigningKey: TestManifestSigningKey | undefined;
+
+function testManifestSigningKey(): TestManifestSigningKey {
+  if (cachedManifestSigningKey) {
+    return cachedManifestSigningKey;
+  }
+  const keyPair = generateKeyPairSync("ed25519");
+  const publicKeyDer = keyPair.publicKey.export({ format: "der", type: "spki" });
+  const publicKeyRaw = Buffer.from(publicKeyDer).subarray(-32);
+  cachedManifestSigningKey = {
+    keyId: "runx-test-registry-ed25519",
+    signerId: "runx-test-registry",
+    publicKeyBase64: publicKeyRaw.toString("base64"),
+    privateKey: keyPair.privateKey,
+  };
+  return cachedManifestSigningKey;
+}
+
+function signPublishedRegistryEntry(registryDir: string, signingKey: TestManifestSigningKey): void {
+  const entryPath = findSingleRegistryEntry(registryDir);
+  const entry = JSON.parse(readFileSync(entryPath, "utf8")) as {
+    skill_id: string;
+    version: string;
+    digest: string;
+    profile_digest?: string;
+    signed_manifest?: unknown;
+  };
+  const payload =
+    "runx.registry.signed_manifest.v1\n" +
+    `skill_id=${entry.skill_id}\n` +
+    `version=${entry.version}\n` +
+    `digest=${entry.digest}\n` +
+    `profile_digest=${entry.profile_digest ?? ""}\n` +
+    `signer_id=${signingKey.signerId}\n` +
+    `key_id=${signingKey.keyId}\n`;
+  entry.signed_manifest = {
+    schema: "runx.registry.signed_manifest.v1",
+    skill_id: entry.skill_id,
+    version: entry.version,
+    digest: entry.digest,
+    ...(entry.profile_digest ? { profile_digest: entry.profile_digest } : {}),
+    signer: {
+      id: signingKey.signerId,
+      key_id: signingKey.keyId,
+    },
+    signature: {
+      alg: "ed25519",
+      value: `base64:${sign(null, Buffer.from(payload), signingKey.privateKey).toString("base64")}`,
+    },
+  };
+  writeFileSync(entryPath, `${JSON.stringify(entry, null, 2)}\n`, "utf8");
+}
+
+function findSingleRegistryEntry(root: string): string {
+  const matches: string[] = [];
+  const walk = (dir: string): void => {
+    for (const entry of readdirSync(dir)) {
+      const entryPath = path.join(dir, entry);
+      const stats = statSync(entryPath);
+      if (stats.isDirectory()) {
+        walk(entryPath);
+      } else if (entryPath.endsWith(".json")) {
+        matches.push(entryPath);
+      }
+    }
+  };
+  walk(root);
+  if (matches.length !== 1) {
+    throw new Error(`expected one registry fixture entry, found ${matches.length}`);
+  }
+  return matches[0];
 }

@@ -11,9 +11,9 @@ plan, so scafld specs that run from `oss/` have a stable local path.
 
 Rust is canonical for advertised native local CLI behavior, graph execution,
 harness and dogfood execution, receipt sealing and verification, policy and
-registry configuration, authority admission, and payment authority. TypeScript
-packages may wrap those paths for distribution, but they do not own the local
-behavior.
+registry configuration, generic authority admission, and effect admission.
+TypeScript packages may wrap those paths for distribution, but they do not own
+the local behavior.
 
 Rust crates that are still in parity-only mode remain conformance evidence
 until a separate cutover spec changes a consumer and passes the relevant gate.

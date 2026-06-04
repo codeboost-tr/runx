@@ -13,49 +13,45 @@
     "discovery_report": {
       "type": "json",
       "required": true,
-      "artifact": true,
-      "description": "Discovery report emitted by the Sourcey discover step."
+      "description": "Discovery report emitted by the Sourcey discover step.",
+      "artifact": true
     },
     "doc_bundle": {
       "type": "json",
       "required": true,
-      "artifact": true,
-      "description": "Doc bundle emitted by the Sourcey author step."
-    },
-    "project_brief": {
-      "type": "json",
-      "required": false,
-      "artifact": true,
-      "description": "Optional grounded brief supplied to the Sourcey run."
-    },
-    "sourcey_build_report": {
-      "type": "json",
-      "required": true,
-      "artifact": true,
-      "description": "Sourcey build report emitted by sourcey.build."
+      "description": "Doc bundle emitted by the Sourcey author step.",
+      "artifact": true
     },
     "evaluation_report": {
       "type": "json",
       "required": true,
-      "artifact": true,
-      "description": "Evaluation report emitted by the critique step."
+      "description": "Evaluation report emitted by the critique step.",
+      "artifact": true
+    },
+    "project_brief": {
+      "type": "json",
+      "required": false,
+      "description": "Optional grounded brief supplied to the Sourcey run.",
+      "artifact": true
     },
     "revision_bundle": {
       "type": "json",
       "required": true,
-      "artifact": true,
-      "description": "Revision bundle emitted by the revise step."
+      "description": "Revision bundle emitted by the revise step.",
+      "artifact": true
+    },
+    "sourcey_build_report": {
+      "type": "json",
+      "required": true,
+      "description": "Sourcey build report emitted by sourcey.build.",
+      "artifact": true
     },
     "sourcey_verification_proof": {
       "type": "json",
       "required": true,
-      "artifact": true,
-      "description": "Verification proof emitted by sourcey.verify."
+      "description": "Verification proof emitted by sourcey.verify.",
+      "artifact": true
     }
-  },
-  "output": {
-    "packet": "runx.sourcey.packet.v1",
-    "wrap_as": "sourcey_packet"
   },
   "scopes": [
     "sourcey.verify"
@@ -71,7 +67,11 @@
       "./run.mjs"
     ]
   },
-  "source_hash": "sha256:43627cd1653bb4e4f18ffb0fc4a3f93d0414637740afa8e2c277d5aa816509c1",
+  "output": {
+    "packet": "runx.sourcey.packet.v1",
+    "wrap_as": "sourcey_packet"
+  },
+  "source_hash": "sha256:e36f2eaee008b5d04a6d5b799fa21a0e9450f48ddc37e5f7422197340a095151",
   "schema_hash": "sha256:975669ce4f792acc392b93ec9cc6010cb95a9dacff5dbdcc420e9b64448d8dd4",
-  "toolkit_version": "0.2.0"
+  "toolkit_version": "0.1.4"
 }

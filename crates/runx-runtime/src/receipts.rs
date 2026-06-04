@@ -12,7 +12,7 @@ pub mod signing;
 pub mod store;
 pub mod tree;
 
-pub(crate) use issuer::{local_runtime_issuer, local_target_runner_issuer};
+pub(crate) use issuer::local_runtime_issuer;
 pub(crate) use seal::{
     GraphClosure, RuntimeReceiptProofContextProvider, StepReceiptWithDisposition,
     graph_receipt_with_disposition_and_policy, graph_receipt_with_effects_and_signature_policy,

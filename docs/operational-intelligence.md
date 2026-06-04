@@ -59,7 +59,7 @@ The proposal packet is a replayable, redacted decision envelope. It should carry
   requests, source publications, outcome observations, or provider links
 - `recommended_actions`, which name governed action lanes; tool ids and tool
   input schemas stay behind those lanes and adapters
-- public summary text safe for provider threads, work-item comments, support
+- public summary text safe for provider threads, source-thread comments, support
   surfaces, and admin readbacks
 
 ## Reference Contracts

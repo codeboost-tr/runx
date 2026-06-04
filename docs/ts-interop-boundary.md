@@ -8,8 +8,8 @@ packages during the final runtime cutover.
 
 Rust is canonical for trusted local runtime and execution: local skill and
 graph execution, harness and dogfood execution, receipt sealing and
-verification, history, policy and registry configuration, authority admission,
-payment authority, sandbox admission/metadata, built-in adapter execution, and
+verification, history, policy and registry configuration, generic authority and
+effect admission, sandbox admission/metadata, built-in adapter execution, and
 external execution-adapter supervision (defined as a contract; see the
 shipped-vs-defined note below for what the CLI actually enables). OS sandbox
 enforcement is implemented in the Rust runtime for the local sandbox profile
@@ -80,19 +80,19 @@ truth, so it is recorded here rather than implied.
   supervisor is `#[cfg(feature = ...)]`-gated and is NOT enabled in `runx-cli`.
   The shipped binary enables the local `external-adapter` lane; future integration
   work should land there instead of adding provider HTTP clients to the kernel.
-- **Payment: authority is Rust, the rail network leg is a family-4 crossing.**
-  Admission, the spend-capability binding, proof validation, and receipt sealing
-  are Rust and stay Rust. The rail SETTLEMENT network leg (provider
-  verify/settle calls and any external-signer call) is not kernel work: it is
-  non-deterministic, secret-free, and offline-impossible, and belongs on a family-4
-  external-adapter lane behind the generic effect kernel.
-- **Provider clients belong outside the kernel.** The dead GitHub target-runner
-  dedupe fetch and GitHub post-merge pull-request readback clients were removed
-  from `runx-runtime`; the remaining Rust code keeps only pure command/decision
-  helpers and fixture-backed readback. When these provider calls are wired for
-  real, they belong on family-4 provider/external-adapter lanes rather than as
-  token-bearing kernel `reqwest` clients. Payment's inert rail dispatcher and
-  HTTP clients were also removed; real rails are rebuilt as generic effect-family
+- **Effects: authority is Rust, domain interpretation stays outside the generic
+  kernel.** Admission, capability binding, proof validation, and receipt sealing
+  are Rust and stay Rust. Domain network legs such as payment settlement
+  provider calls or external-signer calls are not kernel work: they are
+  non-deterministic, secret-bearing or network-bearing, and offline-impossible,
+  so they belong on family-4 external-adapter lanes behind the generic effect
+  kernel.
+- **Provider clients belong outside the kernel.** GitHub PR creation, provider
+  outcome observation, and source-thread publication are owned by adapters or
+  product workflows, not by in-kernel provider clients. When provider calls are
+  wired for real, they belong on family-4 provider/external-adapter lanes rather
+  than as token-bearing kernel `reqwest` clients. Payment's inert rail dispatcher
+  and HTTP clients were also removed; real rails are rebuilt as generic effect-family
   adapters behind the kernel. The unbuilt GitHub post-merge publisher (mutation
   half) likewise belongs on the `thread-outbox-provider` lane, not a new
   in-kernel client. The deterministic halves these feed are pure and correctly
@@ -117,7 +117,7 @@ truth, so it is recorded here rather than implied.
 | `@runxhq/authoring` | Stays as authoring tooling for skills, manifests, protocol fixtures, and generated artifacts until the authoring DX plan decides whether any piece moves to Rust or scafld. It does not own trusted local execution. |
 | `@runxhq/cli` | Stays as a platform-aware npm launcher that resolves and execs the Rust binary. It must remain useful from an installed package without TypeScript sources and must fail closed instead of falling back to TypeScript local execution. |
 | `@runxhq/contracts` | Stays as the published generated TypeScript view of `runx-contracts`, maintained with fixture cross-validation. |
-| `@runxhq/core` | Sunset in OSS. The package is private build-only legacy surface; root/workspace aliases no longer expose it, `core/src/policy` is deleted, and OSS CLI/tests/scripts no longer import it. Any remaining cloud importer belongs to the separate cloud cutover, not the trusted local runtime path. |
+| `@runxhq/core` | Deleted. Its registry/config/parser remnants were not a shipped execution boundary; live OSS code uses Rust crates, generated contracts, tool-local modules, or explicit protocol packages instead. Cloud imports the promoted `@runx/protocol` package. |
 | `@runxhq/create-skill` | Stays as a thin npm bootstrapper that wraps `runx new` through the CLI. |
 | `@runxhq/host-adapters` | Stays as thin host response adapters over the runx host protocol, retargeted to `@runxhq/contracts` types. It can shape host/client responses, not execute trusted local runtime behavior. |
 | `@runxhq/langchain` | Stays as an optional LangChain bridge that shells the `runx` CLI or uses documented external protocols for governed skill and tool invocation. |
@@ -129,13 +129,13 @@ from the surviving package table because they no longer have a TypeScript
 runtime surface, alias, path mapping, workspace dependency, or API export.
 
 Cloud packages remain TypeScript. The Rust runtime consumes cloud through the
-cloud HTTP contracts; cloud cutovers are separate future specs. Local registry
-and policy configuration remains Rust-owned when exercised by the native CLI.
-Cloud/product integrations, host adapters, authoring tooling, and helper SDKs
-can remain TypeScript as long as they stay on one of the contract surfaces
-above. External integration authors target the correct language-neutral protocol
-lane; they must not need Rust, `runx-core`, `runx-runtime`, or a fork of the
-core repository to ship an extension.
+cloud HTTP contracts. Local registry and policy configuration remains
+Rust-owned when exercised by the native CLI. Cloud/product integrations, host
+adapters, authoring tooling, and helper SDKs can remain TypeScript as long as
+they stay on one of the contract surfaces above or the cloud-owned
+`@runx/protocol` helper package. External integration authors target the correct
+language-neutral protocol lane; they must not need Rust, `runx-core`,
+`runx-runtime`, or a fork of the core repository to ship an extension.
 
 ## Test ownership
 

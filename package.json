@@ -75,7 +75,7 @@
   },
   "devDependencies": {
     "@runxhq/authoring": "workspace:*",
-    "@runxhq/contracts": "workspace:^0.2.4",
+    "@runxhq/contracts": "workspace:^0.3.0",
     "@runxhq/host-adapters": "workspace:^0.1.1",
     "@types/node": "^24.0.0",
     "tsx": "^4.20.6",

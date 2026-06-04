@@ -160,9 +160,6 @@ mod tests {
         include_str!("../../../fixtures/contracts/harness-spine/receipt-success.json");
     const ABNORMAL_RECEIPT: &str =
         include_str!("../../../fixtures/contracts/harness-spine/receipt-abnormal.json");
-    const POST_MERGE_OBSERVER_RECEIPT: &str = include_str!(
-        "../../../fixtures/contracts/harness-spine/post-merge-observer-merged-verified.json"
-    );
     const RECEIPT_ORACLE: &str = include_str!(
         "../../../fixtures/contracts/canonical-json/runx-receipt-c14n-v1.oracles.json"
     );
@@ -373,7 +370,6 @@ mod tests {
         let json = match path {
             "harness-spine/receipt-abnormal.json" => ABNORMAL_RECEIPT,
             "harness-spine/receipt-success.json" => SUCCESS_RECEIPT,
-            "harness-spine/post-merge-observer-merged-verified.json" => POST_MERGE_OBSERVER_RECEIPT,
             _ => {
                 return Err(ReceiptError::Serialization {
                     message: format!("unknown receipt oracle fixture: {path}"),

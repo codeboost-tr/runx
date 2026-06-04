@@ -1659,11 +1659,11 @@ harness:
     const tempDir = await mkdtemp(path.join(os.tmpdir(), "runx-doctor-reach-in-"));
     tempDirs.push(tempDir);
     const cliSourcePath = path.join(tempDir, "packages", "cli", "src", "index.ts");
-    const coreSourcePath = path.join(tempDir, "packages", "core", "src", "index.ts");
+    const contractsSourcePath = path.join(tempDir, "packages", "contracts", "src", "index.ts");
     await mkdir(path.dirname(cliSourcePath), { recursive: true });
-    await mkdir(path.dirname(coreSourcePath), { recursive: true });
-    await writeFile(cliSourcePath, `import "../../core/src/index.js";\n`);
-    await writeFile(coreSourcePath, "export const core = true;\n");
+    await mkdir(path.dirname(contractsSourcePath), { recursive: true });
+    await writeFile(cliSourcePath, `import "../../contracts/src/index.js";\n`);
+    await writeFile(contractsSourcePath, "export const contracts = true;\n");
 
     const stdout = createMemoryStream();
     const stderr = createMemoryStream();
@@ -1690,9 +1690,9 @@ harness:
         id: "runx.structure.cross_package_reach_in",
         severity: "error",
         evidence: expect.objectContaining({
-          specifier: "../../core/src/index.js",
+          specifier: "../../contracts/src/index.js",
           source_package: "cli",
-          target_package: "core",
+          target_package: "contracts",
         }),
         location: expect.objectContaining({
           path: "packages/cli/src/index.ts",

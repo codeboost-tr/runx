@@ -1,4 +1,4 @@
-//! Authority algebra: terms, capabilities, verbs, attenuation, and payment bounds.
+//! Authority algebra: terms, capabilities, verbs, attenuation, and effect bounds.
 use serde::{Deserialize, Serialize};
 
 use crate::schema::{IsoDateTime, NonEmptyString, RunxSchema};
@@ -13,7 +13,7 @@ pub enum AuthorityResourceFamily {
     Network,
     Deployment,
     Credential,
-    Payment,
+    Effect,
     Artifact,
     Harness,
     Publication,
@@ -33,10 +33,10 @@ pub enum AuthorityVerb {
     Delete,
     Execute,
     Verify,
-    Quote,
-    Reserve,
-    Spend,
-    Refund,
+    Estimate,
+    Prepare,
+    Commit,
+    Reverse,
     Publish,
     SpawnChild,
 }
@@ -52,45 +52,46 @@ pub enum AuthorityCapability {
     ProviderMutation,
     PublicPublication,
     ChildHarnessSpawn,
-    PaymentSingleUseSpend,
+    EffectSingleUseCapability,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize, RunxSchema)]
 #[serde(rename_all = "snake_case")]
-pub enum PaymentCredentialForm {
-    SingleUseSpendCapability,
+pub enum AuthorityEffectCredentialForm {
+    SingleUseCapability,
     ExternalSigner,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize, RunxSchema)]
 #[serde(deny_unknown_fields)]
-pub struct PaymentAuthorityBounds {
-    pub currency: NonEmptyString,
+pub struct AuthorityEffectLimit {
+    pub family: NonEmptyString,
+    pub unit: NonEmptyString,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub max_per_call_minor: Option<u64>,
+    pub max_per_call_units: Option<u64>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub max_per_run_minor: Option<u64>,
+    pub max_per_run_units: Option<u64>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub max_per_period_minor: Option<u64>,
+    pub max_per_period_units: Option<u64>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub period: Option<NonEmptyString>,
-    pub rails: Vec<NonEmptyString>,
+    pub channels: Vec<NonEmptyString>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub realm: Option<NonEmptyString>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub counterparty: Option<NonEmptyString>,
+    pub peer: Option<NonEmptyString>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub operation: Option<NonEmptyString>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub quote_ttl_ms: Option<u64>,
+    pub preflight_ttl_ms: Option<u64>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub approval_threshold_minor: Option<u64>,
+    pub approval_threshold_units: Option<u64>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub credential_form: Option<PaymentCredentialForm>,
+    pub authorization_form: Option<AuthorityEffectCredentialForm>,
     #[serde(default, skip_serializing_if = "is_false")]
-    pub quote_required: bool,
+    pub preflight_required: bool,
     #[serde(default, skip_serializing_if = "is_false")]
-    pub reservation_required: bool,
+    pub commitment_required: bool,
     #[serde(default, skip_serializing_if = "is_false")]
     pub idempotency_required: bool,
     #[serde(default, skip_serializing_if = "is_false")]
@@ -98,7 +99,7 @@ pub struct PaymentAuthorityBounds {
     #[serde(default, skip_serializing_if = "is_false")]
     pub receipt_before_success: bool,
     #[serde(default, skip_serializing_if = "is_false")]
-    pub single_use_spend: bool,
+    pub single_use_capability: bool,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize, RunxSchema)]
@@ -134,9 +135,9 @@ pub struct AuthorityBounds {
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub token_audiences: Vec<NonEmptyString>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub max_spend_usd: Option<JsonNumber>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub payment: Option<PaymentAuthorityBounds>,
+    pub max_cost_units: Option<JsonNumber>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub effect_limits: Vec<AuthorityEffectLimit>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub effects: Vec<AuthorityEffectGuard>,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -157,8 +158,8 @@ pub enum AuthorityConditionPredicate {
     WithinTimeWindow,
     WithinBudget,
     SandboxEnforced,
-    PaymentReceiptPresent,
-    PaymentRecoveryAvailable,
+    EffectProofPresent,
+    EffectRecoveryAvailable,
 }
 
 fn is_false(value: &bool) -> bool {

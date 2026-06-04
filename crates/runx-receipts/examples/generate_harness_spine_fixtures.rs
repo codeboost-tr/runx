@@ -12,14 +12,12 @@ use std::path::Path;
 
 use runx_contracts::schema::NonEmptyString;
 use runx_contracts::{
-    ActForm, AuthorityAttenuation, ChangePlan, ChangeRequest, Closure, ClosureDisposition,
-    CriterionBinding, CriterionStatus, Decision, DecisionChoice, DecisionInputs,
-    DecisionJustification, HashAlgorithm, Intent, Lineage, RECEIPT_CANONICALIZATION, Receipt,
-    ReceiptAct, ReceiptAuthority, ReceiptCommitment, ReceiptCommitmentScope, ReceiptEnforcement,
-    ReceiptIdempotency, ReceiptInputContext, ReceiptIssuer, ReceiptIssuerType, ReceiptSchema,
-    ReceiptSignature, Reference, ReferenceType, RevisionDetails, Seal, SignatureAlgorithm, Subject,
-    SuccessCriterion, Verification, VerificationCheck, VerificationDetails, VerificationStatus,
-    receipt_subject_kind,
+    ActForm, AuthorityAttenuation, Closure, ClosureDisposition, CriterionBinding, CriterionStatus,
+    Decision, DecisionChoice, DecisionInputs, DecisionJustification, HashAlgorithm, Intent,
+    Lineage, RECEIPT_CANONICALIZATION, Receipt, ReceiptAct, ReceiptAuthority, ReceiptCommitment,
+    ReceiptCommitmentScope, ReceiptEnforcement, ReceiptIdempotency, ReceiptInputContext,
+    ReceiptIssuer, ReceiptIssuerType, ReceiptSchema, ReceiptSignature, Reference, ReferenceType,
+    Seal, SignatureAlgorithm, Subject, SuccessCriterion, receipt_subject_kind,
 };
 use runx_receipts::{
     canonical_receipt_body_digest, canonical_receipt_digest, canonical_receipt_json,
@@ -38,7 +36,6 @@ fn main() {
 
     let success = sealed(success_receipt());
     let abnormal = sealed(abnormal_receipt());
-    let post_merge = sealed(post_merge_receipt());
 
     write_fixture(
         &spine.join("receipt-success.json"),
@@ -54,25 +51,12 @@ fn main() {
         "receipt",
         &abnormal,
     );
-    write_fixture(
-        &spine.join("post-merge-observer-merged-verified.json"),
-        "post_merge_observer_merged_verified",
-        "Sealed post-merge observer runx.receipt.v1.",
-        "receipt",
-        &post_merge,
-    );
-
     let oracle = json!({
         "schema": "runx.canonical_json_oracle.v1",
         "canonicalization": RECEIPT_CANONICALIZATION,
         "cases": [
             oracle_case("receipt-success", "harness-spine/receipt-success.json", &success),
             oracle_case("receipt-abnormal", "harness-spine/receipt-abnormal.json", &abnormal),
-            oracle_case(
-                "post-merge-observer-merged-verified",
-                "harness-spine/post-merge-observer-merged-verified.json",
-                &post_merge,
-            ),
         ],
     });
     fs::write(
@@ -318,218 +302,4 @@ fn abnormal_receipt() -> Receipt {
         summary: Some("cli-tool failed".into()),
     }];
     receipt
-}
-
-fn post_merge_receipt() -> Receipt {
-    let mut receipt = base(
-        "hrn_rcpt_post_merge_nitrosend_77_188",
-        receipt_subject_kind::SKILL.into(),
-        "post_merge_observer",
-    );
-    receipt.idempotency.intent_key =
-        "post-merge:github://runxhq/nitrosend/issues/77:github://runxhq/nitrosend/pulls/188".into();
-    let issue_ref = Reference {
-        provider: Some("github".to_owned().into()),
-        locator: Some("runxhq/nitrosend#77".to_owned().into()),
-        ..Reference::with_uri(
-            ReferenceType::GithubIssue,
-            "github://runxhq/nitrosend/issues/77",
-        )
-    };
-    let pr_ref = Reference {
-        provider: Some("github".to_owned().into()),
-        locator: Some("runxhq/nitrosend!188".to_owned().into()),
-        ..Reference::with_uri(
-            ReferenceType::GithubPullRequest,
-            "github://runxhq/nitrosend/pulls/188",
-        )
-    };
-    let slack_ref = Reference {
-        provider: Some("slack".to_owned().into()),
-        locator: Some("team/channel/1700000000.0001".to_owned().into()),
-        ..Reference::with_uri(
-            ReferenceType::SlackThread,
-            "slack://team/channel/1700000000.0001",
-        )
-    };
-    let verification_ref = Reference::runx(ReferenceType::Verification, "ver_post_merge_verified");
-    let post_merge_criteria = [
-        "post_merge.provider_state",
-        "post_merge.human_gate",
-        "post_merge.verification_passed",
-        "post_merge.source_thread_target_present",
-        "post_merge.close_policy_authorized",
-    ];
-    let act_artifacts = vec![issue_ref.clone(), pr_ref.clone(), slack_ref.clone()];
-    // The observation act declares and binds the post-merge criteria the seal
-    // rolls up; the other forms carry their form-specific bodies inline.
-    let observe_intent = Intent {
-        purpose: "Observe the post-merge state of the target pull request".into(),
-        legitimacy: "Post-merge observer is authorized to inspect provider state".into(),
-        success_criteria: post_merge_criteria
-            .iter()
-            .map(|id| SuccessCriterion {
-                criterion_id: (*id).into(),
-                statement: format!("{id} holds").into(),
-                required: true,
-            })
-            .collect(),
-        constraints: Vec::new(),
-        derived_from: vec![pr_ref.clone(), slack_ref.clone()],
-    };
-    let observe_bindings = post_merge_criteria
-        .iter()
-        .map(|id| CriterionBinding {
-            criterion_id: (*id).into(),
-            status: CriterionStatus::Verified,
-            evidence_refs: vec![pr_ref.clone()],
-            verification_refs: vec![verification_ref.clone()],
-            summary: Some(format!("{id} verified").into()),
-        })
-        .collect::<Vec<_>>();
-    let verification = Verification {
-        schema: None,
-        verification_id: Some("ver_post_merge_verified".into()),
-        status: VerificationStatus::Passed,
-        checks: vec![VerificationCheck {
-            check_id: "post_merge.verification_passed".into(),
-            criterion_ids: vec!["post_merge.verification_passed".into()],
-            status: VerificationStatus::Passed,
-            summary: Some("Nitrosend dogfood verification passed.".into()),
-            checked_refs: vec![pr_ref.clone()],
-            evidence_refs: vec![verification_ref.clone()],
-            verified_at: Some(CREATED_AT.into()),
-        }],
-        verified_at: Some(CREATED_AT.into()),
-        evidence_refs: vec![verification_ref.clone()],
-    };
-    let revision = RevisionDetails {
-        change_request: ChangeRequest {
-            request_id: "act_revise_request".into(),
-            summary: "Ship the target pull request".into(),
-            target_surfaces: Vec::new(),
-            success_criteria: Vec::new(),
-        },
-        change_plan: ChangePlan {
-            plan_id: "act_revise_plan".into(),
-            summary: "Open and merge the target pull request".into(),
-            steps: vec!["Open PR".into(), "Merge PR".into()],
-            risks: Vec::new(),
-        },
-        target_surfaces: Vec::new(),
-        invariants: Vec::new(),
-        verification: None,
-        handoff_refs: Vec::new(),
-        revision_refs: Vec::new(),
-    };
-    let post_merge_act = |id: &str, form: ActForm| ReceiptAct {
-        id: id.into(),
-        form: form.clone(),
-        intent: match form {
-            ActForm::Observation => observe_intent.clone(),
-            _ => Intent {
-                purpose: format!("post-merge {id}").into(),
-                legitimacy: "Post-merge observer is authorized for this act".into(),
-                success_criteria: Vec::new(),
-                constraints: Vec::new(),
-                derived_from: Vec::new(),
-            },
-        },
-        summary: format!("post-merge {id}").into(),
-        criterion_bindings: match form {
-            ActForm::Observation => observe_bindings.clone(),
-            _ => Vec::new(),
-        },
-        by: None,
-        source_refs: vec![slack_ref.clone(), issue_ref.clone()],
-        target_refs: vec![pr_ref.clone()],
-        artifact_refs: act_artifacts.clone(),
-        context_ref: Some(Reference::runx(
-            ReferenceType::Act,
-            &format!("{id}_context"),
-        )),
-        closure: Closure {
-            disposition: ClosureDisposition::Closed,
-            reason_code: "merged_verified".into(),
-            summary: format!("post-merge {id} closed").into(),
-            closed_at: CREATED_AT.into(),
-        },
-        revision: if matches!(form, ActForm::Revision) {
-            Some(revision.clone())
-        } else {
-            None
-        },
-        verification: if matches!(form, ActForm::Verification) {
-            Some(VerificationDetails {
-                criterion_ids: vec!["post_merge.verification_passed".into()],
-                verification: verification.clone(),
-                deployment_ref: None,
-            })
-        } else {
-            None
-        },
-    };
-    receipt.acts = vec![
-        post_merge_act("act_observe", ActForm::Observation),
-        post_merge_act("act_verify", ActForm::Verification),
-        post_merge_act("act_reply", ActForm::Reply),
-        post_merge_act("act_revise", ActForm::Revision),
-    ];
-    receipt.decisions = vec![open_decision("act_observe")];
-    receipt.seal.reason_code = "merged_verified".into();
-    receipt.seal.summary = "Target PR shipped and verified.".into();
-    receipt.seal.criteria = vec![
-        criterion(
-            "post_merge.provider_state",
-            Vec::new(),
-            vec![pr_ref.clone()],
-            None,
-        ),
-        criterion("post_merge.human_gate", Vec::new(), Vec::new(), None),
-        criterion(
-            "post_merge.verification_passed",
-            vec![verification_ref.clone()],
-            vec![pr_ref.clone()],
-            Some("Nitrosend dogfood verification passed."),
-        ),
-        criterion(
-            "post_merge.source_thread_target_present",
-            vec![verification_ref],
-            vec![slack_ref, issue_ref],
-            None,
-        ),
-        criterion(
-            "post_merge.close_policy_authorized",
-            Vec::new(),
-            Vec::new(),
-            None,
-        ),
-    ];
-    use runx_contracts::{JsonObject, JsonValue};
-    let mut pr = JsonObject::new();
-    pr.insert(
-        "merge_sha".to_owned(),
-        JsonValue::String("9f14c0ffee1234567890abcdef1234567890abcd".to_owned()),
-    );
-    let mut observer = JsonObject::new();
-    observer.insert("pr".to_owned(), JsonValue::Object(pr));
-    let mut metadata = JsonObject::new();
-    metadata.insert("observer_contract".to_owned(), JsonValue::Object(observer));
-    receipt.metadata = Some(metadata);
-    receipt
-}
-
-fn criterion(
-    id: &str,
-    verification_refs: Vec<Reference>,
-    evidence_refs: Vec<Reference>,
-    summary: Option<&str>,
-) -> CriterionBinding {
-    CriterionBinding {
-        criterion_id: id.into(),
-        status: CriterionStatus::Verified,
-        evidence_refs,
-        verification_refs,
-        summary: summary.map(Into::into),
-    }
 }

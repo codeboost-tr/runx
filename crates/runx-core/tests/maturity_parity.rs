@@ -1,9 +1,8 @@
 //! Cross-language parity for `compute_maturity`.
 //!
-//! Rust and TypeScript each implement the maturity decision (Rust:
-//! `runx_core::policy::compute_maturity`; TS:
-//! `@runxhq/core` `computeMaturity`). Both read this same fixture and must
-//! agree, so the two hand-mirrored implementations cannot drift.
+//! The Rust maturity decision reads the shared fixture that previously guarded
+//! the TypeScript mirror. Keeping the fixture preserves the public case table
+//! while `runx_core::policy::compute_maturity` remains the sole implementation.
 
 use runx_contracts::maturity::{MaturitySignals, MaturityTier};
 use runx_core::policy::compute_maturity;

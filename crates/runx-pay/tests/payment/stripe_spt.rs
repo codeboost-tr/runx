@@ -5,15 +5,18 @@ use std::path::{Path, PathBuf};
 use std::rc::Rc;
 
 use runx_contracts::{
-    JsonObject, JsonValue, ProofKind, ResolutionRequest, ResolutionResponse,
+    JsonNumber, JsonObject, JsonValue, ProofKind, ResolutionRequest, ResolutionResponse,
     ResolutionResponseActor,
 };
 use runx_core::state_machine::GraphStatus;
 use runx_pay::supervisor::{
-    PAYMENT_RAIL_SUPERVISOR_VERIFIER_ID, PaymentSupervisorError,
-    PaymentSupervisorSettlementEvidence, PaymentSupervisorSettlementRequest,
+    PAYMENT_RAIL_SUPERVISOR_VERIFIER_ID, PaymentSupervisorSettlementEvidence,
+    payment_finality_supervisor_evidence_payload,
 };
-use runx_pay::{EffectSupervisor, PaymentRuntimeEffect};
+use runx_pay::{
+    PaymentFinalitySupervisor, PaymentFinalitySupervisorError, PaymentFinalitySupervisorEvidence,
+    PaymentFinalitySupervisorRequest, PaymentRuntimeEffect,
+};
 use runx_runtime::effects::RuntimeEffectRegistry;
 use runx_runtime::{
     Host, InvocationStatus, RUNX_RUN_ID_ENV, Runtime, RuntimeError, RuntimeOptions, SkillAdapter,
@@ -56,7 +59,7 @@ fn stripe_spt_payment_seals_happy_path_with_scoped_proof() -> Result<(), Box<dyn
             .flat_map(|criterion| criterion.verification_refs.iter())
             .any(|reference| reference.uri == STRIPE_SPT_PROOF_REF
                 && reference.locator.as_deref() == Some(STRIPE_SPT_IDEMPOTENCY_KEY)
-                && reference.proof_kind.as_ref() == Some(&ProofKind::PaymentRail)),
+                && reference.proof_kind.as_ref() == Some(&ProofKind::EffectEvidence)),
         "stripe-spt fulfillment must seal a typed payment rail proof"
     );
     let fulfill_inputs = invocations
@@ -196,18 +199,18 @@ fn runtime_options_with_effects(
     RuntimeOptions {
         env,
         effects: RuntimeEffectRegistry::with_effect(PaymentRuntimeEffect::new(
-            ExpectedEffectSupervisor::new(evidence),
+            ExpectedPaymentFinalitySupervisor::new(evidence),
         )),
         ..RuntimeOptions::local_development()
     }
 }
 
 #[derive(Clone, Debug)]
-struct ExpectedEffectSupervisor {
+struct ExpectedPaymentFinalitySupervisor {
     evidence_by_proof_ref: BTreeMap<String, PaymentSupervisorSettlementEvidence>,
 }
 
-impl ExpectedEffectSupervisor {
+impl ExpectedPaymentFinalitySupervisor {
     fn new(evidence: Vec<PaymentSupervisorSettlementEvidence>) -> Self {
         Self {
             evidence_by_proof_ref: evidence
@@ -218,31 +221,66 @@ impl ExpectedEffectSupervisor {
     }
 }
 
-impl EffectSupervisor for ExpectedEffectSupervisor {
-    fn settlement_evidence(
+impl PaymentFinalitySupervisor for ExpectedPaymentFinalitySupervisor {
+    fn supervise(
         &self,
-        request: PaymentSupervisorSettlementRequest<'_>,
-    ) -> Result<PaymentSupervisorSettlementEvidence, PaymentSupervisorError> {
+        request: PaymentFinalitySupervisorRequest<'_>,
+    ) -> Result<PaymentFinalitySupervisorEvidence, PaymentFinalitySupervisorError> {
+        let proof_ref = supervisor_payload_string(&request, "proof_ref")?;
+        let rail = supervisor_payload_string(&request, "rail")?;
+        let counterparty = supervisor_payload_string(&request, "counterparty")?;
+        let amount_minor = supervisor_payload_u64(&request, "amount_minor")?;
+        let currency = supervisor_payload_string(&request, "currency")?;
+        let idempotency_key = supervisor_payload_string(&request, "idempotency_key")?;
         let evidence = self
             .evidence_by_proof_ref
-            .get(request.proof_ref)
+            .get(proof_ref)
             .cloned()
-            .ok_or_else(|| PaymentSupervisorError::InvalidSupervisorEvidence {
-                message: format!(
-                    "no supervisor settlement for proof ref {}",
-                    request.proof_ref
-                ),
+            .ok_or_else(|| PaymentFinalitySupervisorError::InvalidEvidence {
+                message: format!("no supervisor settlement for proof ref {proof_ref}"),
             })?;
-        expect_supervisor_field("rail", request.rail, &evidence.rail)?;
-        expect_supervisor_field("counterparty", request.counterparty, &evidence.counterparty)?;
-        expect_supervisor_u64("amount_minor", request.amount_minor, evidence.amount_minor)?;
-        expect_supervisor_field("currency", request.currency, &evidence.currency)?;
+        expect_supervisor_field("rail", rail, &evidence.rail)?;
+        expect_supervisor_field("counterparty", counterparty, &evidence.counterparty)?;
+        expect_supervisor_u64("amount_minor", amount_minor, evidence.amount_minor)?;
+        expect_supervisor_field("currency", currency, &evidence.currency)?;
         expect_supervisor_field(
             "idempotency_key",
-            request.idempotency_key,
+            idempotency_key,
             &evidence.idempotency_key,
         )?;
-        Ok(evidence)
+        Ok(PaymentFinalitySupervisorEvidence::new(
+            request.family,
+            payment_finality_supervisor_evidence_payload(&evidence),
+        ))
+    }
+}
+
+fn supervisor_payload_string<'a>(
+    request: &'a PaymentFinalitySupervisorRequest<'_>,
+    field: &'static str,
+) -> Result<&'a str, PaymentFinalitySupervisorError> {
+    match request.payload.get(field) {
+        Some(JsonValue::String(value)) => Ok(value),
+        _ => Err(PaymentFinalitySupervisorError::InvalidEvidence {
+            message: format!("missing or invalid supervisor payload field {field}"),
+        }),
+    }
+}
+
+fn supervisor_payload_u64(
+    request: &PaymentFinalitySupervisorRequest<'_>,
+    field: &'static str,
+) -> Result<u64, PaymentFinalitySupervisorError> {
+    match request.payload.get(field) {
+        Some(JsonValue::Number(JsonNumber::U64(value))) => Ok(*value),
+        Some(JsonValue::Number(JsonNumber::I64(value))) => {
+            u64::try_from(*value).map_err(|_| PaymentFinalitySupervisorError::InvalidEvidence {
+                message: format!("supervisor payload field {field} must be unsigned"),
+            })
+        }
+        _ => Err(PaymentFinalitySupervisorError::InvalidEvidence {
+            message: format!("missing or invalid supervisor payload field {field}"),
+        }),
     }
 }
 
@@ -250,11 +288,11 @@ fn expect_supervisor_field(
     field: &'static str,
     expected: &str,
     actual: &str,
-) -> Result<(), PaymentSupervisorError> {
+) -> Result<(), PaymentFinalitySupervisorError> {
     if expected == actual {
         Ok(())
     } else {
-        Err(PaymentSupervisorError::FieldMismatch {
+        Err(PaymentFinalitySupervisorError::FieldMismatch {
             field,
             expected: expected.to_owned(),
             actual: actual.to_owned(),
@@ -266,11 +304,11 @@ fn expect_supervisor_u64(
     field: &'static str,
     expected: u64,
     actual: u64,
-) -> Result<(), PaymentSupervisorError> {
+) -> Result<(), PaymentFinalitySupervisorError> {
     if expected == actual {
         Ok(())
     } else {
-        Err(PaymentSupervisorError::FieldMismatch {
+        Err(PaymentFinalitySupervisorError::FieldMismatch {
             field,
             expected: expected.to_string(),
             actual: actual.to_string(),
@@ -289,8 +327,6 @@ fn stripe_spt_supervisor_evidence() -> PaymentSupervisorSettlementEvidence {
         idempotency_key: STRIPE_SPT_IDEMPOTENCY_KEY.to_owned(),
         settlement_status: Some("fulfilled".to_owned()),
         provider_event_ref: Some("stripe:event:evt_test_succeeded_001".to_owned()),
-        shared_payment_token_ref: Some("spt_test_succeeded_001".to_owned()),
-        admission_token_digest: Some("sha256:stripe-spt-admission".to_owned()),
     }
 }
 
@@ -333,7 +369,7 @@ impl SkillAdapter for StripeSptAdapter {
                 "payment_quote_packet": {
                     "data": {
                         "payment_signal": {
-                            "signal_type": "payment_required",
+                            "signal_type": "effect_required",
                             "challenge_id": "ch_stripe_spt_001",
                             "amount_minor": 125,
                             "currency": "USD",
@@ -443,7 +479,7 @@ fn stripe_spt_rail_packet(
     if let Some(credential_envelope) = credential_envelope {
         data["credential_envelope"] = credential_envelope;
     }
-    json!({ "payment_rail_packet": { "data": data } })
+    json!({ "effect_evidence_packet": { "data": data } })
 }
 
 fn skill_success(value: Value) -> SkillOutput {
@@ -574,7 +610,7 @@ fn stripe_spt_graph_yaml() -> Result<String, serde_json::Error> {
                 "skill": "./quote",
                 "inputs": {
                     "payment_signal": {
-                        "signal_type": "payment_required",
+                        "signal_type": "effect_required",
                         "challenge_id": "ch_stripe_spt_001",
                         "amount_minor": 125,
                         "currency": "USD",
@@ -617,7 +653,7 @@ fn stripe_spt_graph_yaml() -> Result<String, serde_json::Error> {
                 },
                 "inputs": {
                     "payment_challenge": {
-                        "signal_type": "payment_required",
+                        "signal_type": "effect_required",
                         "challenge_id": "ch_stripe_spt_001",
                         "amount_minor": 125,
                         "currency": "USD",
@@ -643,8 +679,8 @@ fn stripe_spt_graph_yaml() -> Result<String, serde_json::Error> {
 
 fn stripe_spt_reserved_payment_authority() -> Value {
     json!({
-        "parent_authority": stripe_spt_payment_term("stripe-spt-parent", ["quote", "reserve", "spend", "verify"], 10_000),
-        "child_authority": stripe_spt_payment_term("stripe-spt-child", ["reserve", "spend"], 2_500),
+        "parent_authority": stripe_spt_payment_term("stripe-spt-parent", ["estimate", "prepare", "commit", "verify"], 10_000),
+        "child_authority": stripe_spt_payment_term("stripe-spt-child", ["prepare", "commit"], 2_500),
         "reservation_decision": stripe_spt_reservation_decision(),
         "subset_proof": stripe_spt_subset_proof("stripe-spt-child", "stripe-spt-parent"),
         "child_harness_ref": stripe_spt_child_harness_ref(),
@@ -681,33 +717,34 @@ fn stripe_spt_subset_proof(child_term_id: &str, parent_term_id: &str) -> Value {
 fn stripe_spt_payment_term<const N: usize>(
     term_id: &str,
     verbs: [&str; N],
-    max_per_call_minor: u64,
+    max_per_call_units: u64,
 ) -> Value {
     let verbs = verbs.as_slice();
     json!({
         "term_id": term_id,
         "principal_ref": reference("principal", "runx:principal:stripe-spt-agent"),
         "resource_ref": reference("grant", "runx:payment-grant:stripe-spt"),
-        "resource_family": "payment",
+        "resource_family": "effect",
         "verbs": verbs,
         "bounds": {
-            "payment": {
-                "currency": "USD",
-                "max_per_call_minor": max_per_call_minor,
-                "max_per_run_minor": 25_000,
-                "rails": ["stripe-spt"],
-                "counterparty": "merchant:stripe-demo",
+            "effect_limits": [{
+                "family": "payment",
+                "unit": "USD",
+                "max_per_call_units": max_per_call_units,
+                "max_per_run_units": 25_000,
+                "channels": ["stripe-spt"],
+                "peer": "merchant:stripe-demo",
                 "operation": "search.paid",
-                "credential_form": "single_use_spend_capability",
-                "quote_required": true,
-                "reservation_required": true,
+                "authorization_form": "single_use_capability",
+                "preflight_required": true,
+                "commitment_required": true,
                 "idempotency_required": true,
                 "recovery_required": true,
                 "receipt_before_success": true,
-                "single_use_spend": true
-            }
+                "single_use_capability": true
+            }]
         },
-        "capabilities": ["payment_single_use_spend"],
+        "capabilities": ["effect_single_use_capability"],
         "expires_at": "2026-05-21T00:00:00Z",
         "issued_by_ref": reference("grant", "runx:grant:stripe-spt-issuer"),
         "credential_ref": reference("credential", "runx:credential:stripe-spt-session")

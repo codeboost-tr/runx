@@ -18,6 +18,6 @@
     }
   },
   "dependencies": {
-    "@runxhq/contracts": "workspace:^0.2.5"
+    "@runxhq/contracts": "workspace:^0.3.0"
   }
 }

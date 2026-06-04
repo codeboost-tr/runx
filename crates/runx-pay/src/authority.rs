@@ -7,9 +7,9 @@ mod subset;
 pub use subset::is_payment_authority_subset;
 
 use runx_contracts::{
-    AuthorityCapability, AuthorityResourceFamily, AuthoritySubsetProof, AuthoritySubsetRelation,
-    AuthoritySubsetResult, AuthorityTerm, AuthorityVerb, Decision, DecisionChoice,
-    PaymentAuthorityBounds, PaymentCredentialForm, Reference,
+    AuthorityCapability, AuthorityEffectCredentialForm, AuthorityEffectLimit,
+    AuthorityResourceFamily, AuthoritySubsetProof, AuthoritySubsetRelation, AuthoritySubsetResult,
+    AuthorityTerm, AuthorityVerb, Decision, DecisionChoice, Reference,
 };
 #[cfg(test)]
 use runx_core::policy::authority_effect_proof_kinds as generic_authority_effect_proof_kinds;
@@ -17,6 +17,8 @@ use runx_core::policy::{
     authority_effect_family as generic_authority_effect_family, evaluate_authority_effect_guards,
 };
 use thiserror::Error;
+
+const PAYMENT_EFFECT_FAMILY: &str = "payment";
 
 #[derive(Clone, Debug, PartialEq)]
 pub struct StepAuthorityAdmission<'a> {
@@ -147,7 +149,7 @@ fn authority_requires_effect_receipt_before_success(
     family: &str,
 ) -> bool {
     evaluate_authority_effect_guards(parent, child, family).receipt_before_success_required
-        || (family == "payment"
+        || (family == PAYMENT_EFFECT_FAMILY
             && (payment_authority_requires_receipt_before_success(parent)
                 || payment_authority_requires_receipt_before_success(child)))
 }
@@ -176,22 +178,30 @@ fn authority_effect_family<'a>(
     parent: &'a AuthorityTerm,
     child: &'a AuthorityTerm,
 ) -> Option<&'a str> {
-    generic_authority_effect_family(parent, child).or_else(|| {
-        (parent.bounds.payment.is_some() || child.bounds.payment.is_some()).then_some("payment")
-    })
+    generic_authority_effect_family(parent, child)
+        .or_else(|| payment_effect_limit(parent).map(|limit| limit.family.as_str()))
+        .or_else(|| payment_effect_limit(child).map(|limit| limit.family.as_str()))
 }
 
 #[must_use]
 fn payment_authority_requires_receipt_before_success(term: &AuthorityTerm) -> bool {
+    payment_effect_limit(term).is_some_and(|payment| payment.receipt_before_success)
+}
+
+fn is_payment_effect_authority(term: &AuthorityTerm) -> bool {
+    term.resource_family == AuthorityResourceFamily::Effect && payment_effect_limit(term).is_some()
+}
+
+fn payment_effect_limit(term: &AuthorityTerm) -> Option<&AuthorityEffectLimit> {
     term.bounds
-        .payment
-        .as_ref()
-        .is_some_and(|payment| payment.receipt_before_success)
+        .effect_limits
+        .iter()
+        .find(|limit| limit.family == PAYMENT_EFFECT_FAMILY)
 }
 
 #[must_use]
 pub(super) fn payment_authority_spends(term: &AuthorityTerm) -> bool {
-    authority_term_has_verb(term, AuthorityVerb::Spend)
+    authority_term_has_verb(term, AuthorityVerb::Commit)
 }
 
 pub fn admit_step_authority(
@@ -209,7 +219,7 @@ pub fn admit_step_authority(
         authority_requires_effect_non_replay(input.parent_authority, input.child_authority, family)
     });
 
-    if input.child_authority.resource_family == AuthorityResourceFamily::Payment {
+    if is_payment_effect_authority(input.child_authority) {
         let spends = payment_authority_spends(input.child_authority);
         let admission = admit_payment_rail(PaymentRailAdmission {
             parent_authority: input.parent_authority,
@@ -249,7 +259,7 @@ pub fn admit_step_authority(
 
 fn admitted_payment_verb(term: &AuthorityTerm, spends: bool) -> Option<AuthorityVerb> {
     if spends {
-        return Some(AuthorityVerb::Spend);
+        return Some(AuthorityVerb::Commit);
     }
     term.verbs.first().cloned()
 }
@@ -370,16 +380,16 @@ fn decision_selects_payment_execution(decision: &Decision) -> bool {
 fn ensure_single_use_spend_capability(
     input: &PaymentRailAdmission<'_>,
 ) -> Result<(), PaymentAuthorityError> {
-    let Some(payment) = input.child_authority.bounds.payment.as_ref() else {
+    let Some(payment) = payment_effect_limit(input.child_authority) else {
         return Err(PaymentAuthorityError::SpendRequiresSingleUseCapability);
     };
 
-    let has_single_use = payment.single_use_spend
-        && payment.credential_form == Some(PaymentCredentialForm::SingleUseSpendCapability)
+    let has_single_use = payment.single_use_capability
+        && payment.authorization_form == Some(AuthorityEffectCredentialForm::SingleUseCapability)
         && input
             .child_authority
             .capabilities
-            .contains(&AuthorityCapability::PaymentSingleUseSpend);
+            .contains(&AuthorityCapability::EffectSingleUseCapability);
 
     if !has_single_use || input.spend_capability_ref.is_none() {
         return Err(PaymentAuthorityError::SpendRequiresSingleUseCapability);
@@ -411,11 +421,7 @@ fn ensure_single_use_spend_capability(
 }
 
 fn ensure_idempotency_key(input: &PaymentRailAdmission<'_>) -> Result<(), PaymentAuthorityError> {
-    let idempotency_required = input
-        .child_authority
-        .bounds
-        .payment
-        .as_ref()
+    let idempotency_required = payment_effect_limit(input.child_authority)
         .is_some_and(|payment| payment.idempotency_required);
 
     if idempotency_required && input.idempotency_key.is_none_or(str::is_empty) {
@@ -426,10 +432,10 @@ fn ensure_idempotency_key(input: &PaymentRailAdmission<'_>) -> Result<(), Paymen
 }
 
 fn ensure_bounded_spend_counterparty(term: &AuthorityTerm) -> Result<(), PaymentAuthorityError> {
-    let Some(payment) = term.bounds.payment.as_ref() else {
+    let Some(payment) = payment_effect_limit(term) else {
         return Err(PaymentAuthorityError::WildcardCounterpartyDenied);
     };
-    let Some(counterparty) = payment.counterparty.as_deref() else {
+    let Some(counterparty) = payment.peer.as_deref() else {
         return Err(PaymentAuthorityError::WildcardCounterpartyDenied);
     };
     if matches!(counterparty, "" | "*" | "any") {
@@ -442,7 +448,7 @@ fn ensure_bounded_spend_counterparty(term: &AuthorityTerm) -> Result<(), Payment
 fn spend_capability_binding_matches(
     input: &PaymentRailAdmission<'_>,
     decision: &Decision,
-    payment: &PaymentAuthorityBounds,
+    payment: &AuthorityEffectLimit,
     binding: &PaymentSpendCapabilityBinding,
 ) -> bool {
     same_reference(&binding.child_harness_ref, input.child_harness_ref)
@@ -460,12 +466,12 @@ fn spend_capability_binding_matches(
             .idempotency_key
             .is_some_and(|idempotency_key| idempotency_key == binding.idempotency_key)
         && payment
-            .max_per_call_minor
+            .max_per_call_units
             .is_some_and(|max| binding.amount_minor > 0 && binding.amount_minor <= max)
-        && binding.currency == payment.currency
-        && payment.rails.iter().any(|rail| rail == &binding.rail)
+        && binding.currency == payment.unit
+        && payment.channels.iter().any(|rail| rail == &binding.rail)
         && payment
-            .counterparty
+            .peer
             .as_deref()
             .is_some_and(|counterparty| counterparty == binding.counterparty)
 }
@@ -491,11 +497,11 @@ mod tests {
     };
     use runx_contracts::{
         AuthorityApproval, AuthorityBounds, AuthorityCapability, AuthorityCondition,
-        AuthorityConditionPredicate, AuthorityEffectGuard, AuthorityEffectGuardKind,
-        AuthorityResourceFamily, AuthoritySubsetComparison, AuthoritySubsetProof,
-        AuthoritySubsetRelation, AuthoritySubsetResult, AuthorityTerm, AuthorityVerb, Decision,
-        DecisionChoice, DecisionInputs, DecisionJustification, Intent, PaymentAuthorityBounds,
-        PaymentCredentialForm, ProofKind, Reference, ReferenceType,
+        AuthorityConditionPredicate, AuthorityEffectCredentialForm, AuthorityEffectGuard,
+        AuthorityEffectGuardKind, AuthorityEffectLimit, AuthorityResourceFamily,
+        AuthoritySubsetComparison, AuthoritySubsetProof, AuthoritySubsetRelation,
+        AuthoritySubsetResult, AuthorityTerm, AuthorityVerb, Decision, DecisionChoice,
+        DecisionInputs, DecisionJustification, Intent, ProofKind, Reference, ReferenceType,
     };
 
     const ACT_ID: &str = "act_payment_spend";
@@ -528,7 +534,7 @@ mod tests {
     fn admits_non_spend_payment_authority_with_subset_proof() {
         let scenario = PaymentScenario::with_child(payment_term(
             "child",
-            vec![AuthorityVerb::Reserve],
+            vec![AuthorityVerb::Prepare],
             PaymentShape::new(2_500, &["card"]),
         ));
 
@@ -553,7 +559,7 @@ mod tests {
                 decision.idempotency_key,
                 decision.spend_capability_ref,
             )),
-            Ok((Some(AuthorityVerb::Reserve), "parent", "child", None, None,))
+            Ok((Some(AuthorityVerb::Prepare), "parent", "child", None, None,))
         );
     }
 
@@ -561,7 +567,7 @@ mod tests {
     fn denies_non_spend_payment_authority_without_subset_proof() {
         let scenario = PaymentScenario::with_child(payment_term(
             "child",
-            vec![AuthorityVerb::Reserve],
+            vec![AuthorityVerb::Prepare],
             PaymentShape::new(2_500, &["card"]),
         ));
 
@@ -586,12 +592,12 @@ mod tests {
     fn denies_amount_widening_before_rail() {
         let mut scenario = PaymentScenario::with_child(payment_term(
             "child",
-            vec![AuthorityVerb::Spend],
+            vec![AuthorityVerb::Commit],
             PaymentShape::new(2_000, &["card"]),
         ));
         scenario.parent = payment_term(
             "parent",
-            vec![AuthorityVerb::Reserve, AuthorityVerb::Spend],
+            vec![AuthorityVerb::Prepare, AuthorityVerb::Commit],
             PaymentShape::new(1_000, &["card"]),
         );
 
@@ -604,7 +610,7 @@ mod tests {
     #[test]
     fn denies_spend_derived_from_reserve_only_parent() {
         let mut scenario = PaymentScenario::standard();
-        scenario.parent.verbs = vec![AuthorityVerb::Reserve, AuthorityVerb::Verify];
+        scenario.parent.verbs = vec![AuthorityVerb::Prepare, AuthorityVerb::Verify];
 
         assert_eq!(
             scenario.authorize(),
@@ -785,7 +791,7 @@ mod tests {
         );
         assert_eq!(
             authority_effect_proof_kinds(&parent, &child, "deployment"),
-            vec![ProofKind::EffectSettlement]
+            vec![ProofKind::EffectFinality]
         );
     }
 
@@ -930,9 +936,9 @@ mod tests {
         payment_term(
             "parent",
             vec![
-                AuthorityVerb::Quote,
-                AuthorityVerb::Reserve,
-                AuthorityVerb::Spend,
+                AuthorityVerb::Estimate,
+                AuthorityVerb::Prepare,
+                AuthorityVerb::Commit,
                 AuthorityVerb::Verify,
             ],
             PaymentShape::new(10_000, &["card", "ach"]),
@@ -942,28 +948,28 @@ mod tests {
     fn child_spend_term() -> AuthorityTerm {
         payment_term(
             "child",
-            vec![AuthorityVerb::Reserve, AuthorityVerb::Spend],
+            vec![AuthorityVerb::Prepare, AuthorityVerb::Commit],
             PaymentShape::new(2_500, &["card"]),
         )
     }
 
     fn child_wildcard_counterparty_term() -> AuthorityTerm {
         let mut term = child_spend_term();
-        if let Some(payment) = term.bounds.payment.as_mut() {
-            payment.counterparty = Some("*".into());
+        if let Some(payment) = term.bounds.effect_limits.first_mut() {
+            payment.peer = Some("*".into());
         }
         term
     }
 
     struct PaymentShape {
-        max_per_call_minor: u64,
+        max_per_call_units: u64,
         rails: Vec<String>,
     }
 
     impl PaymentShape {
-        fn new(max_per_call_minor: u64, rails: &[&str]) -> Self {
+        fn new(max_per_call_units: u64, rails: &[&str]) -> Self {
             Self {
-                max_per_call_minor,
+                max_per_call_units,
                 rails: rails.iter().map(|rail| (*rail).to_owned()).collect(),
             }
         }
@@ -978,34 +984,35 @@ mod tests {
             term_id: term_id.into(),
             principal_ref: reference(ReferenceType::Principal, "runx:principal:merchant-agent"),
             resource_ref: reference(ReferenceType::Grant, "runx:payment-grant:checkout"),
-            resource_family: AuthorityResourceFamily::Payment,
+            resource_family: AuthorityResourceFamily::Effect,
             verbs,
             bounds: AuthorityBounds {
-                payment: Some(PaymentAuthorityBounds {
-                    currency: "USD".into(),
-                    max_per_call_minor: Some(shape.max_per_call_minor),
-                    max_per_run_minor: Some(25_000),
-                    max_per_period_minor: None,
+                effect_limits: vec![AuthorityEffectLimit {
+                    family: "payment".into(),
+                    unit: "USD".into(),
+                    max_per_call_units: Some(shape.max_per_call_units),
+                    max_per_run_units: Some(25_000),
+                    max_per_period_units: None,
                     period: None,
-                    rails: shape.rails.into_iter().map(Into::into).collect(),
+                    channels: shape.rails.into_iter().map(Into::into).collect(),
                     realm: None,
-                    counterparty: Some(COUNTERPARTY.into()),
+                    peer: Some(COUNTERPARTY.into()),
                     operation: Some("checkout".into()),
-                    quote_ttl_ms: Some(120_000),
-                    approval_threshold_minor: Some(7_500),
-                    credential_form: Some(PaymentCredentialForm::SingleUseSpendCapability),
-                    quote_required: true,
-                    reservation_required: true,
+                    preflight_ttl_ms: Some(120_000),
+                    approval_threshold_units: Some(7_500),
+                    authorization_form: Some(AuthorityEffectCredentialForm::SingleUseCapability),
+                    preflight_required: true,
+                    commitment_required: true,
                     idempotency_required: true,
                     recovery_required: true,
                     receipt_before_success: true,
-                    single_use_spend: true,
-                }),
+                    single_use_capability: true,
+                }],
                 ..AuthorityBounds::default()
             },
             conditions: Vec::new(),
             approvals: Vec::new(),
-            capabilities: vec![AuthorityCapability::PaymentSingleUseSpend],
+            capabilities: vec![AuthorityCapability::EffectSingleUseCapability],
             expires_at: Some("2026-05-21T00:00:00Z".into()),
             issued_by_ref: reference(ReferenceType::Grant, "runx:grant:issuer"),
             credential_ref: Some(reference(
@@ -1029,7 +1036,7 @@ mod tests {
                         AuthorityEffectGuardKind::ReceiptBeforeSuccess,
                         AuthorityEffectGuardKind::NonReplay,
                     ],
-                    proof_kinds: vec![ProofKind::EffectSettlement],
+                    proof_kinds: vec![ProofKind::EffectFinality],
                 }],
                 ..AuthorityBounds::default()
             },
@@ -1092,7 +1099,7 @@ mod tests {
     fn payment_condition() -> AuthorityCondition {
         AuthorityCondition {
             condition_id: "condition_payment_receipt".into(),
-            predicate: AuthorityConditionPredicate::PaymentReceiptPresent,
+            predicate: AuthorityConditionPredicate::EffectProofPresent,
             refs: Vec::new(),
             parameters: None,
         }

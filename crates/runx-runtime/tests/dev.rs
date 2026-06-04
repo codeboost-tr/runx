@@ -191,7 +191,7 @@ fn dev_watch_ignores_generated_paths_and_debounces_changes()
     let mut options = DevWatchOptions::new(&root);
     options.debounce = Duration::from_millis(0);
     let mut watcher = runx_runtime::PollingDevWatcher::new(options)?;
-    fs::write(root.join("src/input.txt"), "two")?;
+    fs::write(root.join("src/input.txt"), "two-two")?;
 
     assert!(watcher.poll()?.is_none());
     let DevWatchTrigger { events } = watcher

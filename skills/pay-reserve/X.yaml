@@ -1,11 +1,9 @@
 skill: pay-reserve
-version: "0.1.0"
-
+version: 0.1.0
 catalog:
   kind: skill
   audience: operator
   visibility: private
-
 harness:
   cases:
     - name: pay-reserve-selected
@@ -28,19 +26,20 @@ harness:
             resource_ref:
               type: surface
               uri: merchant:demo
-            resource_family: payment
+            resource_family: effect
             verbs:
-              - reserve
-              - spend
+              - prepare
+              - commit
             bounds:
-              payment:
-                currency: USD
-                max_per_call_minor: 125
-                rails:
-                  - mock
-                realm: test
-                counterparty: merchant:demo
-                operation: search.paid
+              effect_limits:
+                - family: payment
+                  unit: USD
+                  max_per_call_units: 125
+                  channels:
+                    - mock
+                  realm: test
+                  peer: merchant:demo
+                  operation: search.paid
             conditions: []
             approvals: []
             capabilities: []
@@ -85,29 +84,30 @@ harness:
                 resource_ref:
                   type: surface
                   uri: merchant:demo
-                resource_family: payment
+                resource_family: effect
                 verbs:
-                  - reserve
-                  - spend
+                  - prepare
+                  - commit
                 bounds:
-                  payment:
-                    currency: USD
-                    max_per_call_minor: 125
-                    max_per_run_minor: 125
-                    rails:
-                      - mock
-                    realm: test
-                    counterparty: merchant:demo
-                    operation: search.paid
-                    idempotency_required: true
-                    recovery_required: true
-                    receipt_before_success: true
-                    single_use_spend: true
-                    credential_form: single_use_spend_capability
+                  effect_limits:
+                    - family: payment
+                      unit: USD
+                      max_per_call_units: 125
+                      max_per_run_units: 125
+                      channels:
+                        - mock
+                      realm: test
+                      peer: merchant:demo
+                      operation: search.paid
+                      idempotency_required: true
+                      recovery_required: true
+                      receipt_before_success: true
+                      single_use_capability: true
+                      authorization_form: single_use_capability
                 conditions: []
                 approvals: []
                 capabilities:
-                  - payment_single_use_spend
+                  - effect_single_use_capability
                 issued_by_ref:
                   type: host
                   uri: authority:payment:test
@@ -119,26 +119,27 @@ harness:
                 resource_ref:
                   type: surface
                   uri: merchant:demo
-                resource_family: payment
+                resource_family: effect
                 verbs:
-                  - spend
+                  - commit
                 capabilities:
-                  - payment_single_use_spend
+                  - effect_single_use_capability
                 bounds:
-                  payment:
-                    currency: USD
-                    max_per_call_minor: 125
-                    max_per_run_minor: 125
-                    rails:
-                      - mock
-                    realm: test
-                    counterparty: merchant:demo
-                    operation: search.paid
-                    idempotency_required: true
-                    recovery_required: true
-                    receipt_before_success: true
-                    single_use_spend: true
-                    credential_form: single_use_spend_capability
+                  effect_limits:
+                    - family: payment
+                      unit: USD
+                      max_per_call_units: 125
+                      max_per_run_units: 125
+                      channels:
+                        - mock
+                      realm: test
+                      peer: merchant:demo
+                      operation: search.paid
+                      idempotency_required: true
+                      recovery_required: true
+                      receipt_before_success: true
+                      single_use_capability: true
+                      authorization_form: single_use_capability
                 conditions: []
                 approvals: []
                 issued_by_ref:
@@ -175,7 +176,7 @@ harness:
                   - child_term_id: authority-term:payment:reserve-demo-001
                     parent_term_id: authority-term:payment:quote-demo-001
                     relation: subset
-                checked_at: "2026-05-22T00:00:00Z"
+                checked_at: 2026-05-22T00:00:00Z
               child_harness_ref:
                 type: harness
                 uri: runx:harness:pay-reserve_fulfill
@@ -212,7 +213,6 @@ harness:
           state: sealed
           disposition: closed
           reason_code: payment_reservation_closed
-
 runners:
   reserve:
     default: true
@@ -234,9 +234,9 @@ runners:
     runx:
       payment_authority:
         phase: reserve
-        resource_family: payment
+        resource_family: effect
         verbs:
-          - reserve
+          - prepare
         core_owned:
           - authority_subset_proof
           - atomic_budget_hold
@@ -247,20 +247,20 @@ runners:
       payment_quote_packet:
         type: object
         required: true
-        description: "Output from pay-quote."
+        description: Output from pay-quote.
       parent_payment_authority:
         type: object
         required: true
-        description: "Parent payment authority term or authority reference."
+        description: Parent payment authority term or authority reference.
       spend_policy:
         type: object
         required: false
-        description: "Policy limits, period caps, and approval thresholds."
+        description: Policy limits, period caps, and approval thresholds.
       approval_context:
         type: object
         required: false
-        description: "Operator, system, or prior approval evidence."
+        description: Operator, system, or prior approval evidence.
       idempotency_seed:
         type: string
         required: false
-        description: "Stable seed if not already supplied by the quote."
+        description: Stable seed if not already supplied by the quote.

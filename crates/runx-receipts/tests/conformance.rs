@@ -30,9 +30,6 @@ const SUCCESS_RECEIPT: &str =
     include_str!("../../../fixtures/contracts/harness-spine/receipt-success.json");
 const ABNORMAL_RECEIPT: &str =
     include_str!("../../../fixtures/contracts/harness-spine/receipt-abnormal.json");
-const POST_MERGE_RECEIPT: &str = include_str!(
-    "../../../fixtures/contracts/harness-spine/post-merge-observer-merged-verified.json"
-);
 const RECEIPT_ORACLE: &str =
     include_str!("../../../fixtures/contracts/canonical-json/runx-receipt-c14n-v1.oracles.json");
 
@@ -72,7 +69,6 @@ fn fixture_json_by_path(path: &str) -> &'static str {
     match path {
         "harness-spine/receipt-success.json" => SUCCESS_RECEIPT,
         "harness-spine/receipt-abnormal.json" => ABNORMAL_RECEIPT,
-        "harness-spine/post-merge-observer-merged-verified.json" => POST_MERGE_RECEIPT,
         other => panic!("unknown conformance fixture path: {other}"),
     }
 }
@@ -80,7 +76,7 @@ fn fixture_json_by_path(path: &str) -> &'static str {
 #[test]
 fn conformance_emitter_instances_validate_against_published_schema() {
     let validator = schema();
-    for json in [SUCCESS_RECEIPT, ABNORMAL_RECEIPT, POST_MERGE_RECEIPT] {
+    for json in [SUCCESS_RECEIPT, ABNORMAL_RECEIPT] {
         let receipt = fixture_receipt(json);
         // Serialize through the Rust contract type exactly as the emitter does,
         // then validate that instance against the published JSON Schema.

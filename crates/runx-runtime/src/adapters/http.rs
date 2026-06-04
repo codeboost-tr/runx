@@ -515,18 +515,18 @@ mod tests {
     fn substitute_secrets_resolves_a_delivered_secret_and_fails_closed_on_a_missing_one()
     -> Result<(), RuntimeError> {
         let delivery = crate::credentials::CredentialDelivery::from_local_descriptor(
-            "github",
+            "example-provider",
             "api_key",
-            "GITHUB_TOKEN",
+            "EXAMPLE_API_TOKEN",
             "ref-1",
             Vec::new(),
-            "ghp_secret",
+            "example_secret",
         )
         .map_err(|error| failure(format!("building the test credential delivery: {error}")))?;
         let secrets = delivery.secret_env();
         assert_eq!(
-            substitute_secrets("Bearer ${secret:GITHUB_TOKEN}", secrets)?,
-            "Bearer ghp_secret"
+            substitute_secrets("Bearer ${secret:EXAMPLE_API_TOKEN}", secrets)?,
+            "Bearer example_secret"
         );
         assert!(
             substitute_secrets("Bearer ${secret:MISSING}", secrets).is_err(),

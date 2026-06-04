@@ -4,7 +4,7 @@ steps:
     skill: ../../skills/x402-pay-negative-malformed-challenge-quote
     inputs:
       payment_signal:
-        signal_type: payment_required
+        signal_type: effect_required
         challenge_id: ""
         amount_minor: 125
         rail: mock

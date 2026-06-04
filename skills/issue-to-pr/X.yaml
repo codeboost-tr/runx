@@ -16,7 +16,7 @@ harness:
         thread_locator: local://fixtures/issue-to-pr-smoke
         size: small
         risk: low
-        scafld_bin: ./fixtures/issue-to-pr-harness-scafld.mjs
+        scafld_bin: ../scafld/fixtures/issue-to-pr-harness-scafld.mjs
       expect:
         status: needs_agent
 
@@ -28,7 +28,7 @@ harness:
         thread_locator: local://fixtures/issue-to-pr-reach-fix
         size: small
         risk: low
-        scafld_bin: ./fixtures/issue-to-pr-harness-scafld.mjs
+        scafld_bin: ../scafld/fixtures/issue-to-pr-harness-scafld.mjs
       caller:
         answers:
           agent_task.issue-to-pr-author-spec.output:

@@ -416,7 +416,7 @@ describe("thread.push_outbox tool", () => {
               thread_locator: "github://example/repo/issues/123",
             },
             human_merge_gate: "required",
-            post_merge_observation: "provider_state_update",
+            provider_outcome_observation: "provider_state_update",
           },
         },
         draft_pull_request: {
@@ -475,7 +475,7 @@ describe("thread.push_outbox tool", () => {
               thread_locator: "github://example/repo/issues/123",
             },
             human_merge_gate: "required",
-            post_merge_observation: "provider_state_update",
+            provider_outcome_observation: "provider_state_update",
           },
         },
         thread: {

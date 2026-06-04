@@ -90,7 +90,6 @@ function checkExecutionSplit() {
   const source = readFileSync(stepsPath, "utf8");
   const forbidden = [
     /\bstep_receipt_with\b/u,
-    /\bRuntimePaymentSupervisor\b/u,
     /\brequest_approval\b/u,
     /\bSkillAdapter::invoke\b/u,
     /\bresolve_inputs\b/u,

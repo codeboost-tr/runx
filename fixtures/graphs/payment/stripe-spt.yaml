@@ -4,7 +4,7 @@ steps:
     skill: ../../skills/stripe-spt-quote
     inputs:
       payment_signal:
-        signal_type: payment_required
+        signal_type: effect_required
         challenge_id: ch_stripe_spt_001
         amount_minor: 125
         currency: USD
@@ -39,7 +39,7 @@ steps:
       quote_packet: quote.skill_claim.payment_quote_packet.data
     inputs:
       payment_challenge:
-        signal_type: payment_required
+        signal_type: effect_required
         challenge_id: ch_stripe_spt_001
         amount_minor: 125
         currency: USD

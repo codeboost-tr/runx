@@ -168,7 +168,7 @@ describe("outbox.build_pull_request tool", () => {
     expect(result.draft_pull_request.pull_request.body_markdown).toContain("## scafld Handoff");
     expect(result.outbox_entry.metadata).toMatchObject({
       human_merge_gate: "required",
-      post_merge_observation: "provider_state_update",
+      provider_outcome_observation: "provider_state_update",
     });
   });
 

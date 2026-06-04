@@ -29,11 +29,11 @@
                 "proof_kind": {
                   "anyOf": [
                     {
-                      "const": "payment_rail",
+                      "const": "effect_evidence",
                       "type": "string"
                     },
                     {
-                      "const": "effect_settlement",
+                      "const": "effect_finality",
                       "type": "string"
                     },
                     {
@@ -355,11 +355,11 @@
               "proof_kind": {
                 "anyOf": [
                   {
-                    "const": "payment_rail",
+                    "const": "effect_evidence",
                     "type": "string"
                   },
                   {
-                    "const": "effect_settlement",
+                    "const": "effect_finality",
                     "type": "string"
                   },
                   {
@@ -586,11 +586,11 @@
                       "proof_kind": {
                         "anyOf": [
                           {
-                            "const": "payment_rail",
+                            "const": "effect_evidence",
                             "type": "string"
                           },
                           {
-                            "const": "effect_settlement",
+                            "const": "effect_finality",
                             "type": "string"
                           },
                           {
@@ -839,11 +839,11 @@
                       "proof_kind": {
                         "anyOf": [
                           {
-                            "const": "payment_rail",
+                            "const": "effect_evidence",
                             "type": "string"
                           },
                           {
-                            "const": "effect_settlement",
+                            "const": "effect_finality",
                             "type": "string"
                           },
                           {
@@ -1111,11 +1111,11 @@
                     "proof_kind": {
                       "anyOf": [
                         {
-                          "const": "payment_rail",
+                          "const": "effect_evidence",
                           "type": "string"
                         },
                         {
-                          "const": "effect_settlement",
+                          "const": "effect_finality",
                           "type": "string"
                         },
                         {
@@ -1457,11 +1457,11 @@
                             "proof_kind": {
                               "anyOf": [
                                 {
-                                  "const": "payment_rail",
+                                  "const": "effect_evidence",
                                   "type": "string"
                                 },
                                 {
-                                  "const": "effect_settlement",
+                                  "const": "effect_finality",
                                   "type": "string"
                                 },
                                 {
@@ -1696,11 +1696,11 @@
                     "proof_kind": {
                       "anyOf": [
                         {
-                          "const": "payment_rail",
+                          "const": "effect_evidence",
                           "type": "string"
                         },
                         {
-                          "const": "effect_settlement",
+                          "const": "effect_finality",
                           "type": "string"
                         },
                         {
@@ -1928,11 +1928,11 @@
                     "proof_kind": {
                       "anyOf": [
                         {
-                          "const": "payment_rail",
+                          "const": "effect_evidence",
                           "type": "string"
                         },
                         {
-                          "const": "effect_settlement",
+                          "const": "effect_finality",
                           "type": "string"
                         },
                         {
@@ -2163,11 +2163,11 @@
                         "proof_kind": {
                           "anyOf": [
                             {
-                              "const": "payment_rail",
+                              "const": "effect_evidence",
                               "type": "string"
                             },
                             {
-                              "const": "effect_settlement",
+                              "const": "effect_finality",
                               "type": "string"
                             },
                             {
@@ -2408,11 +2408,11 @@
                               "proof_kind": {
                                 "anyOf": [
                                   {
-                                    "const": "payment_rail",
+                                    "const": "effect_evidence",
                                     "type": "string"
                                   },
                                   {
-                                    "const": "effect_settlement",
+                                    "const": "effect_finality",
                                     "type": "string"
                                   },
                                   {
@@ -2640,11 +2640,11 @@
                               "proof_kind": {
                                 "anyOf": [
                                   {
-                                    "const": "payment_rail",
+                                    "const": "effect_evidence",
                                     "type": "string"
                                   },
                                   {
-                                    "const": "effect_settlement",
+                                    "const": "effect_finality",
                                     "type": "string"
                                   },
                                   {
@@ -2909,11 +2909,11 @@
                         "proof_kind": {
                           "anyOf": [
                             {
-                              "const": "payment_rail",
+                              "const": "effect_evidence",
                               "type": "string"
                             },
                             {
-                              "const": "effect_settlement",
+                              "const": "effect_finality",
                               "type": "string"
                             },
                             {
@@ -3191,11 +3191,11 @@
                 "proof_kind": {
                   "anyOf": [
                     {
-                      "const": "payment_rail",
+                      "const": "effect_evidence",
                       "type": "string"
                     },
                     {
-                      "const": "effect_settlement",
+                      "const": "effect_finality",
                       "type": "string"
                     },
                     {
@@ -3420,11 +3420,11 @@
                 "proof_kind": {
                   "anyOf": [
                     {
-                      "const": "payment_rail",
+                      "const": "effect_evidence",
                       "type": "string"
                     },
                     {
-                      "const": "effect_settlement",
+                      "const": "effect_finality",
                       "type": "string"
                     },
                     {
@@ -3654,11 +3654,11 @@
                   "proof_kind": {
                     "anyOf": [
                       {
-                        "const": "payment_rail",
+                        "const": "effect_evidence",
                         "type": "string"
                       },
                       {
-                        "const": "effect_settlement",
+                        "const": "effect_finality",
                         "type": "string"
                       },
                       {
@@ -3890,11 +3890,11 @@
                               "proof_kind": {
                                 "anyOf": [
                                   {
-                                    "const": "payment_rail",
+                                    "const": "effect_evidence",
                                     "type": "string"
                                   },
                                   {
-                                    "const": "effect_settlement",
+                                    "const": "effect_finality",
                                     "type": "string"
                                   },
                                   {
@@ -4122,11 +4122,11 @@
                               "proof_kind": {
                                 "anyOf": [
                                   {
-                                    "const": "payment_rail",
+                                    "const": "effect_evidence",
                                     "type": "string"
                                   },
                                   {
-                                    "const": "effect_settlement",
+                                    "const": "effect_finality",
                                     "type": "string"
                                   },
                                   {
@@ -4391,11 +4391,11 @@
                         "proof_kind": {
                           "anyOf": [
                             {
-                              "const": "payment_rail",
+                              "const": "effect_evidence",
                               "type": "string"
                             },
                             {
-                              "const": "effect_settlement",
+                              "const": "effect_finality",
                               "type": "string"
                             },
                             {
@@ -4687,11 +4687,11 @@
             "proof_kind": {
               "anyOf": [
                 {
-                  "const": "payment_rail",
+                  "const": "effect_evidence",
                   "type": "string"
                 },
                 {
-                  "const": "effect_settlement",
+                  "const": "effect_finality",
                   "type": "string"
                 },
                 {
@@ -4914,11 +4914,11 @@
                     "proof_kind": {
                       "anyOf": [
                         {
-                          "const": "payment_rail",
+                          "const": "effect_evidence",
                           "type": "string"
                         },
                         {
-                          "const": "effect_settlement",
+                          "const": "effect_finality",
                           "type": "string"
                         },
                         {
@@ -5191,11 +5191,11 @@
                         "proof_kind": {
                           "anyOf": [
                             {
-                              "const": "payment_rail",
+                              "const": "effect_evidence",
                               "type": "string"
                             },
                             {
-                              "const": "effect_settlement",
+                              "const": "effect_finality",
                               "type": "string"
                             },
                             {
@@ -5413,11 +5413,11 @@
                         "proof_kind": {
                           "anyOf": [
                             {
-                              "const": "payment_rail",
+                              "const": "effect_evidence",
                               "type": "string"
                             },
                             {
-                              "const": "effect_settlement",
+                              "const": "effect_finality",
                               "type": "string"
                             },
                             {
@@ -5671,11 +5671,11 @@
               "proof_kind": {
                 "anyOf": [
                   {
-                    "const": "payment_rail",
+                    "const": "effect_evidence",
                     "type": "string"
                   },
                   {
-                    "const": "effect_settlement",
+                    "const": "effect_finality",
                     "type": "string"
                   },
                   {
@@ -5903,11 +5903,11 @@
                   "proof_kind": {
                     "anyOf": [
                       {
-                        "const": "payment_rail",
+                        "const": "effect_evidence",
                         "type": "string"
                       },
                       {
-                        "const": "effect_settlement",
+                        "const": "effect_finality",
                         "type": "string"
                       },
                       {
@@ -6128,11 +6128,11 @@
                   "proof_kind": {
                     "anyOf": [
                       {
-                        "const": "payment_rail",
+                        "const": "effect_evidence",
                         "type": "string"
                       },
                       {
-                        "const": "effect_settlement",
+                        "const": "effect_finality",
                         "type": "string"
                       },
                       {
@@ -6353,11 +6353,11 @@
                   "proof_kind": {
                     "anyOf": [
                       {
-                        "const": "payment_rail",
+                        "const": "effect_evidence",
                         "type": "string"
                       },
                       {
-                        "const": "effect_settlement",
+                        "const": "effect_finality",
                         "type": "string"
                       },
                       {
@@ -6584,11 +6584,11 @@
               "proof_kind": {
                 "anyOf": [
                   {
-                    "const": "payment_rail",
+                    "const": "effect_evidence",
                     "type": "string"
                   },
                   {
-                    "const": "effect_settlement",
+                    "const": "effect_finality",
                     "type": "string"
                   },
                   {
@@ -6808,11 +6808,11 @@
             "proof_kind": {
               "anyOf": [
                 {
-                  "const": "payment_rail",
+                  "const": "effect_evidence",
                   "type": "string"
                 },
                 {
-                  "const": "effect_settlement",
+                  "const": "effect_finality",
                   "type": "string"
                 },
                 {
@@ -7031,11 +7031,11 @@
               "proof_kind": {
                 "anyOf": [
                   {
-                    "const": "payment_rail",
+                    "const": "effect_evidence",
                     "type": "string"
                   },
                   {
-                    "const": "effect_settlement",
+                    "const": "effect_finality",
                     "type": "string"
                   },
                   {
@@ -7263,11 +7263,11 @@
                         "proof_kind": {
                           "anyOf": [
                             {
-                              "const": "payment_rail",
+                              "const": "effect_evidence",
                               "type": "string"
                             },
                             {
-                              "const": "effect_settlement",
+                              "const": "effect_finality",
                               "type": "string"
                             },
                             {
@@ -7490,11 +7490,11 @@
                         "proof_kind": {
                           "anyOf": [
                             {
-                              "const": "payment_rail",
+                              "const": "effect_evidence",
                               "type": "string"
                             },
                             {
-                              "const": "effect_settlement",
+                              "const": "effect_finality",
                               "type": "string"
                             },
                             {
@@ -7723,6 +7723,96 @@
                     },
                     "type": "array"
                   },
+                  "effect_limits": {
+                    "items": {
+                      "additionalProperties": false,
+                      "properties": {
+                        "approval_threshold_units": {
+                          "type": "integer"
+                        },
+                        "authorization_form": {
+                          "anyOf": [
+                            {
+                              "const": "single_use_capability",
+                              "type": "string"
+                            },
+                            {
+                              "const": "external_signer",
+                              "type": "string"
+                            }
+                          ]
+                        },
+                        "channels": {
+                          "items": {
+                            "minLength": 1,
+                            "type": "string"
+                          },
+                          "type": "array"
+                        },
+                        "commitment_required": {
+                          "type": "boolean"
+                        },
+                        "family": {
+                          "minLength": 1,
+                          "type": "string"
+                        },
+                        "idempotency_required": {
+                          "type": "boolean"
+                        },
+                        "max_per_call_units": {
+                          "type": "integer"
+                        },
+                        "max_per_period_units": {
+                          "type": "integer"
+                        },
+                        "max_per_run_units": {
+                          "type": "integer"
+                        },
+                        "operation": {
+                          "minLength": 1,
+                          "type": "string"
+                        },
+                        "peer": {
+                          "minLength": 1,
+                          "type": "string"
+                        },
+                        "period": {
+                          "minLength": 1,
+                          "type": "string"
+                        },
+                        "preflight_required": {
+                          "type": "boolean"
+                        },
+                        "preflight_ttl_ms": {
+                          "type": "integer"
+                        },
+                        "realm": {
+                          "minLength": 1,
+                          "type": "string"
+                        },
+                        "receipt_before_success": {
+                          "type": "boolean"
+                        },
+                        "recovery_required": {
+                          "type": "boolean"
+                        },
+                        "single_use_capability": {
+                          "type": "boolean"
+                        },
+                        "unit": {
+                          "minLength": 1,
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "family",
+                        "unit",
+                        "channels"
+                      ],
+                      "type": "object"
+                    },
+                    "type": "array"
+                  },
                   "effects": {
                     "items": {
                       "additionalProperties": false,
@@ -7750,11 +7840,11 @@
                           "items": {
                             "anyOf": [
                               {
-                                "const": "payment_rail",
+                                "const": "effect_evidence",
                                 "type": "string"
                               },
                               {
-                                "const": "effect_settlement",
+                                "const": "effect_finality",
                                 "type": "string"
                               },
                               {
@@ -7783,14 +7873,14 @@
                   "max_child_depth": {
                     "type": "integer"
                   },
+                  "max_cost_units": {
+                    "type": "number"
+                  },
                   "max_fanout": {
                     "type": "integer"
                   },
                   "max_runtime_ms": {
                     "type": "integer"
-                  },
-                  "max_spend_usd": {
-                    "type": "number"
                   },
                   "network_destinations": {
                     "items": {
@@ -7798,88 +7888,6 @@
                       "type": "string"
                     },
                     "type": "array"
-                  },
-                  "payment": {
-                    "additionalProperties": false,
-                    "properties": {
-                      "approval_threshold_minor": {
-                        "type": "integer"
-                      },
-                      "counterparty": {
-                        "minLength": 1,
-                        "type": "string"
-                      },
-                      "credential_form": {
-                        "anyOf": [
-                          {
-                            "const": "single_use_spend_capability",
-                            "type": "string"
-                          },
-                          {
-                            "const": "external_signer",
-                            "type": "string"
-                          }
-                        ]
-                      },
-                      "currency": {
-                        "minLength": 1,
-                        "type": "string"
-                      },
-                      "idempotency_required": {
-                        "type": "boolean"
-                      },
-                      "max_per_call_minor": {
-                        "type": "integer"
-                      },
-                      "max_per_period_minor": {
-                        "type": "integer"
-                      },
-                      "max_per_run_minor": {
-                        "type": "integer"
-                      },
-                      "operation": {
-                        "minLength": 1,
-                        "type": "string"
-                      },
-                      "period": {
-                        "minLength": 1,
-                        "type": "string"
-                      },
-                      "quote_required": {
-                        "type": "boolean"
-                      },
-                      "quote_ttl_ms": {
-                        "type": "integer"
-                      },
-                      "rails": {
-                        "items": {
-                          "minLength": 1,
-                          "type": "string"
-                        },
-                        "type": "array"
-                      },
-                      "realm": {
-                        "minLength": 1,
-                        "type": "string"
-                      },
-                      "receipt_before_success": {
-                        "type": "boolean"
-                      },
-                      "recovery_required": {
-                        "type": "boolean"
-                      },
-                      "reservation_required": {
-                        "type": "boolean"
-                      },
-                      "single_use_spend": {
-                        "type": "boolean"
-                      }
-                    },
-                    "required": [
-                      "currency",
-                      "rails"
-                    ],
-                    "type": "object"
                   },
                   "repo_path_globs": {
                     "items": {
@@ -7934,7 +7942,7 @@
                       "type": "string"
                     },
                     {
-                      "const": "payment_single_use_spend",
+                      "const": "effect_single_use_capability",
                       "type": "string"
                     }
                   ]
@@ -7984,11 +7992,11 @@
                           "type": "string"
                         },
                         {
-                          "const": "payment_receipt_present",
+                          "const": "effect_proof_present",
                           "type": "string"
                         },
                         {
-                          "const": "payment_recovery_available",
+                          "const": "effect_recovery_available",
                           "type": "string"
                         }
                       ]
@@ -8015,11 +8023,11 @@
                           "proof_kind": {
                             "anyOf": [
                               {
-                                "const": "payment_rail",
+                                "const": "effect_evidence",
                                 "type": "string"
                               },
                               {
-                                "const": "effect_settlement",
+                                "const": "effect_finality",
                                 "type": "string"
                               },
                               {
@@ -8248,11 +8256,11 @@
                   "proof_kind": {
                     "anyOf": [
                       {
-                        "const": "payment_rail",
+                        "const": "effect_evidence",
                         "type": "string"
                       },
                       {
-                        "const": "effect_settlement",
+                        "const": "effect_finality",
                         "type": "string"
                       },
                       {
@@ -8475,11 +8483,11 @@
                   "proof_kind": {
                     "anyOf": [
                       {
-                        "const": "payment_rail",
+                        "const": "effect_evidence",
                         "type": "string"
                       },
                       {
-                        "const": "effect_settlement",
+                        "const": "effect_finality",
                         "type": "string"
                       },
                       {
@@ -8697,11 +8705,11 @@
                   "proof_kind": {
                     "anyOf": [
                       {
-                        "const": "payment_rail",
+                        "const": "effect_evidence",
                         "type": "string"
                       },
                       {
-                        "const": "effect_settlement",
+                        "const": "effect_finality",
                         "type": "string"
                       },
                       {
@@ -8925,7 +8933,7 @@
                     "type": "string"
                   },
                   {
-                    "const": "payment",
+                    "const": "effect",
                     "type": "string"
                   },
                   {
@@ -8963,11 +8971,11 @@
                   "proof_kind": {
                     "anyOf": [
                       {
-                        "const": "payment_rail",
+                        "const": "effect_evidence",
                         "type": "string"
                       },
                       {
-                        "const": "effect_settlement",
+                        "const": "effect_finality",
                         "type": "string"
                       },
                       {
@@ -9216,19 +9224,19 @@
                       "type": "string"
                     },
                     {
-                      "const": "quote",
+                      "const": "estimate",
                       "type": "string"
                     },
                     {
-                      "const": "reserve",
+                      "const": "prepare",
                       "type": "string"
                     },
                     {
-                      "const": "spend",
+                      "const": "commit",
                       "type": "string"
                     },
                     {
-                      "const": "refund",
+                      "const": "reverse",
                       "type": "string"
                     },
                     {
@@ -9302,11 +9310,11 @@
                 "proof_kind": {
                   "anyOf": [
                     {
-                      "const": "payment_rail",
+                      "const": "effect_evidence",
                       "type": "string"
                     },
                     {
-                      "const": "effect_settlement",
+                      "const": "effect_finality",
                       "type": "string"
                     },
                     {
@@ -9638,11 +9646,11 @@
                     "proof_kind": {
                       "anyOf": [
                         {
-                          "const": "payment_rail",
+                          "const": "effect_evidence",
                           "type": "string"
                         },
                         {
-                          "const": "effect_settlement",
+                          "const": "effect_finality",
                           "type": "string"
                         },
                         {
@@ -9864,11 +9872,11 @@
                       "proof_kind": {
                         "anyOf": [
                           {
-                            "const": "payment_rail",
+                            "const": "effect_evidence",
                             "type": "string"
                           },
                           {
-                            "const": "effect_settlement",
+                            "const": "effect_finality",
                             "type": "string"
                           },
                           {
@@ -10092,11 +10100,11 @@
                     "proof_kind": {
                       "anyOf": [
                         {
-                          "const": "payment_rail",
+                          "const": "effect_evidence",
                           "type": "string"
                         },
                         {
-                          "const": "effect_settlement",
+                          "const": "effect_finality",
                           "type": "string"
                         },
                         {
@@ -10318,11 +10326,11 @@
                       "proof_kind": {
                         "anyOf": [
                           {
-                            "const": "payment_rail",
+                            "const": "effect_evidence",
                             "type": "string"
                           },
                           {
-                            "const": "effect_settlement",
+                            "const": "effect_finality",
                             "type": "string"
                           },
                           {
@@ -10556,11 +10564,11 @@
                     "proof_kind": {
                       "anyOf": [
                         {
-                          "const": "payment_rail",
+                          "const": "effect_evidence",
                           "type": "string"
                         },
                         {
-                          "const": "effect_settlement",
+                          "const": "effect_finality",
                           "type": "string"
                         },
                         {
@@ -10801,11 +10809,11 @@
                     "proof_kind": {
                       "anyOf": [
                         {
-                          "const": "payment_rail",
+                          "const": "effect_evidence",
                           "type": "string"
                         },
                         {
-                          "const": "effect_settlement",
+                          "const": "effect_finality",
                           "type": "string"
                         },
                         {
@@ -11082,11 +11090,11 @@
                   "proof_kind": {
                     "anyOf": [
                       {
-                        "const": "payment_rail",
+                        "const": "effect_evidence",
                         "type": "string"
                       },
                       {
-                        "const": "effect_settlement",
+                        "const": "effect_finality",
                         "type": "string"
                       },
                       {
@@ -11399,11 +11407,11 @@
               "proof_kind": {
                 "anyOf": [
                   {
-                    "const": "payment_rail",
+                    "const": "effect_evidence",
                     "type": "string"
                   },
                   {
-                    "const": "effect_settlement",
+                    "const": "effect_finality",
                     "type": "string"
                   },
                   {
@@ -11623,11 +11631,11 @@
             "proof_kind": {
               "anyOf": [
                 {
-                  "const": "payment_rail",
+                  "const": "effect_evidence",
                   "type": "string"
                 },
                 {
-                  "const": "effect_settlement",
+                  "const": "effect_finality",
                   "type": "string"
                 },
                 {
@@ -11845,11 +11853,11 @@
             "proof_kind": {
               "anyOf": [
                 {
-                  "const": "payment_rail",
+                  "const": "effect_evidence",
                   "type": "string"
                 },
                 {
-                  "const": "effect_settlement",
+                  "const": "effect_finality",
                   "type": "string"
                 },
                 {
@@ -12067,11 +12075,11 @@
             "proof_kind": {
               "anyOf": [
                 {
-                  "const": "payment_rail",
+                  "const": "effect_evidence",
                   "type": "string"
                 },
                 {
-                  "const": "effect_settlement",
+                  "const": "effect_finality",
                   "type": "string"
                 },
                 {
@@ -12412,11 +12420,11 @@
                     "proof_kind": {
                       "anyOf": [
                         {
-                          "const": "payment_rail",
+                          "const": "effect_evidence",
                           "type": "string"
                         },
                         {
-                          "const": "effect_settlement",
+                          "const": "effect_finality",
                           "type": "string"
                         },
                         {
@@ -12665,11 +12673,11 @@
                     "proof_kind": {
                       "anyOf": [
                         {
-                          "const": "payment_rail",
+                          "const": "effect_evidence",
                           "type": "string"
                         },
                         {
-                          "const": "effect_settlement",
+                          "const": "effect_finality",
                           "type": "string"
                         },
                         {
@@ -12958,11 +12966,11 @@
           "proof_kind": {
             "anyOf": [
               {
-                "const": "payment_rail",
+                "const": "effect_evidence",
                 "type": "string"
               },
               {
-                "const": "effect_settlement",
+                "const": "effect_finality",
                 "type": "string"
               },
               {
@@ -13288,11 +13296,11 @@
             "proof_kind": {
               "anyOf": [
                 {
-                  "const": "payment_rail",
+                  "const": "effect_evidence",
                   "type": "string"
                 },
                 {
-                  "const": "effect_settlement",
+                  "const": "effect_finality",
                   "type": "string"
                 },
                 {

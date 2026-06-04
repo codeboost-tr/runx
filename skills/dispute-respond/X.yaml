@@ -1,11 +1,9 @@
 skill: dispute-respond
-version: "0.1.0"
-
+version: 0.1.0
 catalog:
   kind: skill
   audience: operator
   visibility: public
-
 harness:
   cases:
     - name: dispute-respond-prepares-evidence
@@ -43,7 +41,6 @@ harness:
           state: sealed
           disposition: closed
           reason_code: dispute_response_closed
-
 runners:
   respond:
     default: true
@@ -62,7 +59,7 @@ runners:
       payment_authority:
         direction: provider_dispute
         phase: dispute_response
-        resource_family: payment
+        resource_family: effect
         verbs:
           - verify
         mutates_rail: false
@@ -73,20 +70,20 @@ runners:
       dispute_event:
         type: object
         required: true
-        description: "Provider-initiated dispute or chargeback event."
+        description: Provider-initiated dispute or chargeback event.
       original_receipt_ref:
         type: string
         required: true
-        description: "Linked sealed charge receipt reference."
+        description: Linked sealed charge receipt reference.
       prior_refund_receipt_refs:
         type: json
         required: false
-        description: "Prior refund receipt references."
+        description: Prior refund receipt references.
       evidence_refs:
         type: json
         required: false
-        description: "Provider evidence references."
+        description: Provider evidence references.
       operator_posture:
         type: string
         required: false
-        description: "Requested response posture."
+        description: Requested response posture.

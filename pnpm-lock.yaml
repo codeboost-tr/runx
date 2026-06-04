@@ -12,7 +12,7 @@ importers:
         specifier: workspace:*
         version: link:packages/authoring
       '@runxhq/contracts':
-        specifier: workspace:^0.2.4
+        specifier: workspace:^0.3.0
         version: link:packages/contracts
       '@runxhq/host-adapters':
         specifier: workspace:^0.1.1
@@ -36,7 +36,7 @@ importers:
   packages/authoring:
     dependencies:
       '@runxhq/contracts':
-        specifier: workspace:^0.2.5
+        specifier: workspace:^0.3.0
         version: link:../contracts
       '@sinclair/typebox':
         specifier: ^0.34.41
@@ -54,15 +54,6 @@ importers:
         specifier: ^8.20.0
         version: 8.20.0
 
-  packages/core:
-    dependencies:
-      '@runxhq/contracts':
-        specifier: workspace:^0.2.4
-        version: link:../contracts
-      yaml:
-        specifier: ^2.8.3
-        version: 2.8.3
-
   packages/create-skill:
     dependencies:
       '@runxhq/cli':
@@ -72,7 +63,7 @@ importers:
   packages/host-adapters:
     dependencies:
       '@runxhq/contracts':
-        specifier: workspace:^0.2.5
+        specifier: workspace:^0.3.0
         version: link:../contracts
 
   packages/langchain:

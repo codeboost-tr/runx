@@ -2,9 +2,9 @@
 
 This note settles a recurring question: do the runx core contracts still need an
 "act-model" reconciliation, or is the live shape final? Short answer: **the live
-contracts are the reconciled model.** The `work_item` / `sealed_act` / `effect.form`
-vocabulary that appears in some plans is aspirational naming, not a pending reshape
-of the core contracts.
+contracts are the reconciled model.** Older plan vocabulary around governed units,
+sealed receipt entries, and effect-form naming was aspirational, not a pending
+reshape of the core contracts.
 
 ## The live model (source of truth)
 
@@ -34,13 +34,13 @@ emits and seals.
 Some plans (`plans/runx.md`, `plans/aster.md`) use an alternate vocabulary. It maps
 onto the live shape with no contract change required:
 
-| Plan term      | Live contract                                                        |
-| -------------- | -------------------------------------------------------------------- |
-| `work_item`    | the run's `Subject` + its `Act`s (the unit of governed work)         |
-| `sealed_act`   | an `Act` carried in a sealed `Receipt` (`Receipt.acts` + `Receipt.seal`) — sealing is a property of the Receipt, not a separate `SealedAct` type |
-| `effect.form`  | `ActForm`                                                            |
-| `decision`     | `Decision`                                                           |
-| `signal`       | `Signal`                                                             |
+| Plan concept                  | Live contract                                                        |
+| ----------------------------- | -------------------------------------------------------------------- |
+| governed unit of work         | the run's `Subject` + its `Act`s                                     |
+| sealed receipt entry          | an `Act` carried in a sealed `Receipt` (`Receipt.acts` + `Receipt.seal`) |
+| effect form                   | `ActForm`                                                            |
+| decision                      | `Decision`                                                           |
+| signal                        | `Signal`                                                             |
 
 There is intentionally **no** `SealedAct` type and **no** `effect.form` enum in the
 code: introducing aliases for unused vocabulary would be speculative cruft. If a

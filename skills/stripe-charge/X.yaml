@@ -1,11 +1,9 @@
 skill: stripe-charge
-version: "0.1.0"
-
+version: 0.1.0
 catalog:
   kind: graph
   audience: operator
   visibility: public
-
 harness:
   cases:
     - name: stripe-charge-models-receipt-before-forward
@@ -38,8 +36,8 @@ harness:
             requested_payment_authority:
               authority_ref: authority:payment:charge-price-demo-001
           agent_task.charge-challenge.output:
-            payment_required_signal:
-              signal_type: payment_required
+            effect_required_signal:
+              signal_type: effect_required
               challenge_id: charge_challenge_demo_001
             charge_challenge:
               challenge_id: charge_challenge_demo_001
@@ -79,7 +77,6 @@ harness:
           - verify
           - seal
           - forward
-
 runners:
   stripe:
     default: true
@@ -88,27 +85,27 @@ runners:
       mcp_tool_call:
         type: object
         required: true
-        description: "Inbound MCP operation request."
+        description: Inbound MCP operation request.
       provider_policy:
         type: object
         required: true
-        description: "Provider price and settlement family policy."
+        description: Provider price and settlement family policy.
       returned_credential:
         type: object
         required: true
-        description: "Returned Stripe payment credential reference."
+        description: Returned Stripe payment credential reference.
       parent_payment_authority:
         type: object
         required: false
-        description: "Parent payment authority term or ref."
+        description: Parent payment authority term or ref.
       verify_capability_ref:
         type: string
         required: true
-        description: "Single-use verification capability reference."
+        description: Single-use verification capability reference.
       idempotency_seed:
         type: string
         required: false
-        description: "Stable challenge idempotency seed."
+        description: Stable challenge idempotency seed.
     graph:
       name: stripe-charge
       steps:
@@ -187,7 +184,7 @@ runners:
       payment_authority:
         direction: provider_charge
         phase: graph
-        resource_family: payment
+        resource_family: effect
         settlement_family: stripe
         receipt_before_forward_required: true
         runtime_forwarding_enabled: false

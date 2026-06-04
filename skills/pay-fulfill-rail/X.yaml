@@ -1,11 +1,9 @@
 skill: pay-fulfill-rail
-version: "0.1.0"
-
+version: 0.1.0
 catalog:
   kind: skill
   audience: operator
   visibility: private
-
 harness:
   cases:
     - name: pay-fulfill-rail-mock-fulfills
@@ -24,21 +22,22 @@ harness:
           resource_ref:
             type: surface
             uri: merchant:demo
-          resource_family: payment
+          resource_family: effect
           verbs:
-            - spend
+            - commit
           capabilities:
-            - payment_single_use_spend
+            - effect_single_use_capability
           bounds:
-            payment:
-              currency: USD
-              max_per_call_minor: 125
-              rails:
-                - mock
-              counterparty: merchant:demo
-              operation: search.paid
-              single_use_spend: true
-              credential_form: single_use_spend_capability
+            effect_limits:
+              - family: payment
+                unit: USD
+                max_per_call_units: 125
+                channels:
+                  - mock
+                peer: merchant:demo
+                operation: search.paid
+                single_use_capability: true
+                authorization_form: single_use_capability
           conditions: []
           approvals: []
           issued_by_ref:
@@ -77,8 +76,7 @@ harness:
           schema: runx.receipt.v1
           state: sealed
           disposition: closed
-          reason_code: payment_rail_closed
-
+          reason_code: effect_evidence_closed
 runners:
   mock:
     default: true
@@ -90,51 +88,50 @@ runners:
       max_attempts: 1
     idempotency:
       key: pay-fulfill-rail-mock
-    outputs: &rail_outputs
+    outputs: &a1
       rail_result: object
       rail_proof: object
       credential_envelope: object
       redactions: array
       recovery_hint: object
-    artifacts: &rail_artifacts
-      wrap_as: payment_rail_packet
-      packet: runx.payment.rail.v1
-    runx: &rail_runx
+    artifacts: &a2
+      wrap_as: effect_evidence_packet
+      packet: runx.effect.evidence.v1
+    runx: &a3
       payment_authority:
         phase: fulfill
-        resource_family: payment
+        resource_family: effect
         verbs:
-          - spend
-        requires_capability: payment_single_use_spend
-        credential_form: single_use_spend_capability
+          - commit
+        requires_capability: effect_single_use_capability
+        authorization_form: single_use_capability
         receives_funding_material: false
         receipt_before_success: true
-    inputs: &rail_inputs
+    inputs: &a4
       payment_challenge:
         type: object
         required: true
-        description: "Protocol/provider challenge to fulfill."
+        description: Protocol/provider challenge to fulfill.
       reserved_payment_authority:
         type: object
         required: true
-        description: "Child payment authority term admitted by core."
+        description: Child payment authority term admitted by core.
       spend_capability_ref:
         type: object
         required: true
-        description: "Scoped single-use spend capability reference."
+        description: Scoped single-use spend capability reference.
       rail_profile_ref:
         type: string
         required: true
-        description: "Configured rail profile reference."
+        description: Configured rail profile reference.
       idempotency:
         type: object
         required: true
-        description: "Reservation key and recovery lookup fields."
+        description: Reservation key and recovery lookup fields.
       quote_packet:
         type: object
         required: false
-        description: "Source quote packet for evidence continuity."
-
+        description: Source quote packet for evidence continuity.
   x402:
     type: agent-task
     agent: operator
@@ -144,23 +141,22 @@ runners:
       max_attempts: 1
     idempotency:
       key: payment-rail-x402
-    outputs: *rail_outputs
-    artifacts: *rail_artifacts
+    outputs: *a1
+    artifacts: *a2
     runx:
-      <<: *rail_runx
+      <<: *a3
       payment_authority:
         phase: fulfill
-        resource_family: payment
+        resource_family: effect
         verbs:
-          - spend
+          - commit
         rails:
           - x402
-        requires_capability: payment_single_use_spend
-        credential_form: single_use_spend_capability
+        requires_capability: effect_single_use_capability
+        authorization_form: single_use_capability
         receives_funding_material: false
         receipt_before_success: true
-    inputs: *rail_inputs
-
+    inputs: *a4
   mpp:
     type: agent-task
     agent: operator
@@ -170,23 +166,22 @@ runners:
       max_attempts: 1
     idempotency:
       key: payment-rail-mpp
-    outputs: *rail_outputs
-    artifacts: *rail_artifacts
+    outputs: *a1
+    artifacts: *a2
     runx:
-      <<: *rail_runx
+      <<: *a3
       payment_authority:
         phase: fulfill
-        resource_family: payment
+        resource_family: effect
         verbs:
-          - spend
+          - commit
         rails:
           - mpp
-        requires_capability: payment_single_use_spend
-        credential_form: single_use_spend_capability
+        requires_capability: effect_single_use_capability
+        authorization_form: single_use_capability
         receives_funding_material: false
         receipt_before_success: true
-    inputs: *rail_inputs
-
+    inputs: *a4
   stripe-spt:
     type: agent-task
     agent: operator
@@ -196,19 +191,19 @@ runners:
       max_attempts: 1
     idempotency:
       key: payment-rail-stripe-spt
-    outputs: *rail_outputs
-    artifacts: *rail_artifacts
+    outputs: *a1
+    artifacts: *a2
     runx:
-      <<: *rail_runx
+      <<: *a3
       payment_authority:
         phase: fulfill
-        resource_family: payment
+        resource_family: effect
         verbs:
-          - spend
+          - commit
         rails:
           - stripe-spt
-        requires_capability: payment_single_use_spend
-        credential_form: single_use_spend_capability
+        requires_capability: effect_single_use_capability
+        authorization_form: single_use_capability
         receives_funding_material: false
         receipt_before_success: true
-    inputs: *rail_inputs
+    inputs: *a4

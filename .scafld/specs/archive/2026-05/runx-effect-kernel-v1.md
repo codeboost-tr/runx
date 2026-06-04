@@ -30,8 +30,8 @@ matches this spec. Live deferred residue remains: `runx-contracts` still exposes
 `PaymentAuthorityBounds`, `AuthorityBounds.payment`, `max_spend_usd`, and
 `ProofKind::PaymentRail`; `runx-pay` still has the payment-named
 `PaymentRailSupervisor` / `PaymentSupervisor*` proof helpers; and the
-deferred-evidence `EffectSettlementReceipt` / `EffectSettlementPhase` schema
-exists without a runtime path that emits follow-on settlement receipts. Treat
+deferred-evidence `EffectFinalityReceipt` / `EffectFinalityPhase` schema
+exists without a runtime path that emits follow-on finality receipts. Treat
 that payment-specific residue as explicitly deferred bridge cleanup, not
 completed Phase 4 work.
 
@@ -213,7 +213,7 @@ phase that retires each symbol, it appears in kernel orchestration:
 - **Effect-state collision** when multiple families run in one graph.
   Mitigation: per-family-namespaced `EffectStateStore`.
 - **Deferred-evidence vs immutable receipts.** Mitigation: never mutate a sealed
-  receipt; async completion emits a *follow-on settlement receipt* that
+  receipt; async completion emits a *follow-on finality receipt* that
   references the original act/criterion.
 - **Cloud lock-step.** The worker `Outcome` JSON is frozen (Phase 0 snapshot);
   Phase 7 re-verifies the worker + publish-harness.
@@ -357,7 +357,7 @@ bridge behind the effects facade, but that is not the final architecture. If the
 payment path still uses a payment-specific enum variant or payment proof helper
 aliases in `runx-runtime`, the phase is accepted only as behavior-preserving
 plumbing. Genericity is not considered fully proven until payment itself settles
-through the generic `EffectSettlementRecord`/payload path. Before Phase 3,
+through the generic `EffectFinalityRecord`/payload path. Before Phase 3,
 reserve the additive worker `criterion_status` field. Phase 4 must delete the
 payment aliases and payment-specific effect enum variant, move typed payment
 verification into `runx-pay`, and add a payment-through-generic-payload
@@ -377,16 +377,16 @@ Dependencies: none
   its bounds; scope validation dispatches per family.
 - Add a **non-replay marker** (e.g. step/effect `form: Irreversible`): on
   resume, such a step is never re-invoked; its proof is verified in place.
-- Add the **deferred-evidence protocol**: `EffectSettlementPhase { Provisional,
-  InFlight, Sealed }`. `settle()` may return `Provisional` (proof_ref reserved);
-  async completion emits a **follow-on settlement receipt** referencing the
+- Add the **deferred-evidence protocol**: `EffectFinalityPhase { Provisional,
+  InFlight, Sealed }`. async settlement may return `Provisional` (proof_ref reserved);
+  async completion emits a **follow-on finality receipt** referencing the
   original act/criterion (the sealed receipt is NEVER mutated). Provisional
   proofs surface via the optional `criterion_status` field **reserved in
   Phase 0** (additive; absent for sync-sealed proofs, so the worker `Outcome`
   for every existing skill is byte-identical to the Phase 0 snapshot).
 - **Acceptance:** a deploy-style unit test enforces receipt-before-success on a
   non-payment family; a delete-style test proves non-replay on resume; a
-  deferred-evidence test produces a valid follow-on settlement receipt; goldens
+  deferred-evidence test produces a valid follow-on finality receipt; goldens
   unchanged for existing skills.
 
 ## Phase 4: Extract `runx-pay` (governance/evidence; no rails/secrets)

@@ -148,10 +148,6 @@ export function scanFile(file: string, source: string): readonly ReceiptAuditFin
     const lineNumber = index + 1;
     const trimmed = line.trim();
 
-    if (file === "packages/core/package.json" && trimmed.startsWith('"./receipts"')) {
-      findings.push(finding(file, lineNumber, "retired_core_receipts_export", "./receipts", line));
-    }
-
     if (
       file === "packages/contracts/src/index.ts"
       && /\b(?:validateLocalSkillReceiptContract|validateLocalGraphReceiptContract|LocalSkillReceiptContract|LocalGraphReceiptContract)\b/u.test(line)
@@ -239,10 +235,6 @@ function classifyFinding(
     return "fixture_archive";
   }
 
-  if (kind === "legacy_receipt_id_prefix" && file.startsWith("packages/core/src/state-machine/")) {
-    return "false_positive";
-  }
-
   if (isKnownGuardOrDevOnlyContext(file, kind, token, text)) {
     return "false_positive";
   }
@@ -328,19 +320,10 @@ function isGeneratedStaleArtifact(file: string): boolean {
 }
 
 function isRetiredReceiptImport(file: string, specifier: string): boolean {
-  if (specifier === "@runxhq/core/receipts" || specifier.startsWith("@runxhq/core/receipts/")) {
-    return true;
-  }
-  if (specifier.includes("packages/core/src/receipts")) {
-    return true;
-  }
   if (!specifier.startsWith(".")) {
     return false;
   }
   const target = toPosix(path.normalize(path.join(path.dirname(file), specifier)));
-  if (file.startsWith("packages/core/src/receipts/") && target.startsWith("packages/core/src/receipts/")) {
-    return false;
-  }
   return target.includes("/receipts/") || target.endsWith("/receipts/index.js") || target.endsWith("/receipts");
 }
 

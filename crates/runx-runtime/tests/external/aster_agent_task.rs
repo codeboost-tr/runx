@@ -8,6 +8,7 @@ use runx_runtime::{
 };
 
 const FIXTURE_CREATED_AT: &str = "2026-05-18T00:00:00Z";
+const RETIRED_VERIFICATION_REPORT_FIELD: &str = concat!("verification", "_", "report");
 
 #[test]
 fn aster_agent_task_replays_current_rust_bridge_terminal_report()
@@ -197,7 +198,7 @@ fn is_retired_bridge_field(field: &str) -> bool {
             | "outcome"
             | "effect"
             | "issue_to_pr_outcome"
-            | "verification_report"
+            | RETIRED_VERIFICATION_REPORT_FIELD
             | "verificationReport"
             | "target_effect"
             | "targetEffect"

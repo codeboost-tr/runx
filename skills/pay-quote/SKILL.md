@@ -50,7 +50,7 @@ credentials. Its output is evidence for a later Decision, not a payment.
   checkout request, or operator intent.
 - `realm` (optional): authority realm such as `local`, `test`, or `prod`.
 - `rail_preferences` (optional): ordered rail preference list.
-- `max_per_call_minor` (optional): caller cap in minor currency units.
+- `max_per_call_units` (optional): caller cap in minor currency units.
 - `currency` (optional): caller-expected ISO 4217 currency.
 - `operation` (optional): stable operation name for the paid action.
 - `counterparty` (optional): expected merchant or payee reference.

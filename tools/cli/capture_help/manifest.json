@@ -10,36 +10,32 @@
     ]
   },
   "inputs": {
-    "command": {
-      "type": "string",
-      "required": true,
-      "description": "Executable to invoke."
-    },
     "args": {
       "type": "json",
       "required": false,
       "description": "Optional argument array to place before the help flag."
     },
-    "help_flag": {
+    "command": {
       "type": "string",
-      "required": false,
-      "default": "--help",
-      "description": "Help flag to append when invoking the command."
+      "required": true,
+      "description": "Executable to invoke."
     },
     "cwd": {
       "type": "string",
       "required": false,
       "description": "Optional working directory override for the command."
     },
+    "help_flag": {
+      "type": "string",
+      "required": false,
+      "description": "Help flag to append when invoking the command.",
+      "default": "--help"
+    },
     "repo_root": {
       "type": "string",
       "required": false,
       "description": "Optional repository or workspace root used when cwd is not supplied."
     }
-  },
-  "output": {
-    "packet": "runx.cli.help.v1",
-    "wrap_as": "cli_help"
   },
   "scopes": [
     "cli.read"
@@ -55,7 +51,11 @@
       "./run.mjs"
     ]
   },
-  "source_hash": "sha256:d9e1709c705adee365d868c22213553981a20749418416cae871f0138ae49ad0",
+  "output": {
+    "packet": "runx.cli.help.v1",
+    "wrap_as": "cli_help"
+  },
+  "source_hash": "sha256:cc21de253b7dd2587d61130949b9e295ba5d4cd7e1a99d520823512943576685",
   "schema_hash": "sha256:bdfe931f351ad478f68d8bfdb0463779bc791fb3fd8d865b16d07d7a2d7d905b",
-  "toolkit_version": "0.2.0"
+  "toolkit_version": "0.1.4"
 }

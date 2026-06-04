@@ -94,41 +94,6 @@ export interface ThreadStory {
   readonly milestones?: readonly StoryMilestone[];
 }
 
-export type FeedStoryMilestoneKind = StoryMilestoneId;
-
-export interface FeedStoryOutboxEntryInput {
-  readonly taskId?: unknown;
-  readonly threadLocator?: unknown;
-  readonly title?: unknown;
-  readonly milestone?: Partial<StoryMilestone> & Record<string, unknown>;
-  readonly bodyMarkdown?: unknown;
-  readonly updatedAt?: unknown;
-  readonly workflow?: unknown;
-  readonly laneId?: unknown;
-  readonly sourceId?: unknown;
-  readonly provider?: unknown;
-  readonly targetRef?: unknown;
-  readonly proposalId?: unknown;
-}
-
-interface StoryOutboxMetadataInput {
-  readonly sourceId?: unknown;
-  readonly provider?: unknown;
-  readonly sourceThreadRef?: unknown;
-  readonly workflowId?: unknown;
-  readonly laneId?: unknown;
-  readonly milestoneId?: unknown;
-  readonly targetRef?: unknown;
-  readonly proposalId?: unknown;
-  readonly bodyMarkdown?: unknown;
-  readonly requiresSourceThreadPublication?: boolean;
-}
-
-interface StoryOutboxIdempotencyMetadata {
-  readonly key: string;
-  readonly content_hash: string;
-}
-
 const STORY_MILESTONE_ID_SET = new Set<string>(STORY_MILESTONE_IDS);
 const LEGACY_STORY_MILESTONE_ID_SET = new Set<string>(Object.keys(LEGACY_STORY_MILESTONE_ID_MAP));
 const LEGACY_STORY_MILESTONE_ID_LOOKUP: Readonly<Record<string, StoryMilestoneId>> = LEGACY_STORY_MILESTONE_ID_MAP;
@@ -249,6 +214,59 @@ export function friendlyProposalLabel(proposalKind: string): string {
     .join(" ");
 }
 
+export function storyMilestoneRefreshesPublishedEntry(existing: unknown, requested: StoryMilestoneId): boolean {
+  const existingCanonical = canonicalStoryMilestoneIdForPublishedRefresh(existing);
+  if (existingCanonical === requested) {
+    return true;
+  }
+  return existing === "merge_gate" && requested === "final_outcome";
+}
+
+export function canonicalStoryEntryIdForRefresh(entryId: string | undefined, existing: unknown, requested: StoryMilestoneId): string | undefined {
+  if (!entryId || typeof existing !== "string") {
+    return entryId;
+  }
+  if (!storyMilestoneRefreshesPublishedEntry(existing, requested)) {
+    return entryId;
+  }
+  return entryId.replace(new RegExp(`:${escapeRegExp(existing)}$`, "u"), `:${requested}`);
+}
+
+export type FeedStoryMilestoneKind = StoryMilestoneId;
+
+export interface FeedStoryOutboxEntryInput {
+  readonly taskId?: unknown;
+  readonly threadLocator?: unknown;
+  readonly title?: unknown;
+  readonly milestone?: Partial<StoryMilestone> & Record<string, unknown>;
+  readonly bodyMarkdown?: unknown;
+  readonly updatedAt?: unknown;
+  readonly workflow?: unknown;
+  readonly laneId?: unknown;
+  readonly sourceId?: unknown;
+  readonly provider?: unknown;
+  readonly targetRef?: unknown;
+  readonly proposalId?: unknown;
+}
+
+interface StoryOutboxMetadataInput {
+  readonly sourceId?: unknown;
+  readonly provider?: unknown;
+  readonly sourceThreadRef?: unknown;
+  readonly workflowId?: unknown;
+  readonly laneId?: unknown;
+  readonly milestoneId?: unknown;
+  readonly targetRef?: unknown;
+  readonly proposalId?: unknown;
+  readonly bodyMarkdown?: unknown;
+  readonly requiresSourceThreadPublication?: boolean;
+}
+
+interface StoryOutboxIdempotencyMetadata {
+  readonly key: string;
+  readonly content_hash: string;
+}
+
 export function renderFeedStoryMarkdown(story: ThreadStory): string {
   return renderThreadStoryMarkdown(story);
 }
@@ -306,28 +324,6 @@ export function buildFeedStoryOutboxEntry(input: FeedStoryOutboxEntryInput): Rec
       body_markdown: bodyMarkdown,
     },
   };
-}
-
-export function storyMilestoneRefreshesPublishedEntry(existing: unknown, requested: StoryMilestoneId): boolean {
-  const existingCanonical = canonicalStoryMilestoneIdForPublishedRefresh(existing);
-  if (existingCanonical === requested) {
-    return true;
-  }
-  return existing === "merge_gate" && requested === "final_outcome";
-}
-
-export function canonicalStoryEntryIdForRefresh(
-  entryId: string | undefined,
-  existing: unknown,
-  requested: StoryMilestoneId,
-): string | undefined {
-  if (!entryId || typeof existing !== "string") {
-    return entryId;
-  }
-  if (!storyMilestoneRefreshesPublishedEntry(existing, requested)) {
-    return entryId;
-  }
-  return entryId.replace(new RegExp(`:${escapeRegExp(existing)}$`, "u"), `:${requested}`);
 }
 
 function buildCoreStoryOutboxMetadata(input: StoryOutboxMetadataInput): {
@@ -417,6 +413,10 @@ function limitLines(value: string, maxLines: number): string {
   return `${lines.slice(0, maxLines).join("\n")}\n...`;
 }
 
+function escapeRegExp(value: string): string {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
 function stableStringify(value: unknown): string {
   if (value === null || typeof value !== "object") {
     return JSON.stringify(value);
@@ -436,8 +436,4 @@ function hashStable(value: unknown): string {
 
 function hashString(value: string): string {
   return createHash("sha256").update(value).digest("hex");
-}
-
-function escapeRegExp(value: string): string {
-  return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }

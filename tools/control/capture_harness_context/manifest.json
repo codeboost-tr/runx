@@ -10,6 +10,11 @@
     ]
   },
   "inputs": {
+    "decision": {
+      "type": "json",
+      "required": false,
+      "description": "Optional runx.decision.v1 packet that selected the next harness action."
+    },
     "harness": {
       "type": "json",
       "required": false,
@@ -19,14 +24,8 @@
       "type": "json",
       "required": false,
       "description": "Optional runx.signal.v1 packet that opened or informed the harness."
-    },
-    "decision": {
-      "type": "json",
-      "required": false,
-      "description": "Optional runx.decision.v1 packet that selected the next harness action."
     }
   },
-  "output": {},
   "scopes": [
     "runx:control:read"
   ],
@@ -36,7 +35,8 @@
       "./run.mjs"
     ]
   },
-  "source_hash": "sha256:9f45923d0d8af3a64b6534e317912a525ce28568249750fafdc150ec155ead3d",
+  "output": {},
+  "source_hash": "sha256:f087b82767b7d5475dc99ec6c33a167fc1a6c0f8e72d883f522b3967ee384af6",
   "schema_hash": "sha256:a9c2921a41e843cd01ca599e73ed561e123283a5f17fab06a6aa6e4e3529a8d6",
-  "toolkit_version": "0.2.0"
+  "toolkit_version": "0.1.4"
 }

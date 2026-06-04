@@ -86,8 +86,6 @@ function settlementReport({ admission, paymentIntentId, chargeId, eventId, spt }
     payment_intent_id: paymentIntentId,
     charge_id: chargeId,
     event_id: eventId,
-    shared_payment_token_ref: spt,
-    admission_token_digest: admission.admission_token_digest,
     amount_minor: admission.amount_minor,
     currency: admission.currency,
     settlement_proof: {
@@ -101,21 +99,21 @@ function settlementReport({ admission, paymentIntentId, chargeId, eventId, spt }
 }
 
 function governedRefusal() {
-  const maxPerCall = numberEnv("RUNX_STRIPE_MAX_PER_CALL_MINOR", 100);
+  const maxPerCall = numberEnv("RUNX_STRIPE_MAX_PER_CALL_UNITS", 100);
   const attempted = numberEnv("RUNX_STRIPE_DEMO_REFUSAL_AMOUNT_MINOR", maxPerCall + 25);
   const refused = attempted > maxPerCall;
   return {
     status: refused ? "refused" : "allowed",
     reason_code: refused ? "cap_exceeded" : "within_cap",
     attempted_amount_minor: attempted,
-    max_per_call_minor: maxPerCall,
+    max_per_call_units: maxPerCall,
     spt_minted: false,
     stripe_call_performed: false,
   };
 }
 
 function writeDemoReceipts(directory, settlement, refusal) {
-  const settlementReceipt = signedDemoReceipt({
+  const railReceipt = signedDemoReceipt({
     idSeed: `${settlement.money_movement_id}:settled:${settlement.charge_id}`,
     disposition: "sealed",
     reasonCode: "stripe_spt_settled",
@@ -132,7 +130,7 @@ function writeDemoReceipts(directory, settlement, refusal) {
   });
   const settlementPath = path.join(directory, "stripe-spt-settlement.receipt.json");
   const refusalPath = path.join(directory, "stripe-spt-refusal.receipt.json");
-  writeFileSync(settlementPath, `${JSON.stringify(settlementReceipt, null, 2)}\n`);
+  writeFileSync(settlementPath, `${JSON.stringify(railReceipt, null, 2)}\n`);
   writeFileSync(refusalPath, `${JSON.stringify(refusalReceipt, null, 2)}\n`);
   return {
     settlement: settlementPath,

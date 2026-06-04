@@ -1,11 +1,9 @@
 skill: charge-verify
-version: "0.1.0"
-
+version: 0.1.0
 catalog:
   kind: skill
   audience: operator
   visibility: private
-
 harness:
   cases:
     - name: charge-verify-seals-proof
@@ -37,20 +35,21 @@ harness:
           resource_ref:
             type: surface
             uri: provider:demo
-          resource_family: payment
+          resource_family: effect
           verbs:
             - verify
           bounds:
-            payment:
-              currency: USD
-              max_per_call_minor: 125
-              rails:
-                - mock
-              realm: test
-              counterparty: provider:demo
-              operation: search.paid
-              idempotency_required: true
-              receipt_before_success: true
+            effect_limits:
+              - family: payment
+                unit: USD
+                max_per_call_units: 125
+                channels:
+                  - mock
+                realm: test
+                peer: provider:demo
+                operation: search.paid
+                idempotency_required: true
+                receipt_before_success: true
           conditions: []
           approvals: []
           capabilities: []
@@ -85,7 +84,6 @@ harness:
           state: sealed
           disposition: closed
           reason_code: charge_verify_closed
-
 runners:
   verify:
     default: true
@@ -110,7 +108,7 @@ runners:
       payment_authority:
         direction: provider_charge
         phase: verify
-        resource_family: payment
+        resource_family: effect
         verbs:
           - verify
         receives_rail_secret_material: false
@@ -120,28 +118,28 @@ runners:
       charge_price_packet:
         type: object
         required: true
-        description: "Output from charge-price."
+        description: Output from charge-price.
       charge_challenge_packet:
         type: object
         required: true
-        description: "Output from charge-challenge."
+        description: Output from charge-challenge.
       returned_credential:
         type: object
         required: true
-        description: "Caller-returned payment credential envelope or reference."
+        description: Caller-returned payment credential envelope or reference.
       priced_payment_authority:
         type: object
         required: true
-        description: "Already-priced provider-side payment authority term."
+        description: Already-priced provider-side payment authority term.
       verify_capability_ref:
         type: string
         required: true
-        description: "Single-use verification capability reference."
+        description: Single-use verification capability reference.
       settlement_family:
         type: string
         required: true
-        description: "Settlement family selected for verification."
+        description: Settlement family selected for verification.
       idempotency:
         type: object
         required: true
-        description: "Challenge idempotency key and replay policy."
+        description: Challenge idempotency key and replay policy.

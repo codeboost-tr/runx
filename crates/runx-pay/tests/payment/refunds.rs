@@ -1,7 +1,7 @@
 use std::fs;
 use std::path::PathBuf;
 
-use runx_contracts::EffectSettlementPhase;
+use runx_contracts::EffectFinalityPhase;
 use runx_pay::refunds::{
     RefundAdmissionCase, RefundAdmissionDecision, RefundAdmissionInput, RefundRefusalCode,
     RefundRequest, RefundableCharge, admit_refund, verify_refund_admission_case,
@@ -21,7 +21,7 @@ fn refund_admission_fixtures_match_rust_contract() -> Result<(), Box<dyn std::er
 #[test]
 fn refund_refuses_non_sealed_charge() {
     let decision = admit_refund(&RefundAdmissionInput {
-        charge: refundable_charge(EffectSettlementPhase::InFlight),
+        charge: refundable_charge(EffectFinalityPhase::InFlight),
         refund: RefundRequest {
             amount_minor: 125,
             requested_counterparty: None,
@@ -37,7 +37,7 @@ fn refund_refuses_non_sealed_charge() {
 
 #[test]
 fn refund_reversal_targets_recorded_payer() {
-    let charge = refundable_charge(EffectSettlementPhase::Sealed);
+    let charge = refundable_charge(EffectFinalityPhase::Sealed);
     let decision = admit_refund(&RefundAdmissionInput {
         refund: RefundRequest {
             amount_minor: 100,
@@ -61,7 +61,7 @@ fn refund_reversal_targets_recorded_payer() {
 #[test]
 fn reversed_wins_refund_race() {
     let decision = admit_refund(&RefundAdmissionInput {
-        charge: refundable_charge(EffectSettlementPhase::Reversed),
+        charge: refundable_charge(EffectFinalityPhase::Reversed),
         refund: RefundRequest {
             amount_minor: 100,
             requested_counterparty: None,
@@ -77,7 +77,7 @@ fn reversed_wins_refund_race() {
 
 fn refund_fixture_paths() -> Result<Vec<PathBuf>, Box<dyn std::error::Error>> {
     let fixture_dir = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-        .join("../../fixtures/payment-finality/refund-admission")
+        .join("../../fixtures/effect-finality/refund-admission")
         .canonicalize()?;
     let mut paths = fs::read_dir(fixture_dir)?
         .map(|entry| entry.map(|entry| entry.path()))
@@ -86,7 +86,7 @@ fn refund_fixture_paths() -> Result<Vec<PathBuf>, Box<dyn std::error::Error>> {
     Ok(paths)
 }
 
-fn refundable_charge(phase: EffectSettlementPhase) -> RefundableCharge {
+fn refundable_charge(phase: EffectFinalityPhase) -> RefundableCharge {
     RefundableCharge {
         money_movement_id: "money-movement-test".to_owned(),
         rail: "mpp-tempo".to_owned(),

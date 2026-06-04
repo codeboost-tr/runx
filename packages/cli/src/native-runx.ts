@@ -9,7 +9,7 @@ import { fileURLToPath } from "node:url";
 import { errorMessage, firstNonEmpty, parsePositiveInt } from "./cli-util.js";
 
 const DEFAULT_NATIVE_RUNX_TIMEOUT_MS = 300_000;
-const DEFAULT_NATIVE_RUNX_OUTPUT_LIMIT_BYTES = 1_048_576;
+const DEFAULT_NATIVE_RUNX_OUTPUT_LIMIT_BYTES = 8_388_608;
 const CLI_PACKAGE_NAME = "@runxhq/cli";
 
 const requireFromCli = createRequire(import.meta.url);

@@ -54,6 +54,13 @@ modes:
     progress_format: concise
     show_reasoning: true
 # =============================================================================
+# EXECUTION
+# =============================================================================
+execution:
+  # Cold Rust workspace gates and native-binary builds are legitimate slow checks.
+  # Keep the gates intact and give each acceptance command enough wall clock.
+  absolute_timeout_seconds: 1800
+# =============================================================================
 # LLM RUNTIME
 # =============================================================================
 llm:

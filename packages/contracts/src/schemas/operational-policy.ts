@@ -601,7 +601,7 @@ function selectRequestRunner(
       });
     } else if (target && !target.runner_ids.includes(runner.runner_id)) {
       findings.push({
-        code: "target_runner_not_allowed",
+        code: "runner_not_allowed_for_target",
         path: "/request/runner_id",
         message: `target '${target.repo}' does not allow runner '${runner.runner_id}'.`,
       });

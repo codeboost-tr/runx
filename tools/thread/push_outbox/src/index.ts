@@ -21,7 +21,7 @@ import {
 } from "../../github_adapter.mjs";
 import {
   assertStoryMilestoneId,
-} from "../../story.js";
+} from "../../story.ts";
 
 const githubPublishEnvAllowlist = [
   "PATH",
@@ -464,7 +464,10 @@ function buildPullRequestControlMetadata({ outboxEntry, draftPullRequest }) {
     dedupe: normalizeDedupeMetadata(optionalRecord(metadata.dedupe)),
     source_thread: normalizeSourceThreadMetadata(optionalRecord(metadata.source_thread)),
     human_merge_gate: safeMetadataString(metadata.human_merge_gate, "outbox_entry.metadata.human_merge_gate"),
-    post_merge_observation: safeMetadataString(metadata.post_merge_observation, "outbox_entry.metadata.post_merge_observation"),
+    provider_outcome_observation: safeMetadataString(
+      metadata.provider_outcome_observation,
+      "outbox_entry.metadata.provider_outcome_observation",
+    ),
     story_milestones: normalizeStoryMilestones(metadata.story_milestones, "outbox_entry.metadata.story_milestones"),
   });
 }

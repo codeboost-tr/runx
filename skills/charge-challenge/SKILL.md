@@ -7,7 +7,7 @@ runx:
 
 # Charge Challenge
 
-Turn a priced provider-side operation into a typed `payment_required` signal.
+Turn a priced provider-side operation into a typed `effect_required` signal.
 
 This skill formats the challenge that a caller must satisfy before a paid tool
 operation can proceed. It carries the priced bounds, idempotency key, accepted
@@ -19,7 +19,7 @@ verify returned credentials, collect funds, or forward the upstream tool call.
 - Purpose: expose priced provider-side payment requirements without widening
   authority.
 - Audience: caller agents, provider harnesses, operators, and registry tooling.
-- Artifact contract: `payment_required_signal`, `charge_challenge`,
+- Artifact contract: `effect_required_signal`, `charge_challenge`,
   `idempotency`, `accepted_settlement_families`, and `open_questions`.
 - Evidence bar: challenge amounts and families must match the price packet and
   provider policy.
@@ -30,7 +30,7 @@ verify returned credentials, collect funds, or forward the upstream tool call.
 
 ## Output
 
-- `payment_required_signal`: typed challenge signal for the caller.
+- `effect_required_signal`: typed challenge signal for the caller.
 - `charge_challenge`: provider charge challenge details.
 - `idempotency`: challenge key and replay policy.
 - `accepted_settlement_families`: settlement families the provider will verify.

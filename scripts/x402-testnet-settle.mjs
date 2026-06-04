@@ -170,7 +170,7 @@ function settlementReport(input) {
 }
 
 function governedRefusal(receiptDir) {
-  const maxPerCall = numberEnv("RUNX_X402_MAX_PER_CALL_MINOR", 100);
+  const maxPerCall = numberEnv("RUNX_X402_MAX_PER_CALL_UNITS", 100);
   const attempted = numberEnv("RUNX_X402_DEMO_REFUSAL_AMOUNT_MINOR", maxPerCall + 25);
   const refused = attempted > maxPerCall;
   const harness = runGovernedRefusalHarness(receiptDir);
@@ -178,7 +178,7 @@ function governedRefusal(receiptDir) {
     status: refused ? "refused" : "allowed",
     reason_code: refused ? "cap_exceeded" : "within_cap",
     attempted_amount_minor: attempted,
-    max_per_call_minor: maxPerCall,
+    max_per_call_units: maxPerCall,
     rail_call_performed: false,
     signer_call_performed: false,
     harness,
@@ -186,7 +186,7 @@ function governedRefusal(receiptDir) {
 }
 
 function writeDemoReceipts(receiptDir, settlement, refusal) {
-  const settlementReceipt = signedDemoReceipt({
+  const railReceipt = signedDemoReceipt({
     idSeed: `${settlement.money_movement_id}:settled:${settlement.tx_hash}`,
     disposition: "sealed",
     reasonCode: "x402_settled",
@@ -205,14 +205,14 @@ function writeDemoReceipts(receiptDir, settlement, refusal) {
     subject: {
       rail: "x402",
       attempted_amount_minor: refusal.attempted_amount_minor,
-      max_per_call_minor: refusal.max_per_call_minor,
+      max_per_call_units: refusal.max_per_call_units,
       rail_call_performed: refusal.rail_call_performed,
       signer_call_performed: refusal.signer_call_performed,
     },
   });
   const settlementPath = path.join(receiptDir, "x402-settlement.receipt.json");
   const refusalPath = path.join(receiptDir, "x402-refusal.receipt.json");
-  writeFileSync(settlementPath, `${JSON.stringify(settlementReceipt, null, 2)}\n`);
+  writeFileSync(settlementPath, `${JSON.stringify(railReceipt, null, 2)}\n`);
   writeFileSync(refusalPath, `${JSON.stringify(refusalReceipt, null, 2)}\n`);
   return {
     settlement: settlementPath,

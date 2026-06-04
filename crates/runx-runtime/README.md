@@ -22,9 +22,16 @@ Adapter families remain feature gated:
 
 - `cli-tool`
 - `mcp`
+- `mcp-http-server`
 - `a2a`
 - `agent`
 - `catalog`
+- `external-adapter`
+- `http`
+
+`a2a` is contract-defined but not enabled in `runx-cli`; the CLI enables
+`cli-tool`, `catalog`, `mcp`, `mcp-http-server`, `external-adapter`, `agent`,
+and `http`.
 
 ## Doctor
 

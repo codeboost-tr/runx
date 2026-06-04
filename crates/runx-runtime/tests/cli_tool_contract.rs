@@ -398,12 +398,14 @@ fn cli_tool_spawn_failure_is_runtime_io() -> Result<(), Box<dyn std::error::Erro
     let skill_dir = temp.path().join("skill");
     fs::create_dir_all(&skill_dir)?;
     let missing_command = temp.path().join("missing-command");
+    let missing_command = path_string(&missing_command)?;
+    let expected_cwd = skill_dir.display().to_string();
 
     let result = CliToolAdapter.invoke(SkillInvocation {
         skill_name: "spawn-failure".to_owned(),
         source: SkillSource {
             source_type: runx_parser::SourceKind::CliTool,
-            command: Some(path_string(&missing_command)?),
+            command: Some(missing_command.clone()),
             args: Vec::new(),
             cwd: None,
             timeout_seconds: Some(5),
@@ -430,10 +432,12 @@ fn cli_tool_spawn_failure_is_runtime_io() -> Result<(), Box<dyn std::error::Erro
         credential_delivery: CredentialDelivery::none(),
     });
 
-    assert!(matches!(
-        result,
-        Err(RuntimeError::Io { context, .. }) if context == "spawning cli-tool process"
-    ));
+    let Err(RuntimeError::Io { context, .. }) = result else {
+        return Err(format!("expected cli-tool spawn failure, got {result:?}").into());
+    };
+    assert!(context.starts_with("spawning cli-tool process `"));
+    assert!(context.contains(&missing_command));
+    assert!(context.ends_with(&format!(" in {expected_cwd}")));
     Ok(())
 }
 

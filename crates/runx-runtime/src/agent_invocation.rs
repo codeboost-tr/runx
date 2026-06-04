@@ -97,7 +97,7 @@ fn envelope(
             .source
             .outputs
             .as_ref()
-            .map(output_contract)
+            .map(output_schema_fields)
             .transpose()?,
         trust_boundary: TRUST_BOUNDARY.into(),
     })
@@ -136,7 +136,7 @@ fn optional_non_empty(value: Option<&str>) -> Option<NonEmptyString> {
     value.and_then(NonEmptyString::new)
 }
 
-fn output_contract(raw: &JsonObject) -> Result<BTreeMap<String, OutputField>, RuntimeError> {
+fn output_schema_fields(raw: &JsonObject) -> Result<BTreeMap<String, OutputField>, RuntimeError> {
     let value = serde_json::to_value(JsonValue::Object(raw.clone()))
         .map_err(|source| RuntimeError::json("serializing agent output contract", source))?;
     let Output(output) = serde_json::from_value(value)

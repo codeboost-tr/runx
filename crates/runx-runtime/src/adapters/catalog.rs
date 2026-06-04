@@ -260,10 +260,10 @@ fn manifest_directory(manifest_path: &Path, fallback: &Path) -> PathBuf {
         .unwrap_or_else(|| fallback.to_path_buf())
 }
 
-fn normalize_local_cli_source(source: &mut SkillSource, skill_directory: &Path) {
-    if source.cwd.is_none() {
-        source.cwd = Some(skill_directory.to_string_lossy().into_owned());
-    }
+fn normalize_local_cli_source(_source: &mut SkillSource, _skill_directory: &Path) {
+    // Leave cwd unset: sandbox resolution already defaults cli-tool execution
+    // to the resolved tool directory. Setting cwd to that same relative path
+    // makes the sandbox join it twice.
 }
 
 fn invoke_fixture_tool(

@@ -120,9 +120,6 @@ contract layer:
   Rust-owned schema artifacts.
 - `@runxhq/cli`: npm distribution wrapper and client presentation around the
   native CLI.
-- `@runxhq/core`: private legacy TypeScript helper package retained only for
-  build-only sunset surfaces. It is not a public contract surface and must not
-  regain policy, executor, receipt, or runtime authority.
 - `@runxhq/authoring`, `@runxhq/create-skill`, `@runxhq/host-adapters`, and
   `@runxhq/langchain`: authoring, scaffolding, host presentation, and bridge
   packages over language-neutral contracts.

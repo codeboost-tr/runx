@@ -1,11 +1,15 @@
 mod error;
 mod metadata;
+mod provider_permission;
 mod registry;
 mod types;
 
 pub use error::RuntimeEffectError;
 pub(crate) use metadata::effect_verification_refs;
 pub use metadata::{EFFECT_VERIFICATION_REFS_METADATA, insert_effect_verification_ref};
+pub use provider_permission::{
+    PROVIDER_PERMISSION_EFFECT_FAMILY, ProviderPermissionAdmission, ProviderPermissionEffect,
+};
 pub use registry::RuntimeEffectRegistry;
 pub use types::{
     EffectAdmission, EffectMetadataRefreshRequest, EffectOutputRequest, EffectReceiptRequest,

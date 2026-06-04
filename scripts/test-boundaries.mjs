@@ -51,7 +51,6 @@ try {
 }
 
 function writeMinimalWorkspace(root) {
-  mkdirSync(path.join(root, "packages", "core"), { recursive: true });
   mkdirSync(path.join(root, "plugins"), { recursive: true });
   mkdirSync(path.join(root, "scripts"), { recursive: true });
   mkdirSync(path.join(root, "tests"), { recursive: true });
@@ -65,10 +64,6 @@ function writeMinimalWorkspace(root) {
   writeJson(path.join(root, "package.json"), {
     private: true,
     devDependencies: {},
-  });
-  writeJson(path.join(root, "packages", "core", "package.json"), {
-    name: "@runxhq/core",
-    exports: {},
   });
   writeJson(path.join(root, "tsconfig.base.json"), {
     compilerOptions: {

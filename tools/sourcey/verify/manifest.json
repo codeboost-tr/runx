@@ -10,26 +10,22 @@
     ]
   },
   "inputs": {
-    "output_dir": {
-      "type": "string",
-      "required": true,
-      "description": "Output directory produced by the Sourcey build."
-    },
     "index_path": {
       "type": "string",
       "required": false,
       "description": "Optional index path relative to output_dir. Defaults to index.html."
     },
+    "output_dir": {
+      "type": "string",
+      "required": true,
+      "description": "Output directory produced by the Sourcey build."
+    },
     "sourcey_build_report": {
       "type": "json",
       "required": false,
-      "artifact": true,
-      "description": "Optional Sourcey build report used to carry icon validation results forward."
+      "description": "Optional Sourcey build report used to carry icon validation results forward.",
+      "artifact": true
     }
-  },
-  "output": {
-    "packet": "runx.sourcey.verification.v1",
-    "wrap_as": "sourcey_verification_proof"
   },
   "scopes": [
     "sourcey.verify"
@@ -45,7 +41,11 @@
       "./run.mjs"
     ]
   },
-  "source_hash": "sha256:88c238e93e304a4f30363802a2a9b1ea3211920aade03aeba7d7269445560194",
+  "output": {
+    "packet": "runx.sourcey.verification.v1",
+    "wrap_as": "sourcey_verification_proof"
+  },
+  "source_hash": "sha256:35541582a2d4c8a85513b295f66e4b06aacd92ccda6bc48685d94a21e6a17549",
   "schema_hash": "sha256:2a5ee7012cb4ce1eb5b071c9d5d0ee5dd92733291deff97e8ca475459388c29c",
-  "toolkit_version": "0.2.0"
+  "toolkit_version": "0.1.4"
 }

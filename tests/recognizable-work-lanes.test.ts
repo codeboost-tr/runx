@@ -9,6 +9,12 @@ import { runCli } from "../packages/cli/src/index.js";
 
 const scafldBin = process.env.SCAFLD_BIN ?? "scafld";
 const passingReviewCommand = `printf '{"verdict":"pass","mode":"discover","summary":"fixture clean","findings":[],"attack_log":[{"target":"diff","attack":"fixture","result":"clean"}],"budget":{"actual_attack_angles":1}}'`;
+const fixtureSigningEnv = {
+  RUNX_RECEIPT_SIGN_KID: process.env.RUNX_RECEIPT_SIGN_KID ?? "recognizable-work-lanes-test-key",
+  RUNX_RECEIPT_SIGN_ED25519_SEED_BASE64:
+    process.env.RUNX_RECEIPT_SIGN_ED25519_SEED_BASE64 ?? "QkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkI=",
+  RUNX_RECEIPT_SIGN_ISSUER_TYPE: process.env.RUNX_RECEIPT_SIGN_ISSUER_TYPE ?? "hosted",
+};
 
 describe("recognizable work lanes", () => {
   it("runs issue-intake through the local CLI with a bounded next-lane packet", async () => {
@@ -119,6 +125,8 @@ describe("recognizable work lanes", () => {
           "github://example/repo/issues/101",
           "--operator-context",
           "Prefer the canonical issue-to-pr name in user-facing replies.",
+          "--run-id",
+          "issue-intake-recognizable-work-lane",
           "--answers",
           answersPath,
           "--receipt-dir",
@@ -127,13 +135,13 @@ describe("recognizable work lanes", () => {
           "--json",
         ],
         { stdin: process.stdin, stdout, stderr },
-        { ...process.env, RUNX_CWD: process.cwd() },
+        { ...process.env, ...fixtureSigningEnv, RUNX_CWD: process.cwd() },
       );
 
       expect(exitCode, stderr.contents() || stdout.contents()).toBe(0);
       expect(stderr.contents()).toBe("");
       expect(JSON.parse(stdout.contents())).toMatchObject({
-        status: "success",
+        status: "sealed",
         skill: {
           name: "issue-intake",
         },
@@ -155,7 +163,7 @@ describe("recognizable work lanes", () => {
 
   it.skipIf(!hasScafld())("runs issue-to-pr through the local CLI and packages a draft pull request", async () => {
     const tempDir = await mkdtemp(path.join(os.tmpdir(), "runx-issue-to-pr-cli-"));
-    const runtimeDir = await mkdtemp(path.join(os.tmpdir(), "runx-issue-to-pr-cli-runtime-"));
+    const runtimeDir = path.join(tempDir, ".runx-test-runtime");
     const answersPath = path.join(runtimeDir, "answers.json");
     const receiptDir = path.join(runtimeDir, "receipts");
     const runxHome = path.join(runtimeDir, "home");
@@ -166,6 +174,7 @@ describe("recognizable work lanes", () => {
     const threadLocator = "github://example/repo/issues/123";
 
     try {
+      await mkdir(runtimeDir, { recursive: true });
       await initScafldRepo(tempDir);
       runChecked("git", ["checkout", "-b", taskId], tempDir);
       const thread = {
@@ -212,6 +221,51 @@ describe("recognizable work lanes", () => {
         )}\n`,
       );
 
+      const firstStdout = createMemoryStream();
+      const firstStderr = createMemoryStream();
+      const firstExitCode = await runCli(
+        [
+          "skill",
+          "skills/issue-to-pr",
+          "--fixture",
+          tempDir,
+          "--task-id",
+          taskId,
+          "--thread-title",
+          "Fixture thread-driven change",
+          "--thread-body",
+          "Apply a bounded fixture docs update.",
+          "--thread-locator",
+          threadLocator,
+          "--thread",
+          JSON.stringify(thread),
+          "--target-repo",
+          "fixtures/repo",
+          "--size",
+          "micro",
+          "--risk",
+          "low",
+          "--provider",
+          "command",
+          "--provider-command",
+          passingReviewCommand,
+          "--scafld-bin",
+          scafldBin,
+          "--receipt-dir",
+          receiptDir,
+          "--non-interactive",
+          "--json",
+        ],
+        { stdin: process.stdin, stdout: firstStdout, stderr: firstStderr },
+        { ...process.env, ...fixtureSigningEnv, RUNX_CWD: tempDir, RUNX_HOME: runxHome },
+      );
+      expect(firstExitCode, firstStderr.contents() || firstStdout.contents()).toBe(2);
+      expect(firstStderr.contents()).toBe("");
+      const firstJson = JSON.parse(firstStdout.contents()) as { run_id: string; status: string };
+      expect(firstJson).toMatchObject({
+        status: "needs_agent",
+      });
+
       const exitCode = await runCli(
         [
           "skill",
@@ -240,6 +294,8 @@ describe("recognizable work lanes", () => {
           passingReviewCommand,
           "--scafld-bin",
           scafldBin,
+          "--run-id",
+          firstJson.run_id,
           "--answers",
           answersPath,
           "--receipt-dir",
@@ -248,13 +304,12 @@ describe("recognizable work lanes", () => {
           "--json",
         ],
         { stdin: process.stdin, stdout, stderr },
-        { ...process.env, RUNX_CWD: tempDir, RUNX_HOME: runxHome },
+        { ...process.env, ...fixtureSigningEnv, RUNX_CWD: tempDir, RUNX_HOME: runxHome },
       );
-
       expect(exitCode, stderr.contents() || stdout.contents()).toBe(0);
       expect(stderr.contents()).toBe("");
       expect(JSON.parse(stdout.contents())).toMatchObject({
-        status: "success",
+        status: "sealed",
         skill: {
           name: "issue-to-pr",
         },
@@ -266,7 +321,6 @@ describe("recognizable work lanes", () => {
       await expect(readFile(path.join(tempDir, "notes.md"), "utf8")).resolves.toBe("governed\n");
     } finally {
       await rm(tempDir, { recursive: true, force: true });
-      await rm(runtimeDir, { recursive: true, force: true });
     }
   }, 90_000);
 });
@@ -292,6 +346,7 @@ async function initScafldRepo(repo: string): Promise<void> {
   runChecked("git", ["config", "user.email", "smoke@example.com"], repo);
   runChecked("git", ["config", "user.name", "Smoke Test"], repo);
   runChecked(scafldBin, ["init"], repo);
+  await writeFile(path.join(repo, ".gitignore"), ".runx-test-runtime/\n");
   await writeFile(path.join(repo, "app.txt"), "base\n");
   await writeFile(path.join(repo, "notes.md"), "draft\n");
   runChecked("git", ["add", "."], repo);

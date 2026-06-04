@@ -253,7 +253,7 @@ async function copyCliToolRuntimeTree(sourceRoot, targetRoot) {
         fileName: sourcePath,
       }).outputText;
       await mkdir(path.dirname(targetPath), { recursive: true });
-      await writeFile(targetPath.replace(/\.ts$/, ".js"), transpiled, "utf8");
+      await writeFile(targetPath.replace(/\.ts$/, ".js"), rewriteRelativeTsImports(transpiled), "utf8");
       continue;
     }
 
@@ -438,6 +438,12 @@ function isErrorCode(error, code) {
 
 function errorMessage(value) {
   return value instanceof Error ? value.message : String(value);
+}
+
+function rewriteRelativeTsImports(source) {
+  return source
+    .replace(/\bfrom\s+(["'])(\.{1,2}\/[^"']+)\.ts\1/gu, "from $1$2.js$1")
+    .replace(/\bimport\(\s*(["'])(\.{1,2}\/[^"']+)\.ts\1\s*\)/gu, "import($1$2.js$1)");
 }
 
 function toPosix(value) {

@@ -25,6 +25,7 @@ import {
 
 const externalAdapterConformanceRoot = path.join(process.cwd(), "fixtures", "external-adapter-conformance");
 const externalAdapterInvocationPath = path.join(externalAdapterConformanceRoot, "invocation.json");
+const tsxBin = path.join(process.cwd(), "node_modules", ".bin", process.platform === "win32" ? "tsx.cmd" : "tsx");
 
 describe("@runxhq/authoring", () => {
   it("defines packets as durable schema objects", () => {
@@ -218,12 +219,8 @@ describe("@runxhq/authoring", () => {
     const adapters = [
       {
         language: "typescript",
-        command: "pnpm",
-        args: [
-          "exec",
-          "tsx",
-          path.join(externalAdapterConformanceRoot, "typescript_echo_adapter.ts"),
-        ],
+        command: tsxBin,
+        args: [path.join(externalAdapterConformanceRoot, "typescript_echo_adapter.ts")],
       },
       {
         language: "python",

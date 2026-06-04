@@ -1,32 +1,16 @@
 skill: overspend-refused
-version: "0.1.0"
-
+version: 0.1.0
 catalog:
   kind: graph
   audience: operator
   visibility: public
-
-# Deny-before-rail demo (the jaw-drop case).
-#
-# This is the x402-pay graph (quote -> reserve -> approve -> fulfill), unchanged
-# except for ONE number: the reserved child authority is capped at 100 minor
-# (1.00) per call, while a prompt-injected agent tries to fulfill a 125-minor
-# (1.25) spend. The reserve step grants the bounded child authority; the fulfill
-# step's payment-rail admission recomputes the binding against that child cap,
-# sees 125 > 100, and blocks the graph BEFORE the x402 rail is ever called.
-#
-# The seeded pay-fulfill-rail.output below is what the compromised agent WANTS
-# to happen (a fulfilled 125 spend). Admission never lets it run; the graph is
-# blocked at the rail gate. runx holds no wallet or spend credential and calls
-# no rail.
-
 harness:
   cases:
     - name: overspend-refused
       runner: x402
       inputs:
         payment_signal:
-          signal_type: payment_required
+          signal_type: effect_required
           challenge_id: ch_x402_001
           amount_minor: 125
           currency: USD
@@ -57,17 +41,18 @@ harness:
               resource_ref:
                 type: surface
                 uri: merchant:demo
-              resource_family: payment
+              resource_family: effect
               verbs:
-                - reserve
-                - spend
+                - prepare
+                - commit
               bounds:
-                payment:
-                  currency: USD
-                  max_per_call_minor: 125
-                  rails:
-                    - x402
-                  realm: test
+                effect_limits:
+                  - family: payment
+                    unit: USD
+                    max_per_call_units: 125
+                    channels:
+                      - x402
+                    realm: test
               conditions: []
               approvals: []
               capabilities: []
@@ -105,29 +90,30 @@ harness:
                 resource_ref:
                   type: surface
                   uri: merchant:demo
-                resource_family: payment
+                resource_family: effect
                 verbs:
-                  - reserve
-                  - spend
+                  - prepare
+                  - commit
                 bounds:
-                  payment:
-                    currency: USD
-                    max_per_call_minor: 125
-                    max_per_run_minor: 125
-                    rails:
-                      - x402
-                    realm: test
-                    counterparty: merchant:demo
-                    operation: search.paid
-                    idempotency_required: true
-                    recovery_required: true
-                    receipt_before_success: true
-                    single_use_spend: true
-                    credential_form: single_use_spend_capability
+                  effect_limits:
+                    - family: payment
+                      unit: USD
+                      max_per_call_units: 125
+                      max_per_run_units: 125
+                      channels:
+                        - x402
+                      realm: test
+                      peer: merchant:demo
+                      operation: search.paid
+                      idempotency_required: true
+                      recovery_required: true
+                      receipt_before_success: true
+                      single_use_capability: true
+                      authorization_form: single_use_capability
                 conditions: []
                 approvals: []
                 capabilities:
-                  - payment_single_use_spend
+                  - effect_single_use_capability
                 issued_by_ref:
                   type: host
                   uri: authority:payment:test
@@ -139,26 +125,27 @@ harness:
                 resource_ref:
                   type: surface
                   uri: merchant:demo
-                resource_family: payment
+                resource_family: effect
                 verbs:
-                  - spend
+                  - commit
                 capabilities:
-                  - payment_single_use_spend
+                  - effect_single_use_capability
                 bounds:
-                  payment:
-                    currency: USD
-                    max_per_call_minor: 100
-                    max_per_run_minor: 100
-                    rails:
-                      - x402
-                    realm: test
-                    counterparty: merchant:demo
-                    operation: search.paid
-                    idempotency_required: true
-                    recovery_required: true
-                    receipt_before_success: true
-                    single_use_spend: true
-                    credential_form: single_use_spend_capability
+                  effect_limits:
+                    - family: payment
+                      unit: USD
+                      max_per_call_units: 100
+                      max_per_run_units: 100
+                      channels:
+                        - x402
+                      realm: test
+                      peer: merchant:demo
+                      operation: search.paid
+                      idempotency_required: true
+                      recovery_required: true
+                      receipt_before_success: true
+                      single_use_capability: true
+                      authorization_form: single_use_capability
                 conditions: []
                 approvals: []
                 issued_by_ref:
@@ -195,7 +182,7 @@ harness:
                   - child_term_id: authority-term:payment:reserve-demo-001
                     parent_term_id: authority-term:payment:quote-demo-001
                     relation: subset
-                checked_at: "2026-05-22T00:00:00Z"
+                checked_at: 2026-05-22T00:00:00Z
               child_harness_ref:
                 type: harness
                 uri: runx:harness:overspend-refused_fulfill
@@ -242,14 +229,8 @@ harness:
               status: sealed
         approvals:
           overspend-refused.spend.approval: true
-      # The graph reaches the fulfill rail gate, where runx's payment-rail
-      # admission recomputes the spend binding (125) against the reserved child
-      # cap (100), refuses, and blocks the graph before the x402 rail runs. The
-      # harness reports this block; run.sh translates the non-zero exit into the
-      # "refused before rail" outcome that is the entire point of the demo.
       expect:
         status: policy_denied
-
 runners:
   x402:
     default: true
@@ -258,31 +239,31 @@ runners:
       payment_signal:
         type: object
         required: true
-        description: "Payment-required signal or challenge."
+        description: Payment-required signal or challenge.
       parent_payment_authority:
         type: object
         required: true
-        description: "Parent payment authority term or authority reference."
+        description: Parent payment authority term or authority reference.
       rail_profile_ref:
         type: string
         required: true
-        description: "Configured rail profile reference."
+        description: Configured rail profile reference.
       realm:
         type: string
         required: false
-        description: "Authority realm."
+        description: Authority realm.
       spend_policy:
         type: object
         required: false
-        description: "Policy limits and approval thresholds."
+        description: Policy limits and approval thresholds.
       approval_context:
         type: object
         required: false
-        description: "Prior approval evidence."
+        description: Prior approval evidence.
       idempotency_seed:
         type: string
         required: false
-        description: "Stable idempotency material."
+        description: Stable idempotency material.
     graph:
       name: overspend-refused
       steps:
@@ -343,8 +324,8 @@ runners:
             idempotency: reserve.payment_reservation_packet.data.idempotency
             quote_packet: quote.payment_quote_packet.data
           artifacts:
-            wrap_as: payment_rail_packet
-            packet: runx.payment.rail.v1
+            wrap_as: effect_evidence_packet
+            packet: runx.effect.evidence.v1
       policy:
         transitions:
           - to: fulfill

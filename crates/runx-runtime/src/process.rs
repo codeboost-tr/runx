@@ -198,7 +198,7 @@ fn spawn_process(spec: &ProcessSpec) -> Result<Child, ProcessSupervisorError> {
     configure_process_group(&mut command);
     command
         .spawn()
-        .map_err(|source| ProcessSupervisorError::io(spawn_context(spec.label), source))
+        .map_err(|source| ProcessSupervisorError::io(spawn_context(spec), source))
 }
 
 fn write_stdin(
@@ -280,8 +280,16 @@ fn duration_ms(started: Instant) -> u64 {
     u64::try_from(started.elapsed().as_millis()).unwrap_or(u64::MAX)
 }
 
-fn spawn_context(label: &str) -> String {
-    format!("spawning {label} process")
+fn spawn_context(spec: &ProcessSpec) -> String {
+    match spec.cwd.as_ref() {
+        Some(cwd) => format!(
+            "spawning {} process `{}` in {}",
+            spec.label,
+            spec.command,
+            cwd.display()
+        ),
+        None => format!("spawning {} process `{}`", spec.label, spec.command),
+    }
 }
 
 fn open_pipe_context(label: &str, stream: &str) -> String {

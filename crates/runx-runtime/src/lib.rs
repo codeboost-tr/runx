@@ -35,13 +35,11 @@ mod lifecycle;
 pub mod list;
 pub mod outbox_provider;
 pub mod parser_eval;
-pub mod post_merge_observer;
 #[cfg(any(feature = "cli-tool", feature = "external-adapter"))]
 mod process;
 mod process_signal;
 pub mod receipts;
 pub mod redaction;
-mod reference_match;
 pub mod registry;
 mod runtime_fs;
 mod runtime_http;
@@ -55,7 +53,6 @@ pub use execution::harness;
 pub use execution::orchestrator;
 pub use execution::runner;
 pub use execution::skill_run;
-pub use execution::target_runner;
 
 #[cfg(any(
     feature = "cli-tool",
@@ -94,6 +91,7 @@ pub use doctor::{DoctorOptions, default_doctor_options, run_doctor};
 pub use effects::{
     EffectAdmission, EffectMetadataRefreshRequest, EffectOutputRequest, EffectReceiptRequest,
     EffectReplay, EffectReplayOutputRequest, EffectReplayReceiptRequest, EffectStepRequest,
+    PROVIDER_PERMISSION_EFFECT_FAMILY, ProviderPermissionAdmission, ProviderPermissionEffect,
     RuntimeEffect, RuntimeEffectError, RuntimeEffectRegistry, insert_effect_verification_ref,
 };
 pub use error::RuntimeError;

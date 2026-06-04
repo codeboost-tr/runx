@@ -173,11 +173,6 @@ const CONTRACT_FIXTURE_SCHEMA_MAPPINGS: &[FixtureSchemaMapping] = &[
         "receipt.schema.json",
     ),
     FixtureSchemaMapping::new(
-        "fixtures/contracts/harness-spine/post-merge-observer-merged-verified.json",
-        "/expected",
-        "receipt.schema.json",
-    ),
-    FixtureSchemaMapping::new(
         "fixtures/contracts/harness-spine/signal-fingerprint-links.json",
         "/expected",
         "signal.schema.json",

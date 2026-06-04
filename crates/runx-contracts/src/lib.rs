@@ -30,7 +30,6 @@ pub mod operational_proposal;
 pub mod output;
 pub mod packet_index;
 pub mod policy_proof;
-pub mod post_merge_observer;
 pub mod receipt;
 pub mod receipts;
 pub mod redaction;
@@ -44,7 +43,6 @@ pub mod schema_artifacts;
 pub mod signal;
 pub mod source_packet;
 pub mod suppression;
-pub mod target_runner;
 pub mod thread_outbox_provider;
 pub mod tools;
 pub mod verification;
@@ -77,10 +75,10 @@ pub use aster::{
 };
 pub use authority::{
     Authority, AuthorityApproval, AuthorityAttenuation, AuthorityBounds, AuthorityCapability,
-    AuthorityCondition, AuthorityConditionPredicate, AuthorityEffectGuard,
-    AuthorityEffectGuardKind, AuthorityResourceFamily, AuthoritySchema, AuthoritySubsetComparison,
-    AuthoritySubsetProof, AuthoritySubsetRelation, AuthoritySubsetResult, AuthorityTerm,
-    AuthorityVerb, PaymentAuthorityBounds, PaymentCredentialForm,
+    AuthorityCondition, AuthorityConditionPredicate, AuthorityEffectCredentialForm,
+    AuthorityEffectGuard, AuthorityEffectGuardKind, AuthorityEffectLimit, AuthorityResourceFamily,
+    AuthoritySchema, AuthoritySubsetComparison, AuthoritySubsetProof, AuthoritySubsetRelation,
+    AuthoritySubsetResult, AuthorityTerm, AuthorityVerb,
 };
 pub use credential_delivery::{
     CredentialDeliveryEnvBinding, CredentialDeliveryHandle, CredentialDeliveryMode,
@@ -182,20 +180,9 @@ pub use policy_proof::{
     AuthorityProofSchemaVersion, CredentialEnvelope, CredentialEnvelopeKind,
     CredentialGrantReference, ScopeAdmission, ScopeAdmissionStatus,
 };
-pub use post_merge_observer::{
-    PostMergeObserverClosureState, PostMergeObserverCriterionPlan,
-    PostMergeObserverIdempotencyPlan, PostMergeObserverPlan, PostMergeObserverPlanError,
-    PostMergeObserverPlanRequest, PostMergeObserverProviderPlan, PostMergeObserverPublicationPlan,
-    PostMergeObserverPublicationProjection, PostMergeObserverRuntimeDecision,
-    PostMergeObserverRuntimeDedupePlan, PostMergeObserverSignalSource,
-    PostMergeObserverSourceIssuePlan, PostMergePullRequestObservation, PostMergePullRequestState,
-    PostMergeSourceIssueDisposition, PostMergeVerificationObservation, PostMergeVerificationStatus,
-    plan_post_merge_observer_closure, plan_post_merge_observer_runtime_dedupe, post_merge_provider,
-    project_post_merge_observer_publication_from_receipt,
-};
 pub use receipt::{
-    EFFECT_SETTLEMENT_RECEIPT_SCHEMA, EffectSettlementPhase, EffectSettlementReceipt,
-    EffectSettlementReceiptSchema, FanoutReceiptDecision, FanoutReceiptStrategy,
+    EFFECT_FINALITY_RECEIPT_SCHEMA, EffectFinalityPhase, EffectFinalityReceipt,
+    EffectFinalityReceiptSchema, FanoutReceiptDecision, FanoutReceiptStrategy,
     FanoutReceiptSyncPoint, Lineage, RECEIPT_CANONICALIZATION, RECEIPT_SCHEMA, Receipt, ReceiptAct,
     ReceiptAuthority, ReceiptCommitment, ReceiptCommitmentScope, ReceiptEnforcement,
     ReceiptIdempotency, ReceiptInputContext, ReceiptIssuer, ReceiptIssuerType, ReceiptSchema,
@@ -216,23 +203,6 @@ pub use signal::{
 };
 pub use source_packet::{SOURCE_PACKET_SCHEMA, SourcePacket, SourcePacketSchema};
 pub use suppression::{SuppressionRecord, SuppressionRecordSchema, SuppressionScope};
-pub use target_runner::{
-    TargetRepoRunnerCheckoutPlan, TargetRepoRunnerDedupeComponent,
-    TargetRepoRunnerDedupeLookupExecution, TargetRepoRunnerDedupeLookupObservation,
-    TargetRepoRunnerDedupeLookupPlan, TargetRepoRunnerDedupeLookupQuery,
-    TargetRepoRunnerDedupePlan, TargetRepoRunnerDedupeResult, TargetRepoRunnerExecutionPlan,
-    TargetRepoRunnerExistingPullRequest, TargetRepoRunnerOwnerPlan, TargetRepoRunnerPlan,
-    TargetRepoRunnerPlanError, TargetRepoRunnerPlanRequest, TargetRepoRunnerProvider,
-    TargetRepoRunnerProviderPullRequest, TargetRepoRunnerPullRequestDisposition,
-    TargetRepoRunnerPullRequestReceiptPlan, TargetRepoRunnerReadinessObservation,
-    TargetRepoRunnerReadinessPlan, TargetRepoRunnerRunnerPlan, TargetRepoRunnerSourceContext,
-    TargetRepoRunnerSourcePlan, TargetRepoRunnerSourcePublicationReceiptPlan,
-    TargetRepoRunnerSourceThreadPlan, TargetRepoRunnerTargetPlan,
-    apply_target_repo_runner_dedupe_lookup_execution, execute_target_repo_runner_dedupe_lookup,
-    plan_target_repo_runner, plan_target_repo_runner_dedupe_lookup,
-    plan_target_repo_runner_execution, plan_target_repo_runner_pull_request_receipt,
-    plan_target_repo_runner_source_publication_receipt,
-};
 pub use thread_outbox_provider::{
     THREAD_OUTBOX_PROVIDER_PROTOCOL_VERSION, ThreadOutboxProviderCredentialNeed,
     ThreadOutboxProviderCredentialProfile, ThreadOutboxProviderError, ThreadOutboxProviderFetch,

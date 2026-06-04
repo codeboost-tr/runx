@@ -16,10 +16,6 @@
       "description": "Repository root to inspect. Defaults to RUNX_CWD or the current working directory."
     }
   },
-  "output": {
-    "packet": "runx.git.status.v1",
-    "wrap_as": "git_status"
-  },
   "scopes": [
     "git.read"
   ],
@@ -34,7 +30,11 @@
       "./run.mjs"
     ]
   },
-  "source_hash": "sha256:bed28e56b0139616103a784b88d8e4a45890da397d816144acf369886c04d332",
+  "output": {
+    "packet": "runx.git.status.v1",
+    "wrap_as": "git_status"
+  },
+  "source_hash": "sha256:71ebe8dd92a56bb147b4cd9c4509599b668215b015af6ba33691836e94e8e6dd",
   "schema_hash": "sha256:cd14e7436d3ad182bc10449798337a7c33aed44ae3e426043113c4343e893b79",
-  "toolkit_version": "0.2.0"
+  "toolkit_version": "0.1.4"
 }

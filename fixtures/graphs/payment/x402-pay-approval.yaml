@@ -25,32 +25,33 @@ steps:
           resource_ref:
             type: grant
             uri: runx:payment-grant:checkout
-          resource_family: payment
+          resource_family: effect
           verbs:
-            - quote
-            - reserve
-            - spend
+            - estimate
+            - prepare
+            - commit
             - verify
           bounds:
-            payment:
-              currency: USD
-              max_per_call_minor: 10000
-              max_per_run_minor: 25000
-              rails:
-                - mock
-                - card
-              counterparty: merchant-123
-              operation: checkout
-              credential_form: single_use_spend_capability
-              quote_required: true
-              reservation_required: true
-              idempotency_required: true
-              recovery_required: true
-              receipt_before_success: true
-              single_use_spend: true
+            effect_limits:
+              - family: payment
+                unit: USD
+                max_per_call_units: 10000
+                max_per_run_units: 25000
+                channels:
+                  - mock
+                  - card
+                peer: merchant-123
+                operation: checkout
+                authorization_form: single_use_capability
+                preflight_required: true
+                commitment_required: true
+                idempotency_required: true
+                recovery_required: true
+                receipt_before_success: true
+                single_use_capability: true
           capabilities:
-            - payment_single_use_spend
-          expires_at: "2026-05-21T00:00:00Z"
+            - effect_single_use_capability
+          expires_at: 2026-05-21T00:00:00Z
           issued_by_ref:
             type: grant
             uri: runx:grant:issuer
@@ -65,30 +66,31 @@ steps:
           resource_ref:
             type: grant
             uri: runx:payment-grant:checkout
-          resource_family: payment
+          resource_family: effect
           verbs:
-            - reserve
-            - spend
+            - prepare
+            - commit
           bounds:
-            payment:
-              currency: USD
-              max_per_call_minor: 2500
-              max_per_run_minor: 25000
-              rails:
-                - mock
-                - card
-              counterparty: merchant-123
-              operation: checkout
-              credential_form: single_use_spend_capability
-              quote_required: true
-              reservation_required: true
-              idempotency_required: true
-              recovery_required: true
-              receipt_before_success: true
-              single_use_spend: true
+            effect_limits:
+              - family: payment
+                unit: USD
+                max_per_call_units: 2500
+                max_per_run_units: 25000
+                channels:
+                  - mock
+                  - card
+                peer: merchant-123
+                operation: checkout
+                authorization_form: single_use_capability
+                preflight_required: true
+                commitment_required: true
+                idempotency_required: true
+                recovery_required: true
+                receipt_before_success: true
+                single_use_capability: true
           capabilities:
-            - payment_single_use_spend
-          expires_at: "2026-05-21T00:00:00Z"
+            - effect_single_use_capability
+          expires_at: 2026-05-21T00:00:00Z
           issued_by_ref:
             type: grant
             uri: runx:grant:issuer
@@ -126,7 +128,7 @@ steps:
             - child_term_id: child
               parent_term_id: parent
               relation: subset
-          checked_at: "2026-05-22T00:00:00Z"
+          checked_at: 2026-05-22T00:00:00Z
         child_harness_ref:
           type: harness
           uri: runx:harness:x402-pay-approval_fulfill

@@ -277,7 +277,7 @@ fn select_request_runner<'a>(
             && !target.runner_ids.iter().any(|id| id == runner_id)
         {
             findings.push(finding(
-                "target_runner_not_allowed",
+                "runner_not_allowed_for_target",
                 "/request/runner_id",
                 &format!(
                     "target '{}' does not allow runner '{}'.",

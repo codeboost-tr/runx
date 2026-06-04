@@ -5,7 +5,7 @@ use std::path::{Path, PathBuf};
 use std::rc::Rc;
 
 use runx_contracts::{
-    AuthorityVerb, ExecutionEvent, JsonObject, JsonValue, ProofKind, ResolutionRequest,
+    AuthorityVerb, ExecutionEvent, JsonNumber, JsonObject, JsonValue, ProofKind, ResolutionRequest,
     ResolutionResponse, ResolutionResponseActor,
 };
 use runx_core::state_machine::GraphStatus;
@@ -15,10 +15,13 @@ use runx_pay::state::{
     RUNX_EFFECT_STATE_PATH_ENV,
 };
 use runx_pay::supervisor::{
-    PAYMENT_RAIL_SUPERVISOR_VERIFIER_ID, PaymentSupervisorError,
-    PaymentSupervisorSettlementEvidence, PaymentSupervisorSettlementRequest,
+    PAYMENT_RAIL_SUPERVISOR_VERIFIER_ID, PaymentSupervisorSettlementEvidence,
+    payment_finality_supervisor_evidence_payload,
 };
-use runx_pay::{EffectSupervisor, PaymentRuntimeEffect};
+use runx_pay::{
+    PaymentFinalitySupervisor, PaymentFinalitySupervisorError, PaymentFinalitySupervisorEvidence,
+    PaymentFinalitySupervisorRequest, PaymentRuntimeEffect,
+};
 use runx_receipts::ReceiptTreeConfig;
 use runx_runtime::effects::RuntimeEffectRegistry;
 use runx_runtime::{
@@ -166,7 +169,7 @@ fn payment_graph_seals_with_strict_parent_child_receipt_proof()
             .iter()
             .flat_map(|criterion| criterion.verification_refs.iter())
             .any(|reference| reference.uri == X402_APPROVAL_PROOF_REF
-                && reference.proof_kind.as_ref() == Some(&ProofKind::PaymentRail)),
+                && reference.proof_kind.as_ref() == Some(&ProofKind::EffectEvidence)),
         "payment fulfillment act must carry the rail proof reference into the sealed receipt"
     );
     Ok(())
@@ -190,7 +193,7 @@ fn payment_spend_success_without_runtime_supervisor_is_denied_before_graph_succe
             step_id,
             reason,
         }) => {
-            assert_eq!(verb, AuthorityVerb::Spend);
+            assert_eq!(verb, AuthorityVerb::Commit);
             assert_eq!(step_id, "fulfill");
             assert!(
                 reason.contains("supervisor-verified rail proof")
@@ -230,7 +233,7 @@ fn payment_spend_success_without_rail_proof_is_denied_before_graph_success()
             step_id,
             reason,
         }) => {
-            assert_eq!(verb, AuthorityVerb::Spend);
+            assert_eq!(verb, AuthorityVerb::Commit);
             assert_eq!(step_id, "fulfill");
             assert!(
                 reason.contains("rail proof"),
@@ -277,7 +280,7 @@ fn payment_spend_authority_is_detected_from_reserved_authority_not_scope_string(
             step_id,
             reason,
         }) => {
-            assert_eq!(verb, AuthorityVerb::Spend);
+            assert_eq!(verb, AuthorityVerb::Commit);
             assert_eq!(step_id, "fulfill");
             assert!(
                 reason.contains("rail proof"),
@@ -396,7 +399,7 @@ fn x402_paid_echo_returns_echo_only_after_sealed_payment_proof()
             .flat_map(|criterion| criterion.verification_refs.iter())
             .any(
                 |reference| reference.uri == "receipt-proof:mock:paid-echo-001"
-                    && reference.proof_kind.as_ref() == Some(&ProofKind::PaymentRail)
+                    && reference.proof_kind.as_ref() == Some(&ProofKind::EffectEvidence)
             ),
         "rail fulfillment must seal a typed payment rail proof before echo"
     );
@@ -572,7 +575,7 @@ fn x402_paid_echo_replay_with_mismatched_amount_denies_before_second_rail()
             step_id,
             reason,
         }) => {
-            assert_eq!(verb, AuthorityVerb::Spend);
+            assert_eq!(verb, AuthorityVerb::Commit);
             assert_eq!(step_id, "fulfill");
             assert!(
                 reason.contains("was sealed for 125 USD") && reason.contains("requested 250 USD"),
@@ -646,7 +649,7 @@ fn x402_paid_echo_reused_spend_capability_with_new_idempotency_denied_from_persi
             step_id,
             reason,
         }) => {
-            assert_eq!(verb, AuthorityVerb::Spend);
+            assert_eq!(verb, AuthorityVerb::Commit);
             assert_eq!(step_id, "fulfill");
             assert!(
                 reason.contains("already consumed"),
@@ -726,10 +729,10 @@ fn x402_paid_echo_run_cap_exhaustion_is_governed_denial_before_second_rail()
             step_id,
             reason,
         }) => {
-            assert_eq!(verb, AuthorityVerb::Spend);
+            assert_eq!(verb, AuthorityVerb::Commit);
             assert_eq!(step_id, "fulfill");
             assert!(
-                reason.contains("max_per_run_minor")
+                reason.contains("max_per_run_units")
                     && reason.contains("attempted 250")
                     && reason.contains("max 200"),
                 "run cap denial should be a governed authority refusal, got: {reason}"
@@ -821,7 +824,7 @@ fn x402_paid_echo_partial_mutation_escalates_without_second_rail()
             step_id,
             reason,
         }) => {
-            assert_eq!(verb, AuthorityVerb::Spend);
+            assert_eq!(verb, AuthorityVerb::Commit);
             assert_eq!(step_id, "fulfill");
             assert!(
                 reason.contains("recovery escalated"),
@@ -925,7 +928,7 @@ fn x402_paid_echo_missing_rail_proof_never_invokes_echo() -> Result<(), Box<dyn 
             step_id,
             reason,
         }) => {
-            assert_eq!(verb, AuthorityVerb::Spend);
+            assert_eq!(verb, AuthorityVerb::Commit);
             assert_eq!(step_id, "fulfill");
             assert!(
                 reason.contains("rail proof"),
@@ -974,7 +977,7 @@ fn assert_payment_admission_denied_before_adapter(
             step_id,
             reason,
         }) => {
-            assert_eq!(verb, AuthorityVerb::Spend);
+            assert_eq!(verb, AuthorityVerb::Commit);
             assert_eq!(step_id, "fulfill");
             assert!(
                 reason.contains(expected_reason_fragment),
@@ -1015,17 +1018,17 @@ fn runtime_options_with_effects(
 }
 
 fn runtime_effects(evidence: Vec<PaymentSupervisorSettlementEvidence>) -> RuntimeEffectRegistry {
-    RuntimeEffectRegistry::with_effect(PaymentRuntimeEffect::new(ExpectedEffectSupervisor::new(
-        evidence,
-    )))
+    RuntimeEffectRegistry::with_effect(PaymentRuntimeEffect::new(
+        ExpectedPaymentFinalitySupervisor::new(evidence),
+    ))
 }
 
 #[derive(Clone, Debug)]
-struct ExpectedEffectSupervisor {
+struct ExpectedPaymentFinalitySupervisor {
     evidence_by_proof_ref: BTreeMap<String, PaymentSupervisorSettlementEvidence>,
 }
 
-impl ExpectedEffectSupervisor {
+impl ExpectedPaymentFinalitySupervisor {
     fn new(evidence: Vec<PaymentSupervisorSettlementEvidence>) -> Self {
         Self {
             evidence_by_proof_ref: evidence
@@ -1036,31 +1039,66 @@ impl ExpectedEffectSupervisor {
     }
 }
 
-impl EffectSupervisor for ExpectedEffectSupervisor {
-    fn settlement_evidence(
+impl PaymentFinalitySupervisor for ExpectedPaymentFinalitySupervisor {
+    fn supervise(
         &self,
-        request: PaymentSupervisorSettlementRequest<'_>,
-    ) -> Result<PaymentSupervisorSettlementEvidence, PaymentSupervisorError> {
+        request: PaymentFinalitySupervisorRequest<'_>,
+    ) -> Result<PaymentFinalitySupervisorEvidence, PaymentFinalitySupervisorError> {
+        let proof_ref = supervisor_payload_string(&request, "proof_ref")?;
+        let rail = supervisor_payload_string(&request, "rail")?;
+        let counterparty = supervisor_payload_string(&request, "counterparty")?;
+        let amount_minor = supervisor_payload_u64(&request, "amount_minor")?;
+        let currency = supervisor_payload_string(&request, "currency")?;
+        let idempotency_key = supervisor_payload_string(&request, "idempotency_key")?;
         let evidence = self
             .evidence_by_proof_ref
-            .get(request.proof_ref)
+            .get(proof_ref)
             .cloned()
-            .ok_or_else(|| PaymentSupervisorError::InvalidSupervisorEvidence {
-                message: format!(
-                    "no supervisor settlement for proof ref {}",
-                    request.proof_ref
-                ),
+            .ok_or_else(|| PaymentFinalitySupervisorError::InvalidEvidence {
+                message: format!("no supervisor settlement for proof ref {proof_ref}"),
             })?;
-        expect_supervisor_field("rail", request.rail, &evidence.rail)?;
-        expect_supervisor_field("counterparty", request.counterparty, &evidence.counterparty)?;
-        expect_supervisor_u64("amount_minor", request.amount_minor, evidence.amount_minor)?;
-        expect_supervisor_field("currency", request.currency, &evidence.currency)?;
+        expect_supervisor_field("rail", rail, &evidence.rail)?;
+        expect_supervisor_field("counterparty", counterparty, &evidence.counterparty)?;
+        expect_supervisor_u64("amount_minor", amount_minor, evidence.amount_minor)?;
+        expect_supervisor_field("currency", currency, &evidence.currency)?;
         expect_supervisor_field(
             "idempotency_key",
-            request.idempotency_key,
+            idempotency_key,
             &evidence.idempotency_key,
         )?;
-        Ok(evidence)
+        Ok(PaymentFinalitySupervisorEvidence::new(
+            request.family,
+            payment_finality_supervisor_evidence_payload(&evidence),
+        ))
+    }
+}
+
+fn supervisor_payload_string<'a>(
+    request: &'a PaymentFinalitySupervisorRequest<'_>,
+    field: &'static str,
+) -> Result<&'a str, PaymentFinalitySupervisorError> {
+    match request.payload.get(field) {
+        Some(JsonValue::String(value)) => Ok(value),
+        _ => Err(PaymentFinalitySupervisorError::InvalidEvidence {
+            message: format!("missing or invalid supervisor payload field {field}"),
+        }),
+    }
+}
+
+fn supervisor_payload_u64(
+    request: &PaymentFinalitySupervisorRequest<'_>,
+    field: &'static str,
+) -> Result<u64, PaymentFinalitySupervisorError> {
+    match request.payload.get(field) {
+        Some(JsonValue::Number(JsonNumber::U64(value))) => Ok(*value),
+        Some(JsonValue::Number(JsonNumber::I64(value))) => {
+            u64::try_from(*value).map_err(|_| PaymentFinalitySupervisorError::InvalidEvidence {
+                message: format!("supervisor payload field {field} must be unsigned"),
+            })
+        }
+        _ => Err(PaymentFinalitySupervisorError::InvalidEvidence {
+            message: format!("missing or invalid supervisor payload field {field}"),
+        }),
     }
 }
 
@@ -1068,11 +1106,11 @@ fn expect_supervisor_field(
     field: &'static str,
     expected: &str,
     actual: &str,
-) -> Result<(), PaymentSupervisorError> {
+) -> Result<(), PaymentFinalitySupervisorError> {
     if expected == actual {
         Ok(())
     } else {
-        Err(PaymentSupervisorError::FieldMismatch {
+        Err(PaymentFinalitySupervisorError::FieldMismatch {
             field,
             expected: expected.to_owned(),
             actual: actual.to_owned(),
@@ -1084,11 +1122,11 @@ fn expect_supervisor_u64(
     field: &'static str,
     expected: u64,
     actual: u64,
-) -> Result<(), PaymentSupervisorError> {
+) -> Result<(), PaymentFinalitySupervisorError> {
     if expected == actual {
         Ok(())
     } else {
-        Err(PaymentSupervisorError::FieldMismatch {
+        Err(PaymentFinalitySupervisorError::FieldMismatch {
             field,
             expected: expected.to_string(),
             actual: actual.to_string(),
@@ -1136,8 +1174,6 @@ fn payment_supervisor_evidence(
         idempotency_key: idempotency_key.to_owned(),
         settlement_status: Some("fulfilled".to_owned()),
         provider_event_ref: Some(format!("provider:event:{idempotency_key}")),
-        shared_payment_token_ref: None,
-        admission_token_digest: None,
     }
 }
 
@@ -1149,7 +1185,7 @@ struct RecordingAdapter {
 impl Default for RecordingAdapter {
     fn default() -> Self {
         Self::with_stdout(
-            r#"{"payment_rail_packet":{"data":{"rail_result":{"status":"fulfilled","rail":"mock","amount_minor":125,"currency":"USD"},"rail_proof":{"proof_ref":"receipt-proof:mock:x402-pay-approval-001","idempotency_key":"payment:x402-pay-approval-001"},"credential_envelope":{"form":"paid_tool_credential","credential_ref":"credential:mock:x402-pay-approval-001"}}}}"#,
+            r#"{"effect_evidence_packet":{"data":{"rail_result":{"status":"fulfilled","rail":"mock","amount_minor":125,"currency":"USD"},"rail_proof":{"proof_ref":"receipt-proof:mock:x402-pay-approval-001","idempotency_key":"payment:x402-pay-approval-001"},"credential_envelope":{"form":"paid_tool_credential","credential_ref":"credential:mock:x402-pay-approval-001"}}}}"#,
         )
     }
 }
@@ -1157,7 +1193,7 @@ impl Default for RecordingAdapter {
 impl RecordingAdapter {
     fn without_rail_proof() -> Self {
         Self::with_stdout(
-            r#"{"payment_rail_packet":{"data":{"rail_result":{"status":"fulfilled","rail":"mock","amount_minor":125,"currency":"USD"},"credential_envelope":{"form":"paid_tool_credential","credential_ref":"credential:mock:x402-pay-approval-001"}}}}"#,
+            r#"{"effect_evidence_packet":{"data":{"rail_result":{"status":"fulfilled","rail":"mock","amount_minor":125,"currency":"USD"},"credential_envelope":{"form":"paid_tool_credential","credential_ref":"credential:mock:x402-pay-approval-001"}}}}"#,
         )
     }
 
@@ -1213,7 +1249,7 @@ struct PaidEchoAdapter {
     current_amount_minor: Rc<RefCell<u64>>,
     spend_capability_refs: Rc<RefCell<VecDeque<String>>>,
     current_spend_capability_ref: Rc<RefCell<String>>,
-    max_per_run_minor: u64,
+    max_per_run_units: u64,
 }
 
 impl PaidEchoAdapter {
@@ -1240,14 +1276,14 @@ impl PaidEchoAdapter {
         rail_proof: PaidEchoRailProof,
         idempotency_keys: [&str; K],
         amount_minor_by_run: [u64; A],
-        max_per_run_minor: u64,
+        max_per_run_units: u64,
     ) -> Self {
         Self::with_run_cap_and_spend_capability_refs(
             rail_proof,
             idempotency_keys,
             amount_minor_by_run,
             ["runx:payment-capability:paid-echo-spend-1"],
-            max_per_run_minor,
+            max_per_run_units,
         )
     }
 
@@ -1256,7 +1292,7 @@ impl PaidEchoAdapter {
         idempotency_keys: [&str; K],
         amount_minor_by_run: [u64; A],
         spend_capability_refs: [&str; C],
-        max_per_run_minor: u64,
+        max_per_run_units: u64,
     ) -> Self {
         Self {
             invocations: Rc::new(RefCell::new(Vec::new())),
@@ -1273,7 +1309,7 @@ impl PaidEchoAdapter {
             current_spend_capability_ref: Rc::new(RefCell::new(
                 "runx:payment-capability:paid-echo-spend-1".to_owned(),
             )),
-            max_per_run_minor,
+            max_per_run_units,
         }
     }
 
@@ -1327,7 +1363,7 @@ impl SkillAdapter for PaidEchoAdapter {
                 "payment_quote_packet": {
                     "data": {
                         "payment_signal": {
-                            "signal_type": "payment_required",
+                            "signal_type": "effect_required",
                             "challenge_id": "ch_mock_paid_echo_001",
                             "amount_minor": *self.current_amount_minor.borrow(),
                             "currency": "USD",
@@ -1357,7 +1393,7 @@ impl SkillAdapter for PaidEchoAdapter {
                             "reserved_payment_authority": paid_echo_reserved_payment_authority(
                                 &idempotency_key,
                                 amount_minor,
-                                self.max_per_run_minor
+                                self.max_per_run_units
                             ),
                             "spend_capability_ref": paid_echo_spend_capability_ref(
                                 &spend_capability_ref
@@ -1485,12 +1521,12 @@ fn paid_echo_rail_packet(
             "rail_session_material_ref": PAID_ECHO_RAIL_SESSION_MATERIAL_REF
         });
     }
-    json!({ "payment_rail_packet": { "data": data } })
+    json!({ "effect_evidence_packet": { "data": data } })
 }
 
 fn paid_echo_partial_rail_packet(idempotency_key: &str, amount_minor: u64) -> Value {
     json!({
-        "payment_rail_packet": {
+        "effect_evidence_packet": {
             "data": {
                 "rail_result": {
                     "status": "partial",
@@ -1699,7 +1735,7 @@ fn paid_echo_graph_yaml() -> Result<String, serde_json::Error> {
                 "skill": "./quote",
                 "inputs": {
                     "payment_signal": {
-                        "signal_type": "payment_required",
+                        "signal_type": "effect_required",
                         "challenge_id": "ch_mock_paid_echo_001",
                         "amount_minor": 125,
                         "currency": "USD",
@@ -1747,8 +1783,8 @@ fn paid_echo_graph_yaml() -> Result<String, serde_json::Error> {
                     "message": "hello from paid echo"
                 },
                 "context": {
-                    "payment_credential_ref": "fulfill.skill_claim.payment_rail_packet.data.credential_envelope.credential_ref",
-                    "payment_proof_ref": "fulfill.skill_claim.payment_rail_packet.data.rail_proof.proof_ref"
+                    "payment_credential_ref": "fulfill.skill_claim.effect_evidence_packet.data.credential_envelope.credential_ref",
+                    "payment_proof_ref": "fulfill.skill_claim.effect_evidence_packet.data.rail_proof.proof_ref"
                 }
             }
         ],
@@ -1786,18 +1822,18 @@ fn fulfill_inputs(admission: FulfillAdmission) -> Option<Value> {
     }
 }
 
-fn valid_payment_inputs(child_max_per_call_minor: u64, include_subset_proof: bool) -> Value {
+fn valid_payment_inputs(child_max_per_call_units: u64, include_subset_proof: bool) -> Value {
     json!({
-        "reserved_payment_authority": reserved_payment_authority(child_max_per_call_minor, include_subset_proof),
+        "reserved_payment_authority": reserved_payment_authority(child_max_per_call_units, include_subset_proof),
         "spend_capability_ref": spend_capability_ref(),
         "idempotency": { "key": X402_APPROVAL_IDEMPOTENCY_KEY }
     })
 }
 
-fn reserved_payment_authority(child_max_per_call_minor: u64, include_subset_proof: bool) -> Value {
+fn reserved_payment_authority(child_max_per_call_units: u64, include_subset_proof: bool) -> Value {
     let mut authority = json!({
-        "parent_authority": payment_term("parent", ["quote", "reserve", "spend", "verify"], 10_000),
-        "child_authority": payment_term("child", ["reserve", "spend"], child_max_per_call_minor),
+        "parent_authority": payment_term("parent", ["estimate", "prepare", "commit", "verify"], 10_000),
+        "child_authority": payment_term("child", ["prepare", "commit"], child_max_per_call_units),
         "reservation_decision": reservation_decision(),
         "child_harness_ref": child_harness_ref(),
         "spend_capability_binding": {
@@ -1839,32 +1875,33 @@ fn payment_subset_proof(child_term_id: &str, parent_term_id: &str) -> Value {
     })
 }
 
-fn payment_term<const N: usize>(term_id: &str, verbs: [&str; N], max_per_call_minor: u64) -> Value {
+fn payment_term<const N: usize>(term_id: &str, verbs: [&str; N], max_per_call_units: u64) -> Value {
     let verbs = verbs.as_slice();
     json!({
         "term_id": term_id,
         "principal_ref": reference("principal", "runx:principal:merchant-agent"),
         "resource_ref": reference("grant", "runx:payment-grant:checkout"),
-        "resource_family": "payment",
+        "resource_family": "effect",
         "verbs": verbs,
         "bounds": {
-            "payment": {
-                "currency": "USD",
-                "max_per_call_minor": max_per_call_minor,
-                "max_per_run_minor": 25_000,
-                "rails": ["mock", "card"],
-                "counterparty": "merchant-123",
+            "effect_limits": [{
+                "family": "payment",
+                "unit": "USD",
+                "max_per_call_units": max_per_call_units,
+                "max_per_run_units": 25_000,
+                "channels": ["mock", "card"],
+                "peer": "merchant-123",
                 "operation": "checkout",
-                "credential_form": "single_use_spend_capability",
-                "quote_required": true,
-                "reservation_required": true,
+                "authorization_form": "single_use_capability",
+                "preflight_required": true,
+                "commitment_required": true,
                 "idempotency_required": true,
                 "recovery_required": true,
                 "receipt_before_success": true,
-                "single_use_spend": true
-            }
+                "single_use_capability": true
+            }]
         },
-        "capabilities": ["payment_single_use_spend"],
+        "capabilities": ["effect_single_use_capability"],
         "expires_at": "2026-05-21T00:00:00Z",
         "issued_by_ref": reference("grant", "runx:grant:issuer"),
         "credential_ref": reference("credential", "runx:credential:payment-session")
@@ -1902,11 +1939,11 @@ fn reservation_decision() -> Value {
 fn paid_echo_reserved_payment_authority(
     idempotency_key: &str,
     amount_minor: u64,
-    max_per_run_minor: u64,
+    max_per_run_units: u64,
 ) -> Value {
     json!({
-        "parent_authority": paid_echo_payment_term("paid-echo-parent", ["quote", "reserve", "spend", "verify"], 10_000, max_per_run_minor),
-        "child_authority": paid_echo_payment_term("paid-echo-child", ["reserve", "spend"], 2_500, max_per_run_minor),
+        "parent_authority": paid_echo_payment_term("paid-echo-parent", ["estimate", "prepare", "commit", "verify"], 10_000, max_per_run_units),
+        "child_authority": paid_echo_payment_term("paid-echo-child", ["prepare", "commit"], 2_500, max_per_run_units),
         "reservation_decision": paid_echo_reservation_decision(),
         "subset_proof": paid_echo_subset_proof("paid-echo-child", "paid-echo-parent"),
         "child_harness_ref": paid_echo_child_harness_ref(),
@@ -1943,34 +1980,35 @@ fn paid_echo_subset_proof(child_term_id: &str, parent_term_id: &str) -> Value {
 fn paid_echo_payment_term<const N: usize>(
     term_id: &str,
     verbs: [&str; N],
-    max_per_call_minor: u64,
-    max_per_run_minor: u64,
+    max_per_call_units: u64,
+    max_per_run_units: u64,
 ) -> Value {
     let verbs = verbs.as_slice();
     json!({
         "term_id": term_id,
         "principal_ref": reference("principal", "runx:principal:paid-echo-agent"),
         "resource_ref": reference("grant", "runx:payment-grant:paid-echo"),
-        "resource_family": "payment",
+        "resource_family": "effect",
         "verbs": verbs,
         "bounds": {
-            "payment": {
-                "currency": "USD",
-                "max_per_call_minor": max_per_call_minor,
-                "max_per_run_minor": max_per_run_minor,
-                "rails": ["mock"],
-                "counterparty": "merchant:paid-echo",
+            "effect_limits": [{
+                "family": "payment",
+                "unit": "USD",
+                "max_per_call_units": max_per_call_units,
+                "max_per_run_units": max_per_run_units,
+                "channels": ["mock"],
+                "peer": "merchant:paid-echo",
                 "operation": "paid.echo",
-                "credential_form": "single_use_spend_capability",
-                "quote_required": true,
-                "reservation_required": true,
+                "authorization_form": "single_use_capability",
+                "preflight_required": true,
+                "commitment_required": true,
                 "idempotency_required": true,
                 "recovery_required": true,
                 "receipt_before_success": true,
-                "single_use_spend": true
-            }
+                "single_use_capability": true
+            }]
         },
-        "capabilities": ["payment_single_use_spend"],
+        "capabilities": ["effect_single_use_capability"],
         "expires_at": "2026-05-21T00:00:00Z",
         "issued_by_ref": reference("grant", "runx:grant:paid-echo-issuer"),
         "credential_ref": reference("credential", "runx:credential:paid-echo-session")

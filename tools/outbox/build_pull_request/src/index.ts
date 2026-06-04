@@ -10,10 +10,10 @@ import {
   sanitizePublicMarkdown,
   summarizePublicHandoffMarkdown,
   renderIssueToPrReviewerMarkdown,
-} from "../../markdown.js";
+} from "../../markdown.ts";
 import {
   ISSUE_TO_PR_STORY_MILESTONES,
-} from "../../story.js";
+} from "../../story.ts";
 import { admitOperationalPolicyRequest } from "@runxhq/contracts";
 
 const build_pull_request_canonical_story_milestones = [...ISSUE_TO_PR_STORY_MILESTONES];
@@ -248,7 +248,7 @@ function runBuildPullRequest({ inputs }) {
       dedupe,
       source_thread: buildSourceThreadMetadata(sourceThreadLocator),
       human_merge_gate: "required",
-      post_merge_observation: "provider_state_update",
+      provider_outcome_observation: "provider_state_update",
       story_milestones: build_pull_request_canonical_story_milestones,
     }),
   });

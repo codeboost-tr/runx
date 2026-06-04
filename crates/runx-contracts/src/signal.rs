@@ -23,7 +23,7 @@ pub mod signal_type {
     pub const CHAT_MESSAGE: &str = "chat_message";
     pub const ALERT: &str = "alert";
     pub const DEPLOYMENT_EVENT: &str = "deployment_event";
-    pub const PAYMENT_REQUIRED: &str = "payment_required";
+    pub const EFFECT_REQUIRED: &str = "effect_required";
     pub const SCHEDULE_TICK: &str = "schedule_tick";
     pub const OPERATOR_NOTE: &str = "operator_note";
     pub const SYSTEM_EVENT: &str = "system_event";

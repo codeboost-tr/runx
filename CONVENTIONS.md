@@ -26,9 +26,8 @@ Package names carry trust claims:
 
 - contracts define portable schemas and generated validators.
 - Rust `runx-core` owns pure state-machine and policy decisions.
-- TypeScript `@runxhq/core` is private legacy build-only surface during sunset.
-  Do not add new imports to it, and do not restore local execution, policy,
-  receipt sealing, or runtime fallback behavior there.
+- Deleted TypeScript core packages must not be restored as compatibility shims
+  or build-only fallbacks.
 - `runx-runtime` coordinates local execution, adapters, sandbox planning,
   caller interaction, and receipts.
 - host adapters and protocol adapters touch external processes and protocols.

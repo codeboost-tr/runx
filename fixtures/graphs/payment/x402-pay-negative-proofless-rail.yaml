@@ -4,7 +4,7 @@ steps:
     skill: ../../skills/x402-pay-paid-echo-quote
     inputs:
       payment_signal:
-        signal_type: payment_required
+        signal_type: effect_required
         challenge_id: ch_mock_paid_echo_proofless_rail
         amount_minor: 125
         currency: USD
@@ -41,8 +41,8 @@ steps:
     inputs:
       message: should not run
     context:
-      payment_capability_ref: fulfill.skill_claim.payment_rail_packet.data.credential_envelope.credential_ref
-      payment_proof_ref: fulfill.skill_claim.payment_rail_packet.data.rail_proof.proof_ref
+      payment_capability_ref: fulfill.skill_claim.effect_evidence_packet.data.credential_envelope.credential_ref
+      payment_proof_ref: fulfill.skill_claim.effect_evidence_packet.data.rail_proof.proof_ref
 policy:
   transitions:
     - to: fulfill

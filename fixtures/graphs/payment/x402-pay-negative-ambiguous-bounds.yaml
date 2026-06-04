@@ -4,7 +4,7 @@ steps:
     skill: ../../skills/x402-pay-paid-echo-quote
     inputs:
       payment_signal:
-        signal_type: payment_required
+        signal_type: effect_required
         challenge_id: ch_mock_paid_echo_ambiguous_bounds
         amount_minor: 125
         rail: mock

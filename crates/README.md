@@ -33,11 +33,11 @@ crates) require an explicit spec before they may be added to `deny.toml`.
   [`rust-cli-rust-cutover`](../.scafld/specs/archive/2026-05/rust-cli-rust-cutover.md)
   spec.
 - `runx-contracts`: pure public contracts for JSON, host protocol, receipts,
-  registry/tool records, act assignment, harness spine, payment authority,
-  target-repo runner planning, and the post-merge observer.
+  registry/tool records, act assignment, harness spine, generic authority and
+  effect finality, target-repo runner planning, and the post-merge observer.
 - `runx-core`: pure decisions. State-machine parity and policy parity
   (admission, sandbox, authority proof, public-work, retry, graph-step scope,
-  payment authority subset).
+  generic authority subset).
 - `runx-parser`: pure YAML → AST → IR parity for graphs, skills, runners, tool
   manifests, and skill installs. Raw object subtrees use
   `runx_contracts::JsonValue`.
@@ -45,8 +45,10 @@ crates) require an explicit spec before they may be added to `deny.toml`.
   verification with an adversarial unit matrix.
 - `runx-runtime`: impure runtime. Owns filesystem, subprocess, sandbox
   enforcement, journals, registry clients, harness replay, doctor,
-  dev loop, scaffold, payment authority gating, and the adapter set. Adapter
-  families are opt-in features: `cli-tool`, `mcp`, `a2a`, `agent`, `catalog`.
+  dev loop, scaffold, generic authority gating, and the adapter set. Adapter
+  families are opt-in features: `cli-tool`, `mcp`, `mcp-http-server`, `a2a`,
+  `agent`, `catalog`, `external-adapter`, and `http`; `a2a` is
+  contract-defined but not enabled in `runx-cli`.
   The `async-http` feature owns runtime HTTP with reqwest over rustls, disables
   redirect following, and uses bounded request/connect timeouts. `cli-tool`
   enables `async-http`; defaults keep the runtime dependency-light.

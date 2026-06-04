@@ -73,24 +73,14 @@ pub fn read_payment_reservation_packet(
     .or_else(|| object_path(data, &["spend_capability_binding"])) else {
         return Ok(None);
     };
-    let payment_bounds = object_path(
+    let payment_bounds = payment_effect_limit_path(
         data,
-        &[
-            "reserved_payment_authority",
-            "child_authority",
-            "bounds",
-            "payment",
-        ],
+        &["reserved_payment_authority", "child_authority", "bounds"],
     )
     .or_else(|| {
-        object_path(
+        payment_effect_limit_path(
             data,
-            &[
-                "reserved_payment_authority",
-                "parent_authority",
-                "bounds",
-                "payment",
-            ],
+            &["reserved_payment_authority", "parent_authority", "bounds"],
         )
     });
 
@@ -112,7 +102,7 @@ pub fn read_payment_reservation_packet(
         operation: payment_bounds
             .and_then(|bounds| non_empty_string_field(bounds, "operation"))
             .ok_or(PaymentPacketError::MissingField {
-                field: "reserved_payment_authority.*.bounds.payment.operation",
+                field: "reserved_payment_authority.*.bounds.effect_limits[].operation",
             })?
             .to_owned(),
         idempotency_key: required_string(
@@ -130,10 +120,10 @@ pub fn read_payment_reservation_packet(
     }))
 }
 
-pub fn read_payment_rail_packet(
+pub fn read_effect_evidence_packet(
     outputs: &JsonObject,
 ) -> Result<Option<PaymentRailPacket>, PaymentPacketError> {
-    let Some(data) = packet_data(outputs, "payment_rail_packet") else {
+    let Some(data) = packet_data(outputs, "effect_evidence_packet") else {
         return Ok(None);
     };
     let result = object_path(data, &["rail_result"])
@@ -224,6 +214,19 @@ fn object_path<'a>(object: &'a JsonObject, path: &[&str]) -> Option<&'a JsonObje
         current = next;
     }
     Some(current)
+}
+
+fn payment_effect_limit_path<'a>(object: &'a JsonObject, path: &[&str]) -> Option<&'a JsonObject> {
+    let bounds = object_path(object, path)?;
+    let JsonValue::Array(limits) = bounds.get("effect_limits")? else {
+        return None;
+    };
+    limits.iter().find_map(|limit| {
+        let JsonValue::Object(limit) = limit else {
+            return None;
+        };
+        (json_string_field(limit, "family") == Some("payment")).then_some(limit)
+    })
 }
 
 fn required_string<'a>(

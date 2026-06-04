@@ -1,4 +1,4 @@
-use runx_contracts::EffectSettlementPhase;
+use runx_contracts::EffectFinalityPhase;
 use serde::{Deserialize, Serialize};
 use thiserror::Error;
 
@@ -22,7 +22,7 @@ pub struct RefundAdmissionInput {
 pub struct RefundableCharge {
     pub money_movement_id: String,
     pub rail: String,
-    pub phase: EffectSettlementPhase,
+    pub phase: EffectFinalityPhase,
     pub amount_minor: u64,
     pub currency: String,
     pub payer_ref: String,
@@ -81,13 +81,13 @@ pub enum RefundAdmissionError {
 }
 
 pub fn admit_refund(input: &RefundAdmissionInput) -> RefundAdmissionDecision {
-    if input.charge.phase == EffectSettlementPhase::Reversed {
+    if input.charge.phase == EffectFinalityPhase::Reversed {
         return refused(
             RefundRefusalCode::ChargeReversed,
             "refund refused because the linked charge is already reversed",
         );
     }
-    if input.charge.phase != EffectSettlementPhase::Sealed {
+    if input.charge.phase != EffectFinalityPhase::Sealed {
         return refused(
             RefundRefusalCode::ChargeNotSealed,
             "refund refused because the linked charge is not sealed",

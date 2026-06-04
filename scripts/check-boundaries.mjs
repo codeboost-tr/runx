@@ -83,18 +83,7 @@ const forbiddenHostedCredentialContractTerms = [
   { name: literalName("credential-delivery", "-broker", "-response"), pattern: literalPattern("credential-delivery", "-broker", "-response") },
   { name: literalName("CredentialDelivery", "Broker", "Response"), pattern: literalPattern("CredentialDelivery", "Broker", "Response") },
 ];
-const removedCoreRuntimeSubpaths = [
-  "@runxhq/core/runner-local",
-  "@runxhq/core/harness",
-  "@runxhq/core/sdk",
-  "@runxhq/core/mcp",
-  "@runxhq/core/tool-catalogs",
-];
-const removedCoreKernelSubpaths = [
-  "@runxhq/core/state-machine",
-];
-const forbiddenCoreRuntimeDirs = ["runner-local", "harness", "sdk", "mcp", "tool-catalogs"];
-const forbiddenDeletedCoreDirs = ["state-machine"];
+const retiredCorePackageName = ["@runxhq", "core"].join("/");
 const forbiddenPureNodeImports = new Set([
   "fs",
   "fs/promises",
@@ -152,16 +141,6 @@ const forbiddenCompatibilityPackageDirectoryNames = new Set([
 const packageDependencyFields = ["dependencies", "devDependencies", "peerDependencies", "optionalDependencies"];
 const aliasConfigFiles = ["tsconfig.base.json", "vitest.workspace-aliases.ts"];
 const forbiddenPackageImports = {
-  core: {
-    prefixes: [
-      "@runxhq/runtime-local",
-      "@runxhq/adapters",
-      "@runxhq/cli",
-      "@runxhq/host-adapters",
-      "@runxhq/langchain",
-    ],
-    reason: "@runxhq/core must not depend on runtime, adapters, CLI, or host packages.",
-  },
   "runtime-local": {
     prefixes: [
       "@runxhq/adapters",
@@ -204,10 +183,9 @@ const findings = [];
 const packageManifestCache = new Map();
 const workspacePackageNames = await readWorkspacePackageNames();
 
-await checkPackageExports();
+await checkRetiredCorePackageDeleted();
 await checkForbiddenCompatibilityPackages();
 await checkForbiddenCompatibilityAliases();
-await checkForbiddenCoreRuntimeDirectories();
 await checkForbiddenHostedConnectBrokerage();
 await checkForbiddenHostedCredentialContracts();
 for (const filePath of await findSourceFiles(workspaceRoot)) {
@@ -224,22 +202,11 @@ if (findings.length > 0) {
 
 console.log("Boundary check passed.");
 
-async function checkPackageExports() {
-  const coreManifestPath = path.join(workspaceRoot, "packages", "core", "package.json");
-  const coreManifest = JSON.parse(await readFile(coreManifestPath, "utf8"));
-
-  for (const removedSubpath of ["./runner-local", "./harness", "./sdk", "./mcp", "./tool-catalogs"]) {
-    if (Object.hasOwn(coreManifest.exports ?? {}, removedSubpath)) {
-      findings.push(`packages/core/package.json still exports ${removedSubpath}; local execution is Rust-owned.`);
-    }
+async function checkRetiredCorePackageDeleted() {
+  const corePackagePath = path.join(workspaceRoot, "packages", "core");
+  if (await statIfExists(corePackagePath)) {
+    findings.push(`packages/core still exists; ${retiredCorePackageName} is retired and must not be restored.`);
   }
-
-  for (const removedSubpath of ["./state-machine"]) {
-    if (Object.hasOwn(coreManifest.exports ?? {}, removedSubpath)) {
-      findings.push(`packages/core/package.json still exports ${removedSubpath}; state-machine is Rust-owned.`);
-    }
-  }
-
   for (const sunsetPath of ["packages/runtime-local/package.json", "packages/adapters/package.json"]) {
     if (await readJsonIfExists(path.join(workspaceRoot, sunsetPath))) {
       findings.push(`${sunsetPath} still exists; local execution is Rust-owned.`);
@@ -348,23 +315,6 @@ function checkAliasToken(rel, token) {
   }
 }
 
-async function checkForbiddenCoreRuntimeDirectories() {
-  for (const directoryName of forbiddenCoreRuntimeDirs) {
-    const directoryPath = path.join(workspaceRoot, "packages", "core", "src", directoryName);
-    const entry = await statIfExists(directoryPath);
-    if (entry?.isDirectory()) {
-      findings.push(`packages/core/src/${directoryName} still exists; local runtime execution is Rust-owned.`);
-    }
-  }
-  for (const directoryName of forbiddenDeletedCoreDirs) {
-    const directoryPath = path.join(workspaceRoot, "packages", "core", "src", directoryName);
-    const entry = await statIfExists(directoryPath);
-    if (entry?.isDirectory()) {
-      findings.push(`packages/core/src/${directoryName} still exists; this TypeScript kernel domain has been deleted.`);
-    }
-  }
-}
-
 async function checkForbiddenHostedConnectBrokerage() {
   for (const rootName of hostedConnectBrokerageScanRoots) {
     const rootPath = path.join(workspaceRoot, rootName);
@@ -427,11 +377,8 @@ async function checkSourceFile(filePath) {
   const packageSource = getPackageSource(rel);
 
   for (const specifier of specifiers) {
-    if (removedCoreRuntimeSubpaths.some((prefix) => specifier === prefix || specifier.startsWith(`${prefix}/`))) {
-      findings.push(`${rel} imports removed ${specifier}; use Rust CLI JSON, generated contracts, or an explicit hosted/client protocol boundary.`);
-    }
-    if (removedCoreKernelSubpaths.some((prefix) => specifier === prefix || specifier.startsWith(`${prefix}/`))) {
-      findings.push(`${rel} imports removed ${specifier}; use the Rust kernel eval boundary.`);
+    if (specifierMatchesPackageName(specifier, retiredCorePackageName)) {
+      findings.push(`${rel} imports ${specifier}; ${retiredCorePackageName} is retired and must not be restored.`);
     }
 
     if (packageSource) {
@@ -629,9 +576,6 @@ async function readPackageManifest(packageName) {
 }
 
 function specifierTargetsDomain(rel, specifier, domain) {
-  if (specifier === `@runxhq/core/${domain}` || specifier.startsWith(`@runxhq/core/${domain}/`)) {
-    return true;
-  }
   if (specifier === `@runxhq/${domain}` || specifier.startsWith(`@runxhq/${domain}/`)) {
     return true;
   }

@@ -63,8 +63,8 @@ function paidSpend(runId) {
     currency: envOr("RUNX_PAYMENTS_DEMO_CURRENCY", "USD"),
     counterparty: envOr("RUNX_PAYMENTS_DEMO_COUNTERPARTY", "merchant:x402-demo"),
     authority: {
-      max_per_call_minor: numberEnv("RUNX_PAYMENTS_DEMO_MAX_PER_CALL_MINOR", 150),
-      max_per_run_minor: numberEnv("RUNX_PAYMENTS_DEMO_MAX_PER_RUN_MINOR", 150),
+      max_per_call_units: numberEnv("RUNX_PAYMENTS_DEMO_MAX_PER_CALL_UNITS", 150),
+      max_per_run_units: numberEnv("RUNX_PAYMENTS_DEMO_MAX_PER_RUN_UNITS", 150),
       rails: ["x402"],
     },
     settlement_proof: {
@@ -78,7 +78,7 @@ function paidSpend(runId) {
 }
 
 function governedRefusal(runId) {
-  const maxPerRun = numberEnv("RUNX_PAYMENTS_DEMO_MAX_PER_RUN_MINOR", 150);
+  const maxPerRun = numberEnv("RUNX_PAYMENTS_DEMO_MAX_PER_RUN_UNITS", 150);
   const attempted = numberEnv("RUNX_PAYMENTS_DEMO_REFUSAL_AMOUNT_MINOR", 75);
   const alreadySpent = numberEnv("RUNX_PAYMENTS_DEMO_ALREADY_SPENT_MINOR", 125);
   const refused = alreadySpent + attempted > maxPerRun;
@@ -88,7 +88,7 @@ function governedRefusal(runId) {
     reason_code: refused ? "run_cap_exceeded" : "within_cap",
     attempted_amount_minor: attempted,
     already_reserved_minor: alreadySpent,
-    max_per_run_minor: maxPerRun,
+    max_per_run_units: maxPerRun,
     rail_call_performed: false,
     money_movement_id: null,
   };

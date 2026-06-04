@@ -10,6 +10,16 @@
     ]
   },
   "inputs": {
+    "risk": {
+      "type": "string",
+      "required": false,
+      "description": "Expected scafld risk: low, medium, or high."
+    },
+    "size": {
+      "type": "string",
+      "required": false,
+      "description": "Expected scafld size: small, medium, or large."
+    },
     "spec_contents": {
       "type": "string",
       "required": true,
@@ -24,21 +34,7 @@
       "type": "string",
       "required": false,
       "description": "Expected non-empty scafld title."
-    },
-    "size": {
-      "type": "string",
-      "required": false,
-      "description": "Expected scafld size: small, medium, or large."
-    },
-    "risk": {
-      "type": "string",
-      "required": false,
-      "description": "Expected scafld risk: low, medium, or high."
     }
-  },
-  "output": {
-    "packet": "runx.spec.normalized_scafld_spec.v1",
-    "wrap_as": "normalized_spec"
   },
   "scopes": [
     "spec.normalize_scafld_frontmatter"
@@ -54,7 +50,11 @@
       "./run.mjs"
     ]
   },
-  "source_hash": "sha256:823a67df2be6dde534ebb319e2ddc1de78ae6d16b761b8ee5ca4fc91fc12b0b2",
+  "output": {
+    "packet": "runx.spec.normalized_scafld_spec.v1",
+    "wrap_as": "normalized_spec"
+  },
+  "source_hash": "sha256:79ad05f9ad17d3c86464901322ba545cd3839c80a16771d1f47f01f8b5fdda78",
   "schema_hash": "sha256:5572fff6a0dfb3f3965e2f6f91b62b5957cd1df6f5d4c568102b8f3a74dab389",
-  "toolkit_version": "0.2.0"
+  "toolkit_version": "0.1.4"
 }

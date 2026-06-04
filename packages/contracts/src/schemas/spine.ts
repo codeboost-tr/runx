@@ -46,7 +46,7 @@ export type AuthorityResourceFamilyContract = string;
 export type AuthorityVerbContract = string;
 export type AuthorityCapabilityContract = string;
 export type AuthorityConditionPredicateContract = string;
-export type PaymentCredentialFormContract = string;
+export type AuthorityEffectCredentialFormContract = string;
 export type ProofKindContract = string;
 
 export type ReferenceContract = DeepReadonly<{
@@ -73,7 +73,7 @@ export type FingerprintContract = ContractObject;
 export type LinksContract = ContractObject;
 export type SignalAuthenticityContract = ContractObject;
 export type SignalContract = ContractObject;
-export type PaymentAuthorityBoundsContract = ContractObject;
+export type AuthorityEffectLimitContract = ContractObject;
 export type AuthorityBoundsContract = ContractObject;
 export type AuthorityConditionContract = ContractObject;
 export type AuthorityApprovalContract = ContractObject;
@@ -264,10 +264,10 @@ export const authorityBoundsSchema = schemaAt<AuthorityBoundsContract>(
   ["properties", "bounds"],
   "authority.terms[].bounds",
 );
-export const paymentAuthorityBoundsSchema = schemaAt<PaymentAuthorityBoundsContract>(
+export const authorityEffectLimitSchema = schemaAt<AuthorityEffectLimitContract>(
   authorityBoundsSchema,
-  ["properties", "payment"],
-  "authority.terms[].bounds.payment",
+  ["properties", "effect_limits", "items"],
+  "authority.terms[].bounds.effect_limits[]",
 );
 export const authorityResourceFamilySchema = schemaAt<AuthorityResourceFamilyContract>(
   authorityTermSchema,
@@ -304,10 +304,10 @@ export const authoritySubsetComparisonSchema = schemaAt<ContractObject>(
   ["properties", "compared_terms", "items"],
   "authority_subset_proof.compared_terms[]",
 );
-export const paymentCredentialFormSchema = schemaAt<PaymentCredentialFormContract>(
-  paymentAuthorityBoundsSchema,
-  ["properties", "credential_form"],
-  "authority.terms[].bounds.payment.credential_form",
+export const authorityEffectCredentialFormSchema = schemaAt<AuthorityEffectCredentialFormContract>(
+  authorityEffectLimitSchema,
+  ["properties", "authorization_form"],
+  "authority.terms[].bounds.effect_limits[].authorization_form",
 );
 export const authorityAttenuationSchema = schemaAt<ContractObject>(
   authoritySchema,
@@ -453,7 +453,7 @@ export const signalTypes = [
   "chat_message",
   "alert",
   "deployment_event",
-  "payment_required",
+  "effect_required",
   "schedule_tick",
   "operator_note",
   "system_event",
@@ -473,7 +473,7 @@ export const authorityResourceFamilies = enumValues(authorityResourceFamilySchem
 export const authorityVerbs = enumValues(authorityVerbSchema, "authority.terms[].verbs[]");
 export const authorityCapabilities = enumValues(authorityCapabilitySchema, "authority.terms[].capabilities[]");
 export const authorityConditionPredicates = enumValues(authorityConditionPredicateSchema, "authority.terms[].conditions[].predicate");
-export const paymentCredentialForms = enumValues(paymentCredentialFormSchema, "authority.terms[].bounds.payment.credential_form");
+export const authorityEffectCredentialForms = enumValues(authorityEffectCredentialFormSchema, "authority.terms[].bounds.effect_limits[].authorization_form");
 export const proofKinds = enumValues(proofKindSchema, "reference.proof_kind");
 export const redactionCommitmentAlgorithms = enumValues(redactionCommitmentAlgorithmSchema, "redaction.hash_commitments[].algorithm");
 

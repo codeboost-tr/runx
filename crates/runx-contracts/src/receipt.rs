@@ -24,10 +24,10 @@ use crate::{
 /// Logical schema name for the governance receipt.
 pub const RECEIPT_SCHEMA: &str = "runx.receipt.v1";
 
-/// Logical schema name reserved for follow-on receipts that settle deferred
-/// effect evidence. A settlement receipt is emitted as a new artifact; sealed
+/// Logical schema name reserved for follow-on receipts that record deferred
+/// effect finality. A finality receipt is emitted as a new artifact; sealed
 /// receipts are never mutated after the fact.
-pub const EFFECT_SETTLEMENT_RECEIPT_SCHEMA: &str = "runx.effect_settlement_receipt.v1";
+pub const EFFECT_FINALITY_RECEIPT_SCHEMA: &str = "runx.effect_finality_receipt.v1";
 
 /// The canonicalization byte contract this receipt's digest commits under.
 pub const RECEIPT_CANONICALIZATION: &str = "runx.receipt.c14n.v1";
@@ -39,14 +39,14 @@ pub enum ReceiptSchema {
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize, RunxSchema)]
-pub enum EffectSettlementReceiptSchema {
-    #[serde(rename = "runx.effect_settlement_receipt.v1")]
+pub enum EffectFinalityReceiptSchema {
+    #[serde(rename = "runx.effect_finality_receipt.v1")]
     V1,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize, RunxSchema)]
 #[serde(rename_all = "snake_case")]
-pub enum EffectSettlementPhase {
+pub enum EffectFinalityPhase {
     Provisional,
     InFlight,
     Sealed,
@@ -56,13 +56,13 @@ pub enum EffectSettlementPhase {
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, RunxSchema)]
 #[serde(deny_unknown_fields)]
-#[runx_schema(id = "runx.effect_settlement_receipt.v1")]
-pub struct EffectSettlementReceipt {
-    pub schema: EffectSettlementReceiptSchema,
+#[runx_schema(id = "runx.effect_finality_receipt.v1")]
+pub struct EffectFinalityReceipt {
+    pub schema: EffectFinalityReceiptSchema,
     pub id: NonEmptyString,
     pub created_at: IsoDateTime,
     pub family: NonEmptyString,
-    pub phase: EffectSettlementPhase,
+    pub phase: EffectFinalityPhase,
     pub original_receipt_ref: Reference,
     pub criterion_id: NonEmptyString,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -131,9 +131,9 @@ pub struct ReceiptCommitment {
 }
 
 /// Canonical receipt subject kinds. The wire form on `Subject.kind` is an
-/// open `NonEmptyString` so receipts emitted by new subject categories (e.g.
-/// post-merge observation, target-runner mutation, tool build) do not require
-/// a contract edit.
+/// open `NonEmptyString` so receipts emitted by new subject categories (for
+/// example, tool build or hosted provider publication) do not require a
+/// contract edit.
 pub mod receipt_subject_kind {
     /// A single skill invocation.
     pub const SKILL: &str = "skill";

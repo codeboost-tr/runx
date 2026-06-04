@@ -1,17 +1,17 @@
 [
   {
     "skill_id": "runx/charge-challenge",
-    "version": "sha-4767c46fc856",
-    "digest": "91ebd18c309c12f905bfb88940786415452bb2546cfe3def26ba9fe33b1309ed"
+    "version": "sha-46c7124334ad",
+    "digest": "8bfbadaa81be3ab63d6e8edefacca1b32914b5017f9ccafdd829b8185d3795cb"
   },
   {
     "skill_id": "runx/charge-price",
-    "version": "sha-6991e3d6cea7",
-    "digest": "56fa21afe6491706bcc9bf22b7ca9a236037d4167e30b1f85f0dd8b181b5261f"
+    "version": "sha-20cef4fb16c1",
+    "digest": "6be0c40a7bf4ac78dc19fce80a7a34e75c746e6b3914cad5e5939e18aeb6af06"
   },
   {
     "skill_id": "runx/charge-verify",
-    "version": "sha-73b4971da1d1",
+    "version": "sha-8bb72a1bef4c",
     "digest": "742631492a75d1351c0a5935da2f238e3e79ff618ab0fa097dcf6eddfed56651"
   },
   {
@@ -31,7 +31,7 @@
   },
   {
     "skill_id": "runx/dispute-respond",
-    "version": "sha-95437d54ff3c",
+    "version": "sha-ac71b1dbb3de",
     "digest": "e694839eaedc09eb19c096a2a963dc4996b4b5913e3c05bfe5a61f733ea1a314"
   },
   {
@@ -66,12 +66,12 @@
   },
   {
     "skill_id": "runx/issue-to-pr",
-    "version": "sha-45ea87a34f3f",
+    "version": "sha-bf3cb27e17aa",
     "digest": "77a0863bdbb8a74efde08840b1c35bc3375cbecf721c2e5b5b6270f0c4988014"
   },
   {
     "skill_id": "runx/issue-triage",
-    "version": "sha-c5c04a09c2f1",
+    "version": "sha-61e562d632df",
     "digest": "10cbe7f936bc12f7f5e5a2aa926382a6b556c3ae0a572b0851d795316d909ab7"
   },
   {
@@ -81,17 +81,17 @@
   },
   {
     "skill_id": "runx/mock-charge",
-    "version": "sha-0df2fd011f01",
-    "digest": "8ac4c2df00f91ac9aa3e3434ad046583d3621213205fdd46e8a80e81a61d3dab"
+    "version": "sha-3e8871dba1e1",
+    "digest": "51f21f9180a94ee12844f3b7ca3e4c508ce14727248660a982ec4c456117640e"
   },
   {
     "skill_id": "runx/mock-pay",
-    "version": "sha-ef0d95fba692",
-    "digest": "f639a8635f4ad6c5be66606a30adb0e5719136b60a65b19241232f4655cdc4ee"
+    "version": "sha-dc455eb5ae9c",
+    "digest": "efc70ddce02a87296a90072071141f66684349bce16888fb997371a8f7279c50"
   },
   {
     "skill_id": "runx/mock-refund",
-    "version": "sha-c00b638021fc",
+    "version": "sha-c8f0426584f4",
     "digest": "25fbf4792b69b3240b08141f4145d080db7bc0c357c2d8656ff7013d83684ac1"
   },
   {
@@ -101,17 +101,17 @@
   },
   {
     "skill_id": "runx/mpp-charge",
-    "version": "sha-32b436c22730",
+    "version": "sha-e820c4d5663f",
     "digest": "1f5ddff16031843acbd5f7180b0647e5ebf8a02c59e446d51c30890ef7e327db"
   },
   {
     "skill_id": "runx/mpp-pay",
-    "version": "sha-9110c117ecb0",
-    "digest": "60edc5402fb443d6051edb212e1f121bd96714322964638587e3ff8b43009f3f"
+    "version": "sha-a3f49c4230c8",
+    "digest": "bebe8f94a802986c9b8d9dacb73c9753825d61aa24504130adff495d1f7ef099"
   },
   {
     "skill_id": "runx/mpp-refund",
-    "version": "sha-0b8bddcec289",
+    "version": "sha-3aee56f7a676",
     "digest": "6f2e22db27e85c02d6c05836c2d9e8812c697ba34fe7bfcdfd6fd679d8ee5c18"
   },
   {
@@ -121,28 +121,33 @@
   },
   {
     "skill_id": "runx/pay-fulfill-rail",
-    "version": "sha-a18030b2b13e",
+    "version": "sha-83209d505681",
     "digest": "030ae8751a1361a446b698c22fdd47e1e64c32ec2242fb824ac75b82b6a7b986"
   },
   {
     "skill_id": "runx/pay-quote",
-    "version": "sha-69012ade1679",
-    "digest": "7352e306b04b72602c2be08e85f0f9ed147ada9bf2755226e7d1c0f1e275e97e"
+    "version": "sha-b26dbe75d78c",
+    "digest": "18059697fd58ddc37b9941f457588c6db62e073159c1cebb3ff43ccc117e04fa"
   },
   {
     "skill_id": "runx/pay-recover",
-    "version": "sha-aaa95992c040",
+    "version": "sha-3352b1e1e5c2",
     "digest": "f8a22e670f6fafaa3a75057da713841cde26158587ed35b4c7d65e1c5a31b014"
   },
   {
     "skill_id": "runx/pay-reserve",
-    "version": "sha-10108326e01c",
+    "version": "sha-5a34b0503d43",
     "digest": "a892c71f613fe69ad5d8c6678cebb4ad5cad930f84604a206c3fd348b8151e87"
   },
   {
     "skill_id": "runx/policy-author",
     "version": "sha-6d81d8d5e7d7",
     "digest": "4a0c9a3ec0464a658aa8782a9c10b574a025f81fddf912a2f70ed55c4f9c1d04"
+  },
+  {
+    "skill_id": "runx/pr-review-note",
+    "version": "sha-24d02877a80c",
+    "digest": "1b9f34f9e7f5355a10babbd154333db4b1b94fa16668583438166b91eec95e0a"
   },
   {
     "skill_id": "runx/prior-art",
@@ -161,17 +166,17 @@
   },
   {
     "skill_id": "runx/refund-quote",
-    "version": "sha-3926796228b5",
+    "version": "sha-5d316a82df94",
     "digest": "baff29513dd25ab6b7cb374722e492805ec055500ad3250add98f591a79844bf"
   },
   {
     "skill_id": "runx/refund-recover",
-    "version": "sha-42d028a5578a",
+    "version": "sha-2dc9f018f801",
     "digest": "69b77995d92ddcc7da6bb676dbb037bdb0c37896ee6c477cad641565c38836e6"
   },
   {
     "skill_id": "runx/refund-reserve",
-    "version": "sha-70bc1d49bfc5",
+    "version": "sha-06f41748e887",
     "digest": "6f0d48caebdf36abc5928881ea17473bfd8d76029b8275d2a5572689930c3440"
   },
   {
@@ -221,17 +226,17 @@
   },
   {
     "skill_id": "runx/stripe-charge",
-    "version": "sha-deac7f05b8ef",
+    "version": "sha-a2acedbdf849",
     "digest": "34b04a5ba67c0de4e682519cd1a6c160e097a08b3c5eaf4537441e709d3ba982"
   },
   {
     "skill_id": "runx/stripe-pay",
-    "version": "sha-38350928f04c",
-    "digest": "df621c11b326a0f1d374aa7f8c19798b4db19c1d0370373bfd345c22341591e0"
+    "version": "sha-1be4adeddcd6",
+    "digest": "61eda0b87f7575643c9e339972a772f1892ad042fe5b0cd7ca08e6729d043f47"
   },
   {
     "skill_id": "runx/stripe-refund",
-    "version": "sha-87d4040e62d9",
+    "version": "sha-77a3ee5aa1a9",
     "digest": "2bfa94189cd3b7084a3b29e1f83de2d0787d28c5f0c962a15bac76155c24d95f"
   },
   {
@@ -251,7 +256,7 @@
   },
   {
     "skill_id": "runx/x402-pay",
-    "version": "sha-1af1dfb83f10",
-    "digest": "ec9eb388a1e4622f0c98e31a41e6e47628b0657833f00fb552138754c54ba8ce"
+    "version": "sha-18d9ac9c4c66",
+    "digest": "c668d23392bbaf9ed1291559c0bbe63cc8f1d316c7021f57d7e18a3c43b04e7d"
   }
 ]

@@ -89,7 +89,7 @@ mod tests {
             signal_type: "chat_message".into(),
             title: "Incoming customer message".into(),
             observed_at: "2026-05-28T12:00:00Z".into(),
-            body_preview: Some("Customer reports payment failure".into()),
+            body_preview: Some("Customer reports delivery failure".into()),
             authenticity: None,
             redaction_status: OperationalProposalRedactionStatus::Redacted,
             workflow_inputs: JsonObject::new(),

@@ -151,6 +151,7 @@ async function ensureOfficialSkillCached(options: {
   // --digest (the locked digest) before writing, and emits the same
   // runx.skill-profile.v1 `.runx/profile.json` the official cache expects, so the
   // X.yaml runner manifest is restored below from that state.
+  await mkdir(options.cacheRoot, { recursive: true });
   const installArgs = [
     "registry",
     "install",
@@ -169,6 +170,7 @@ async function ensureOfficialSkillCached(options: {
   ];
   const result = await runNativeRunx(installArgs, {
     env: options.env,
+    cwd: options.cacheRoot,
     timeoutMs: parsePositiveInt(options.env.RUNX_RUST_REGISTRY_TIMEOUT_MS) ?? 30_000,
   });
   if (result.status !== 0) {
@@ -253,10 +255,13 @@ function verifyProfileDigest(skillId: string, document: string, expectedDigest: 
   if (!expectedDigest) {
     return;
   }
+  const normalizedExpectedDigest = expectedDigest.startsWith("sha256:")
+    ? expectedDigest.slice("sha256:".length)
+    : expectedDigest;
   const actualDigest = hashString(document);
-  if (actualDigest !== expectedDigest) {
+  if (actualDigest !== normalizedExpectedDigest) {
     throw new Error(
-      `Official skill profile verification failed for ${skillId}: expected sha256:${expectedDigest}, computed sha256:${actualDigest}.`,
+      `Official skill profile verification failed for ${skillId}: expected sha256:${normalizedExpectedDigest}, computed sha256:${actualDigest}.`,
     );
   }
 }

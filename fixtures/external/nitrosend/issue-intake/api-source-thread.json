@@ -24,21 +24,5 @@
   "runtime_fixtures": [
     "fixtures/runtime/skills/issue-intake/cases/bounded-docs-fix.yaml",
     "fixtures/runtime/skills/issue-to-pr/cases/issue-to-pr-reaches-fix-boundary.yaml"
-  ],
-  "expected_target_plan": {
-    "policy_id": "nitrosend-issue-flow",
-    "source_id": "bugs-fixes",
-    "target_repo": "nitrosend/api",
-    "owner_route_id": "product-surface",
-    "source_thread_required": true,
-    "mutate_target_repo": true,
-    "require_human_merge_gate": true
-  },
-  "expected_dedupe_lookup": {
-    "provider": "github",
-    "result": "lookup_required",
-    "marker_prefix": "runx-dedupe-key:source_fingerprint:",
-    "required_source_thread_ref": "slack://nitrosend/C0APFMY0V8Q/1778834840.485629"
-  },
-  "post_merge_fixture": "fixtures/contracts/harness-spine/post-merge-observer-merged-verified.json"
+  ]
 }

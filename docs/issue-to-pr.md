@@ -55,10 +55,10 @@ particular channel, label, Sentry project, or owner map.
 For Slack/Sentry/GitHub command entrypoints, adapters should normalize source
 commands locally into the shared source-event and operational-policy packets.
 The resulting `source_event` feeds `issue-intake`, while the policy request
-feeds the Rust-owned policy gate before target-runner or provider mutation work
-begins. A blocked or unsupported response from this layer should be posted back
-to the originating thread by the adapter; it is never permission to post a new
-root message or to create a PR.
+feeds the Rust-owned policy gate before outbox packaging or provider adapter
+work begins. A blocked or unsupported response from this layer should be posted
+back to the originating thread by the adapter; it is never permission to post a
+new root message or to create a PR.
 
 Before PR packaging, callers may pass a `runx.operational_policy.v1` packet plus
 `source_id`, `target_repo`, `runner_id`, and source-thread locator. The

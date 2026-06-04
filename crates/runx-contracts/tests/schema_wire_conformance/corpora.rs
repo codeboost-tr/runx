@@ -1786,14 +1786,15 @@ pub(super) fn authority_corpus() -> Vec<(&'static str, Value)> {
                 "term_id": "term_1",
                 "principal_ref": a_ref(),
                 "resource_ref": a_ref(),
-                "resource_family": "payment",
-                "verbs": ["spend"],
+                "resource_family": "effect",
+                "verbs": ["commit"],
                 "bounds": {
-                    "payment": {
-                        "currency": "USD",
-                        "rails": ["card"],
-                        "max_per_call_minor": 2500,
-                    },
+                    "effect_limits": [{
+                        "family": "payment",
+                        "unit": "USD",
+                        "channels": ["card"],
+                        "max_per_call_units": 2500,
+                    }],
                 },
                 "conditions": [
                     { "condition_id": "cond_1", "predicate": "within_budget" },
@@ -1801,7 +1802,7 @@ pub(super) fn authority_corpus() -> Vec<(&'static str, Value)> {
                 "approvals": [
                     { "approval_ref": a_ref(), "approved_at": "2026-01-01T00:00:00Z" },
                 ],
-                "capabilities": ["payment_single_use_spend"],
+                "capabilities": ["effect_single_use_capability"],
                 "expires_at": "2026-02-01T00:00:00Z",
                 "issued_by_ref": a_ref(),
             }]);
@@ -1841,14 +1842,14 @@ pub(super) fn authority_corpus() -> Vec<(&'static str, Value)> {
             ),
         ),
         (
-            "empty payment currency rejected",
+            "empty effect limit family rejected",
             set_field(
                 valid.clone(),
                 "terms",
                 json!([set_field(
                     authority_term(),
                     "bounds",
-                    json!({ "payment": { "currency": "", "rails": ["card"] } }),
+                    json!({ "effect_limits": [{ "family": "", "unit": "USD", "channels": ["card"] }] }),
                 )]),
             ),
         ),
@@ -4028,7 +4029,7 @@ pub(super) fn reference_corpus() -> Vec<(&'static str, Value)> {
                 "locator": "owner/repo#1",
                 "label": "an act",
                 "observed_at": "2026-01-01T00:00:00.000Z",
-                "proof_kind": "payment_rail",
+                "proof_kind": "effect_evidence",
             }),
         ),
         (

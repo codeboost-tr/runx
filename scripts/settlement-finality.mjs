@@ -101,7 +101,7 @@ if (flags.has("--refund-race")) {
 console.log(JSON.stringify({ status: "passed", results }, null, 2));
 
 function runRefundRace() {
-  const fixtureDir = path.resolve("fixtures/payment-finality/refund-admission");
+  const fixtureDir = path.resolve("fixtures/effect-finality/refund-admission");
   const fixtures = fs.readdirSync(fixtureDir)
     .filter((file) => file.endsWith(".json"))
     .sort()

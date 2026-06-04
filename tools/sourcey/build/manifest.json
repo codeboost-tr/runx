@@ -8,20 +8,10 @@
     "args": [
       "./run.mjs"
     ],
-    "timeout_seconds": 180,
-    "input_mode": "none"
+    "input_mode": "none",
+    "timeout_seconds": 180
   },
   "inputs": {
-    "project": {
-      "type": "string",
-      "required": true,
-      "description": "Project root containing Sourcey inputs."
-    },
-    "homepage_url": {
-      "type": "string",
-      "required": true,
-      "description": "Canonical project homepage URL to include in docs context."
-    },
     "brand_name": {
       "type": "string",
       "required": true,
@@ -32,20 +22,26 @@
       "required": false,
       "description": "Structured docs inputs, for example {\"mode\":\"config\",\"config\":\"sourcey.config.ts\"} or {\"mode\":\"openapi\",\"spec\":\"openapi.yaml\"}."
     },
-    "sourcey_bin": {
+    "homepage_url": {
       "type": "string",
-      "required": false,
-      "description": "Explicit Sourcey executable or JS entrypoint; defaults to SOURCEY_BIN or sourcey on PATH."
+      "required": true,
+      "description": "Canonical project homepage URL to include in docs context."
     },
     "output_dir": {
       "type": "string",
       "required": false,
       "description": "Output directory for Sourcey docs; defaults to <project>/.sourcey/runx-docs."
+    },
+    "project": {
+      "type": "string",
+      "required": true,
+      "description": "Project root containing Sourcey inputs."
+    },
+    "sourcey_bin": {
+      "type": "string",
+      "required": false,
+      "description": "Explicit Sourcey executable or JS entrypoint; defaults to SOURCEY_BIN or sourcey on PATH."
     }
-  },
-  "output": {
-    "packet": "runx.sourcey.build_report.v1",
-    "wrap_as": "sourcey_build_report"
   },
   "scopes": [
     "sourcey.build"
@@ -61,7 +57,11 @@
       "./run.mjs"
     ]
   },
+  "output": {
+    "packet": "runx.sourcey.build_report.v1",
+    "wrap_as": "sourcey_build_report"
+  },
   "source_hash": "sha256:00afc4946e17e0fdd5323570f63e7814017e4213d4476e1dd6801743da15aadb",
   "schema_hash": "sha256:b180ca4d2407c64c45f64988b70d9a3d143706eb7fb52fc12382f56963363869",
-  "toolkit_version": "0.2.0"
+  "toolkit_version": "0.1.4"
 }

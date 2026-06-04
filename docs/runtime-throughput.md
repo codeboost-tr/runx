@@ -72,7 +72,7 @@ Fanout remains serial by default. Set `RUNX_MAX_FANOUT_CONCURRENCY` in
 `RuntimeOptions.env` or the process environment to opt into bounded parallel
 fanout. The runtime only parallelizes isolated, non-mutating skill branches when
 the adapter explicitly provides a sendable fanout clone; native run steps,
-tool-resolution paths, host-resolution paths, payment-authority inputs, and
+tool-resolution paths, host-resolution paths, effect-authority inputs, and
 custom adapters without the capability stay serial.
 
 ## Runtime Boundaries

@@ -19,7 +19,7 @@ upstream tool call, or receive rail credentials.
 ## Quality Profile
 
 - Purpose: make provider-side price and authority bounds explicit before any
-  `payment_required` signal is emitted.
+  `effect_required` signal is emitted.
 - Audience: provider harnesses, operators, registry tooling, and future charge
   runtime enforcement.
 - Artifact contract: `charge_price`, `requested_payment_authority`,

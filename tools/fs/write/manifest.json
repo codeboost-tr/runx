@@ -10,30 +10,26 @@
     ]
   },
   "inputs": {
-    "path": {
-      "type": "string",
-      "required": true,
-      "description": "Path to the output file relative to repo_root."
-    },
     "contents": {
       "type": "json",
       "required": true,
       "description": "UTF-8 string contents to write."
     },
-    "repo_root": {
-      "type": "string",
-      "required": false,
-      "description": "Repository or workspace root; defaults to fixture, RUNX_CWD, or the current working directory."
-    },
     "fixture": {
       "type": "string",
       "required": false,
       "description": "Optional fixture workspace root used during dev and harness execution."
+    },
+    "path": {
+      "type": "string",
+      "required": true,
+      "description": "Path to the output file relative to repo_root."
+    },
+    "repo_root": {
+      "type": "string",
+      "required": false,
+      "description": "Repository or workspace root; defaults to fixture, RUNX_CWD, or the current working directory."
     }
-  },
-  "output": {
-    "packet": "runx.fs.file_write.v1",
-    "wrap_as": "file_write"
   },
   "scopes": [
     "fs.write"
@@ -49,7 +45,11 @@
       "./run.mjs"
     ]
   },
-  "source_hash": "sha256:4015b348fcb2374fe1a13c713541829ed87f99e228af26a4962b4d464f0efa81",
+  "output": {
+    "packet": "runx.fs.file_write.v1",
+    "wrap_as": "file_write"
+  },
+  "source_hash": "sha256:b0d279577c21cff6fc93f92f3fefe304db667469f808c34298ea8744dcb9e7f8",
   "schema_hash": "sha256:35e39761060690edac08c3d78bab84a2ba2a41959a58f49e4b41fb09b307b23b",
-  "toolkit_version": "0.2.0"
+  "toolkit_version": "0.1.4"
 }

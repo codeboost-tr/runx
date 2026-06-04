@@ -16,7 +16,7 @@ kernel, but the local runtime cutover is now the operating boundary. For trusted
 local execution, Rust is the canonical owner once a command is advertised by
 the native CLI or runtime. That includes graph execution, harness and dogfood
 execution, receipt sealing and verification, policy and registry configuration,
-authority admission, payment authority, sandbox admission/metadata, and local
+authority admission, effect-family authority, sandbox admission/metadata, and local
 built-in adapter execution plus external execution-adapter supervision. Future
 OS sandbox enforcement belongs in `runx-runtime`, but current sandbox
 declarations are not confinement by themselves.
@@ -38,7 +38,7 @@ Rust crates exist to:
   still in the dual-tree window.
 - Make TypeScript kernel drift explicit (intentional fixture refresh required).
 - Provide the native local CLI/runtime path for skill, graph, harness, receipt,
-  history, policy, authority, payment, sandbox admission/metadata, and
+  history, policy, authority, effect-family admission, sandbox admission/metadata, and
   external execution-adapter supervision.
 
 Rust is not a second source of truth for cut-over surfaces; it is the source of
@@ -121,7 +121,8 @@ runx-runtime      impure: filesystem, subprocess, network, built-in adapter
                   execution, external execution-adapter supervision, MCP,
                   sandbox admission/metadata, and future OS enforcement
                     default features: none
-                    opt-in features: cli-tool, mcp, a2a, agent, catalog
+                    opt-in features: cli-tool, mcp, mcp-http-server, a2a,
+                                     agent, catalog, external-adapter, http
                     deps: runx-contracts, runx-core, runx-parser,
                           runx-receipts; async/network dependencies require
                           explicit adapter-tier exception specs
@@ -201,8 +202,9 @@ package split is useful history, not a forcing function for Cargo crates.
 There is also no `runx-adapters` crate in the initial Rust shape. Built-in
 adapter execution and external execution-adapter protocol supervision live under
 `runx-runtime` feature flags
-(`cli-tool`, `mcp`, `a2a`, `agent`, `catalog`) until a family has an
-independent publishing story. External execution adapter implementations live
+(`cli-tool`, `mcp`, `mcp-http-server`, `a2a`, `agent`, `catalog`,
+`external-adapter`, `http`) until a family has an independent publishing story;
+`a2a` is contract-defined but not enabled in `runx-cli`. External execution adapter implementations live
 outside the trusted core and talk to runx over language-neutral protocols. The
 extension author's stable surface is a lane-specific manifest and wire contract,
 plus optional helper SDKs; it is not a Rust crate dependency or a core fork.
@@ -224,9 +226,8 @@ of side effects. Current modules map to these implementation buckets:
   receipt paths, and signing policy. They should become typed service facets
   that are constructed near runtime entrypoints, not leaf adapters.
 - Harness execution: `execution::harness`, `execution::orchestrator`,
-  `execution::runner`, `execution::skill_run`, and
-  `execution::target_runner`. These modules open the governed execution
-  boundary, run graphs or skills, and seal receipts.
+  `execution::runner`, and `execution::skill_run`. These modules open the
+  governed execution boundary, run graphs or skills, and seal receipts.
 - Adapter invocation: `adapter`, `adapters::*`, `agent_invocation`,
   `sandbox`, and `outbox_provider`. These modules resolve an invocation,
   admit it, run or supervise a process/protocol call, capture output, and
@@ -235,7 +236,7 @@ of side effects. Current modules map to these implementation buckets:
   and the receipt tree verifier. These modules own durable evidence and the
   projections that feed history, hosted ingestion, and fixture oracles.
 - Authority algebra: `runx-core::policy` plus runtime consumers in
-  `execution::runner::authority`, `approval`, `payment`, and
+  `execution::runner::authority`, `approval`, effect-family adapters, and
   `credential_grant_policy` tests. Runtime code may record authority evidence,
   but checkable attenuation belongs in typed policy primitives.
 - CLI presentation: `runx-cli` owns argument parsing, output, and exit codes.
@@ -687,7 +688,9 @@ Async and blocking rules:
   protocol crate only after a spec records the security rationale and updates
   `crates/deny.toml`; until then the workspace ban is deliberate.
 - `runx-runtime` defaults to no adapter features. Built-in protocol host
-  families are opt-in: `cli-tool`, `mcp`, `a2a`, `agent`, and `catalog`.
+  families are opt-in: `cli-tool`, `mcp`, `mcp-http-server`, `a2a`, `agent`,
+  `catalog`, `external-adapter`, and `http`; `a2a` is contract-defined but not
+  enabled in `runx-cli`.
 - `runx-sdk` v0 is explicitly a blocking CLI-backed client and depends on
   `runx-contracts`, not `runx-core` or `runx-runtime`. A future async SDK path
   requires its own spec and contract fixtures.

@@ -234,17 +234,20 @@ fn external_adapter_process_supervisor_rejects_spawn_failure()
 -> Result<(), Box<dyn std::error::Error>> {
     let temp = tempfile::tempdir()?;
     let mut manifest = manifest_for_script(&temp.path().join("missing-adapter-command"))?;
-    manifest.transport.command = Some(path_string(&temp.path().join("missing-shell"))?.into());
+    let missing_command = path_string(&temp.path().join("missing-shell"))?;
+    manifest.transport.command = Some(missing_command.clone().into());
 
     let Err(error) = ExternalAdapterProcessSupervisor.invoke(&manifest, &base_invocation()) else {
         return Err("spawn failure must fail closed".into());
     };
 
-    assert!(matches!(
-        error,
-        ExternalAdapterSupervisorError::Io { context, .. }
-            if context == "spawning external adapter process"
-    ));
+    let ExternalAdapterSupervisorError::Io { context, .. } = error else {
+        return Err(
+            format!("expected external adapter process spawn failure, got {error:?}").into(),
+        );
+    };
+    assert!(context.starts_with("spawning external adapter process `"));
+    assert!(context.contains(&missing_command));
     Ok(())
 }
 

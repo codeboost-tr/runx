@@ -3,11 +3,12 @@ use std::path::PathBuf;
 
 use runx_contracts::JsonValue;
 use runx_pay::{
-    DeterministicEffectSupervisor, PaymentRuntimeEffect,
+    DeterministicPaymentFinalitySupervisor, PaymentRuntimeEffect,
     ledger::{X402_PAY_PAYMENT_PROFILE, persist_x402_payment_ledger_projection_event},
 };
 use runx_runtime::{
-    HarnessReplayOutput, LocalOrchestrator, RUNX_RECEIPT_DIR_ENV, RuntimeEffectRegistry,
+    HarnessReplayOutput, LocalOrchestrator, ProviderPermissionEffect, RUNX_RECEIPT_DIR_ENV,
+    RuntimeEffectRegistry,
 };
 
 #[must_use]
@@ -17,7 +18,11 @@ pub fn local_orchestrator() -> LocalOrchestrator {
 
 #[must_use]
 pub fn payment_effect_registry() -> RuntimeEffectRegistry {
-    RuntimeEffectRegistry::with_effect(PaymentRuntimeEffect::new(DeterministicEffectSupervisor))
+    let mut registry = RuntimeEffectRegistry::with_effect(PaymentRuntimeEffect::new(
+        DeterministicPaymentFinalitySupervisor,
+    ));
+    let _ = registry.register_effect(ProviderPermissionEffect);
+    registry
 }
 
 pub fn persist_payment_ledger_projection(output: &HarnessReplayOutput) -> Result<(), String> {

@@ -9,7 +9,7 @@ use crate::schema::{NonEmptyString, RunxSchema};
 ///
 /// # Examples
 ///
-/// ```
+/// ```rust,no_run
 /// use runx_contracts::fingerprint::hex_lower;
 ///
 /// assert_eq!(hex_lower(&[0xde, 0xad, 0xbe, 0xef]), "deadbeef");
@@ -29,7 +29,7 @@ pub fn hex_lower(bytes: &[u8]) -> String {
 ///
 /// # Examples
 ///
-/// ```
+/// ```rust,no_run
 /// use runx_contracts::fingerprint::sha256_hex;
 ///
 /// assert_eq!(
@@ -48,7 +48,7 @@ pub fn sha256_hex(bytes: &[u8]) -> String {
 ///
 /// # Examples
 ///
-/// ```
+/// ```rust,no_run
 /// use runx_contracts::fingerprint::sha256_prefixed;
 ///
 /// let id = sha256_prefixed(b"runx");
@@ -76,4 +76,30 @@ pub struct Fingerprint {
     pub canonicalization: NonEmptyString,
     pub value: NonEmptyString,
     pub derived_from: Vec<Reference>,
+}
+
+#[cfg(test)]
+mod tests {
+    use super::{hex_lower, sha256_hex, sha256_prefixed};
+
+    #[test]
+    fn hex_lower_encodes_bytes() {
+        assert_eq!(hex_lower(&[0xde, 0xad, 0xbe, 0xef]), "deadbeef");
+    }
+
+    #[test]
+    fn sha256_hex_hashes_bytes() {
+        assert_eq!(
+            sha256_hex(b"runx"),
+            "8186b7035bea2f66ebe27c1f5cf7de4e94ef935e259a2f3160352adffc752f28",
+        );
+    }
+
+    #[test]
+    fn sha256_prefixed_includes_algorithm_tag() {
+        assert_eq!(
+            sha256_prefixed(b"runx"),
+            "sha256:8186b7035bea2f66ebe27c1f5cf7de4e94ef935e259a2f3160352adffc752f28",
+        );
+    }
 }

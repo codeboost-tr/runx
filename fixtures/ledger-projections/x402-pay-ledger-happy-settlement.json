@@ -13,7 +13,7 @@
   "disposition": "settled",
   "evidence_refs": [
     "hrn_x402-pay-paid-echo_fulfill",
-    "runx:receipt:sha256:5564557b690efa24b498616eb8b849afb8a7538d2d70bbb8181649be31070a7f",
+    "runx:receipt:sha256:d2aa0caeddce6a5ff99618beeca1d1b7d3d8124a07f3a5205d833df8b143bc8a",
     "runx:payment-capability:paid-echo-spend-1"
   ],
   "payment_profile": "x402-pay",

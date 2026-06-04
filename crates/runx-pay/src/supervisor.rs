@@ -8,7 +8,7 @@ use runx_contracts::{
 use serde::{Deserialize, Serialize};
 use thiserror::Error;
 
-use crate::packets::{PaymentPacketError, PaymentRailResult, read_payment_rail_packet};
+use crate::packets::{PaymentPacketError, PaymentRailResult, read_effect_evidence_packet};
 
 pub const PAYMENT_RAIL_SUPERVISOR_EVIDENCE_METADATA: &str = "payment_rail_supervisor_evidence";
 pub const PAYMENT_RAIL_SUPERVISOR_PROOF_METADATA: &str = "payment_rail_supervisor_proof";
@@ -28,10 +28,6 @@ pub struct PaymentSupervisorSettlementEvidence {
     pub settlement_status: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub provider_event_ref: Option<String>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub shared_payment_token_ref: Option<String>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub admission_token_digest: Option<String>,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
@@ -79,44 +75,137 @@ pub struct PaymentSupervisorProofMatch<'a> {
     pub receipt_digest: &'a str,
 }
 
-#[derive(Clone, Copy, Debug)]
-pub struct PaymentSupervisorSettlementRequest<'a> {
-    pub rail: &'a str,
-    pub counterparty: &'a str,
-    pub amount_minor: u64,
-    pub currency: &'a str,
-    pub idempotency_key: &'a str,
-    pub proof_ref: &'a str,
-    pub skill_settlement_status: Option<&'a str>,
-}
-
-pub fn payment_supervisor_settlement_request_payload(
-    request: PaymentSupervisorSettlementRequest<'_>,
+pub fn payment_finality_supervisor_evidence_payload(
+    evidence: &PaymentSupervisorSettlementEvidence,
 ) -> JsonObject {
     let mut payload = JsonObject::new();
     payload.insert(
-        "rail".to_owned(),
-        JsonValue::String(request.rail.to_owned()),
+        "verifier_id".to_owned(),
+        JsonValue::String(evidence.verifier_id.clone()),
     );
     payload.insert(
+        "proof_ref".to_owned(),
+        JsonValue::String(evidence.proof_ref.clone()),
+    );
+    payload.insert("rail".to_owned(), JsonValue::String(evidence.rail.clone()));
+    payload.insert(
         "counterparty".to_owned(),
-        JsonValue::String(request.counterparty.to_owned()),
+        JsonValue::String(evidence.counterparty.clone()),
     );
     payload.insert(
         "amount_minor".to_owned(),
-        JsonValue::Number(JsonNumber::U64(request.amount_minor)),
+        JsonValue::Number(JsonNumber::U64(evidence.amount_minor)),
     );
     payload.insert(
         "currency".to_owned(),
-        JsonValue::String(request.currency.to_owned()),
+        JsonValue::String(evidence.currency.clone()),
     );
-    if let Some(status) = request.skill_settlement_status {
-        payload.insert(
-            "skill_settlement_status".to_owned(),
-            JsonValue::String(status.to_owned()),
-        );
-    }
+    payload.insert(
+        "idempotency_key".to_owned(),
+        JsonValue::String(evidence.idempotency_key.clone()),
+    );
+    insert_optional_payload_string(
+        &mut payload,
+        "settlement_status",
+        evidence.settlement_status.clone(),
+    );
+    insert_optional_payload_string(
+        &mut payload,
+        "provider_event_ref",
+        evidence.provider_event_ref.clone(),
+    );
     payload
+}
+
+pub fn payment_supervisor_evidence_from_payload(
+    payload: &JsonObject,
+) -> Result<PaymentSupervisorSettlementEvidence, PaymentSupervisorError> {
+    Ok(PaymentSupervisorSettlementEvidence {
+        verifier_id: payload_string(payload, "verifier_id")?.to_owned(),
+        proof_ref: payload_string(payload, "proof_ref")?.to_owned(),
+        rail: payload_string(payload, "rail")?.to_owned(),
+        counterparty: payload_string(payload, "counterparty")?.to_owned(),
+        amount_minor: payload_u64(payload, "amount_minor")?,
+        currency: payload_string(payload, "currency")?.to_owned(),
+        idempotency_key: payload_string(payload, "idempotency_key")?.to_owned(),
+        settlement_status: payload_optional_string(payload, "settlement_status")?
+            .map(str::to_owned),
+        provider_event_ref: payload_optional_string(payload, "provider_event_ref")?
+            .map(str::to_owned),
+    })
+}
+
+fn insert_optional_payload_string(
+    payload: &mut JsonObject,
+    field: &'static str,
+    value: Option<String>,
+) {
+    if let Some(value) = value {
+        payload.insert(field.to_owned(), JsonValue::String(value));
+    }
+}
+
+fn payload_string<'a>(
+    payload: &'a JsonObject,
+    field: &'static str,
+) -> Result<&'a str, PaymentSupervisorError> {
+    match payload.get(field) {
+        Some(JsonValue::String(value)) => Ok(value),
+        Some(value) => Err(invalid_payload(field, value, "string")),
+        None => Err(missing_payload(field)),
+    }
+}
+
+fn payload_optional_string<'a>(
+    payload: &'a JsonObject,
+    field: &'static str,
+) -> Result<Option<&'a str>, PaymentSupervisorError> {
+    match payload.get(field) {
+        Some(JsonValue::String(value)) => Ok(Some(value)),
+        Some(JsonValue::Null) | None => Ok(None),
+        Some(value) => Err(invalid_payload(field, value, "string")),
+    }
+}
+
+fn payload_u64(payload: &JsonObject, field: &'static str) -> Result<u64, PaymentSupervisorError> {
+    match payload.get(field) {
+        Some(JsonValue::Number(JsonNumber::U64(value))) => Ok(*value),
+        Some(value @ JsonValue::Number(JsonNumber::I64(number))) => {
+            u64::try_from(*number).map_err(|_| invalid_payload(field, value, "unsigned integer"))
+        }
+        Some(value) => Err(invalid_payload(field, value, "unsigned integer")),
+        None => Err(missing_payload(field)),
+    }
+}
+
+fn missing_payload(field: &'static str) -> PaymentSupervisorError {
+    PaymentSupervisorError::InvalidSupervisorEvidence {
+        message: format!("payment supervisor payload is missing {field}"),
+    }
+}
+
+fn invalid_payload(
+    field: &'static str,
+    value: &JsonValue,
+    expected: &'static str,
+) -> PaymentSupervisorError {
+    PaymentSupervisorError::InvalidSupervisorEvidence {
+        message: format!(
+            "payment supervisor payload field {field} must be {expected}, got {}",
+            json_value_kind(value)
+        ),
+    }
+}
+
+fn json_value_kind(value: &JsonValue) -> &'static str {
+    match value {
+        JsonValue::Null => "null",
+        JsonValue::Bool(_) => "bool",
+        JsonValue::Number(_) => "number",
+        JsonValue::String(_) => "string",
+        JsonValue::Array(_) => "array",
+        JsonValue::Object(_) => "object",
+    }
 }
 
 #[derive(Debug, Error, PartialEq, Eq)]
@@ -166,7 +255,7 @@ impl From<PaymentPacketError> for PaymentSupervisorError {
 pub fn verify_payment_rail_supervisor_proof(
     input: PaymentSupervisorVerificationInput<'_>,
 ) -> Result<PaymentSupervisorProof, PaymentSupervisorError> {
-    let packet = read_payment_rail_packet(input.outputs)?
+    let packet = read_effect_evidence_packet(input.outputs)?
         .ok_or(PaymentSupervisorError::MissingRailPacket)?;
     let result = packet
         .result
@@ -327,7 +416,7 @@ pub fn payment_supervisor_evidence_reference(
         locator: Some(evidence.idempotency_key.clone().into()),
         label: Some("payment rail supervisor proof".to_owned().into()),
         observed_at: None,
-        proof_kind: Some(ProofKind::PaymentRail),
+        proof_kind: Some(ProofKind::EffectEvidence),
     }
 }
 
@@ -339,7 +428,7 @@ pub fn payment_supervisor_proof_reference(proof: &PaymentSupervisorProof) -> Ref
         locator: Some(proof.idempotency_key.clone().into()),
         label: Some("payment rail supervisor proof".to_owned().into()),
         observed_at: None,
-        proof_kind: Some(ProofKind::PaymentRail),
+        proof_kind: Some(ProofKind::EffectEvidence),
     }
 }
 
@@ -484,7 +573,7 @@ fn validate_receipt_binding(
 /// `proof_kind`, never on human-readable label text.
 pub(crate) fn is_payment_rail_proof_ref(reference: &Reference) -> bool {
     reference.reference_type == ReferenceType::Verification
-        && reference.proof_kind.as_ref() == Some(&ProofKind::PaymentRail)
+        && reference.proof_kind.as_ref() == Some(&ProofKind::EffectEvidence)
 }
 
 fn is_matching_payment_rail_ref(
@@ -591,7 +680,7 @@ mod tests {
             locator: None,
             label: Some("human display text".to_owned().into()),
             observed_at: None,
-            proof_kind: Some(ProofKind::PaymentRail),
+            proof_kind: Some(ProofKind::EffectEvidence),
         };
         let label_only_ref = Reference {
             reference_type: ReferenceType::Verification,

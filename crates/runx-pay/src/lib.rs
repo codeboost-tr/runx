@@ -19,5 +19,7 @@ pub use payment_admission::{
     payment_admission_token_digest,
 };
 pub use runtime::{
-    DeterministicEffectSupervisor, EffectSupervisor, PAYMENT_EFFECT_FAMILY, PaymentRuntimeEffect,
+    DeterministicPaymentFinalitySupervisor, PAYMENT_EFFECT_FAMILY, PaymentFinalitySupervisor,
+    PaymentFinalitySupervisorError, PaymentFinalitySupervisorEvidence,
+    PaymentFinalitySupervisorRequest, PaymentRuntimeEffect,
 };

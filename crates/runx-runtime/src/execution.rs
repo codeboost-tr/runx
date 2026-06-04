@@ -7,7 +7,6 @@
 //! - `orchestrator`: canonical entrypoint for local skill, graph, and harness
 //!   execution.
 //! - `skill_run`: top-level skill-run orchestration.
-//! - `target_runner`: target-repo runner dispatch helpers.
 
 pub(crate) mod fanout;
 pub(crate) mod graph;
@@ -17,4 +16,3 @@ pub mod orchestrator;
 pub(crate) mod output_projection;
 pub mod runner;
 pub mod skill_run;
-pub mod target_runner;

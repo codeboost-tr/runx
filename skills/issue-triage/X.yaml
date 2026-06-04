@@ -59,6 +59,15 @@ harness:
         status: sealed
         receipt:
           schema: runx.receipt.v1
+    - name: issue-triage-mcp-read
+      runner: mcp-read
+      inputs:
+        repository: runxhq/runx
+        issue_number: "241"
+      expect:
+        status: sealed
+        receipt:
+          schema: runx.receipt.v1
 
 runners:
   agent:
@@ -92,6 +101,34 @@ runners:
         type: string
         required: false
         description: "Operator-supplied context for triage."
+
+  mcp-read:
+    type: graph
+    inputs:
+      repository:
+        type: string
+        required: true
+        description: "Repository slug to inspect through the governed MCP read path."
+      issue_number:
+        type: string
+        required: true
+        description: "Issue number to inspect through the governed MCP read path."
+    graph:
+      name: issue-triage-mcp-read
+      steps:
+        - id: read_issue
+          skill: ../../examples/github-mcp-hero/read-issue
+          scopes:
+            - repo.read
+          policy:
+            provider_permission:
+              grant_id: github-mcp-issue-triage-read
+              granted_scopes:
+                - repo.read
+              verb: read
+          inputs:
+            repository: "$input.repository"
+            issue_number: "$input.issue_number"
 
   respond:
     default: true

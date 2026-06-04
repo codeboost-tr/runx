@@ -1,11 +1,9 @@
 skill: refund-reserve
-version: "0.1.0"
-
+version: 0.1.0
 catalog:
   kind: skill
   audience: operator
   visibility: private
-
 harness:
   cases:
     - name: refund-reserve-selected
@@ -46,21 +44,22 @@ harness:
               resource_ref:
                 type: surface
                 uri: provider:demo
-              resource_family: payment
+              resource_family: effect
               verbs:
-                - refund
+                - reverse
               bounds:
-                payment:
-                  currency: USD
-                  max_per_call_minor: 125
-                  rails:
-                    - mock
-                  realm: test
-                  counterparty: provider:demo
-                  operation: refund:search.paid
-                  idempotency_required: true
-                  recovery_required: true
-                  receipt_before_success: true
+                effect_limits:
+                  - family: payment
+                    unit: USD
+                    max_per_call_units: 125
+                    channels:
+                      - mock
+                    realm: test
+                    peer: provider:demo
+                    operation: refund:search.paid
+                    idempotency_required: true
+                    recovery_required: true
+                    receipt_before_success: true
               conditions: []
               approvals: []
               capabilities: []
@@ -89,7 +88,6 @@ harness:
           state: sealed
           disposition: closed
           reason_code: refund_reservation_closed
-
 runners:
   reserve:
     default: true
@@ -111,9 +109,9 @@ runners:
       payment_authority:
         direction: provider_refund
         phase: reserve
-        resource_family: payment
+        resource_family: effect
         verbs:
-          - refund
+          - reverse
         mutates_rail: false
         receives_rail_secret_material: false
         requires_original_receipt_ref: true
@@ -121,16 +119,16 @@ runners:
       refund_quote_packet:
         type: object
         required: true
-        description: "Output from refund-quote."
+        description: Output from refund-quote.
       parent_payment_authority:
         type: object
         required: true
-        description: "Parent payment authority term or authority reference."
+        description: Parent payment authority term or authority reference.
       approval_context:
         type: object
         required: false
-        description: "Prior approval evidence."
+        description: Prior approval evidence.
       idempotency_seed:
         type: string
         required: false
-        description: "Stable refund idempotency seed."
+        description: Stable refund idempotency seed.

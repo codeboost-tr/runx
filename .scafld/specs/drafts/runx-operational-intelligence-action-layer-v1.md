@@ -93,9 +93,9 @@ Out of scope for this parent:
   - `docs/developer-issue-inbox.md`;
   - `docs/issue-to-pr.md`;
   - `docs/thread-story-contract.md`;
-  - `packages/core/src/source/index.ts`;
-  - `packages/core/src/knowledge/thread-story.ts`;
-  - `packages/core/src/knowledge/outbox.ts`;
+  - `tools/outbox/story.ts`;
+  - `tools/outbox/markdown.ts`;
+  - `tools/thread/push_outbox/src/index.ts`;
   - `packages/contracts/src/schemas/operational-policy.ts`;
   - `skills/issue-intake/SKILL.md`;
   - `skills/issue-triage/SKILL.md`;

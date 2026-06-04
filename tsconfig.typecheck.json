@@ -7,8 +7,6 @@
   },
   "include": [
     "packages/**/*.ts",
-    "apps/**/*.ts",
-    "plugins/**/*.ts",
     "tests/**/*.ts",
     "vitest.config.ts",
     "vitest.fast.config.ts"

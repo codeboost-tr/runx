@@ -1,11 +1,9 @@
 skill: pay-recover
-version: "0.1.0"
-
+version: 0.1.0
 catalog:
   kind: skill
   audience: operator
   visibility: private
-
 harness:
   cases:
     - name: pay-recovery-finds-proof
@@ -21,21 +19,22 @@ harness:
           resource_ref:
             type: surface
             uri: merchant:demo
-          resource_family: payment
+          resource_family: effect
           verbs:
-            - spend
+            - commit
           capabilities:
-            - payment_single_use_spend
+            - effect_single_use_capability
           bounds:
-            payment:
-              currency: USD
-              max_per_call_minor: 125
-              rails:
-                - mock
-              realm: test
-              counterparty: merchant:demo
-              operation: search.paid
-              single_use_spend: true
+            effect_limits:
+              - family: payment
+                unit: USD
+                max_per_call_units: 125
+                channels:
+                  - mock
+                realm: test
+                peer: merchant:demo
+                operation: search.paid
+                single_use_capability: true
           conditions: []
           approvals: []
           issued_by_ref:
@@ -65,7 +64,6 @@ harness:
           state: sealed
           disposition: closed
           reason_code: payment_recovery_closed
-
 runners:
   inspect:
     default: true
@@ -84,7 +82,7 @@ runners:
     runx:
       payment_authority:
         phase: recover
-        resource_family: payment
+        resource_family: effect
         verbs:
           - verify
         mutates_rail: false
@@ -94,20 +92,20 @@ runners:
       idempotency:
         type: object
         required: true
-        description: "Reservation key and recovery lookup fields."
+        description: Reservation key and recovery lookup fields.
       reserved_payment_authority:
         type: object
         required: true
-        description: "Child payment authority term."
+        description: Child payment authority term.
       rail_profile_ref:
         type: string
         required: true
-        description: "Configured rail profile reference."
+        description: Configured rail profile reference.
       prior_rail_result:
         type: object
         required: false
-        description: "Previous rail attempt result."
+        description: Previous rail attempt result.
       receipt_refs:
         type: json
         required: false
-        description: "Existing harness or rail proof refs."
+        description: Existing harness or rail proof refs.

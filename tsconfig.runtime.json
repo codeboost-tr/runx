@@ -6,6 +6,6 @@
     "outDir": ".build/runtime",
     "tsBuildInfoFile": "node_modules/.cache/tsc/runtime.tsbuildinfo"
   },
-  "include": ["packages/**/*.ts", "apps/**/*.ts", "plugins/**/*.ts"],
+  "include": ["packages/**/*.ts"],
   "exclude": ["**/*.test.ts", "dist", "**/dist", ".build", "coverage", "node_modules", "packages/**/tools"]
 }

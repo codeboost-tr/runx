@@ -32,7 +32,7 @@ runtime forwarding.
 ## Output
 
 - `charge_price_packet`: provider-side price and requested authority.
-- `charge_challenge_packet`: `payment_required` challenge and idempotency key.
+- `charge_challenge_packet`: `effect_required` challenge and idempotency key.
 - `charge_verification_packet`: mock settlement proof and receipt ref.
 - `charge_seal`: modeled child receipt seal.
 - `forwarded_result`: modeled upstream result gated by the seal.

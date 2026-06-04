@@ -47,7 +47,7 @@ one scoped x402 spend, then one over-run-cap refusal before money moves.
 ## Tweak it
 
 In [`skills/overspend-refused/X.yaml`](skills/overspend-refused/X.yaml), raise the
-reserved child authority's `max_per_call_minor` from `100` to `125` and re-run: the
+reserved child authority's `max_per_call_units` from `100` to `125` and re-run: the
 same agent now fulfills, because the spend is within its authority.
 
 ## What is real

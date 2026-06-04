@@ -1151,11 +1151,11 @@ export const runxSchemaArtifacts = {
             "proof_kind": {
               "anyOf": [
                 {
-                  "const": "payment_rail",
+                  "const": "effect_evidence",
                   "type": "string"
                 },
                 {
-                  "const": "effect_settlement",
+                  "const": "effect_finality",
                   "type": "string"
                 },
                 {
@@ -1445,11 +1445,11 @@ export const runxSchemaArtifacts = {
                   "proof_kind": {
                     "anyOf": [
                       {
-                        "const": "payment_rail",
+                        "const": "effect_evidence",
                         "type": "string"
                       },
                       {
-                        "const": "effect_settlement",
+                        "const": "effect_finality",
                         "type": "string"
                       },
                       {
@@ -1698,11 +1698,11 @@ export const runxSchemaArtifacts = {
                   "proof_kind": {
                     "anyOf": [
                       {
-                        "const": "payment_rail",
+                        "const": "effect_evidence",
                         "type": "string"
                       },
                       {
-                        "const": "effect_settlement",
+                        "const": "effect_finality",
                         "type": "string"
                       },
                       {
@@ -1956,11 +1956,11 @@ export const runxSchemaArtifacts = {
             "proof_kind": {
               "anyOf": [
                 {
-                  "const": "payment_rail",
+                  "const": "effect_evidence",
                   "type": "string"
                 },
                 {
-                  "const": "effect_settlement",
+                  "const": "effect_finality",
                   "type": "string"
                 },
                 {
@@ -2191,11 +2191,11 @@ export const runxSchemaArtifacts = {
                 "proof_kind": {
                   "anyOf": [
                     {
-                      "const": "payment_rail",
+                      "const": "effect_evidence",
                       "type": "string"
                     },
                     {
-                      "const": "effect_settlement",
+                      "const": "effect_finality",
                       "type": "string"
                     },
                     {
@@ -2542,11 +2542,11 @@ export const runxSchemaArtifacts = {
                         "proof_kind": {
                           "anyOf": [
                             {
-                              "const": "payment_rail",
+                              "const": "effect_evidence",
                               "type": "string"
                             },
                             {
-                              "const": "effect_settlement",
+                              "const": "effect_finality",
                               "type": "string"
                             },
                             {
@@ -2781,11 +2781,11 @@ export const runxSchemaArtifacts = {
                 "proof_kind": {
                   "anyOf": [
                     {
-                      "const": "payment_rail",
+                      "const": "effect_evidence",
                       "type": "string"
                     },
                     {
-                      "const": "effect_settlement",
+                      "const": "effect_finality",
                       "type": "string"
                     },
                     {
@@ -3013,11 +3013,11 @@ export const runxSchemaArtifacts = {
                 "proof_kind": {
                   "anyOf": [
                     {
-                      "const": "payment_rail",
+                      "const": "effect_evidence",
                       "type": "string"
                     },
                     {
-                      "const": "effect_settlement",
+                      "const": "effect_finality",
                       "type": "string"
                     },
                     {
@@ -3248,11 +3248,11 @@ export const runxSchemaArtifacts = {
                     "proof_kind": {
                       "anyOf": [
                         {
-                          "const": "payment_rail",
+                          "const": "effect_evidence",
                           "type": "string"
                         },
                         {
-                          "const": "effect_settlement",
+                          "const": "effect_finality",
                           "type": "string"
                         },
                         {
@@ -3493,11 +3493,11 @@ export const runxSchemaArtifacts = {
                           "proof_kind": {
                             "anyOf": [
                               {
-                                "const": "payment_rail",
+                                "const": "effect_evidence",
                                 "type": "string"
                               },
                               {
-                                "const": "effect_settlement",
+                                "const": "effect_finality",
                                 "type": "string"
                               },
                               {
@@ -3725,11 +3725,11 @@ export const runxSchemaArtifacts = {
                           "proof_kind": {
                             "anyOf": [
                               {
-                                "const": "payment_rail",
+                                "const": "effect_evidence",
                                 "type": "string"
                               },
                               {
-                                "const": "effect_settlement",
+                                "const": "effect_finality",
                                 "type": "string"
                               },
                               {
@@ -3994,11 +3994,11 @@ export const runxSchemaArtifacts = {
                     "proof_kind": {
                       "anyOf": [
                         {
-                          "const": "payment_rail",
+                          "const": "effect_evidence",
                           "type": "string"
                         },
                         {
-                          "const": "effect_settlement",
+                          "const": "effect_finality",
                           "type": "string"
                         },
                         {
@@ -4284,11 +4284,11 @@ export const runxSchemaArtifacts = {
             "proof_kind": {
               "anyOf": [
                 {
-                  "const": "payment_rail",
+                  "const": "effect_evidence",
                   "type": "string"
                 },
                 {
-                  "const": "effect_settlement",
+                  "const": "effect_finality",
                   "type": "string"
                 },
                 {
@@ -4513,11 +4513,11 @@ export const runxSchemaArtifacts = {
             "proof_kind": {
               "anyOf": [
                 {
-                  "const": "payment_rail",
+                  "const": "effect_evidence",
                   "type": "string"
                 },
                 {
-                  "const": "effect_settlement",
+                  "const": "effect_finality",
                   "type": "string"
                 },
                 {
@@ -4738,11 +4738,11 @@ export const runxSchemaArtifacts = {
             "proof_kind": {
               "anyOf": [
                 {
-                  "const": "payment_rail",
+                  "const": "effect_evidence",
                   "type": "string"
                 },
                 {
-                  "const": "effect_settlement",
+                  "const": "effect_finality",
                   "type": "string"
                 },
                 {
@@ -4972,11 +4972,11 @@ export const runxSchemaArtifacts = {
               "proof_kind": {
                 "anyOf": [
                   {
-                    "const": "payment_rail",
+                    "const": "effect_evidence",
                     "type": "string"
                   },
                   {
-                    "const": "effect_settlement",
+                    "const": "effect_finality",
                     "type": "string"
                   },
                   {
@@ -5208,11 +5208,11 @@ export const runxSchemaArtifacts = {
                           "proof_kind": {
                             "anyOf": [
                               {
-                                "const": "payment_rail",
+                                "const": "effect_evidence",
                                 "type": "string"
                               },
                               {
-                                "const": "effect_settlement",
+                                "const": "effect_finality",
                                 "type": "string"
                               },
                               {
@@ -5440,11 +5440,11 @@ export const runxSchemaArtifacts = {
                           "proof_kind": {
                             "anyOf": [
                               {
-                                "const": "payment_rail",
+                                "const": "effect_evidence",
                                 "type": "string"
                               },
                               {
-                                "const": "effect_settlement",
+                                "const": "effect_finality",
                                 "type": "string"
                               },
                               {
@@ -5709,11 +5709,11 @@ export const runxSchemaArtifacts = {
                     "proof_kind": {
                       "anyOf": [
                         {
-                          "const": "payment_rail",
+                          "const": "effect_evidence",
                           "type": "string"
                         },
                         {
-                          "const": "effect_settlement",
+                          "const": "effect_finality",
                           "type": "string"
                         },
                         {
@@ -5991,11 +5991,11 @@ export const runxSchemaArtifacts = {
             "proof_kind": {
               "anyOf": [
                 {
-                  "const": "payment_rail",
+                  "const": "effect_evidence",
                   "type": "string"
                 },
                 {
-                  "const": "effect_settlement",
+                  "const": "effect_finality",
                   "type": "string"
                 },
                 {
@@ -7428,11 +7428,11 @@ export const runxSchemaArtifacts = {
           "proof_kind": {
             "anyOf": [
               {
-                "const": "payment_rail",
+                "const": "effect_evidence",
                 "type": "string"
               },
               {
-                "const": "effect_settlement",
+                "const": "effect_finality",
                 "type": "string"
               },
               {
@@ -7655,11 +7655,11 @@ export const runxSchemaArtifacts = {
           "proof_kind": {
             "anyOf": [
               {
-                "const": "payment_rail",
+                "const": "effect_evidence",
                 "type": "string"
               },
               {
-                "const": "effect_settlement",
+                "const": "effect_finality",
                 "type": "string"
               },
               {
@@ -7922,11 +7922,11 @@ export const runxSchemaArtifacts = {
                   "proof_kind": {
                     "anyOf": [
                       {
-                        "const": "payment_rail",
+                        "const": "effect_evidence",
                         "type": "string"
                       },
                       {
-                        "const": "effect_settlement",
+                        "const": "effect_finality",
                         "type": "string"
                       },
                       {
@@ -8151,11 +8151,11 @@ export const runxSchemaArtifacts = {
               "proof_kind": {
                 "anyOf": [
                   {
-                    "const": "payment_rail",
+                    "const": "effect_evidence",
                     "type": "string"
                   },
                   {
-                    "const": "effect_settlement",
+                    "const": "effect_finality",
                     "type": "string"
                   },
                   {
@@ -8373,11 +8373,11 @@ export const runxSchemaArtifacts = {
               "proof_kind": {
                 "anyOf": [
                   {
-                    "const": "payment_rail",
+                    "const": "effect_evidence",
                     "type": "string"
                   },
                   {
-                    "const": "effect_settlement",
+                    "const": "effect_finality",
                     "type": "string"
                   },
                   {
@@ -8595,11 +8595,11 @@ export const runxSchemaArtifacts = {
               "proof_kind": {
                 "anyOf": [
                   {
-                    "const": "payment_rail",
+                    "const": "effect_evidence",
                     "type": "string"
                   },
                   {
-                    "const": "effect_settlement",
+                    "const": "effect_finality",
                     "type": "string"
                   },
                   {
@@ -8817,11 +8817,11 @@ export const runxSchemaArtifacts = {
               "proof_kind": {
                 "anyOf": [
                   {
-                    "const": "payment_rail",
+                    "const": "effect_evidence",
                     "type": "string"
                   },
                   {
-                    "const": "effect_settlement",
+                    "const": "effect_finality",
                     "type": "string"
                   },
                   {
@@ -9043,11 +9043,11 @@ export const runxSchemaArtifacts = {
             "proof_kind": {
               "anyOf": [
                 {
-                  "const": "payment_rail",
+                  "const": "effect_evidence",
                   "type": "string"
                 },
                 {
-                  "const": "effect_settlement",
+                  "const": "effect_finality",
                   "type": "string"
                 },
                 {
@@ -9279,11 +9279,11 @@ export const runxSchemaArtifacts = {
             "proof_kind": {
               "anyOf": [
                 {
-                  "const": "payment_rail",
+                  "const": "effect_evidence",
                   "type": "string"
                 },
                 {
-                  "const": "effect_settlement",
+                  "const": "effect_finality",
                   "type": "string"
                 },
                 {
@@ -9997,11 +9997,11 @@ export const runxSchemaArtifacts = {
           "proof_kind": {
             "anyOf": [
               {
-                "const": "payment_rail",
+                "const": "effect_evidence",
                 "type": "string"
               },
               {
-                "const": "effect_settlement",
+                "const": "effect_finality",
                 "type": "string"
               },
               {
@@ -10219,11 +10219,11 @@ export const runxSchemaArtifacts = {
           "proof_kind": {
             "anyOf": [
               {
-                "const": "payment_rail",
+                "const": "effect_evidence",
                 "type": "string"
               },
               {
-                "const": "effect_settlement",
+                "const": "effect_finality",
                 "type": "string"
               },
               {
@@ -10469,11 +10469,11 @@ export const runxSchemaArtifacts = {
           "proof_kind": {
             "anyOf": [
               {
-                "const": "payment_rail",
+                "const": "effect_evidence",
                 "type": "string"
               },
               {
-                "const": "effect_settlement",
+                "const": "effect_finality",
                 "type": "string"
               },
               {
@@ -10696,11 +10696,11 @@ export const runxSchemaArtifacts = {
                   "proof_kind": {
                     "anyOf": [
                       {
-                        "const": "payment_rail",
+                        "const": "effect_evidence",
                         "type": "string"
                       },
                       {
-                        "const": "effect_settlement",
+                        "const": "effect_finality",
                         "type": "string"
                       },
                       {
@@ -10973,11 +10973,11 @@ export const runxSchemaArtifacts = {
                       "proof_kind": {
                         "anyOf": [
                           {
-                            "const": "payment_rail",
+                            "const": "effect_evidence",
                             "type": "string"
                           },
                           {
-                            "const": "effect_settlement",
+                            "const": "effect_finality",
                             "type": "string"
                           },
                           {
@@ -11195,11 +11195,11 @@ export const runxSchemaArtifacts = {
                       "proof_kind": {
                         "anyOf": [
                           {
-                            "const": "payment_rail",
+                            "const": "effect_evidence",
                             "type": "string"
                           },
                           {
-                            "const": "effect_settlement",
+                            "const": "effect_finality",
                             "type": "string"
                           },
                           {
@@ -11453,11 +11453,11 @@ export const runxSchemaArtifacts = {
             "proof_kind": {
               "anyOf": [
                 {
-                  "const": "payment_rail",
+                  "const": "effect_evidence",
                   "type": "string"
                 },
                 {
-                  "const": "effect_settlement",
+                  "const": "effect_finality",
                   "type": "string"
                 },
                 {
@@ -11678,11 +11678,11 @@ export const runxSchemaArtifacts = {
             "proof_kind": {
               "anyOf": [
                 {
-                  "const": "payment_rail",
+                  "const": "effect_evidence",
                   "type": "string"
                 },
                 {
-                  "const": "effect_settlement",
+                  "const": "effect_finality",
                   "type": "string"
                 },
                 {
@@ -11902,11 +11902,11 @@ export const runxSchemaArtifacts = {
           "proof_kind": {
             "anyOf": [
               {
-                "const": "payment_rail",
+                "const": "effect_evidence",
                 "type": "string"
               },
               {
-                "const": "effect_settlement",
+                "const": "effect_finality",
                 "type": "string"
               },
               {
@@ -12125,11 +12125,11 @@ export const runxSchemaArtifacts = {
             "proof_kind": {
               "anyOf": [
                 {
-                  "const": "payment_rail",
+                  "const": "effect_evidence",
                   "type": "string"
                 },
                 {
-                  "const": "effect_settlement",
+                  "const": "effect_finality",
                   "type": "string"
                 },
                 {
@@ -12358,11 +12358,11 @@ export const runxSchemaArtifacts = {
             "proof_kind": {
               "anyOf": [
                 {
-                  "const": "payment_rail",
+                  "const": "effect_evidence",
                   "type": "string"
                 },
                 {
-                  "const": "effect_settlement",
+                  "const": "effect_finality",
                   "type": "string"
                 },
                 {
@@ -12590,11 +12590,11 @@ export const runxSchemaArtifacts = {
                       "proof_kind": {
                         "anyOf": [
                           {
-                            "const": "payment_rail",
+                            "const": "effect_evidence",
                             "type": "string"
                           },
                           {
-                            "const": "effect_settlement",
+                            "const": "effect_finality",
                             "type": "string"
                           },
                           {
@@ -12817,11 +12817,11 @@ export const runxSchemaArtifacts = {
                       "proof_kind": {
                         "anyOf": [
                           {
-                            "const": "payment_rail",
+                            "const": "effect_evidence",
                             "type": "string"
                           },
                           {
-                            "const": "effect_settlement",
+                            "const": "effect_finality",
                             "type": "string"
                           },
                           {
@@ -13050,6 +13050,96 @@ export const runxSchemaArtifacts = {
                   },
                   "type": "array"
                 },
+                "effect_limits": {
+                  "items": {
+                    "additionalProperties": false,
+                    "properties": {
+                      "approval_threshold_units": {
+                        "type": "integer"
+                      },
+                      "authorization_form": {
+                        "anyOf": [
+                          {
+                            "const": "single_use_capability",
+                            "type": "string"
+                          },
+                          {
+                            "const": "external_signer",
+                            "type": "string"
+                          }
+                        ]
+                      },
+                      "channels": {
+                        "items": {
+                          "minLength": 1,
+                          "type": "string"
+                        },
+                        "type": "array"
+                      },
+                      "commitment_required": {
+                        "type": "boolean"
+                      },
+                      "family": {
+                        "minLength": 1,
+                        "type": "string"
+                      },
+                      "idempotency_required": {
+                        "type": "boolean"
+                      },
+                      "max_per_call_units": {
+                        "type": "integer"
+                      },
+                      "max_per_period_units": {
+                        "type": "integer"
+                      },
+                      "max_per_run_units": {
+                        "type": "integer"
+                      },
+                      "operation": {
+                        "minLength": 1,
+                        "type": "string"
+                      },
+                      "peer": {
+                        "minLength": 1,
+                        "type": "string"
+                      },
+                      "period": {
+                        "minLength": 1,
+                        "type": "string"
+                      },
+                      "preflight_required": {
+                        "type": "boolean"
+                      },
+                      "preflight_ttl_ms": {
+                        "type": "integer"
+                      },
+                      "realm": {
+                        "minLength": 1,
+                        "type": "string"
+                      },
+                      "receipt_before_success": {
+                        "type": "boolean"
+                      },
+                      "recovery_required": {
+                        "type": "boolean"
+                      },
+                      "single_use_capability": {
+                        "type": "boolean"
+                      },
+                      "unit": {
+                        "minLength": 1,
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "family",
+                      "unit",
+                      "channels"
+                    ],
+                    "type": "object"
+                  },
+                  "type": "array"
+                },
                 "effects": {
                   "items": {
                     "additionalProperties": false,
@@ -13077,11 +13167,11 @@ export const runxSchemaArtifacts = {
                         "items": {
                           "anyOf": [
                             {
-                              "const": "payment_rail",
+                              "const": "effect_evidence",
                               "type": "string"
                             },
                             {
-                              "const": "effect_settlement",
+                              "const": "effect_finality",
                               "type": "string"
                             },
                             {
@@ -13110,14 +13200,14 @@ export const runxSchemaArtifacts = {
                 "max_child_depth": {
                   "type": "integer"
                 },
+                "max_cost_units": {
+                  "type": "number"
+                },
                 "max_fanout": {
                   "type": "integer"
                 },
                 "max_runtime_ms": {
                   "type": "integer"
-                },
-                "max_spend_usd": {
-                  "type": "number"
                 },
                 "network_destinations": {
                   "items": {
@@ -13125,88 +13215,6 @@ export const runxSchemaArtifacts = {
                     "type": "string"
                   },
                   "type": "array"
-                },
-                "payment": {
-                  "additionalProperties": false,
-                  "properties": {
-                    "approval_threshold_minor": {
-                      "type": "integer"
-                    },
-                    "counterparty": {
-                      "minLength": 1,
-                      "type": "string"
-                    },
-                    "credential_form": {
-                      "anyOf": [
-                        {
-                          "const": "single_use_spend_capability",
-                          "type": "string"
-                        },
-                        {
-                          "const": "external_signer",
-                          "type": "string"
-                        }
-                      ]
-                    },
-                    "currency": {
-                      "minLength": 1,
-                      "type": "string"
-                    },
-                    "idempotency_required": {
-                      "type": "boolean"
-                    },
-                    "max_per_call_minor": {
-                      "type": "integer"
-                    },
-                    "max_per_period_minor": {
-                      "type": "integer"
-                    },
-                    "max_per_run_minor": {
-                      "type": "integer"
-                    },
-                    "operation": {
-                      "minLength": 1,
-                      "type": "string"
-                    },
-                    "period": {
-                      "minLength": 1,
-                      "type": "string"
-                    },
-                    "quote_required": {
-                      "type": "boolean"
-                    },
-                    "quote_ttl_ms": {
-                      "type": "integer"
-                    },
-                    "rails": {
-                      "items": {
-                        "minLength": 1,
-                        "type": "string"
-                      },
-                      "type": "array"
-                    },
-                    "realm": {
-                      "minLength": 1,
-                      "type": "string"
-                    },
-                    "receipt_before_success": {
-                      "type": "boolean"
-                    },
-                    "recovery_required": {
-                      "type": "boolean"
-                    },
-                    "reservation_required": {
-                      "type": "boolean"
-                    },
-                    "single_use_spend": {
-                      "type": "boolean"
-                    }
-                  },
-                  "required": [
-                    "currency",
-                    "rails"
-                  ],
-                  "type": "object"
                 },
                 "repo_path_globs": {
                   "items": {
@@ -13261,7 +13269,7 @@ export const runxSchemaArtifacts = {
                     "type": "string"
                   },
                   {
-                    "const": "payment_single_use_spend",
+                    "const": "effect_single_use_capability",
                     "type": "string"
                   }
                 ]
@@ -13311,11 +13319,11 @@ export const runxSchemaArtifacts = {
                         "type": "string"
                       },
                       {
-                        "const": "payment_receipt_present",
+                        "const": "effect_proof_present",
                         "type": "string"
                       },
                       {
-                        "const": "payment_recovery_available",
+                        "const": "effect_recovery_available",
                         "type": "string"
                       }
                     ]
@@ -13342,11 +13350,11 @@ export const runxSchemaArtifacts = {
                         "proof_kind": {
                           "anyOf": [
                             {
-                              "const": "payment_rail",
+                              "const": "effect_evidence",
                               "type": "string"
                             },
                             {
-                              "const": "effect_settlement",
+                              "const": "effect_finality",
                               "type": "string"
                             },
                             {
@@ -13575,11 +13583,11 @@ export const runxSchemaArtifacts = {
                 "proof_kind": {
                   "anyOf": [
                     {
-                      "const": "payment_rail",
+                      "const": "effect_evidence",
                       "type": "string"
                     },
                     {
-                      "const": "effect_settlement",
+                      "const": "effect_finality",
                       "type": "string"
                     },
                     {
@@ -13802,11 +13810,11 @@ export const runxSchemaArtifacts = {
                 "proof_kind": {
                   "anyOf": [
                     {
-                      "const": "payment_rail",
+                      "const": "effect_evidence",
                       "type": "string"
                     },
                     {
-                      "const": "effect_settlement",
+                      "const": "effect_finality",
                       "type": "string"
                     },
                     {
@@ -14024,11 +14032,11 @@ export const runxSchemaArtifacts = {
                 "proof_kind": {
                   "anyOf": [
                     {
-                      "const": "payment_rail",
+                      "const": "effect_evidence",
                       "type": "string"
                     },
                     {
-                      "const": "effect_settlement",
+                      "const": "effect_finality",
                       "type": "string"
                     },
                     {
@@ -14252,7 +14260,7 @@ export const runxSchemaArtifacts = {
                   "type": "string"
                 },
                 {
-                  "const": "payment",
+                  "const": "effect",
                   "type": "string"
                 },
                 {
@@ -14290,11 +14298,11 @@ export const runxSchemaArtifacts = {
                 "proof_kind": {
                   "anyOf": [
                     {
-                      "const": "payment_rail",
+                      "const": "effect_evidence",
                       "type": "string"
                     },
                     {
-                      "const": "effect_settlement",
+                      "const": "effect_finality",
                       "type": "string"
                     },
                     {
@@ -14543,19 +14551,19 @@ export const runxSchemaArtifacts = {
                     "type": "string"
                   },
                   {
-                    "const": "quote",
+                    "const": "estimate",
                     "type": "string"
                   },
                   {
-                    "const": "reserve",
+                    "const": "prepare",
                     "type": "string"
                   },
                   {
-                    "const": "spend",
+                    "const": "commit",
                     "type": "string"
                   },
                   {
-                    "const": "refund",
+                    "const": "reverse",
                     "type": "string"
                   },
                   {
@@ -14619,11 +14627,11 @@ export const runxSchemaArtifacts = {
             "proof_kind": {
               "anyOf": [
                 {
-                  "const": "payment_rail",
+                  "const": "effect_evidence",
                   "type": "string"
                 },
                 {
-                  "const": "effect_settlement",
+                  "const": "effect_finality",
                   "type": "string"
                 },
                 {
@@ -14874,11 +14882,11 @@ export const runxSchemaArtifacts = {
           "proof_kind": {
             "anyOf": [
               {
-                "const": "payment_rail",
+                "const": "effect_evidence",
                 "type": "string"
               },
               {
-                "const": "effect_settlement",
+                "const": "effect_finality",
                 "type": "string"
               },
               {
@@ -15096,11 +15104,11 @@ export const runxSchemaArtifacts = {
           "proof_kind": {
             "anyOf": [
               {
-                "const": "payment_rail",
+                "const": "effect_evidence",
                 "type": "string"
               },
               {
-                "const": "effect_settlement",
+                "const": "effect_finality",
                 "type": "string"
               },
               {
@@ -15360,11 +15368,11 @@ export const runxSchemaArtifacts = {
             "proof_kind": {
               "anyOf": [
                 {
-                  "const": "payment_rail",
+                  "const": "effect_evidence",
                   "type": "string"
                 },
                 {
-                  "const": "effect_settlement",
+                  "const": "effect_finality",
                   "type": "string"
                 },
                 {
@@ -15741,11 +15749,11 @@ export const runxSchemaArtifacts = {
           "proof_kind": {
             "anyOf": [
               {
-                "const": "payment_rail",
+                "const": "effect_evidence",
                 "type": "string"
               },
               {
-                "const": "effect_settlement",
+                "const": "effect_finality",
                 "type": "string"
               },
               {
@@ -15991,11 +15999,11 @@ export const runxSchemaArtifacts = {
           "proof_kind": {
             "anyOf": [
               {
-                "const": "payment_rail",
+                "const": "effect_evidence",
                 "type": "string"
               },
               {
-                "const": "effect_settlement",
+                "const": "effect_finality",
                 "type": "string"
               },
               {
@@ -16213,11 +16221,11 @@ export const runxSchemaArtifacts = {
           "proof_kind": {
             "anyOf": [
               {
-                "const": "payment_rail",
+                "const": "effect_evidence",
                 "type": "string"
               },
               {
-                "const": "effect_settlement",
+                "const": "effect_finality",
                 "type": "string"
               },
               {
@@ -16435,11 +16443,11 @@ export const runxSchemaArtifacts = {
           "proof_kind": {
             "anyOf": [
               {
-                "const": "payment_rail",
+                "const": "effect_evidence",
                 "type": "string"
               },
               {
-                "const": "effect_settlement",
+                "const": "effect_finality",
                 "type": "string"
               },
               {
@@ -16657,11 +16665,11 @@ export const runxSchemaArtifacts = {
           "proof_kind": {
             "anyOf": [
               {
-                "const": "payment_rail",
+                "const": "effect_evidence",
                 "type": "string"
               },
               {
-                "const": "effect_settlement",
+                "const": "effect_finality",
                 "type": "string"
               },
               {
@@ -16970,11 +16978,11 @@ export const runxSchemaArtifacts = {
             "proof_kind": {
               "anyOf": [
                 {
-                  "const": "payment_rail",
+                  "const": "effect_evidence",
                   "type": "string"
                 },
                 {
-                  "const": "effect_settlement",
+                  "const": "effect_finality",
                   "type": "string"
                 },
                 {
@@ -17218,11 +17226,11 @@ export const runxSchemaArtifacts = {
                 "proof_kind": {
                   "anyOf": [
                     {
-                      "const": "payment_rail",
+                      "const": "effect_evidence",
                       "type": "string"
                     },
                     {
-                      "const": "effect_settlement",
+                      "const": "effect_finality",
                       "type": "string"
                     },
                     {
@@ -17635,11 +17643,11 @@ export const runxSchemaArtifacts = {
             "proof_kind": {
               "anyOf": [
                 {
-                  "const": "payment_rail",
+                  "const": "effect_evidence",
                   "type": "string"
                 },
                 {
-                  "const": "effect_settlement",
+                  "const": "effect_finality",
                   "type": "string"
                 },
                 {
@@ -17971,11 +17979,11 @@ export const runxSchemaArtifacts = {
                 "proof_kind": {
                   "anyOf": [
                     {
-                      "const": "payment_rail",
+                      "const": "effect_evidence",
                       "type": "string"
                     },
                     {
-                      "const": "effect_settlement",
+                      "const": "effect_finality",
                       "type": "string"
                     },
                     {
@@ -18197,11 +18205,11 @@ export const runxSchemaArtifacts = {
                   "proof_kind": {
                     "anyOf": [
                       {
-                        "const": "payment_rail",
+                        "const": "effect_evidence",
                         "type": "string"
                       },
                       {
-                        "const": "effect_settlement",
+                        "const": "effect_finality",
                         "type": "string"
                       },
                       {
@@ -18425,11 +18433,11 @@ export const runxSchemaArtifacts = {
                 "proof_kind": {
                   "anyOf": [
                     {
-                      "const": "payment_rail",
+                      "const": "effect_evidence",
                       "type": "string"
                     },
                     {
-                      "const": "effect_settlement",
+                      "const": "effect_finality",
                       "type": "string"
                     },
                     {
@@ -18651,11 +18659,11 @@ export const runxSchemaArtifacts = {
                   "proof_kind": {
                     "anyOf": [
                       {
-                        "const": "payment_rail",
+                        "const": "effect_evidence",
                         "type": "string"
                       },
                       {
-                        "const": "effect_settlement",
+                        "const": "effect_finality",
                         "type": "string"
                       },
                       {
@@ -18889,11 +18897,11 @@ export const runxSchemaArtifacts = {
                 "proof_kind": {
                   "anyOf": [
                     {
-                      "const": "payment_rail",
+                      "const": "effect_evidence",
                       "type": "string"
                     },
                     {
-                      "const": "effect_settlement",
+                      "const": "effect_finality",
                       "type": "string"
                     },
                     {
@@ -19134,11 +19142,11 @@ export const runxSchemaArtifacts = {
                 "proof_kind": {
                   "anyOf": [
                     {
-                      "const": "payment_rail",
+                      "const": "effect_evidence",
                       "type": "string"
                     },
                     {
-                      "const": "effect_settlement",
+                      "const": "effect_finality",
                       "type": "string"
                     },
                     {
@@ -19415,11 +19423,11 @@ export const runxSchemaArtifacts = {
               "proof_kind": {
                 "anyOf": [
                   {
-                    "const": "payment_rail",
+                    "const": "effect_evidence",
                     "type": "string"
                   },
                   {
-                    "const": "effect_settlement",
+                    "const": "effect_finality",
                     "type": "string"
                   },
                   {
@@ -20240,8 +20248,8 @@ export const runxSchemaArtifacts = {
     "type": "object",
     "x-runx-schema": "runx.doctor.v1"
   } as JsonSchema,
-  "effect-settlement-receipt.schema.json": {
-    "$id": "https://schemas.runx.dev/runx/effect-settlement-receipt/v1.json",
+  "effect-finality-receipt.schema.json": {
+    "$id": "https://schemas.runx.dev/runx/effect-finality-receipt/v1.json",
     "$schema": "https://json-schema.org/draft/2020-12/schema",
     "additionalProperties": false,
     "properties": {
@@ -20279,11 +20287,11 @@ export const runxSchemaArtifacts = {
             "proof_kind": {
               "anyOf": [
                 {
-                  "const": "payment_rail",
+                  "const": "effect_evidence",
                   "type": "string"
                 },
                 {
-                  "const": "effect_settlement",
+                  "const": "effect_finality",
                   "type": "string"
                 },
                 {
@@ -20511,11 +20519,11 @@ export const runxSchemaArtifacts = {
           "proof_kind": {
             "anyOf": [
               {
-                "const": "payment_rail",
+                "const": "effect_evidence",
                 "type": "string"
               },
               {
-                "const": "effect_settlement",
+                "const": "effect_finality",
                 "type": "string"
               },
               {
@@ -20761,11 +20769,11 @@ export const runxSchemaArtifacts = {
           "proof_kind": {
             "anyOf": [
               {
-                "const": "payment_rail",
+                "const": "effect_evidence",
                 "type": "string"
               },
               {
-                "const": "effect_settlement",
+                "const": "effect_finality",
                 "type": "string"
               },
               {
@@ -20965,7 +20973,7 @@ export const runxSchemaArtifacts = {
       "schema": {
         "anyOf": [
           {
-            "const": "runx.effect_settlement_receipt.v1",
+            "const": "runx.effect_finality_receipt.v1",
             "type": "string"
           }
         ]
@@ -20981,7 +20989,7 @@ export const runxSchemaArtifacts = {
       "criterion_id"
     ],
     "type": "object",
-    "x-runx-schema": "runx.effect_settlement_receipt.v1"
+    "x-runx-schema": "runx.effect_finality_receipt.v1"
   } as JsonSchema,
   "external-adapter-cancellation.schema.json": {
     "$id": "https://schemas.runx.dev/runx/external-adapter/cancellation/v1.json",
@@ -21072,11 +21080,11 @@ export const runxSchemaArtifacts = {
                 "proof_kind": {
                   "anyOf": [
                     {
-                      "const": "payment_rail",
+                      "const": "effect_evidence",
                       "type": "string"
                     },
                     {
-                      "const": "effect_settlement",
+                      "const": "effect_finality",
                       "type": "string"
                     },
                     {
@@ -22160,11 +22168,11 @@ export const runxSchemaArtifacts = {
                 "proof_kind": {
                   "anyOf": [
                     {
-                      "const": "payment_rail",
+                      "const": "effect_evidence",
                       "type": "string"
                     },
                     {
-                      "const": "effect_settlement",
+                      "const": "effect_finality",
                       "type": "string"
                     },
                     {
@@ -22424,11 +22432,11 @@ export const runxSchemaArtifacts = {
           "proof_kind": {
             "anyOf": [
               {
-                "const": "payment_rail",
+                "const": "effect_evidence",
                 "type": "string"
               },
               {
-                "const": "effect_settlement",
+                "const": "effect_finality",
                 "type": "string"
               },
               {
@@ -22646,11 +22654,11 @@ export const runxSchemaArtifacts = {
           "proof_kind": {
             "anyOf": [
               {
-                "const": "payment_rail",
+                "const": "effect_evidence",
                 "type": "string"
               },
               {
-                "const": "effect_settlement",
+                "const": "effect_finality",
                 "type": "string"
               },
               {
@@ -22978,11 +22986,11 @@ export const runxSchemaArtifacts = {
                   "proof_kind": {
                     "anyOf": [
                       {
-                        "const": "payment_rail",
+                        "const": "effect_evidence",
                         "type": "string"
                       },
                       {
-                        "const": "effect_settlement",
+                        "const": "effect_finality",
                         "type": "string"
                       },
                       {
@@ -23354,11 +23362,11 @@ export const runxSchemaArtifacts = {
                 "proof_kind": {
                   "anyOf": [
                     {
-                      "const": "payment_rail",
+                      "const": "effect_evidence",
                       "type": "string"
                     },
                     {
-                      "const": "effect_settlement",
+                      "const": "effect_finality",
                       "type": "string"
                     },
                     {
@@ -23716,11 +23724,11 @@ export const runxSchemaArtifacts = {
                 "proof_kind": {
                   "anyOf": [
                     {
-                      "const": "payment_rail",
+                      "const": "effect_evidence",
                       "type": "string"
                     },
                     {
-                      "const": "effect_settlement",
+                      "const": "effect_finality",
                       "type": "string"
                     },
                     {
@@ -23949,11 +23957,11 @@ export const runxSchemaArtifacts = {
             "proof_kind": {
               "anyOf": [
                 {
-                  "const": "payment_rail",
+                  "const": "effect_evidence",
                   "type": "string"
                 },
                 {
-                  "const": "effect_settlement",
+                  "const": "effect_finality",
                   "type": "string"
                 },
                 {
@@ -24174,11 +24182,11 @@ export const runxSchemaArtifacts = {
             "proof_kind": {
               "anyOf": [
                 {
-                  "const": "payment_rail",
+                  "const": "effect_evidence",
                   "type": "string"
                 },
                 {
-                  "const": "effect_settlement",
+                  "const": "effect_finality",
                   "type": "string"
                 },
                 {
@@ -24400,11 +24408,11 @@ export const runxSchemaArtifacts = {
             "proof_kind": {
               "anyOf": [
                 {
-                  "const": "payment_rail",
+                  "const": "effect_evidence",
                   "type": "string"
                 },
                 {
-                  "const": "effect_settlement",
+                  "const": "effect_finality",
                   "type": "string"
                 },
                 {
@@ -24631,11 +24639,11 @@ export const runxSchemaArtifacts = {
               "proof_kind": {
                 "anyOf": [
                   {
-                    "const": "payment_rail",
+                    "const": "effect_evidence",
                     "type": "string"
                   },
                   {
-                    "const": "effect_settlement",
+                    "const": "effect_finality",
                     "type": "string"
                   },
                   {
@@ -24864,11 +24872,11 @@ export const runxSchemaArtifacts = {
             "proof_kind": {
               "anyOf": [
                 {
-                  "const": "payment_rail",
+                  "const": "effect_evidence",
                   "type": "string"
                 },
                 {
-                  "const": "effect_settlement",
+                  "const": "effect_finality",
                   "type": "string"
                 },
                 {
@@ -25089,11 +25097,11 @@ export const runxSchemaArtifacts = {
           "proof_kind": {
             "anyOf": [
               {
-                "const": "payment_rail",
+                "const": "effect_evidence",
                 "type": "string"
               },
               {
-                "const": "effect_settlement",
+                "const": "effect_finality",
                 "type": "string"
               },
               {
@@ -25312,11 +25320,11 @@ export const runxSchemaArtifacts = {
             "proof_kind": {
               "anyOf": [
                 {
-                  "const": "payment_rail",
+                  "const": "effect_evidence",
                   "type": "string"
                 },
                 {
-                  "const": "effect_settlement",
+                  "const": "effect_finality",
                   "type": "string"
                 },
                 {
@@ -25546,11 +25554,11 @@ export const runxSchemaArtifacts = {
               "proof_kind": {
                 "anyOf": [
                   {
-                    "const": "payment_rail",
+                    "const": "effect_evidence",
                     "type": "string"
                   },
                   {
-                    "const": "effect_settlement",
+                    "const": "effect_finality",
                     "type": "string"
                   },
                   {
@@ -25779,11 +25787,11 @@ export const runxSchemaArtifacts = {
               "proof_kind": {
                 "anyOf": [
                   {
-                    "const": "payment_rail",
+                    "const": "effect_evidence",
                     "type": "string"
                   },
                   {
-                    "const": "effect_settlement",
+                    "const": "effect_finality",
                     "type": "string"
                   },
                   {
@@ -26011,11 +26019,11 @@ export const runxSchemaArtifacts = {
             "proof_kind": {
               "anyOf": [
                 {
-                  "const": "payment_rail",
+                  "const": "effect_evidence",
                   "type": "string"
                 },
                 {
-                  "const": "effect_settlement",
+                  "const": "effect_finality",
                   "type": "string"
                 },
                 {
@@ -27586,11 +27594,11 @@ export const runxSchemaArtifacts = {
             "proof_kind": {
               "anyOf": [
                 {
-                  "const": "payment_rail",
+                  "const": "effect_evidence",
                   "type": "string"
                 },
                 {
-                  "const": "effect_settlement",
+                  "const": "effect_finality",
                   "type": "string"
                 },
                 {
@@ -27842,11 +27850,11 @@ export const runxSchemaArtifacts = {
             "proof_kind": {
               "anyOf": [
                 {
-                  "const": "payment_rail",
+                  "const": "effect_evidence",
                   "type": "string"
                 },
                 {
-                  "const": "effect_settlement",
+                  "const": "effect_finality",
                   "type": "string"
                 },
                 {
@@ -28062,11 +28070,11 @@ export const runxSchemaArtifacts = {
                 "proof_kind": {
                   "anyOf": [
                     {
-                      "const": "payment_rail",
+                      "const": "effect_evidence",
                       "type": "string"
                     },
                     {
-                      "const": "effect_settlement",
+                      "const": "effect_finality",
                       "type": "string"
                     },
                     {
@@ -28317,11 +28325,11 @@ export const runxSchemaArtifacts = {
           "proof_kind": {
             "anyOf": [
               {
-                "const": "payment_rail",
+                "const": "effect_evidence",
                 "type": "string"
               },
               {
-                "const": "effect_settlement",
+                "const": "effect_finality",
                 "type": "string"
               },
               {
@@ -28568,11 +28576,11 @@ export const runxSchemaArtifacts = {
                 "proof_kind": {
                   "anyOf": [
                     {
-                      "const": "payment_rail",
+                      "const": "effect_evidence",
                       "type": "string"
                     },
                     {
-                      "const": "effect_settlement",
+                      "const": "effect_finality",
                       "type": "string"
                     },
                     {
@@ -28793,11 +28801,11 @@ export const runxSchemaArtifacts = {
             "proof_kind": {
               "anyOf": [
                 {
-                  "const": "payment_rail",
+                  "const": "effect_evidence",
                   "type": "string"
                 },
                 {
-                  "const": "effect_settlement",
+                  "const": "effect_finality",
                   "type": "string"
                 },
                 {
@@ -29013,11 +29021,11 @@ export const runxSchemaArtifacts = {
                   "proof_kind": {
                     "anyOf": [
                       {
-                        "const": "payment_rail",
+                        "const": "effect_evidence",
                         "type": "string"
                       },
                       {
-                        "const": "effect_settlement",
+                        "const": "effect_finality",
                         "type": "string"
                       },
                       {
@@ -29249,11 +29257,11 @@ export const runxSchemaArtifacts = {
                 "proof_kind": {
                   "anyOf": [
                     {
-                      "const": "payment_rail",
+                      "const": "effect_evidence",
                       "type": "string"
                     },
                     {
-                      "const": "effect_settlement",
+                      "const": "effect_finality",
                       "type": "string"
                     },
                     {
@@ -29489,11 +29497,11 @@ export const runxSchemaArtifacts = {
           "proof_kind": {
             "anyOf": [
               {
-                "const": "payment_rail",
+                "const": "effect_evidence",
                 "type": "string"
               },
               {
-                "const": "effect_settlement",
+                "const": "effect_finality",
                 "type": "string"
               },
               {
@@ -29691,11 +29699,11 @@ export const runxSchemaArtifacts = {
           "proof_kind": {
             "anyOf": [
               {
-                "const": "payment_rail",
+                "const": "effect_evidence",
                 "type": "string"
               },
               {
-                "const": "effect_settlement",
+                "const": "effect_finality",
                 "type": "string"
               },
               {
@@ -29894,11 +29902,11 @@ export const runxSchemaArtifacts = {
             "proof_kind": {
               "anyOf": [
                 {
-                  "const": "payment_rail",
+                  "const": "effect_evidence",
                   "type": "string"
                 },
                 {
-                  "const": "effect_settlement",
+                  "const": "effect_finality",
                   "type": "string"
                 },
                 {
@@ -30129,11 +30137,11 @@ export const runxSchemaArtifacts = {
             "proof_kind": {
               "anyOf": [
                 {
-                  "const": "payment_rail",
+                  "const": "effect_evidence",
                   "type": "string"
                 },
                 {
-                  "const": "effect_settlement",
+                  "const": "effect_finality",
                   "type": "string"
                 },
                 {
@@ -30369,11 +30377,11 @@ export const runxSchemaArtifacts = {
                 "proof_kind": {
                   "anyOf": [
                     {
-                      "const": "payment_rail",
+                      "const": "effect_evidence",
                       "type": "string"
                     },
                     {
-                      "const": "effect_settlement",
+                      "const": "effect_finality",
                       "type": "string"
                     },
                     {
@@ -30618,11 +30626,11 @@ export const runxSchemaArtifacts = {
                     "proof_kind": {
                       "anyOf": [
                         {
-                          "const": "payment_rail",
+                          "const": "effect_evidence",
                           "type": "string"
                         },
                         {
-                          "const": "effect_settlement",
+                          "const": "effect_finality",
                           "type": "string"
                         },
                         {
@@ -30844,11 +30852,11 @@ export const runxSchemaArtifacts = {
                       "proof_kind": {
                         "anyOf": [
                           {
-                            "const": "payment_rail",
+                            "const": "effect_evidence",
                             "type": "string"
                           },
                           {
-                            "const": "effect_settlement",
+                            "const": "effect_finality",
                             "type": "string"
                           },
                           {
@@ -31074,11 +31082,11 @@ export const runxSchemaArtifacts = {
                       "proof_kind": {
                         "anyOf": [
                           {
-                            "const": "payment_rail",
+                            "const": "effect_evidence",
                             "type": "string"
                           },
                           {
-                            "const": "effect_settlement",
+                            "const": "effect_finality",
                             "type": "string"
                           },
                           {
@@ -31308,11 +31316,11 @@ export const runxSchemaArtifacts = {
               "proof_kind": {
                 "anyOf": [
                   {
-                    "const": "payment_rail",
+                    "const": "effect_evidence",
                     "type": "string"
                   },
                   {
-                    "const": "effect_settlement",
+                    "const": "effect_finality",
                     "type": "string"
                   },
                   {
@@ -31531,11 +31539,11 @@ export const runxSchemaArtifacts = {
                 "proof_kind": {
                   "anyOf": [
                     {
-                      "const": "payment_rail",
+                      "const": "effect_evidence",
                       "type": "string"
                     },
                     {
-                      "const": "effect_settlement",
+                      "const": "effect_finality",
                       "type": "string"
                     },
                     {
@@ -31756,11 +31764,11 @@ export const runxSchemaArtifacts = {
                 "proof_kind": {
                   "anyOf": [
                     {
-                      "const": "payment_rail",
+                      "const": "effect_evidence",
                       "type": "string"
                     },
                     {
-                      "const": "effect_settlement",
+                      "const": "effect_finality",
                       "type": "string"
                     },
                     {
@@ -31981,11 +31989,11 @@ export const runxSchemaArtifacts = {
                 "proof_kind": {
                   "anyOf": [
                     {
-                      "const": "payment_rail",
+                      "const": "effect_evidence",
                       "type": "string"
                     },
                     {
-                      "const": "effect_settlement",
+                      "const": "effect_finality",
                       "type": "string"
                     },
                     {
@@ -32248,11 +32256,11 @@ export const runxSchemaArtifacts = {
             "proof_kind": {
               "anyOf": [
                 {
-                  "const": "payment_rail",
+                  "const": "effect_evidence",
                   "type": "string"
                 },
                 {
-                  "const": "effect_settlement",
+                  "const": "effect_finality",
                   "type": "string"
                 },
                 {
@@ -32476,11 +32484,11 @@ export const runxSchemaArtifacts = {
           "proof_kind": {
             "anyOf": [
               {
-                "const": "payment_rail",
+                "const": "effect_evidence",
                 "type": "string"
               },
               {
-                "const": "effect_settlement",
+                "const": "effect_finality",
                 "type": "string"
               },
               {
@@ -32908,11 +32916,11 @@ export const runxSchemaArtifacts = {
                   "proof_kind": {
                     "anyOf": [
                       {
-                        "const": "payment_rail",
+                        "const": "effect_evidence",
                         "type": "string"
                       },
                       {
-                        "const": "effect_settlement",
+                        "const": "effect_finality",
                         "type": "string"
                       },
                       {
@@ -33234,11 +33242,11 @@ export const runxSchemaArtifacts = {
                 "proof_kind": {
                   "anyOf": [
                     {
-                      "const": "payment_rail",
+                      "const": "effect_evidence",
                       "type": "string"
                     },
                     {
-                      "const": "effect_settlement",
+                      "const": "effect_finality",
                       "type": "string"
                     },
                     {
@@ -33465,11 +33473,11 @@ export const runxSchemaArtifacts = {
                         "proof_kind": {
                           "anyOf": [
                             {
-                              "const": "payment_rail",
+                              "const": "effect_evidence",
                               "type": "string"
                             },
                             {
-                              "const": "effect_settlement",
+                              "const": "effect_finality",
                               "type": "string"
                             },
                             {
@@ -33718,11 +33726,11 @@ export const runxSchemaArtifacts = {
                         "proof_kind": {
                           "anyOf": [
                             {
-                              "const": "payment_rail",
+                              "const": "effect_evidence",
                               "type": "string"
                             },
                             {
-                              "const": "effect_settlement",
+                              "const": "effect_finality",
                               "type": "string"
                             },
                             {
@@ -33990,11 +33998,11 @@ export const runxSchemaArtifacts = {
                       "proof_kind": {
                         "anyOf": [
                           {
-                            "const": "payment_rail",
+                            "const": "effect_evidence",
                             "type": "string"
                           },
                           {
-                            "const": "effect_settlement",
+                            "const": "effect_finality",
                             "type": "string"
                           },
                           {
@@ -34336,11 +34344,11 @@ export const runxSchemaArtifacts = {
                               "proof_kind": {
                                 "anyOf": [
                                   {
-                                    "const": "payment_rail",
+                                    "const": "effect_evidence",
                                     "type": "string"
                                   },
                                   {
-                                    "const": "effect_settlement",
+                                    "const": "effect_finality",
                                     "type": "string"
                                   },
                                   {
@@ -34575,11 +34583,11 @@ export const runxSchemaArtifacts = {
                       "proof_kind": {
                         "anyOf": [
                           {
-                            "const": "payment_rail",
+                            "const": "effect_evidence",
                             "type": "string"
                           },
                           {
-                            "const": "effect_settlement",
+                            "const": "effect_finality",
                             "type": "string"
                           },
                           {
@@ -34807,11 +34815,11 @@ export const runxSchemaArtifacts = {
                       "proof_kind": {
                         "anyOf": [
                           {
-                            "const": "payment_rail",
+                            "const": "effect_evidence",
                             "type": "string"
                           },
                           {
-                            "const": "effect_settlement",
+                            "const": "effect_finality",
                             "type": "string"
                           },
                           {
@@ -35042,11 +35050,11 @@ export const runxSchemaArtifacts = {
                           "proof_kind": {
                             "anyOf": [
                               {
-                                "const": "payment_rail",
+                                "const": "effect_evidence",
                                 "type": "string"
                               },
                               {
-                                "const": "effect_settlement",
+                                "const": "effect_finality",
                                 "type": "string"
                               },
                               {
@@ -35287,11 +35295,11 @@ export const runxSchemaArtifacts = {
                                 "proof_kind": {
                                   "anyOf": [
                                     {
-                                      "const": "payment_rail",
+                                      "const": "effect_evidence",
                                       "type": "string"
                                     },
                                     {
-                                      "const": "effect_settlement",
+                                      "const": "effect_finality",
                                       "type": "string"
                                     },
                                     {
@@ -35519,11 +35527,11 @@ export const runxSchemaArtifacts = {
                                 "proof_kind": {
                                   "anyOf": [
                                     {
-                                      "const": "payment_rail",
+                                      "const": "effect_evidence",
                                       "type": "string"
                                     },
                                     {
-                                      "const": "effect_settlement",
+                                      "const": "effect_finality",
                                       "type": "string"
                                     },
                                     {
@@ -35788,11 +35796,11 @@ export const runxSchemaArtifacts = {
                           "proof_kind": {
                             "anyOf": [
                               {
-                                "const": "payment_rail",
+                                "const": "effect_evidence",
                                 "type": "string"
                               },
                               {
-                                "const": "effect_settlement",
+                                "const": "effect_finality",
                                 "type": "string"
                               },
                               {
@@ -36070,11 +36078,11 @@ export const runxSchemaArtifacts = {
                   "proof_kind": {
                     "anyOf": [
                       {
-                        "const": "payment_rail",
+                        "const": "effect_evidence",
                         "type": "string"
                       },
                       {
-                        "const": "effect_settlement",
+                        "const": "effect_finality",
                         "type": "string"
                       },
                       {
@@ -36299,11 +36307,11 @@ export const runxSchemaArtifacts = {
                   "proof_kind": {
                     "anyOf": [
                       {
-                        "const": "payment_rail",
+                        "const": "effect_evidence",
                         "type": "string"
                       },
                       {
-                        "const": "effect_settlement",
+                        "const": "effect_finality",
                         "type": "string"
                       },
                       {
@@ -36533,11 +36541,11 @@ export const runxSchemaArtifacts = {
                     "proof_kind": {
                       "anyOf": [
                         {
-                          "const": "payment_rail",
+                          "const": "effect_evidence",
                           "type": "string"
                         },
                         {
-                          "const": "effect_settlement",
+                          "const": "effect_finality",
                           "type": "string"
                         },
                         {
@@ -36769,11 +36777,11 @@ export const runxSchemaArtifacts = {
                                 "proof_kind": {
                                   "anyOf": [
                                     {
-                                      "const": "payment_rail",
+                                      "const": "effect_evidence",
                                       "type": "string"
                                     },
                                     {
-                                      "const": "effect_settlement",
+                                      "const": "effect_finality",
                                       "type": "string"
                                     },
                                     {
@@ -37001,11 +37009,11 @@ export const runxSchemaArtifacts = {
                                 "proof_kind": {
                                   "anyOf": [
                                     {
-                                      "const": "payment_rail",
+                                      "const": "effect_evidence",
                                       "type": "string"
                                     },
                                     {
-                                      "const": "effect_settlement",
+                                      "const": "effect_finality",
                                       "type": "string"
                                     },
                                     {
@@ -37270,11 +37278,11 @@ export const runxSchemaArtifacts = {
                           "proof_kind": {
                             "anyOf": [
                               {
-                                "const": "payment_rail",
+                                "const": "effect_evidence",
                                 "type": "string"
                               },
                               {
-                                "const": "effect_settlement",
+                                "const": "effect_finality",
                                 "type": "string"
                               },
                               {
@@ -37566,11 +37574,11 @@ export const runxSchemaArtifacts = {
               "proof_kind": {
                 "anyOf": [
                   {
-                    "const": "payment_rail",
+                    "const": "effect_evidence",
                     "type": "string"
                   },
                   {
-                    "const": "effect_settlement",
+                    "const": "effect_finality",
                     "type": "string"
                   },
                   {
@@ -37793,11 +37801,11 @@ export const runxSchemaArtifacts = {
                       "proof_kind": {
                         "anyOf": [
                           {
-                            "const": "payment_rail",
+                            "const": "effect_evidence",
                             "type": "string"
                           },
                           {
-                            "const": "effect_settlement",
+                            "const": "effect_finality",
                             "type": "string"
                           },
                           {
@@ -38070,11 +38078,11 @@ export const runxSchemaArtifacts = {
                           "proof_kind": {
                             "anyOf": [
                               {
-                                "const": "payment_rail",
+                                "const": "effect_evidence",
                                 "type": "string"
                               },
                               {
-                                "const": "effect_settlement",
+                                "const": "effect_finality",
                                 "type": "string"
                               },
                               {
@@ -38292,11 +38300,11 @@ export const runxSchemaArtifacts = {
                           "proof_kind": {
                             "anyOf": [
                               {
-                                "const": "payment_rail",
+                                "const": "effect_evidence",
                                 "type": "string"
                               },
                               {
-                                "const": "effect_settlement",
+                                "const": "effect_finality",
                                 "type": "string"
                               },
                               {
@@ -38550,11 +38558,11 @@ export const runxSchemaArtifacts = {
                 "proof_kind": {
                   "anyOf": [
                     {
-                      "const": "payment_rail",
+                      "const": "effect_evidence",
                       "type": "string"
                     },
                     {
-                      "const": "effect_settlement",
+                      "const": "effect_finality",
                       "type": "string"
                     },
                     {
@@ -38782,11 +38790,11 @@ export const runxSchemaArtifacts = {
                     "proof_kind": {
                       "anyOf": [
                         {
-                          "const": "payment_rail",
+                          "const": "effect_evidence",
                           "type": "string"
                         },
                         {
-                          "const": "effect_settlement",
+                          "const": "effect_finality",
                           "type": "string"
                         },
                         {
@@ -39007,11 +39015,11 @@ export const runxSchemaArtifacts = {
                     "proof_kind": {
                       "anyOf": [
                         {
-                          "const": "payment_rail",
+                          "const": "effect_evidence",
                           "type": "string"
                         },
                         {
-                          "const": "effect_settlement",
+                          "const": "effect_finality",
                           "type": "string"
                         },
                         {
@@ -39232,11 +39240,11 @@ export const runxSchemaArtifacts = {
                     "proof_kind": {
                       "anyOf": [
                         {
-                          "const": "payment_rail",
+                          "const": "effect_evidence",
                           "type": "string"
                         },
                         {
-                          "const": "effect_settlement",
+                          "const": "effect_finality",
                           "type": "string"
                         },
                         {
@@ -39463,11 +39471,11 @@ export const runxSchemaArtifacts = {
                 "proof_kind": {
                   "anyOf": [
                     {
-                      "const": "payment_rail",
+                      "const": "effect_evidence",
                       "type": "string"
                     },
                     {
-                      "const": "effect_settlement",
+                      "const": "effect_finality",
                       "type": "string"
                     },
                     {
@@ -39687,11 +39695,11 @@ export const runxSchemaArtifacts = {
               "proof_kind": {
                 "anyOf": [
                   {
-                    "const": "payment_rail",
+                    "const": "effect_evidence",
                     "type": "string"
                   },
                   {
-                    "const": "effect_settlement",
+                    "const": "effect_finality",
                     "type": "string"
                   },
                   {
@@ -39910,11 +39918,11 @@ export const runxSchemaArtifacts = {
                 "proof_kind": {
                   "anyOf": [
                     {
-                      "const": "payment_rail",
+                      "const": "effect_evidence",
                       "type": "string"
                     },
                     {
-                      "const": "effect_settlement",
+                      "const": "effect_finality",
                       "type": "string"
                     },
                     {
@@ -40142,11 +40150,11 @@ export const runxSchemaArtifacts = {
                           "proof_kind": {
                             "anyOf": [
                               {
-                                "const": "payment_rail",
+                                "const": "effect_evidence",
                                 "type": "string"
                               },
                               {
-                                "const": "effect_settlement",
+                                "const": "effect_finality",
                                 "type": "string"
                               },
                               {
@@ -40369,11 +40377,11 @@ export const runxSchemaArtifacts = {
                           "proof_kind": {
                             "anyOf": [
                               {
-                                "const": "payment_rail",
+                                "const": "effect_evidence",
                                 "type": "string"
                               },
                               {
-                                "const": "effect_settlement",
+                                "const": "effect_finality",
                                 "type": "string"
                               },
                               {
@@ -40602,6 +40610,96 @@ export const runxSchemaArtifacts = {
                       },
                       "type": "array"
                     },
+                    "effect_limits": {
+                      "items": {
+                        "additionalProperties": false,
+                        "properties": {
+                          "approval_threshold_units": {
+                            "type": "integer"
+                          },
+                          "authorization_form": {
+                            "anyOf": [
+                              {
+                                "const": "single_use_capability",
+                                "type": "string"
+                              },
+                              {
+                                "const": "external_signer",
+                                "type": "string"
+                              }
+                            ]
+                          },
+                          "channels": {
+                            "items": {
+                              "minLength": 1,
+                              "type": "string"
+                            },
+                            "type": "array"
+                          },
+                          "commitment_required": {
+                            "type": "boolean"
+                          },
+                          "family": {
+                            "minLength": 1,
+                            "type": "string"
+                          },
+                          "idempotency_required": {
+                            "type": "boolean"
+                          },
+                          "max_per_call_units": {
+                            "type": "integer"
+                          },
+                          "max_per_period_units": {
+                            "type": "integer"
+                          },
+                          "max_per_run_units": {
+                            "type": "integer"
+                          },
+                          "operation": {
+                            "minLength": 1,
+                            "type": "string"
+                          },
+                          "peer": {
+                            "minLength": 1,
+                            "type": "string"
+                          },
+                          "period": {
+                            "minLength": 1,
+                            "type": "string"
+                          },
+                          "preflight_required": {
+                            "type": "boolean"
+                          },
+                          "preflight_ttl_ms": {
+                            "type": "integer"
+                          },
+                          "realm": {
+                            "minLength": 1,
+                            "type": "string"
+                          },
+                          "receipt_before_success": {
+                            "type": "boolean"
+                          },
+                          "recovery_required": {
+                            "type": "boolean"
+                          },
+                          "single_use_capability": {
+                            "type": "boolean"
+                          },
+                          "unit": {
+                            "minLength": 1,
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "family",
+                          "unit",
+                          "channels"
+                        ],
+                        "type": "object"
+                      },
+                      "type": "array"
+                    },
                     "effects": {
                       "items": {
                         "additionalProperties": false,
@@ -40629,11 +40727,11 @@ export const runxSchemaArtifacts = {
                             "items": {
                               "anyOf": [
                                 {
-                                  "const": "payment_rail",
+                                  "const": "effect_evidence",
                                   "type": "string"
                                 },
                                 {
-                                  "const": "effect_settlement",
+                                  "const": "effect_finality",
                                   "type": "string"
                                 },
                                 {
@@ -40662,14 +40760,14 @@ export const runxSchemaArtifacts = {
                     "max_child_depth": {
                       "type": "integer"
                     },
+                    "max_cost_units": {
+                      "type": "number"
+                    },
                     "max_fanout": {
                       "type": "integer"
                     },
                     "max_runtime_ms": {
                       "type": "integer"
-                    },
-                    "max_spend_usd": {
-                      "type": "number"
                     },
                     "network_destinations": {
                       "items": {
@@ -40677,88 +40775,6 @@ export const runxSchemaArtifacts = {
                         "type": "string"
                       },
                       "type": "array"
-                    },
-                    "payment": {
-                      "additionalProperties": false,
-                      "properties": {
-                        "approval_threshold_minor": {
-                          "type": "integer"
-                        },
-                        "counterparty": {
-                          "minLength": 1,
-                          "type": "string"
-                        },
-                        "credential_form": {
-                          "anyOf": [
-                            {
-                              "const": "single_use_spend_capability",
-                              "type": "string"
-                            },
-                            {
-                              "const": "external_signer",
-                              "type": "string"
-                            }
-                          ]
-                        },
-                        "currency": {
-                          "minLength": 1,
-                          "type": "string"
-                        },
-                        "idempotency_required": {
-                          "type": "boolean"
-                        },
-                        "max_per_call_minor": {
-                          "type": "integer"
-                        },
-                        "max_per_period_minor": {
-                          "type": "integer"
-                        },
-                        "max_per_run_minor": {
-                          "type": "integer"
-                        },
-                        "operation": {
-                          "minLength": 1,
-                          "type": "string"
-                        },
-                        "period": {
-                          "minLength": 1,
-                          "type": "string"
-                        },
-                        "quote_required": {
-                          "type": "boolean"
-                        },
-                        "quote_ttl_ms": {
-                          "type": "integer"
-                        },
-                        "rails": {
-                          "items": {
-                            "minLength": 1,
-                            "type": "string"
-                          },
-                          "type": "array"
-                        },
-                        "realm": {
-                          "minLength": 1,
-                          "type": "string"
-                        },
-                        "receipt_before_success": {
-                          "type": "boolean"
-                        },
-                        "recovery_required": {
-                          "type": "boolean"
-                        },
-                        "reservation_required": {
-                          "type": "boolean"
-                        },
-                        "single_use_spend": {
-                          "type": "boolean"
-                        }
-                      },
-                      "required": [
-                        "currency",
-                        "rails"
-                      ],
-                      "type": "object"
                     },
                     "repo_path_globs": {
                       "items": {
@@ -40813,7 +40829,7 @@ export const runxSchemaArtifacts = {
                         "type": "string"
                       },
                       {
-                        "const": "payment_single_use_spend",
+                        "const": "effect_single_use_capability",
                         "type": "string"
                       }
                     ]
@@ -40863,11 +40879,11 @@ export const runxSchemaArtifacts = {
                             "type": "string"
                           },
                           {
-                            "const": "payment_receipt_present",
+                            "const": "effect_proof_present",
                             "type": "string"
                           },
                           {
-                            "const": "payment_recovery_available",
+                            "const": "effect_recovery_available",
                             "type": "string"
                           }
                         ]
@@ -40894,11 +40910,11 @@ export const runxSchemaArtifacts = {
                             "proof_kind": {
                               "anyOf": [
                                 {
-                                  "const": "payment_rail",
+                                  "const": "effect_evidence",
                                   "type": "string"
                                 },
                                 {
-                                  "const": "effect_settlement",
+                                  "const": "effect_finality",
                                   "type": "string"
                                 },
                                 {
@@ -41127,11 +41143,11 @@ export const runxSchemaArtifacts = {
                     "proof_kind": {
                       "anyOf": [
                         {
-                          "const": "payment_rail",
+                          "const": "effect_evidence",
                           "type": "string"
                         },
                         {
-                          "const": "effect_settlement",
+                          "const": "effect_finality",
                           "type": "string"
                         },
                         {
@@ -41354,11 +41370,11 @@ export const runxSchemaArtifacts = {
                     "proof_kind": {
                       "anyOf": [
                         {
-                          "const": "payment_rail",
+                          "const": "effect_evidence",
                           "type": "string"
                         },
                         {
-                          "const": "effect_settlement",
+                          "const": "effect_finality",
                           "type": "string"
                         },
                         {
@@ -41576,11 +41592,11 @@ export const runxSchemaArtifacts = {
                     "proof_kind": {
                       "anyOf": [
                         {
-                          "const": "payment_rail",
+                          "const": "effect_evidence",
                           "type": "string"
                         },
                         {
-                          "const": "effect_settlement",
+                          "const": "effect_finality",
                           "type": "string"
                         },
                         {
@@ -41804,7 +41820,7 @@ export const runxSchemaArtifacts = {
                       "type": "string"
                     },
                     {
-                      "const": "payment",
+                      "const": "effect",
                       "type": "string"
                     },
                     {
@@ -41842,11 +41858,11 @@ export const runxSchemaArtifacts = {
                     "proof_kind": {
                       "anyOf": [
                         {
-                          "const": "payment_rail",
+                          "const": "effect_evidence",
                           "type": "string"
                         },
                         {
-                          "const": "effect_settlement",
+                          "const": "effect_finality",
                           "type": "string"
                         },
                         {
@@ -42095,19 +42111,19 @@ export const runxSchemaArtifacts = {
                         "type": "string"
                       },
                       {
-                        "const": "quote",
+                        "const": "estimate",
                         "type": "string"
                       },
                       {
-                        "const": "reserve",
+                        "const": "prepare",
                         "type": "string"
                       },
                       {
-                        "const": "spend",
+                        "const": "commit",
                         "type": "string"
                       },
                       {
-                        "const": "refund",
+                        "const": "reverse",
                         "type": "string"
                       },
                       {
@@ -42181,11 +42197,11 @@ export const runxSchemaArtifacts = {
                   "proof_kind": {
                     "anyOf": [
                       {
-                        "const": "payment_rail",
+                        "const": "effect_evidence",
                         "type": "string"
                       },
                       {
-                        "const": "effect_settlement",
+                        "const": "effect_finality",
                         "type": "string"
                       },
                       {
@@ -42517,11 +42533,11 @@ export const runxSchemaArtifacts = {
                       "proof_kind": {
                         "anyOf": [
                           {
-                            "const": "payment_rail",
+                            "const": "effect_evidence",
                             "type": "string"
                           },
                           {
-                            "const": "effect_settlement",
+                            "const": "effect_finality",
                             "type": "string"
                           },
                           {
@@ -42743,11 +42759,11 @@ export const runxSchemaArtifacts = {
                         "proof_kind": {
                           "anyOf": [
                             {
-                              "const": "payment_rail",
+                              "const": "effect_evidence",
                               "type": "string"
                             },
                             {
-                              "const": "effect_settlement",
+                              "const": "effect_finality",
                               "type": "string"
                             },
                             {
@@ -42971,11 +42987,11 @@ export const runxSchemaArtifacts = {
                       "proof_kind": {
                         "anyOf": [
                           {
-                            "const": "payment_rail",
+                            "const": "effect_evidence",
                             "type": "string"
                           },
                           {
-                            "const": "effect_settlement",
+                            "const": "effect_finality",
                             "type": "string"
                           },
                           {
@@ -43197,11 +43213,11 @@ export const runxSchemaArtifacts = {
                         "proof_kind": {
                           "anyOf": [
                             {
-                              "const": "payment_rail",
+                              "const": "effect_evidence",
                               "type": "string"
                             },
                             {
-                              "const": "effect_settlement",
+                              "const": "effect_finality",
                               "type": "string"
                             },
                             {
@@ -43435,11 +43451,11 @@ export const runxSchemaArtifacts = {
                       "proof_kind": {
                         "anyOf": [
                           {
-                            "const": "payment_rail",
+                            "const": "effect_evidence",
                             "type": "string"
                           },
                           {
-                            "const": "effect_settlement",
+                            "const": "effect_finality",
                             "type": "string"
                           },
                           {
@@ -43680,11 +43696,11 @@ export const runxSchemaArtifacts = {
                       "proof_kind": {
                         "anyOf": [
                           {
-                            "const": "payment_rail",
+                            "const": "effect_evidence",
                             "type": "string"
                           },
                           {
-                            "const": "effect_settlement",
+                            "const": "effect_finality",
                             "type": "string"
                           },
                           {
@@ -43961,11 +43977,11 @@ export const runxSchemaArtifacts = {
                     "proof_kind": {
                       "anyOf": [
                         {
-                          "const": "payment_rail",
+                          "const": "effect_evidence",
                           "type": "string"
                         },
                         {
-                          "const": "effect_settlement",
+                          "const": "effect_finality",
                           "type": "string"
                         },
                         {
@@ -44278,11 +44294,11 @@ export const runxSchemaArtifacts = {
                 "proof_kind": {
                   "anyOf": [
                     {
-                      "const": "payment_rail",
+                      "const": "effect_evidence",
                       "type": "string"
                     },
                     {
-                      "const": "effect_settlement",
+                      "const": "effect_finality",
                       "type": "string"
                     },
                     {
@@ -44502,11 +44518,11 @@ export const runxSchemaArtifacts = {
               "proof_kind": {
                 "anyOf": [
                   {
-                    "const": "payment_rail",
+                    "const": "effect_evidence",
                     "type": "string"
                   },
                   {
-                    "const": "effect_settlement",
+                    "const": "effect_finality",
                     "type": "string"
                   },
                   {
@@ -44724,11 +44740,11 @@ export const runxSchemaArtifacts = {
               "proof_kind": {
                 "anyOf": [
                   {
-                    "const": "payment_rail",
+                    "const": "effect_evidence",
                     "type": "string"
                   },
                   {
-                    "const": "effect_settlement",
+                    "const": "effect_finality",
                     "type": "string"
                   },
                   {
@@ -44946,11 +44962,11 @@ export const runxSchemaArtifacts = {
               "proof_kind": {
                 "anyOf": [
                   {
-                    "const": "payment_rail",
+                    "const": "effect_evidence",
                     "type": "string"
                   },
                   {
-                    "const": "effect_settlement",
+                    "const": "effect_finality",
                     "type": "string"
                   },
                   {
@@ -45291,11 +45307,11 @@ export const runxSchemaArtifacts = {
                       "proof_kind": {
                         "anyOf": [
                           {
-                            "const": "payment_rail",
+                            "const": "effect_evidence",
                             "type": "string"
                           },
                           {
-                            "const": "effect_settlement",
+                            "const": "effect_finality",
                             "type": "string"
                           },
                           {
@@ -45544,11 +45560,11 @@ export const runxSchemaArtifacts = {
                       "proof_kind": {
                         "anyOf": [
                           {
-                            "const": "payment_rail",
+                            "const": "effect_evidence",
                             "type": "string"
                           },
                           {
-                            "const": "effect_settlement",
+                            "const": "effect_finality",
                             "type": "string"
                           },
                           {
@@ -45837,11 +45853,11 @@ export const runxSchemaArtifacts = {
             "proof_kind": {
               "anyOf": [
                 {
-                  "const": "payment_rail",
+                  "const": "effect_evidence",
                   "type": "string"
                 },
                 {
-                  "const": "effect_settlement",
+                  "const": "effect_finality",
                   "type": "string"
                 },
                 {
@@ -46167,11 +46183,11 @@ export const runxSchemaArtifacts = {
               "proof_kind": {
                 "anyOf": [
                   {
-                    "const": "payment_rail",
+                    "const": "effect_evidence",
                     "type": "string"
                   },
                   {
-                    "const": "effect_settlement",
+                    "const": "effect_finality",
                     "type": "string"
                   },
                   {
@@ -46457,11 +46473,11 @@ export const runxSchemaArtifacts = {
           "proof_kind": {
             "anyOf": [
               {
-                "const": "payment_rail",
+                "const": "effect_evidence",
                 "type": "string"
               },
               {
-                "const": "effect_settlement",
+                "const": "effect_finality",
                 "type": "string"
               },
               {
@@ -46679,11 +46695,11 @@ export const runxSchemaArtifacts = {
           "proof_kind": {
             "anyOf": [
               {
-                "const": "payment_rail",
+                "const": "effect_evidence",
                 "type": "string"
               },
               {
-                "const": "effect_settlement",
+                "const": "effect_finality",
                 "type": "string"
               },
               {
@@ -46937,11 +46953,11 @@ export const runxSchemaArtifacts = {
           "proof_kind": {
             "anyOf": [
               {
-                "const": "payment_rail",
+                "const": "effect_evidence",
                 "type": "string"
               },
               {
-                "const": "effect_settlement",
+                "const": "effect_finality",
                 "type": "string"
               },
               {
@@ -47175,11 +47191,11 @@ export const runxSchemaArtifacts = {
       "proof_kind": {
         "anyOf": [
           {
-            "const": "payment_rail",
+            "const": "effect_evidence",
             "type": "string"
           },
           {
-            "const": "effect_settlement",
+            "const": "effect_finality",
             "type": "string"
           },
           {
@@ -47410,11 +47426,11 @@ export const runxSchemaArtifacts = {
                 "proof_kind": {
                   "anyOf": [
                     {
-                      "const": "payment_rail",
+                      "const": "effect_evidence",
                       "type": "string"
                     },
                     {
-                      "const": "effect_settlement",
+                      "const": "effect_finality",
                       "type": "string"
                     },
                     {
@@ -47643,11 +47659,11 @@ export const runxSchemaArtifacts = {
               "proof_kind": {
                 "anyOf": [
                   {
-                    "const": "payment_rail",
+                    "const": "effect_evidence",
                     "type": "string"
                   },
                   {
-                    "const": "effect_settlement",
+                    "const": "effect_finality",
                     "type": "string"
                   },
                   {
@@ -47871,11 +47887,11 @@ export const runxSchemaArtifacts = {
             "proof_kind": {
               "anyOf": [
                 {
-                  "const": "payment_rail",
+                  "const": "effect_evidence",
                   "type": "string"
                 },
                 {
-                  "const": "effect_settlement",
+                  "const": "effect_finality",
                   "type": "string"
                 },
                 {
@@ -48096,11 +48112,11 @@ export const runxSchemaArtifacts = {
             "proof_kind": {
               "anyOf": [
                 {
-                  "const": "payment_rail",
+                  "const": "effect_evidence",
                   "type": "string"
                 },
                 {
-                  "const": "effect_settlement",
+                  "const": "effect_finality",
                   "type": "string"
                 },
                 {
@@ -48329,11 +48345,11 @@ export const runxSchemaArtifacts = {
               "proof_kind": {
                 "anyOf": [
                   {
-                    "const": "payment_rail",
+                    "const": "effect_evidence",
                     "type": "string"
                   },
                   {
-                    "const": "effect_settlement",
+                    "const": "effect_finality",
                     "type": "string"
                   },
                   {
@@ -48557,11 +48573,11 @@ export const runxSchemaArtifacts = {
             "proof_kind": {
               "anyOf": [
                 {
-                  "const": "payment_rail",
+                  "const": "effect_evidence",
                   "type": "string"
                 },
                 {
-                  "const": "effect_settlement",
+                  "const": "effect_finality",
                   "type": "string"
                 },
                 {
@@ -48800,11 +48816,11 @@ export const runxSchemaArtifacts = {
               "proof_kind": {
                 "anyOf": [
                   {
-                    "const": "payment_rail",
+                    "const": "effect_evidence",
                     "type": "string"
                   },
                   {
-                    "const": "effect_settlement",
+                    "const": "effect_finality",
                     "type": "string"
                   },
                   {
@@ -49033,11 +49049,11 @@ export const runxSchemaArtifacts = {
               "proof_kind": {
                 "anyOf": [
                   {
-                    "const": "payment_rail",
+                    "const": "effect_evidence",
                     "type": "string"
                   },
                   {
-                    "const": "effect_settlement",
+                    "const": "effect_finality",
                     "type": "string"
                   },
                   {
@@ -50424,11 +50440,11 @@ export const runxSchemaArtifacts = {
               "proof_kind": {
                 "anyOf": [
                   {
-                    "const": "payment_rail",
+                    "const": "effect_evidence",
                     "type": "string"
                   },
                   {
-                    "const": "effect_settlement",
+                    "const": "effect_finality",
                     "type": "string"
                   },
                   {
@@ -50669,11 +50685,11 @@ export const runxSchemaArtifacts = {
               "proof_kind": {
                 "anyOf": [
                   {
-                    "const": "payment_rail",
+                    "const": "effect_evidence",
                     "type": "string"
                   },
                   {
-                    "const": "effect_settlement",
+                    "const": "effect_finality",
                     "type": "string"
                   },
                   {
@@ -50912,11 +50928,11 @@ export const runxSchemaArtifacts = {
                 "proof_kind": {
                   "anyOf": [
                     {
-                      "const": "payment_rail",
+                      "const": "effect_evidence",
                       "type": "string"
                     },
                     {
-                      "const": "effect_settlement",
+                      "const": "effect_finality",
                       "type": "string"
                     },
                     {
@@ -51150,11 +51166,11 @@ export const runxSchemaArtifacts = {
             "proof_kind": {
               "anyOf": [
                 {
-                  "const": "payment_rail",
+                  "const": "effect_evidence",
                   "type": "string"
                 },
                 {
-                  "const": "effect_settlement",
+                  "const": "effect_finality",
                   "type": "string"
                 },
                 {
@@ -51443,11 +51459,11 @@ export const runxSchemaArtifacts = {
             "proof_kind": {
               "anyOf": [
                 {
-                  "const": "payment_rail",
+                  "const": "effect_evidence",
                   "type": "string"
                 },
                 {
-                  "const": "effect_settlement",
+                  "const": "effect_finality",
                   "type": "string"
                 },
                 {
@@ -51668,11 +51684,11 @@ export const runxSchemaArtifacts = {
             "proof_kind": {
               "anyOf": [
                 {
-                  "const": "payment_rail",
+                  "const": "effect_evidence",
                   "type": "string"
                 },
                 {
-                  "const": "effect_settlement",
+                  "const": "effect_finality",
                   "type": "string"
                 },
                 {
@@ -51894,11 +51910,11 @@ export const runxSchemaArtifacts = {
               "proof_kind": {
                 "anyOf": [
                   {
-                    "const": "payment_rail",
+                    "const": "effect_evidence",
                     "type": "string"
                   },
                   {
-                    "const": "effect_settlement",
+                    "const": "effect_finality",
                     "type": "string"
                   },
                   {
@@ -52155,11 +52171,11 @@ export const runxSchemaArtifacts = {
             "proof_kind": {
               "anyOf": [
                 {
-                  "const": "payment_rail",
+                  "const": "effect_evidence",
                   "type": "string"
                 },
                 {
-                  "const": "effect_settlement",
+                  "const": "effect_finality",
                   "type": "string"
                 },
                 {
@@ -52401,11 +52417,11 @@ export const runxSchemaArtifacts = {
             "proof_kind": {
               "anyOf": [
                 {
-                  "const": "payment_rail",
+                  "const": "effect_evidence",
                   "type": "string"
                 },
                 {
-                  "const": "effect_settlement",
+                  "const": "effect_finality",
                   "type": "string"
                 },
                 {
@@ -52630,11 +52646,11 @@ export const runxSchemaArtifacts = {
           "proof_kind": {
             "anyOf": [
               {
-                "const": "payment_rail",
+                "const": "effect_evidence",
                 "type": "string"
               },
               {
-                "const": "effect_settlement",
+                "const": "effect_finality",
                 "type": "string"
               },
               {
@@ -52854,11 +52870,11 @@ export const runxSchemaArtifacts = {
               "proof_kind": {
                 "anyOf": [
                   {
-                    "const": "payment_rail",
+                    "const": "effect_evidence",
                     "type": "string"
                   },
                   {
-                    "const": "effect_settlement",
+                    "const": "effect_finality",
                     "type": "string"
                   },
                   {
@@ -53082,11 +53098,11 @@ export const runxSchemaArtifacts = {
             "proof_kind": {
               "anyOf": [
                 {
-                  "const": "payment_rail",
+                  "const": "effect_evidence",
                   "type": "string"
                 },
                 {
-                  "const": "effect_settlement",
+                  "const": "effect_finality",
                   "type": "string"
                 },
                 {
@@ -53306,11 +53322,11 @@ export const runxSchemaArtifacts = {
           "proof_kind": {
             "anyOf": [
               {
-                "const": "payment_rail",
+                "const": "effect_evidence",
                 "type": "string"
               },
               {
-                "const": "effect_settlement",
+                "const": "effect_finality",
                 "type": "string"
               },
               {
@@ -53583,11 +53599,11 @@ export const runxSchemaArtifacts = {
                 "proof_kind": {
                   "anyOf": [
                     {
-                      "const": "payment_rail",
+                      "const": "effect_evidence",
                       "type": "string"
                     },
                     {
-                      "const": "effect_settlement",
+                      "const": "effect_finality",
                       "type": "string"
                     },
                     {
@@ -53807,11 +53823,11 @@ export const runxSchemaArtifacts = {
               "proof_kind": {
                 "anyOf": [
                   {
-                    "const": "payment_rail",
+                    "const": "effect_evidence",
                     "type": "string"
                   },
                   {
-                    "const": "effect_settlement",
+                    "const": "effect_finality",
                     "type": "string"
                   },
                   {
@@ -54029,11 +54045,11 @@ export const runxSchemaArtifacts = {
               "proof_kind": {
                 "anyOf": [
                   {
-                    "const": "payment_rail",
+                    "const": "effect_evidence",
                     "type": "string"
                   },
                   {
-                    "const": "effect_settlement",
+                    "const": "effect_finality",
                     "type": "string"
                   },
                   {
@@ -54252,11 +54268,11 @@ export const runxSchemaArtifacts = {
                 "proof_kind": {
                   "anyOf": [
                     {
-                      "const": "payment_rail",
+                      "const": "effect_evidence",
                       "type": "string"
                     },
                     {
-                      "const": "effect_settlement",
+                      "const": "effect_finality",
                       "type": "string"
                     },
                     {
@@ -54505,11 +54521,11 @@ export const runxSchemaArtifacts = {
               "proof_kind": {
                 "anyOf": [
                   {
-                    "const": "payment_rail",
+                    "const": "effect_evidence",
                     "type": "string"
                   },
                   {
-                    "const": "effect_settlement",
+                    "const": "effect_finality",
                     "type": "string"
                   },
                   {
@@ -54739,11 +54755,11 @@ export const runxSchemaArtifacts = {
             "proof_kind": {
               "anyOf": [
                 {
-                  "const": "payment_rail",
+                  "const": "effect_evidence",
                   "type": "string"
                 },
                 {
-                  "const": "effect_settlement",
+                  "const": "effect_finality",
                   "type": "string"
                 },
                 {
@@ -54983,11 +54999,11 @@ export const runxSchemaArtifacts = {
                 "proof_kind": {
                   "anyOf": [
                     {
-                      "const": "payment_rail",
+                      "const": "effect_evidence",
                       "type": "string"
                     },
                     {
-                      "const": "effect_settlement",
+                      "const": "effect_finality",
                       "type": "string"
                     },
                     {
@@ -55227,11 +55243,11 @@ export const runxSchemaArtifacts = {
                     "proof_kind": {
                       "anyOf": [
                         {
-                          "const": "payment_rail",
+                          "const": "effect_evidence",
                           "type": "string"
                         },
                         {
-                          "const": "effect_settlement",
+                          "const": "effect_finality",
                           "type": "string"
                         },
                         {
@@ -55453,11 +55469,11 @@ export const runxSchemaArtifacts = {
                       "proof_kind": {
                         "anyOf": [
                           {
-                            "const": "payment_rail",
+                            "const": "effect_evidence",
                             "type": "string"
                           },
                           {
-                            "const": "effect_settlement",
+                            "const": "effect_finality",
                             "type": "string"
                           },
                           {
@@ -55683,11 +55699,11 @@ export const runxSchemaArtifacts = {
                       "proof_kind": {
                         "anyOf": [
                           {
-                            "const": "payment_rail",
+                            "const": "effect_evidence",
                             "type": "string"
                           },
                           {
-                            "const": "effect_settlement",
+                            "const": "effect_finality",
                             "type": "string"
                           },
                           {
@@ -55917,11 +55933,11 @@ export const runxSchemaArtifacts = {
               "proof_kind": {
                 "anyOf": [
                   {
-                    "const": "payment_rail",
+                    "const": "effect_evidence",
                     "type": "string"
                   },
                   {
-                    "const": "effect_settlement",
+                    "const": "effect_finality",
                     "type": "string"
                   },
                   {
@@ -56140,11 +56156,11 @@ export const runxSchemaArtifacts = {
                 "proof_kind": {
                   "anyOf": [
                     {
-                      "const": "payment_rail",
+                      "const": "effect_evidence",
                       "type": "string"
                     },
                     {
-                      "const": "effect_settlement",
+                      "const": "effect_finality",
                       "type": "string"
                     },
                     {
@@ -56365,11 +56381,11 @@ export const runxSchemaArtifacts = {
                 "proof_kind": {
                   "anyOf": [
                     {
-                      "const": "payment_rail",
+                      "const": "effect_evidence",
                       "type": "string"
                     },
                     {
-                      "const": "effect_settlement",
+                      "const": "effect_finality",
                       "type": "string"
                     },
                     {
@@ -56590,11 +56606,11 @@ export const runxSchemaArtifacts = {
                 "proof_kind": {
                   "anyOf": [
                     {
-                      "const": "payment_rail",
+                      "const": "effect_evidence",
                       "type": "string"
                     },
                     {
-                      "const": "effect_settlement",
+                      "const": "effect_finality",
                       "type": "string"
                     },
                     {
@@ -56838,11 +56854,11 @@ export const runxSchemaArtifacts = {
           "proof_kind": {
             "anyOf": [
               {
-                "const": "payment_rail",
+                "const": "effect_evidence",
                 "type": "string"
               },
               {
-                "const": "effect_settlement",
+                "const": "effect_finality",
                 "type": "string"
               },
               {
@@ -57112,11 +57128,11 @@ export const runxSchemaArtifacts = {
             "proof_kind": {
               "anyOf": [
                 {
-                  "const": "payment_rail",
+                  "const": "effect_evidence",
                   "type": "string"
                 },
                 {
-                  "const": "effect_settlement",
+                  "const": "effect_finality",
                   "type": "string"
                 },
                 {
@@ -57347,11 +57363,11 @@ export const runxSchemaArtifacts = {
               "proof_kind": {
                 "anyOf": [
                   {
-                    "const": "payment_rail",
+                    "const": "effect_evidence",
                     "type": "string"
                   },
                   {
-                    "const": "effect_settlement",
+                    "const": "effect_finality",
                     "type": "string"
                   },
                   {
@@ -57575,11 +57591,11 @@ export const runxSchemaArtifacts = {
             "proof_kind": {
               "anyOf": [
                 {
-                  "const": "payment_rail",
+                  "const": "effect_evidence",
                   "type": "string"
                 },
                 {
-                  "const": "effect_settlement",
+                  "const": "effect_finality",
                   "type": "string"
                 },
                 {
@@ -57813,7 +57829,7 @@ export const runxSchemaArtifacts = {
             "type": "string"
           },
           {
-            "const": "payment",
+            "const": "effect",
             "type": "string"
           },
           {
@@ -57851,11 +57867,11 @@ export const runxSchemaArtifacts = {
           "proof_kind": {
             "anyOf": [
               {
-                "const": "payment_rail",
+                "const": "effect_evidence",
                 "type": "string"
               },
               {
-                "const": "effect_settlement",
+                "const": "effect_finality",
                 "type": "string"
               },
               {
@@ -58105,11 +58121,11 @@ export const runxSchemaArtifacts = {
                 "proof_kind": {
                   "anyOf": [
                     {
-                      "const": "payment_rail",
+                      "const": "effect_evidence",
                       "type": "string"
                     },
                     {
-                      "const": "effect_settlement",
+                      "const": "effect_finality",
                       "type": "string"
                     },
                     {
@@ -58329,11 +58345,11 @@ export const runxSchemaArtifacts = {
               "proof_kind": {
                 "anyOf": [
                   {
-                    "const": "payment_rail",
+                    "const": "effect_evidence",
                     "type": "string"
                   },
                   {
-                    "const": "effect_settlement",
+                    "const": "effect_finality",
                     "type": "string"
                   },
                   {
@@ -58551,11 +58567,11 @@ export const runxSchemaArtifacts = {
               "proof_kind": {
                 "anyOf": [
                   {
-                    "const": "payment_rail",
+                    "const": "effect_evidence",
                     "type": "string"
                   },
                   {
-                    "const": "effect_settlement",
+                    "const": "effect_finality",
                     "type": "string"
                   },
                   {
@@ -58774,11 +58790,11 @@ export const runxSchemaArtifacts = {
                 "proof_kind": {
                   "anyOf": [
                     {
-                      "const": "payment_rail",
+                      "const": "effect_evidence",
                       "type": "string"
                     },
                     {
-                      "const": "effect_settlement",
+                      "const": "effect_finality",
                       "type": "string"
                     },
                     {
@@ -59027,11 +59043,11 @@ export const runxSchemaArtifacts = {
               "proof_kind": {
                 "anyOf": [
                   {
-                    "const": "payment_rail",
+                    "const": "effect_evidence",
                     "type": "string"
                   },
                   {
-                    "const": "effect_settlement",
+                    "const": "effect_finality",
                     "type": "string"
                   },
                   {
@@ -59280,11 +59296,11 @@ export const runxSchemaArtifacts = {
                 "proof_kind": {
                   "anyOf": [
                     {
-                      "const": "payment_rail",
+                      "const": "effect_evidence",
                       "type": "string"
                     },
                     {
-                      "const": "effect_settlement",
+                      "const": "effect_finality",
                       "type": "string"
                     },
                     {
@@ -59543,11 +59559,11 @@ export const runxSchemaArtifacts = {
             "proof_kind": {
               "anyOf": [
                 {
-                  "const": "payment_rail",
+                  "const": "effect_evidence",
                   "type": "string"
                 },
                 {
-                  "const": "effect_settlement",
+                  "const": "effect_finality",
                   "type": "string"
                 },
                 {
@@ -59779,11 +59795,11 @@ export const runxSchemaArtifacts = {
           "proof_kind": {
             "anyOf": [
               {
-                "const": "payment_rail",
+                "const": "effect_evidence",
                 "type": "string"
               },
               {
-                "const": "effect_settlement",
+                "const": "effect_finality",
                 "type": "string"
               },
               {
@@ -60119,11 +60135,11 @@ export const runxSchemaArtifacts = {
               "proof_kind": {
                 "anyOf": [
                   {
-                    "const": "payment_rail",
+                    "const": "effect_evidence",
                     "type": "string"
                   },
                   {
-                    "const": "effect_settlement",
+                    "const": "effect_finality",
                     "type": "string"
                   },
                   {
@@ -60391,11 +60407,11 @@ export const runxSchemaArtifacts = {
               "proof_kind": {
                 "anyOf": [
                   {
-                    "const": "payment_rail",
+                    "const": "effect_evidence",
                     "type": "string"
                   },
                   {
-                    "const": "effect_settlement",
+                    "const": "effect_finality",
                     "type": "string"
                   },
                   {
@@ -60632,11 +60648,11 @@ export const runxSchemaArtifacts = {
             "proof_kind": {
               "anyOf": [
                 {
-                  "const": "payment_rail",
+                  "const": "effect_evidence",
                   "type": "string"
                 },
                 {
-                  "const": "effect_settlement",
+                  "const": "effect_finality",
                   "type": "string"
                 },
                 {
@@ -60860,11 +60876,11 @@ export const runxSchemaArtifacts = {
           "proof_kind": {
             "anyOf": [
               {
-                "const": "payment_rail",
+                "const": "effect_evidence",
                 "type": "string"
               },
               {
-                "const": "effect_settlement",
+                "const": "effect_finality",
                 "type": "string"
               },
               {
@@ -61132,11 +61148,11 @@ export const runxSchemaArtifacts = {
             "proof_kind": {
               "anyOf": [
                 {
-                  "const": "payment_rail",
+                  "const": "effect_evidence",
                   "type": "string"
                 },
                 {
-                  "const": "effect_settlement",
+                  "const": "effect_finality",
                   "type": "string"
                 },
                 {
@@ -61407,11 +61423,11 @@ export const runxSchemaArtifacts = {
                 "proof_kind": {
                   "anyOf": [
                     {
-                      "const": "payment_rail",
+                      "const": "effect_evidence",
                       "type": "string"
                     },
                     {
-                      "const": "effect_settlement",
+                      "const": "effect_finality",
                       "type": "string"
                     },
                     {
@@ -61679,11 +61695,11 @@ export const runxSchemaArtifacts = {
                     "proof_kind": {
                       "anyOf": [
                         {
-                          "const": "payment_rail",
+                          "const": "effect_evidence",
                           "type": "string"
                         },
                         {
-                          "const": "effect_settlement",
+                          "const": "effect_finality",
                           "type": "string"
                         },
                         {
@@ -61905,11 +61921,11 @@ export const runxSchemaArtifacts = {
                       "proof_kind": {
                         "anyOf": [
                           {
-                            "const": "payment_rail",
+                            "const": "effect_evidence",
                             "type": "string"
                           },
                           {
-                            "const": "effect_settlement",
+                            "const": "effect_finality",
                             "type": "string"
                           },
                           {
@@ -62135,11 +62151,11 @@ export const runxSchemaArtifacts = {
                       "proof_kind": {
                         "anyOf": [
                           {
-                            "const": "payment_rail",
+                            "const": "effect_evidence",
                             "type": "string"
                           },
                           {
-                            "const": "effect_settlement",
+                            "const": "effect_finality",
                             "type": "string"
                           },
                           {
@@ -62369,11 +62385,11 @@ export const runxSchemaArtifacts = {
               "proof_kind": {
                 "anyOf": [
                   {
-                    "const": "payment_rail",
+                    "const": "effect_evidence",
                     "type": "string"
                   },
                   {
-                    "const": "effect_settlement",
+                    "const": "effect_finality",
                     "type": "string"
                   },
                   {
@@ -62592,11 +62608,11 @@ export const runxSchemaArtifacts = {
                 "proof_kind": {
                   "anyOf": [
                     {
-                      "const": "payment_rail",
+                      "const": "effect_evidence",
                       "type": "string"
                     },
                     {
-                      "const": "effect_settlement",
+                      "const": "effect_finality",
                       "type": "string"
                     },
                     {
@@ -62817,11 +62833,11 @@ export const runxSchemaArtifacts = {
                 "proof_kind": {
                   "anyOf": [
                     {
-                      "const": "payment_rail",
+                      "const": "effect_evidence",
                       "type": "string"
                     },
                     {
-                      "const": "effect_settlement",
+                      "const": "effect_finality",
                       "type": "string"
                     },
                     {
@@ -63042,11 +63058,11 @@ export const runxSchemaArtifacts = {
                 "proof_kind": {
                   "anyOf": [
                     {
-                      "const": "payment_rail",
+                      "const": "effect_evidence",
                       "type": "string"
                     },
                     {
-                      "const": "effect_settlement",
+                      "const": "effect_finality",
                       "type": "string"
                     },
                     {
@@ -63270,11 +63286,11 @@ export const runxSchemaArtifacts = {
             "proof_kind": {
               "anyOf": [
                 {
-                  "const": "payment_rail",
+                  "const": "effect_evidence",
                   "type": "string"
                 },
                 {
-                  "const": "effect_settlement",
+                  "const": "effect_finality",
                   "type": "string"
                 },
                 {
@@ -63510,11 +63526,11 @@ export const runxSchemaArtifacts = {
           "proof_kind": {
             "anyOf": [
               {
-                "const": "payment_rail",
+                "const": "effect_evidence",
                 "type": "string"
               },
               {
-                "const": "effect_settlement",
+                "const": "effect_finality",
                 "type": "string"
               },
               {
@@ -63742,11 +63758,11 @@ export const runxSchemaArtifacts = {
             "proof_kind": {
               "anyOf": [
                 {
-                  "const": "payment_rail",
+                  "const": "effect_evidence",
                   "type": "string"
                 },
                 {
-                  "const": "effect_settlement",
+                  "const": "effect_finality",
                   "type": "string"
                 },
                 {
@@ -64016,11 +64032,11 @@ export const runxSchemaArtifacts = {
             "proof_kind": {
               "anyOf": [
                 {
-                  "const": "payment_rail",
+                  "const": "effect_evidence",
                   "type": "string"
                 },
                 {
-                  "const": "effect_settlement",
+                  "const": "effect_finality",
                   "type": "string"
                 },
                 {
@@ -64240,11 +64256,11 @@ export const runxSchemaArtifacts = {
           "proof_kind": {
             "anyOf": [
               {
-                "const": "payment_rail",
+                "const": "effect_evidence",
                 "type": "string"
               },
               {
-                "const": "effect_settlement",
+                "const": "effect_finality",
                 "type": "string"
               },
               {
@@ -64483,11 +64499,11 @@ export const runxSchemaArtifacts = {
             "proof_kind": {
               "anyOf": [
                 {
-                  "const": "payment_rail",
+                  "const": "effect_evidence",
                   "type": "string"
                 },
                 {
-                  "const": "effect_settlement",
+                  "const": "effect_finality",
                   "type": "string"
                 },
                 {
@@ -64718,11 +64734,11 @@ export const runxSchemaArtifacts = {
           "proof_kind": {
             "anyOf": [
               {
-                "const": "payment_rail",
+                "const": "effect_evidence",
                 "type": "string"
               },
               {
-                "const": "effect_settlement",
+                "const": "effect_finality",
                 "type": "string"
               },
               {
@@ -64940,11 +64956,11 @@ export const runxSchemaArtifacts = {
           "proof_kind": {
             "anyOf": [
               {
-                "const": "payment_rail",
+                "const": "effect_evidence",
                 "type": "string"
               },
               {
-                "const": "effect_settlement",
+                "const": "effect_finality",
                 "type": "string"
               },
               {
@@ -65188,11 +65204,11 @@ export const runxSchemaArtifacts = {
             "proof_kind": {
               "anyOf": [
                 {
-                  "const": "payment_rail",
+                  "const": "effect_evidence",
                   "type": "string"
                 },
                 {
-                  "const": "effect_settlement",
+                  "const": "effect_finality",
                   "type": "string"
                 },
                 {
@@ -65449,11 +65465,11 @@ export const runxSchemaArtifacts = {
                 "proof_kind": {
                   "anyOf": [
                     {
-                      "const": "payment_rail",
+                      "const": "effect_evidence",
                       "type": "string"
                     },
                     {
-                      "const": "effect_settlement",
+                      "const": "effect_finality",
                       "type": "string"
                     },
                     {
@@ -65727,11 +65743,11 @@ export const runxSchemaArtifacts = {
                 "proof_kind": {
                   "anyOf": [
                     {
-                      "const": "payment_rail",
+                      "const": "effect_evidence",
                       "type": "string"
                     },
                     {
-                      "const": "effect_settlement",
+                      "const": "effect_finality",
                       "type": "string"
                     },
                     {
@@ -65951,11 +65967,11 @@ export const runxSchemaArtifacts = {
               "proof_kind": {
                 "anyOf": [
                   {
-                    "const": "payment_rail",
+                    "const": "effect_evidence",
                     "type": "string"
                   },
                   {
-                    "const": "effect_settlement",
+                    "const": "effect_finality",
                     "type": "string"
                   },
                   {
@@ -66173,11 +66189,11 @@ export const runxSchemaArtifacts = {
               "proof_kind": {
                 "anyOf": [
                   {
-                    "const": "payment_rail",
+                    "const": "effect_evidence",
                     "type": "string"
                   },
                   {
-                    "const": "effect_settlement",
+                    "const": "effect_finality",
                     "type": "string"
                   },
                   {
@@ -66396,11 +66412,11 @@ export const runxSchemaArtifacts = {
                 "proof_kind": {
                   "anyOf": [
                     {
-                      "const": "payment_rail",
+                      "const": "effect_evidence",
                       "type": "string"
                     },
                     {
-                      "const": "effect_settlement",
+                      "const": "effect_finality",
                       "type": "string"
                     },
                     {
@@ -66656,11 +66672,11 @@ export const runxSchemaArtifacts = {
                       "proof_kind": {
                         "anyOf": [
                           {
-                            "const": "payment_rail",
+                            "const": "effect_evidence",
                             "type": "string"
                           },
                           {
-                            "const": "effect_settlement",
+                            "const": "effect_finality",
                             "type": "string"
                           },
                           {
@@ -66906,11 +66922,11 @@ export const runxSchemaArtifacts = {
                       "proof_kind": {
                         "anyOf": [
                           {
-                            "const": "payment_rail",
+                            "const": "effect_evidence",
                             "type": "string"
                           },
                           {
-                            "const": "effect_settlement",
+                            "const": "effect_finality",
                             "type": "string"
                           },
                           {
@@ -67213,11 +67229,11 @@ export const runxSchemaArtifacts = {
                   "proof_kind": {
                     "anyOf": [
                       {
-                        "const": "payment_rail",
+                        "const": "effect_evidence",
                         "type": "string"
                       },
                       {
-                        "const": "effect_settlement",
+                        "const": "effect_finality",
                         "type": "string"
                       },
                       {
@@ -67595,11 +67611,11 @@ export const runxSchemaArtifacts = {
                   "proof_kind": {
                     "anyOf": [
                       {
-                        "const": "payment_rail",
+                        "const": "effect_evidence",
                         "type": "string"
                       },
                       {
-                        "const": "effect_settlement",
+                        "const": "effect_finality",
                         "type": "string"
                       },
                       {
@@ -67850,11 +67866,11 @@ export const runxSchemaArtifacts = {
                 "proof_kind": {
                   "anyOf": [
                     {
-                      "const": "payment_rail",
+                      "const": "effect_evidence",
                       "type": "string"
                     },
                     {
-                      "const": "effect_settlement",
+                      "const": "effect_finality",
                       "type": "string"
                     },
                     {
@@ -68072,11 +68088,11 @@ export const runxSchemaArtifacts = {
                 "proof_kind": {
                   "anyOf": [
                     {
-                      "const": "payment_rail",
+                      "const": "effect_evidence",
                       "type": "string"
                     },
                     {
-                      "const": "effect_settlement",
+                      "const": "effect_finality",
                       "type": "string"
                     },
                     {
@@ -68336,11 +68352,11 @@ export const runxSchemaArtifacts = {
                   "proof_kind": {
                     "anyOf": [
                       {
-                        "const": "payment_rail",
+                        "const": "effect_evidence",
                         "type": "string"
                       },
                       {
-                        "const": "effect_settlement",
+                        "const": "effect_finality",
                         "type": "string"
                       },
                       {
@@ -68643,11 +68659,11 @@ export const runxSchemaArtifacts = {
               "proof_kind": {
                 "anyOf": [
                   {
-                    "const": "payment_rail",
+                    "const": "effect_evidence",
                     "type": "string"
                   },
                   {
-                    "const": "effect_settlement",
+                    "const": "effect_finality",
                     "type": "string"
                   },
                   {
@@ -68940,11 +68956,11 @@ export const runxSchemaArtifacts = {
               "proof_kind": {
                 "anyOf": [
                   {
-                    "const": "payment_rail",
+                    "const": "effect_evidence",
                     "type": "string"
                   },
                   {
-                    "const": "effect_settlement",
+                    "const": "effect_finality",
                     "type": "string"
                   },
                   {
@@ -69190,11 +69206,11 @@ export const runxSchemaArtifacts = {
             "proof_kind": {
               "anyOf": [
                 {
-                  "const": "payment_rail",
+                  "const": "effect_evidence",
                   "type": "string"
                 },
                 {
-                  "const": "effect_settlement",
+                  "const": "effect_finality",
                   "type": "string"
                 },
                 {
@@ -69468,11 +69484,11 @@ export const runxSchemaArtifacts = {
             "proof_kind": {
               "anyOf": [
                 {
-                  "const": "payment_rail",
+                  "const": "effect_evidence",
                   "type": "string"
                 },
                 {
-                  "const": "effect_settlement",
+                  "const": "effect_finality",
                   "type": "string"
                 },
                 {
@@ -69741,11 +69757,11 @@ export const runxSchemaArtifacts = {
                 "proof_kind": {
                   "anyOf": [
                     {
-                      "const": "payment_rail",
+                      "const": "effect_evidence",
                       "type": "string"
                     },
                     {
-                      "const": "effect_settlement",
+                      "const": "effect_finality",
                       "type": "string"
                     },
                     {
@@ -69988,11 +70004,11 @@ export const runxSchemaArtifacts = {
                 "proof_kind": {
                   "anyOf": [
                     {
-                      "const": "payment_rail",
+                      "const": "effect_evidence",
                       "type": "string"
                     },
                     {
-                      "const": "effect_settlement",
+                      "const": "effect_finality",
                       "type": "string"
                     },
                     {
@@ -70266,11 +70282,11 @@ export const runxSchemaArtifacts = {
                 "proof_kind": {
                   "anyOf": [
                     {
-                      "const": "payment_rail",
+                      "const": "effect_evidence",
                       "type": "string"
                     },
                     {
-                      "const": "effect_settlement",
+                      "const": "effect_finality",
                       "type": "string"
                     },
                     {
@@ -70490,11 +70506,11 @@ export const runxSchemaArtifacts = {
               "proof_kind": {
                 "anyOf": [
                   {
-                    "const": "payment_rail",
+                    "const": "effect_evidence",
                     "type": "string"
                   },
                   {
-                    "const": "effect_settlement",
+                    "const": "effect_finality",
                     "type": "string"
                   },
                   {
@@ -70712,11 +70728,11 @@ export const runxSchemaArtifacts = {
               "proof_kind": {
                 "anyOf": [
                   {
-                    "const": "payment_rail",
+                    "const": "effect_evidence",
                     "type": "string"
                   },
                   {
-                    "const": "effect_settlement",
+                    "const": "effect_finality",
                     "type": "string"
                   },
                   {
@@ -70935,11 +70951,11 @@ export const runxSchemaArtifacts = {
                 "proof_kind": {
                   "anyOf": [
                     {
-                      "const": "payment_rail",
+                      "const": "effect_evidence",
                       "type": "string"
                     },
                     {
-                      "const": "effect_settlement",
+                      "const": "effect_finality",
                       "type": "string"
                     },
                     {
@@ -71190,11 +71206,11 @@ export const runxSchemaArtifacts = {
               "proof_kind": {
                 "anyOf": [
                   {
-                    "const": "payment_rail",
+                    "const": "effect_evidence",
                     "type": "string"
                   },
                   {
-                    "const": "effect_settlement",
+                    "const": "effect_finality",
                     "type": "string"
                   },
                   {
@@ -71806,11 +71822,11 @@ export const runxSchemaArtifacts = {
                   "proof_kind": {
                     "anyOf": [
                       {
-                        "const": "payment_rail",
+                        "const": "effect_evidence",
                         "type": "string"
                       },
                       {
-                        "const": "effect_settlement",
+                        "const": "effect_finality",
                         "type": "string"
                       },
                       {
@@ -72038,11 +72054,11 @@ export const runxSchemaArtifacts = {
                   "proof_kind": {
                     "anyOf": [
                       {
-                        "const": "payment_rail",
+                        "const": "effect_evidence",
                         "type": "string"
                       },
                       {
-                        "const": "effect_settlement",
+                        "const": "effect_finality",
                         "type": "string"
                       },
                       {
@@ -72307,11 +72323,11 @@ export const runxSchemaArtifacts = {
             "proof_kind": {
               "anyOf": [
                 {
-                  "const": "payment_rail",
+                  "const": "effect_evidence",
                   "type": "string"
                 },
                 {
-                  "const": "effect_settlement",
+                  "const": "effect_finality",
                   "type": "string"
                 },
                 {

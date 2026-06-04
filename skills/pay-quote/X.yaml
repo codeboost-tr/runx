@@ -1,18 +1,16 @@
 skill: pay-quote
-version: "0.1.0"
-
+version: 0.1.0
 catalog:
   kind: skill
   audience: operator
   visibility: private
-
 harness:
   cases:
     - name: pay-quote-normalizes-challenge
       runner: quote
       inputs:
         payment_signal:
-          signal_type: payment_required
+          signal_type: effect_required
           challenge_id: ch_mock_001
           amount_minor: 125
           currency: USD
@@ -32,7 +30,7 @@ harness:
                 - mock
               counterparty: merchant:demo
               operation: search.paid
-              expires_at: "2026-05-20T01:00:00Z"
+              expires_at: 2026-05-20T01:00:00Z
             requested_payment_authority:
               term_id: authority-term:payment:quote-demo-001
               principal_ref:
@@ -41,22 +39,23 @@ harness:
               resource_ref:
                 type: surface
                 uri: merchant:demo
-              resource_family: payment
+              resource_family: effect
               verbs:
-                - reserve
-                - spend
+                - prepare
+                - commit
               bounds:
-                payment:
-                  currency: USD
-                  max_per_call_minor: 125
-                  rails:
-                    - mock
-                  realm: test
-                  counterparty: merchant:demo
-                  operation: search.paid
-                  idempotency_required: true
-                  recovery_required: true
-                  receipt_before_success: true
+                effect_limits:
+                  - family: payment
+                    unit: USD
+                    max_per_call_units: 125
+                    channels:
+                      - mock
+                    realm: test
+                    peer: merchant:demo
+                    operation: search.paid
+                    idempotency_required: true
+                    recovery_required: true
+                    receipt_before_success: true
               conditions: []
               approvals: []
               capabilities: []
@@ -76,7 +75,6 @@ harness:
           state: sealed
           disposition: closed
           reason_code: payment_quote_closed
-
 runners:
   quote:
     default: true
@@ -95,41 +93,41 @@ runners:
     runx:
       payment_authority:
         phase: quote
-        resource_family: payment
+        resource_family: effect
         verbs:
-          - quote
+          - estimate
         mutates_rail: false
         receives_funding_material: false
     inputs:
       payment_signal:
         type: object
         required: true
-        description: "Payment-required signal, MCP challenge, invoice, checkout request, or operator intent."
+        description: Payment-required signal, MCP challenge, invoice, checkout request, or operator intent.
       realm:
         type: string
         required: false
-        description: "Authority realm such as local, test, or prod."
+        description: Authority realm such as local, test, or prod.
       rail_preferences:
         type: json
         required: false
-        description: "Ordered list of preferred payment rails."
-      max_per_call_minor:
+        description: Ordered list of preferred payment rails.
+      max_per_call_units:
         type: number
         required: false
-        description: "Caller cap in minor currency units."
+        description: Caller cap in minor currency units.
       currency:
         type: string
         required: false
-        description: "Caller-expected ISO 4217 currency."
+        description: Caller-expected ISO 4217 currency.
       operation:
         type: string
         required: false
-        description: "Stable operation name for the paid action."
+        description: Stable operation name for the paid action.
       counterparty:
         type: string
         required: false
-        description: "Expected merchant or payee reference."
+        description: Expected merchant or payee reference.
       idempotency_seed:
         type: string
         required: false
-        description: "Stable caller-provided idempotency material."
+        description: Stable caller-provided idempotency material.

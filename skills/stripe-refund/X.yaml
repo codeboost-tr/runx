@@ -1,11 +1,9 @@
 skill: stripe-refund
-version: "0.1.0"
-
+version: 0.1.0
 catalog:
   kind: graph
   audience: operator
   visibility: public
-
 harness:
   cases:
     - name: stripe-refund-links-original-receipt
@@ -78,7 +76,6 @@ harness:
           - reserve
           - approve-refund
           - settlement
-
 runners:
   stripe:
     default: true
@@ -87,27 +84,27 @@ runners:
       original_receipt_ref:
         type: string
         required: true
-        description: "Linked sealed charge receipt reference."
+        description: Linked sealed charge receipt reference.
       original_receipt:
         type: object
         required: true
-        description: "Redacted original charge receipt summary."
+        description: Redacted original charge receipt summary.
       refund_request:
         type: object
         required: true
-        description: "Requested amount and reason."
+        description: Requested amount and reason.
       parent_payment_authority:
         type: object
         required: true
-        description: "Parent payment authority term or ref."
+        description: Parent payment authority term or ref.
       approval_context:
         type: object
         required: false
-        description: "Prior approval evidence."
+        description: Prior approval evidence.
       idempotency_seed:
         type: string
         required: false
-        description: "Stable refund idempotency seed."
+        description: Stable refund idempotency seed.
     graph:
       name: stripe-refund
       steps:
@@ -163,7 +160,7 @@ runners:
             reserved_refund_authority: reserve.refund_reservation_packet.data.reserved_payment_authority
           artifacts:
             wrap_as: refund_rail_packet
-            packet: runx.payment.rail.v1
+            packet: runx.effect.evidence.v1
       policy:
         transitions:
           - to: settlement
@@ -173,7 +170,7 @@ runners:
       payment_authority:
         direction: provider_refund
         phase: graph
-        resource_family: payment
+        resource_family: effect
         settlement_family: stripe
         requires_original_receipt_ref: true
         same_family_required: true

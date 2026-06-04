@@ -6,7 +6,8 @@ use std::path::Path;
 use std::sync::Arc;
 
 use runx_contracts::{
-    AuthoritySubsetProof, AuthorityTerm, AuthorityVerb, Decision, JsonObject, JsonValue, Reference,
+    AuthorityEffectLimit, AuthoritySubsetProof, AuthorityTerm, AuthorityVerb, Decision, JsonNumber,
+    JsonObject, JsonValue, Reference,
 };
 use runx_core::policy::authority_term_has_verb;
 use runx_core::state_machine::AuthorityAdmissionWitness;
@@ -16,22 +17,22 @@ use runx_runtime::{
     EffectReplayOutputRequest, EffectReplayReceiptRequest, EffectStepRequest, RuntimeEffect,
     RuntimeEffectError, insert_effect_verification_ref,
 };
+use thiserror::Error;
 
 use crate::authority::{
     PaymentSpendCapabilityBinding, StepAuthorityAdmission, admit_step_authority,
 };
-use crate::packets::{PaymentRailProof, read_payment_rail_packet};
+use crate::packets::{PaymentRailProof, read_effect_evidence_packet};
 use crate::state::{
     EffectIdempotencyEntry, EffectIdempotencyKey, EffectMutation, EffectMutationStatus,
     EffectRecoveryState, EffectRunSpendReservation, EffectStateError, EffectStepStateInput,
     consumed_spend_capability_recorded, escalate_effect_mutation, lookup_effect_idempotency_entry,
-    lookup_effect_mutation, persist_effect_step_state, record_effect_settlement_intent,
+    lookup_effect_mutation, persist_effect_step_state, record_effect_finality_intent,
 };
 use crate::supervisor::{
-    PAYMENT_RAIL_SUPERVISOR_EVIDENCE_METADATA, PaymentSupervisorError, PaymentSupervisorProof,
-    PaymentSupervisorProofMatch, PaymentSupervisorSettlementEvidence,
-    PaymentSupervisorSettlementRequest, PaymentSupervisorVerificationInput,
-    insert_payment_supervisor_proof_metadata, payment_supervisor_evidence_metadata_value,
+    PAYMENT_RAIL_SUPERVISOR_EVIDENCE_METADATA, PaymentSupervisorProof, PaymentSupervisorProofMatch,
+    PaymentSupervisorVerificationInput, insert_payment_supervisor_proof_metadata,
+    payment_supervisor_evidence_from_payload, payment_supervisor_evidence_metadata_value,
     payment_supervisor_evidence_reference, payment_supervisor_proof_reference,
     rebind_supervisor_proof_to_receipt, validate_payment_supervisor_proof,
     verify_payment_rail_supervisor_proof,
@@ -39,22 +40,62 @@ use crate::supervisor::{
 
 pub const PAYMENT_EFFECT_FAMILY: &str = "payment";
 
-pub trait EffectSupervisor: Send + Sync {
-    fn settlement_evidence(
+pub trait PaymentFinalitySupervisor: Send + Sync {
+    fn supervise(
         &self,
-        request: PaymentSupervisorSettlementRequest<'_>,
-    ) -> Result<PaymentSupervisorSettlementEvidence, PaymentSupervisorError>;
+        request: PaymentFinalitySupervisorRequest<'_>,
+    ) -> Result<PaymentFinalitySupervisorEvidence, PaymentFinalitySupervisorError>;
+}
+
+#[derive(Debug, Error, PartialEq, Eq)]
+pub enum PaymentFinalitySupervisorError {
+    #[error("payment finality supervisor is not configured")]
+    SupervisorUnavailable,
+    #[error("payment finality supervisor evidence is invalid: {message}")]
+    InvalidEvidence { message: String },
+    #[error("payment finality supervisor denied request: {message}")]
+    Denied { message: String },
+    #[error(
+        "payment finality supervisor field {field} mismatch: expected {expected}, got {actual}"
+    )]
+    FieldMismatch {
+        field: &'static str,
+        expected: String,
+        actual: String,
+    },
+}
+
+#[derive(Clone, Debug)]
+pub struct PaymentFinalitySupervisorRequest<'a> {
+    pub family: &'a str,
+    pub payload: JsonObject,
+}
+
+#[derive(Clone, Debug, PartialEq)]
+pub struct PaymentFinalitySupervisorEvidence {
+    pub family: String,
+    pub payload: JsonObject,
+}
+
+impl PaymentFinalitySupervisorEvidence {
+    #[must_use]
+    pub fn new(family: impl Into<String>, payload: JsonObject) -> Self {
+        Self {
+            family: family.into(),
+            payload,
+        }
+    }
 }
 
 #[derive(Clone)]
 pub struct PaymentRuntimeEffect {
-    supervisor: Arc<dyn EffectSupervisor>,
+    supervisor: Arc<dyn PaymentFinalitySupervisor>,
 }
 
 impl PaymentRuntimeEffect {
     pub fn new<T>(supervisor: T) -> Self
     where
-        T: EffectSupervisor + 'static,
+        T: PaymentFinalitySupervisor + 'static,
     {
         Self {
             supervisor: Arc::new(supervisor),
@@ -63,31 +104,131 @@ impl PaymentRuntimeEffect {
 }
 
 #[derive(Clone, Copy, Debug, Default)]
-pub struct DeterministicEffectSupervisor;
+pub struct DeterministicPaymentFinalitySupervisor;
 
-impl EffectSupervisor for DeterministicEffectSupervisor {
-    fn settlement_evidence(
+impl PaymentFinalitySupervisor for DeterministicPaymentFinalitySupervisor {
+    fn supervise(
         &self,
-        request: PaymentSupervisorSettlementRequest<'_>,
-    ) -> Result<PaymentSupervisorSettlementEvidence, PaymentSupervisorError> {
-        if request.skill_settlement_status != Some("fulfilled") {
-            return Err(PaymentSupervisorError::SettlementNotFulfilled {
-                status: request.skill_settlement_status.map(str::to_owned),
+        request: PaymentFinalitySupervisorRequest<'_>,
+    ) -> Result<PaymentFinalitySupervisorEvidence, PaymentFinalitySupervisorError> {
+        let status =
+            supervisor_payload_optional_string(&request.payload, "skill_settlement_status")?;
+        if status != Some("fulfilled") {
+            return Err(PaymentFinalitySupervisorError::Denied {
+                message: format!("payment rail result status {status:?} is not fulfilled"),
             });
         }
-        Ok(PaymentSupervisorSettlementEvidence {
-            verifier_id: crate::supervisor::PAYMENT_RAIL_SUPERVISOR_VERIFIER_ID.to_owned(),
-            proof_ref: request.proof_ref.to_owned(),
-            rail: request.rail.to_owned(),
-            counterparty: request.counterparty.to_owned(),
-            amount_minor: request.amount_minor,
-            currency: request.currency.to_owned(),
-            idempotency_key: request.idempotency_key.to_owned(),
-            settlement_status: request.skill_settlement_status.map(str::to_owned),
-            provider_event_ref: Some(format!("runx-pay:test:{}", request.proof_ref)),
-            shared_payment_token_ref: None,
-            admission_token_digest: None,
-        })
+        let proof_ref = supervisor_payload_string(&request.payload, "proof_ref")?;
+        let rail = supervisor_payload_string(&request.payload, "rail")?;
+        let counterparty = supervisor_payload_string(&request.payload, "counterparty")?;
+        let amount_minor = supervisor_payload_u64(&request.payload, "amount_minor")?;
+        let currency = supervisor_payload_string(&request.payload, "currency")?;
+        let idempotency_key = supervisor_payload_string(&request.payload, "idempotency_key")?;
+        let mut payload = JsonObject::new();
+        payload.insert(
+            "verifier_id".to_owned(),
+            JsonValue::String(crate::supervisor::PAYMENT_RAIL_SUPERVISOR_VERIFIER_ID.to_owned()),
+        );
+        payload.insert(
+            "proof_ref".to_owned(),
+            JsonValue::String(proof_ref.to_owned()),
+        );
+        payload.insert("rail".to_owned(), JsonValue::String(rail.to_owned()));
+        payload.insert(
+            "counterparty".to_owned(),
+            JsonValue::String(counterparty.to_owned()),
+        );
+        payload.insert(
+            "amount_minor".to_owned(),
+            JsonValue::Number(JsonNumber::U64(amount_minor)),
+        );
+        payload.insert(
+            "currency".to_owned(),
+            JsonValue::String(currency.to_owned()),
+        );
+        payload.insert(
+            "idempotency_key".to_owned(),
+            JsonValue::String(idempotency_key.to_owned()),
+        );
+        if let Some(status) = status {
+            payload.insert(
+                "settlement_status".to_owned(),
+                JsonValue::String(status.to_owned()),
+            );
+        }
+        payload.insert(
+            "provider_event_ref".to_owned(),
+            JsonValue::String(format!("runx-pay:test:{proof_ref}")),
+        );
+        Ok(PaymentFinalitySupervisorEvidence::new(
+            request.family,
+            payload,
+        ))
+    }
+}
+
+fn supervisor_payload_string<'a>(
+    payload: &'a JsonObject,
+    field: &'static str,
+) -> Result<&'a str, PaymentFinalitySupervisorError> {
+    match payload.get(field) {
+        Some(JsonValue::String(value)) => Ok(value),
+        Some(value) => Err(invalid_supervisor_payload(field, value, "string")),
+        None => Err(missing_supervisor_payload(field)),
+    }
+}
+
+fn supervisor_payload_optional_string<'a>(
+    payload: &'a JsonObject,
+    field: &'static str,
+) -> Result<Option<&'a str>, PaymentFinalitySupervisorError> {
+    match payload.get(field) {
+        Some(JsonValue::String(value)) => Ok(Some(value)),
+        Some(JsonValue::Null) | None => Ok(None),
+        Some(value) => Err(invalid_supervisor_payload(field, value, "string")),
+    }
+}
+
+fn supervisor_payload_u64(
+    payload: &JsonObject,
+    field: &'static str,
+) -> Result<u64, PaymentFinalitySupervisorError> {
+    match payload.get(field) {
+        Some(JsonValue::Number(JsonNumber::U64(value))) => Ok(*value),
+        Some(value @ JsonValue::Number(JsonNumber::I64(number))) => u64::try_from(*number)
+            .map_err(|_| invalid_supervisor_payload(field, value, "unsigned integer")),
+        Some(value) => Err(invalid_supervisor_payload(field, value, "unsigned integer")),
+        None => Err(missing_supervisor_payload(field)),
+    }
+}
+
+fn missing_supervisor_payload(field: &'static str) -> PaymentFinalitySupervisorError {
+    PaymentFinalitySupervisorError::InvalidEvidence {
+        message: format!("payment finality supervisor payload is missing {field}"),
+    }
+}
+
+fn invalid_supervisor_payload(
+    field: &'static str,
+    value: &JsonValue,
+    expected: &'static str,
+) -> PaymentFinalitySupervisorError {
+    PaymentFinalitySupervisorError::InvalidEvidence {
+        message: format!(
+            "payment finality supervisor payload field {field} must be {expected}, got {}",
+            json_value_kind(value)
+        ),
+    }
+}
+
+fn json_value_kind(value: &JsonValue) -> &'static str {
+    match value {
+        JsonValue::Null => "null",
+        JsonValue::Bool(_) => "bool",
+        JsonValue::Number(_) => "number",
+        JsonValue::String(_) => "string",
+        JsonValue::Array(_) => "array",
+        JsonValue::Object(_) => "object",
     }
 }
 
@@ -139,7 +280,7 @@ impl RuntimeEffect for PaymentRuntimeEffect {
             spend_capability_ref: input.spend_capability_ref.as_ref(),
         })
         .map_err(|source| denied(source.to_string()))?;
-        if decision.verb != Some(AuthorityVerb::Spend) {
+        if decision.verb != Some(AuthorityVerb::Commit) {
             return Ok(None);
         }
         validate_entry_matches_payment(&entry, &payment)?;
@@ -218,15 +359,15 @@ impl RuntimeEffect for PaymentRuntimeEffect {
             consumed_spend_capability_refs_for_admission(&input, request.env, request.graph_dir)?;
         let act_id = format!("act_{}", request.step.id);
         let admission_error_verb =
-            if authority_term_has_verb(&input.child_authority, AuthorityVerb::Spend) {
-                AuthorityVerb::Spend
+            if authority_term_has_verb(&input.child_authority, AuthorityVerb::Commit) {
+                AuthorityVerb::Commit
             } else {
                 input
                     .child_authority
                     .verbs
                     .first()
                     .cloned()
-                    .unwrap_or(AuthorityVerb::Spend)
+                    .unwrap_or(AuthorityVerb::Commit)
             };
         let decision = admit_step_authority(StepAuthorityAdmission {
             parent_authority: &input.parent_authority,
@@ -248,13 +389,13 @@ impl RuntimeEffect for PaymentRuntimeEffect {
         let Some(verb) = decision.verb else {
             return Ok(None);
         };
-        let payment = if verb == AuthorityVerb::Spend {
+        let payment = if verb == AuthorityVerb::Commit {
             payment_context(&input, request.inputs, request.env)?
         } else {
             None
         };
         if let Some(payment) = payment.as_ref() {
-            record_effect_settlement_intent(
+            record_effect_finality_intent(
                 request.env,
                 request.graph_dir,
                 &EffectStepStateInput {
@@ -269,7 +410,7 @@ impl RuntimeEffect for PaymentRuntimeEffect {
                     run_spend: payment.run_spend.clone(),
                 },
             )
-            .map_err(settlement_intent_error)?;
+            .map_err(finality_intent_error)?;
         }
         Ok(Some(EffectAdmission::new(
             PAYMENT_EFFECT_FAMILY,
@@ -295,7 +436,7 @@ impl RuntimeEffect for PaymentRuntimeEffect {
         if !request.output.succeeded() {
             return Ok(());
         }
-        let Some(packet) = read_payment_rail_packet(request.claim)
+        let Some(packet) = read_effect_evidence_packet(request.claim)
             .map_err(|source| failed("reading rail packet", source))?
         else {
             return Ok(());
@@ -307,9 +448,21 @@ impl RuntimeEffect for PaymentRuntimeEffect {
             .result
             .as_ref()
             .and_then(|result| result.status.as_deref());
-        let evidence = self
+        let supervisor_evidence = self
             .supervisor
-            .settlement_evidence(supervisor_settlement_request(payment, claim, status))
+            .supervise(supervisor_request(payment, claim, status))
+            .map_err(|source| {
+                denied(format!(
+                    "supervisor-verified rail proof is required: {source}"
+                ))
+            })?;
+        if supervisor_evidence.family != PAYMENT_EFFECT_FAMILY {
+            return Err(denied(format!(
+                "supervisor returned evidence family {}, expected {}",
+                supervisor_evidence.family, PAYMENT_EFFECT_FAMILY
+            )));
+        }
+        let evidence = payment_supervisor_evidence_from_payload(&supervisor_evidence.payload)
             .map_err(|source| {
                 denied(format!(
                     "supervisor-verified rail proof is required: {source}"
@@ -492,19 +645,42 @@ fn validate_pending_mutation_matches_payment(
     )))
 }
 
-fn supervisor_settlement_request<'a>(
+fn supervisor_request<'a>(
     payment: &'a StepPaymentAuthorityContext,
     claim: &'a PaymentRailProof,
     skill_settlement_status: Option<&'a str>,
-) -> PaymentSupervisorSettlementRequest<'a> {
-    PaymentSupervisorSettlementRequest {
-        rail: &payment.rail,
-        counterparty: &payment.counterparty,
-        amount_minor: payment.amount_minor,
-        currency: &payment.currency,
-        idempotency_key: &payment.idempotency_key.key,
-        proof_ref: &claim.proof_ref,
-        skill_settlement_status,
+) -> PaymentFinalitySupervisorRequest<'a> {
+    let mut payload = JsonObject::new();
+    payload.insert("rail".to_owned(), JsonValue::String(payment.rail.clone()));
+    payload.insert(
+        "counterparty".to_owned(),
+        JsonValue::String(payment.counterparty.clone()),
+    );
+    payload.insert(
+        "amount_minor".to_owned(),
+        JsonValue::Number(JsonNumber::U64(payment.amount_minor)),
+    );
+    payload.insert(
+        "currency".to_owned(),
+        JsonValue::String(payment.currency.clone()),
+    );
+    payload.insert(
+        "idempotency_key".to_owned(),
+        JsonValue::String(payment.idempotency_key.key.clone()),
+    );
+    payload.insert(
+        "proof_ref".to_owned(),
+        JsonValue::String(claim.proof_ref.clone()),
+    );
+    if let Some(status) = skill_settlement_status {
+        payload.insert(
+            "skill_settlement_status".to_owned(),
+            JsonValue::String(status.to_owned()),
+        );
+    }
+    PaymentFinalitySupervisorRequest {
+        family: PAYMENT_EFFECT_FAMILY,
+        payload,
     }
 }
 
@@ -600,26 +776,29 @@ fn run_spend_reservation(
     inputs: &JsonObject,
     env: &BTreeMap<String, String>,
 ) -> Result<Option<EffectRunSpendReservation>, RuntimeEffectError> {
-    let Some(max_per_run_minor) = input
-        .child_authority
-        .bounds
-        .payment
-        .as_ref()
-        .and_then(|payment| payment.max_per_run_minor)
+    let Some(max_per_run_units) =
+        payment_effect_limit(&input.child_authority).and_then(|payment| payment.max_per_run_units)
     else {
         return Ok(None);
     };
     let Some(run_id) = payment_run_id(inputs, env)? else {
         return Err(denied(
-            "payment authority with max_per_run_minor requires a run_id before rail execution"
+            "payment authority with max_per_run_units requires a run_id before rail execution"
                 .to_owned(),
         ));
     };
     Ok(Some(EffectRunSpendReservation {
         run_id,
         authority_ref: input.child_authority.resource_ref.uri.clone().into_string(),
-        max_per_run_minor,
+        max_per_run_units,
     }))
+}
+
+fn payment_effect_limit(term: &AuthorityTerm) -> Option<&AuthorityEffectLimit> {
+    term.bounds
+        .effect_limits
+        .iter()
+        .find(|limit| limit.family == PAYMENT_EFFECT_FAMILY)
 }
 
 fn payment_run_id(
@@ -652,7 +831,7 @@ fn step_authority_submission(
         return Ok(None);
     };
     let reserved = parse_reserved_payment_authority(reserved)?;
-    let spends = authority_term_has_verb(&reserved.child_authority, AuthorityVerb::Spend);
+    let spends = authority_term_has_verb(&reserved.child_authority, AuthorityVerb::Commit);
     let (spend_capability_ref, idempotency_key) = if spends {
         let idempotency = require_object_input(inputs, "idempotency")?;
         (
@@ -892,7 +1071,7 @@ fn receipt_has_payment_rail_proof(receipt: &runx_contracts::Receipt, rail_proof_
             .any(|reference| {
                 reference.uri == rail_proof_ref
                     && reference.proof_kind.as_ref()
-                        == Some(&runx_contracts::ProofKind::PaymentRail)
+                        == Some(&runx_contracts::ProofKind::EffectEvidence)
             })
     })
 }
@@ -908,12 +1087,12 @@ fn same_reference(left: &Reference, right: &Reference) -> bool {
 fn denied(message: impl Into<String>) -> RuntimeEffectError {
     RuntimeEffectError::Denied {
         family: PAYMENT_EFFECT_FAMILY.to_owned(),
-        verb: AuthorityVerb::Spend,
+        verb: AuthorityVerb::Commit,
         message: message.into(),
     }
 }
 
-fn settlement_intent_error(source: EffectStateError) -> RuntimeEffectError {
+fn finality_intent_error(source: EffectStateError) -> RuntimeEffectError {
     if matches!(&source, EffectStateError::RunSpendCapExceeded { .. }) {
         denied(source.to_string())
     } else {

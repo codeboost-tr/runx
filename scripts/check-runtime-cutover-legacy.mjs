@@ -126,6 +126,7 @@ function runCutoverCheck() {
   if (finalMode) {
     checkFinalPackageDirectories();
     checkFinalRustKernelDomainFree();
+    checkFinalRetiredWireNames();
     checkFinalRuntimeCargoEdges();
     checkFinalNoInKernelGithubProviderClients();
   }
@@ -247,14 +248,13 @@ function checkEffectKernelPhase2NoDualPath() {
   if (existsSync(runnerRoot)) {
     runnerFiles.push(runnerRoot);
   }
-  const retiredIdentifiers = /\b(?:PaymentRailSupervisor|RuntimePaymentSupervisor|FileBackedPaymentStateStore|PaymentStateError|PaymentStepStateInput|attach_payment_supervisor_evidence_before_gate|record_payment_supervisor_proof_metadata|persist_payment_step_state)\b/u;
   const retiredSnake = /\bpayment_supervisor\b/u;
   const retiredStateImport = /\b(?:crate|runx_runtime)::payment::state\b/u;
   const paymentModuleImport = /\b(?:use\s+)?crate::payment::/u;
   for (const filePath of runnerFiles) {
     const rel = relative(filePath);
     const source = readFileSync(filePath, "utf8");
-    if (retiredIdentifiers.test(source) || retiredSnake.test(source)) {
+    if (retiredSnake.test(source)) {
       findings.push(`${rel} still references retired payment supervisor orchestration symbols`);
     }
     if (retiredStateImport.test(source)) {
@@ -267,7 +267,7 @@ function checkEffectKernelPhase2NoDualPath() {
 }
 
 function checkFinalPackageDirectories() {
-  for (const relPath of ["packages/runtime-local", "packages/adapters"]) {
+  for (const relPath of ["packages/core", "packages/runtime-local", "packages/adapters"]) {
     if (existsSync(path.join(workspaceRoot, relPath))) {
       findings.push(`${relPath} remains in final cutover mode`);
     }
@@ -275,8 +275,8 @@ function checkFinalPackageDirectories() {
 }
 
 function checkFinalRustKernelDomainFree() {
-  const sourceRoots = ["crates/runx-runtime/src", "crates/runx-core/src"];
-  const manifestFiles = ["crates/runx-core/Cargo.toml"];
+  const sourceRoots = ["crates/runx-runtime/src", "crates/runx-core/src", "crates/runx-contracts/src"];
+  const manifestFiles = ["crates/runx-core/Cargo.toml", "crates/runx-contracts/Cargo.toml"];
   const files = [
     ...sourceFiles(sourceRoots, [".rs"]),
     ...manifestFiles.map((relPath) => path.join(workspaceRoot, relPath)).filter(existsSync),
@@ -320,9 +320,20 @@ function checkFinalRuntimeCargoEdges() {
 }
 
 function checkFinalNoInKernelGithubProviderClients() {
-  const deletedClientPath = path.join(workspaceRoot, "crates/runx-runtime/src/post_merge_observer/github.rs");
-  if (existsSync(deletedClientPath)) {
-    findings.push("crates/runx-runtime/src/post_merge_observer/github.rs reintroduces an in-kernel GitHub provider client");
+  const retiredProviderLanePaths = [
+    "crates/runx-runtime/src/execution/target_runner.rs",
+    "crates/runx-runtime/src/execution/target_runner",
+    "crates/runx-runtime/src/post_merge_observer.rs",
+    "crates/runx-runtime/src/post_merge_observer",
+    "crates/runx-contracts/src/target_runner.rs",
+    "crates/runx-contracts/src/target_runner",
+    "crates/runx-contracts/src/post_merge_observer.rs",
+    "crates/runx-contracts/src/post_merge_observer",
+  ];
+  for (const relPath of retiredProviderLanePaths) {
+    if (existsSync(path.join(workspaceRoot, relPath))) {
+      findings.push(`${relPath} reintroduces the retired provider orchestration lane`);
+    }
   }
   const providerClientMarkers = [
     /\breqwest\b/u,
@@ -333,10 +344,7 @@ function checkFinalNoInKernelGithubProviderClients() {
     /\bAUTHORIZATION\b/u,
   ];
   const files = [
-    ...sourceFiles(["crates/runx-runtime/src/execution/target_runner"], [".rs"]),
-    ...sourceFiles(["crates/runx-runtime/src/post_merge_observer"], [".rs"]),
-    path.join(workspaceRoot, "crates/runx-runtime/src/execution/target_runner.rs"),
-    path.join(workspaceRoot, "crates/runx-runtime/src/post_merge_observer.rs"),
+    ...sourceFiles(["crates/runx-runtime/src/adapters", "crates/runx-runtime/src/outbox_provider"], [".rs"]),
   ].filter(existsSync);
   for (const filePath of files) {
     const rel = relative(filePath);
@@ -346,6 +354,63 @@ function checkFinalNoInKernelGithubProviderClients() {
       findings.push(`${rel} contains outbound GitHub provider client marker ${marker}`);
     }
   }
+}
+
+function checkFinalRetiredWireNames() {
+  const scanFiles = sourceFiles(
+    [
+      "crates/runx-contracts/src",
+      "crates/runx-contracts/tests",
+      "packages/contracts/src",
+      "schemas",
+      "fixtures",
+      "skills",
+      "examples",
+      "scripts",
+      "docs",
+    ],
+    [".rs", ".ts", ".tsx", ".js", ".jsx", ".mjs", ".cjs", ".json", ".yaml", ".yml", ".md"],
+  ).filter((filePath) => relative(filePath) !== "scripts/check-runtime-cutover-legacy.mjs");
+  const patterns = retiredWirePatterns();
+  for (const filePath of scanFiles) {
+    const rel = relative(filePath);
+    const source = readFileSync(filePath, "utf8");
+    for (const pattern of patterns) {
+      if (pattern.test(source)) {
+        findings.push(`${rel} contains retired generic-contract wire name ${pattern}`);
+      }
+    }
+  }
+}
+
+function retiredWirePatterns() {
+  const literal = (parts) => new RegExp(parts.join(""), "u");
+  return [
+    literal(["Payment", "Authority", "Bounds"]),
+    literal(["Payment", "Credential", "Form"]),
+    /\bbounds\.payment\b/u,
+    literal(["max_", "spend_", "usd"]),
+    literal(["max_", "per_", "call_", "minor"]),
+    literal(["max_", "per_", "run_", "minor"]),
+    literal(["max_", "per_", "period_", "minor"]),
+    literal(["payment_", "single_", "use_", "spend"]),
+    literal(["single_", "use_", "spend_", "capability"]),
+    literal(["ProofKind", "::", "Payment", "Rail"]),
+    literal(['"', "payment_", "rail", '"']),
+    /\bpayment_rail\b/u,
+    literal(["Effect", "Settlement", "Receipt"]),
+    literal(["\\b", "effect", "_", "settlement", "\\b"]),
+    literal(["\\b", "effect", "-", "settlement", "\\b"]),
+    /\bpayment_required\b/u,
+    literal(["payment_", "rail_", "packet"]),
+    literal(["runx", "\\.", "payment", "\\.", "rail", "\\.", "v1"]),
+    /\bquote_required\b/u,
+    /\breservation_required\b/u,
+    /\bcredential_form\b/u,
+    /\bsingle_use_spend\b/u,
+    /resource_family:\s*payment/u,
+    literal(['"', "resource_family", '"', "\\s*:\\s*", '"', "payment", '"']),
+  ];
 }
 
 function splitIdentifierParts(token) {

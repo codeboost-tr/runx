@@ -240,11 +240,32 @@ async function toolSourceClosure(roots: readonly string[]): Promise<readonly str
 
 function localImportSpecifiers(source: string): readonly string[] {
   const specifiers: string[] = [];
-  const quotedPattern = /["']([^"']+)["']/gu;
-  for (const match of source.matchAll(quotedPattern)) {
-    const specifier = match[1];
-    if (specifier.startsWith("./") || specifier.startsWith("../")) {
-      specifiers.push(specifier);
+  for (let index = 0; index < source.length; index += 1) {
+    const quote = source[index];
+    if (quote !== "\"" && quote !== "'") {
+      continue;
+    }
+    const valueStart = index + 1;
+    let escaped = false;
+    let valueEnd = valueStart;
+    for (index += 1; index < source.length; index += 1) {
+      valueEnd = index;
+      const character = source[index];
+      if (escaped) {
+        escaped = false;
+        continue;
+      }
+      if (character === "\\") {
+        escaped = true;
+        continue;
+      }
+      if (character === quote) {
+        break;
+      }
+    }
+    const value = source.slice(valueStart, valueEnd);
+    if (value.startsWith("./") || value.startsWith("../")) {
+      specifiers.push(value);
     }
   }
   return specifiers;

@@ -17,6 +17,7 @@ import {
   credentialDeliveryRequestV1Schema,
   devV1Schema,
   doctorV1Schema,
+  effectFinalityReceiptV1Schema,
   externalAdapterCancellationFrameV1Schema,
   externalAdapterCredentialRequestV1Schema,
   externalAdapterHostResolutionFrameV1Schema,
@@ -61,6 +62,7 @@ import {
   validateDoctorReportContract,
   validateHandoffSignalContract,
   validateHandoffStateContract,
+  validateEffectFinalityReceiptContract,
   validateReceiptContract,
   validateTargetContract,
   validateOpportunityContract,
@@ -89,6 +91,7 @@ describe("@runxhq/contracts", () => {
   it("exports stable runx logical schema identifiers", () => {
     expect(RUNX_LOGICAL_SCHEMAS.doctor).toBe("runx.doctor.v1");
     expect(RUNX_LOGICAL_SCHEMAS.receipt).toBe("runx.receipt.v1");
+    expect(RUNX_LOGICAL_SCHEMAS.effectFinalityReceipt).toBe("runx.effect_finality_receipt.v1");
     expect(RUNX_LOGICAL_SCHEMAS.operationalProposal).toBe("runx.operational_proposal.v1");
   });
 
@@ -96,6 +99,9 @@ describe("@runxhq/contracts", () => {
     expect(RUNX_CONTRACT_IDS.toolManifest).toBe("https://schemas.runx.dev/runx/tool/manifest/v1.json");
     expect(runxContractSchemas.toolManifest.$id).toBe(RUNX_CONTRACT_IDS.toolManifest);
     expect(toolManifestV1Schema).toBe(runxContractSchemas.toolManifest);
+    expect(RUNX_CONTRACT_IDS.effectFinalityReceipt)
+      .toBe("https://schemas.runx.dev/runx/effect-finality-receipt/v1.json");
+    expect(runxContractSchemas.effectFinalityReceipt.$id).toBe(RUNX_CONTRACT_IDS.effectFinalityReceipt);
     expect((toolManifestV1Schema.properties as Record<string, unknown>).source).toBeDefined();
     expect((toolManifestV1Schema.required as readonly string[])).not.toContain("version");
     const devProperties = runxContractSchemas.dev.properties as Record<string, unknown> | undefined;
@@ -129,6 +135,7 @@ describe("@runxhq/contracts", () => {
     expect(externalAdapterHostResolutionFrameV1Schema).toBe(runxContractSchemas.externalAdapterHostResolution);
     expect(externalAdapterCancellationFrameV1Schema).toBe(runxContractSchemas.externalAdapterCancellation);
     expect(receiptV1Schema).toBe(runxContractSchemas.receipt);
+    expect(effectFinalityReceiptV1Schema).toBe(runxContractSchemas.effectFinalityReceipt);
     expect(doctorV1Schema).toBe(runxContractSchemas.doctor);
     expect(devV1Schema).toBe(runxContractSchemas.dev);
     expect(listV1Schema).toBe(runxContractSchemas.list);
@@ -153,30 +160,30 @@ describe("@runxhq/contracts", () => {
   });
 
   it("accepts typed proof kinds on references", () => {
-    expect(proofKinds).toEqual(["payment_rail", "effect_settlement", "credential_resolution"]);
+    expect(proofKinds).toEqual(["effect_evidence", "effect_finality", "credential_resolution"]);
     expect(proofKindSchema).toMatchObject({
       anyOf: [
-        expect.objectContaining({ const: "payment_rail", type: "string" }),
-        expect.objectContaining({ const: "effect_settlement", type: "string" }),
+        expect.objectContaining({ const: "effect_evidence", type: "string" }),
+        expect.objectContaining({ const: "effect_finality", type: "string" }),
         expect.objectContaining({ const: "credential_resolution", type: "string" }),
       ],
     });
     expect(validateReferenceContract({
       type: "verification",
       uri: "receipt-proof:mock:payment-execution-001",
-      proof_kind: "payment_rail",
+      proof_kind: "effect_evidence",
       label: "display-only text",
     })).toMatchObject({
       type: "verification",
-      proof_kind: "payment_rail",
+      proof_kind: "effect_evidence",
     });
     expect(validateReferenceContract({
       type: "verification",
-      uri: "receipt-proof:mock:effect-settlement-001",
-      proof_kind: "effect_settlement",
+      uri: "receipt-proof:mock:effect-finality-001",
+      proof_kind: "effect_finality",
     })).toMatchObject({
       type: "verification",
-      proof_kind: "effect_settlement",
+      proof_kind: "effect_finality",
     });
     expect(validateReferenceContract({
       type: "credential",
@@ -188,6 +195,47 @@ describe("@runxhq/contracts", () => {
       provider: "github",
       proof_kind: "credential_resolution",
     });
+  });
+
+  it("exports and validates effect finality receipts", () => {
+    expect(validateEffectFinalityReceiptContract({
+      schema: "runx.effect_finality_receipt.v1",
+      id: "effect-finality-001",
+      created_at: "2026-01-01T00:00:00Z",
+      family: "payment",
+      phase: "sealed",
+      original_receipt_ref: {
+        type: "receipt",
+        uri: "runx:receipt:original-001",
+      },
+      criterion_id: "payment.finality",
+      evidence_refs: [{
+        type: "verification",
+        uri: "receipt-proof:mock:effect-finality-001",
+        proof_kind: "effect_finality",
+      }],
+      proof_ref: {
+        type: "verification",
+        uri: "receipt-proof:mock:effect-finality-001",
+        proof_kind: "effect_finality",
+      },
+      confirmation_depth: 1,
+      payload: {
+        provider: "stripe",
+      },
+    })).toMatchObject({
+      schema: "runx.effect_finality_receipt.v1",
+      family: "payment",
+      phase: "sealed",
+      criterion_id: "payment.finality",
+    });
+    expect(() => validateEffectFinalityReceiptContract({
+      schema: "runx.effect_finality_receipt.v1",
+      id: "effect-finality-002",
+      created_at: "2026-01-01T00:00:00Z",
+      family: "payment",
+      phase: "sealed",
+    })).toThrow(/effect finality receipt/);
   });
 
   it("owns credential envelope schema and runtime validation", () => {
@@ -379,6 +427,8 @@ describe("@runxhq/contracts", () => {
     expect(runxGeneratedSchemaArtifacts["doctor.schema.json"]).toBe(runxContractSchemas.doctor);
     expect(runxGeneratedSchemaArtifacts["act-assignment.schema.json"]).toBe(runxContractSchemas.actAssignment);
     expect(runxGeneratedSchemaArtifacts["receipt.schema.json"]).toBe(runxContractSchemas.receipt);
+    expect(runxGeneratedSchemaArtifacts["effect-finality-receipt.schema.json"])
+      .toBe(runxContractSchemas.effectFinalityReceipt);
     expect(runxGeneratedSchemaArtifacts["run-summary.schema.json"]).toBe(runxContractSchemas.runSummary);
     const retiredReceiptArtifact = `${"harness"}-receipt.schema.json` as keyof typeof runxGeneratedSchemaArtifacts;
     expect(runxGeneratedSchemaArtifacts[retiredReceiptArtifact]).toBeUndefined();

@@ -14,7 +14,7 @@ use thiserror::Error;
 use runx_runtime::StepRun;
 
 use crate::packets::{
-    PaymentPacketError, read_paid_tool_packet, read_payment_rail_packet,
+    PaymentPacketError, read_effect_evidence_packet, read_paid_tool_packet,
     read_payment_refusal_packet, read_payment_reservation_packet,
 };
 use crate::supervisor::{
@@ -722,7 +722,7 @@ fn settlement_evidence(
     step: &StepRun,
 ) -> Result<Option<PaymentRailSettlementEvidence>, PaymentLedgerProjectionError> {
     with_step_outputs(step, |outputs| {
-        let Some(packet) = read_payment_rail_packet(outputs)? else {
+        let Some(packet) = read_effect_evidence_packet(outputs)? else {
             return Ok(None);
         };
         let Some(proof) = packet.proof else {
@@ -731,7 +731,7 @@ fn settlement_evidence(
         let result = packet
             .result
             .ok_or(PaymentLedgerProjectionError::MissingEvidenceField {
-                field: "payment_rail_packet.data.rail_result",
+                field: "effect_evidence_packet.data.rail_result",
             })?;
         Ok(Some(PaymentRailSettlementEvidence {
             amount_minor: result.amount_minor.ok_or(

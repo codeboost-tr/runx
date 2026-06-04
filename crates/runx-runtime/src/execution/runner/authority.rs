@@ -90,18 +90,11 @@ pub(super) fn finalize_effect_output_before_success(
     let Some(authority) = context.authority else {
         return Ok(());
     };
-    context
-        .effects
-        .finalize_output(EffectReceiptRequest {
-            step: context.step,
-            graph_dir: context.graph_dir,
-            admission: &authority.admission,
-            claim: context.claim,
-            output: context.output,
-            receipt: context.receipt,
-            env: context.env,
-        })
-        .map_err(|source| runtime_effect_error(context.step, source))
+    let effects = context.effects;
+    let step = context.step;
+    effects
+        .finalize_output(effect_receipt_request(context, authority))
+        .map_err(|source| runtime_effect_error(step, source))
 }
 
 pub(super) fn persist_effect_state_for_step(
@@ -110,18 +103,11 @@ pub(super) fn persist_effect_state_for_step(
     let Some(authority) = context.authority else {
         return Ok(());
     };
-    context
-        .effects
-        .persist(EffectReceiptRequest {
-            step: context.step,
-            graph_dir: context.graph_dir,
-            admission: &authority.admission,
-            claim: context.claim,
-            output: context.output,
-            receipt: context.receipt,
-            env: context.env,
-        })
-        .map_err(|source| runtime_effect_error(context.step, source))
+    let effects = context.effects;
+    let step = context.step;
+    effects
+        .persist(effect_receipt_request(context, authority))
+        .map_err(|source| runtime_effect_error(step, source))
 }
 
 pub(super) fn prepare_replay_output(
@@ -179,6 +165,21 @@ pub(super) struct EffectReceiptContext<'a> {
     pub(super) receipt: &'a Receipt,
     pub(super) env: &'a BTreeMap<String, String>,
     pub(super) effects: &'a RuntimeEffectRegistry,
+}
+
+fn effect_receipt_request<'a>(
+    context: EffectReceiptContext<'a>,
+    authority: &'a StepAuthorityContext,
+) -> EffectReceiptRequest<'a> {
+    EffectReceiptRequest {
+        step: context.step,
+        graph_dir: context.graph_dir,
+        admission: &authority.admission,
+        claim: context.claim,
+        output: context.output,
+        receipt: context.receipt,
+        env: context.env,
+    }
 }
 
 fn runtime_effect_error(step: &GraphStep, source: RuntimeEffectError) -> RuntimeError {

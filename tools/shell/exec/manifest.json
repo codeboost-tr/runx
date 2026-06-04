@@ -10,15 +10,15 @@
     ]
   },
   "inputs": {
-    "command": {
-      "type": "string",
-      "required": true,
-      "description": "Executable to invoke."
-    },
     "args": {
       "type": "json",
       "required": false,
       "description": "Optional argument array for the command."
+    },
+    "command": {
+      "type": "string",
+      "required": true,
+      "description": "Executable to invoke."
     },
     "cwd": {
       "type": "string",
@@ -33,13 +33,9 @@
     "timeout_ms": {
       "type": "number",
       "required": false,
-      "default": 30000,
-      "description": "Maximum execution time in milliseconds."
+      "description": "Maximum execution time in milliseconds.",
+      "default": 30000
     }
-  },
-  "output": {
-    "packet": "runx.shell.execution.v1",
-    "wrap_as": "shell_execution"
   },
   "scopes": [
     "shell.exec"
@@ -55,7 +51,11 @@
       "./run.mjs"
     ]
   },
-  "source_hash": "sha256:ba4dc9b080abbb28c4f85fc6e67fd606b6d8f9f077f296811beb5e597ed0cee0",
+  "output": {
+    "packet": "runx.shell.execution.v1",
+    "wrap_as": "shell_execution"
+  },
+  "source_hash": "sha256:8b5ba54306ae678f0a1f4146ab492930de6cc521f6535186a7f97b8cfcc60fcf",
   "schema_hash": "sha256:cbc74586027247f3aaf6f24ebc93c9e2b1862a774f9985f910df4557dfd8943e",
-  "toolkit_version": "0.2.0"
+  "toolkit_version": "0.1.4"
 }

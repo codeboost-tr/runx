@@ -229,6 +229,13 @@ export {
 } from "./schemas/run-summary.js";
 
 export {
+  effectFinalityReceiptV1Schema,
+  type EffectFinalityReceiptContract,
+  type EffectFinalityReceiptPhaseContract,
+  validateEffectFinalityReceiptContract,
+} from "./schemas/effect-finality-receipt.js";
+
+export {
   receiptV1Schema,
   type ReceiptContract,
   validateReceiptContract,
@@ -387,7 +394,7 @@ export {
   authorityVerbs,
   authorityCapabilities,
   authorityConditionPredicates,
-  paymentCredentialForms,
+  authorityEffectCredentialForms,
   proofKinds,
   redactionCommitmentAlgorithms,
   referenceTypeSchema,
@@ -406,7 +413,7 @@ export {
   authorityVerbSchema,
   authorityCapabilitySchema,
   authorityConditionPredicateSchema,
-  paymentCredentialFormSchema,
+  authorityEffectCredentialFormSchema,
   proofKindSchema,
   redactionCommitmentAlgorithmSchema,
   referenceSchema,
@@ -420,7 +427,7 @@ export {
   linksSchema,
   signalAuthenticitySchema,
   signalSchema,
-  paymentAuthorityBoundsSchema,
+  authorityEffectLimitSchema,
   authorityBoundsSchema,
   authorityConditionSchema,
   authorityApprovalSchema,
@@ -491,7 +498,7 @@ export {
   type AuthorityVerbContract,
   type AuthorityCapabilityContract,
   type AuthorityConditionPredicateContract,
-  type PaymentCredentialFormContract,
+  type AuthorityEffectCredentialFormContract,
   type ProofKindContract,
   type ReferenceContract,
   type ReferenceLinkContract,
@@ -502,7 +509,7 @@ export {
   type LinksContract,
   type SignalAuthenticityContract,
   type SignalContract,
-  type PaymentAuthorityBoundsContract,
+  type AuthorityEffectLimitContract,
   type AuthorityBoundsContract,
   type AuthorityConditionContract,
   type AuthorityApprovalContract,
@@ -572,6 +579,7 @@ import { doctorV1Schema } from "./schemas/doctor.js";
 import { devV1Schema } from "./schemas/dev.js";
 import { listV1Schema } from "./schemas/list.js";
 import { runSummaryV1Schema } from "./schemas/run-summary.js";
+import { effectFinalityReceiptV1Schema } from "./schemas/effect-finality-receipt.js";
 import { receiptV1Schema } from "./schemas/receipt.js";
 import { fixtureV1Schema } from "./schemas/fixture.js";
 import { toolManifestV1Schema } from "./schemas/tool-manifest.js";
@@ -636,6 +644,7 @@ export const runxContractSchemas = {
   list: runxSchemaArtifacts["list.schema.json"],
   runSummary: runxSchemaArtifacts["run-summary.schema.json"],
   receipt: runxSchemaArtifacts["receipt.schema.json"],
+  effectFinalityReceipt: runxSchemaArtifacts["effect-finality-receipt.schema.json"],
   fixture: runxSchemaArtifacts["fixture.schema.json"],
   toolManifest: runxSchemaArtifacts["tool-manifest.schema.json"],
   packetIndex: runxSchemaArtifacts["packet-index.schema.json"],

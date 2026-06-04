@@ -1,18 +1,16 @@
 skill: mpp-pay
-version: "0.1.0"
-
+version: 0.1.0
 catalog:
   kind: graph
   audience: operator
   visibility: public
-
 harness:
   cases:
     - name: mpp-pay-mpp-path
       runner: mpp
       inputs:
         payment_signal:
-          signal_type: payment_required
+          signal_type: effect_required
           challenge_id: ch_mpp_001
           amount_minor: 125
           currency: USD
@@ -43,17 +41,18 @@ harness:
               resource_ref:
                 type: surface
                 uri: merchant:demo
-              resource_family: payment
+              resource_family: effect
               verbs:
-                - reserve
-                - spend
+                - prepare
+                - commit
               bounds:
-                payment:
-                  currency: USD
-                  max_per_call_minor: 125
-                  rails:
-                    - mpp
-                  realm: test
+                effect_limits:
+                  - family: payment
+                    unit: USD
+                    max_per_call_units: 125
+                    channels:
+                      - mpp
+                    realm: test
               conditions: []
               approvals: []
               capabilities: []
@@ -91,29 +90,30 @@ harness:
                 resource_ref:
                   type: surface
                   uri: merchant:demo
-                resource_family: payment
+                resource_family: effect
                 verbs:
-                  - reserve
-                  - spend
+                  - prepare
+                  - commit
                 bounds:
-                  payment:
-                    currency: USD
-                    max_per_call_minor: 125
-                    max_per_run_minor: 125
-                    rails:
-                      - mpp
-                    realm: test
-                    counterparty: merchant:demo
-                    operation: search.paid
-                    idempotency_required: true
-                    recovery_required: true
-                    receipt_before_success: true
-                    single_use_spend: true
-                    credential_form: single_use_spend_capability
+                  effect_limits:
+                    - family: payment
+                      unit: USD
+                      max_per_call_units: 125
+                      max_per_run_units: 125
+                      channels:
+                        - mpp
+                      realm: test
+                      peer: merchant:demo
+                      operation: search.paid
+                      idempotency_required: true
+                      recovery_required: true
+                      receipt_before_success: true
+                      single_use_capability: true
+                      authorization_form: single_use_capability
                 conditions: []
                 approvals: []
                 capabilities:
-                  - payment_single_use_spend
+                  - effect_single_use_capability
                 issued_by_ref:
                   type: host
                   uri: authority:payment:test
@@ -125,26 +125,27 @@ harness:
                 resource_ref:
                   type: surface
                   uri: merchant:demo
-                resource_family: payment
+                resource_family: effect
                 verbs:
-                  - spend
+                  - commit
                 capabilities:
-                  - payment_single_use_spend
+                  - effect_single_use_capability
                 bounds:
-                  payment:
-                    currency: USD
-                    max_per_call_minor: 125
-                    max_per_run_minor: 125
-                    rails:
-                      - mpp
-                    realm: test
-                    counterparty: merchant:demo
-                    operation: search.paid
-                    idempotency_required: true
-                    recovery_required: true
-                    receipt_before_success: true
-                    single_use_spend: true
-                    credential_form: single_use_spend_capability
+                  effect_limits:
+                    - family: payment
+                      unit: USD
+                      max_per_call_units: 125
+                      max_per_run_units: 125
+                      channels:
+                        - mpp
+                      realm: test
+                      peer: merchant:demo
+                      operation: search.paid
+                      idempotency_required: true
+                      recovery_required: true
+                      receipt_before_success: true
+                      single_use_capability: true
+                      authorization_form: single_use_capability
                 conditions: []
                 approvals: []
                 issued_by_ref:
@@ -181,7 +182,7 @@ harness:
                   - child_term_id: authority-term:payment:reserve-demo-001
                     parent_term_id: authority-term:payment:quote-demo-001
                     relation: subset
-                checked_at: "2026-05-22T00:00:00Z"
+                checked_at: 2026-05-22T00:00:00Z
               child_harness_ref:
                 type: harness
                 uri: runx:harness:mpp-pay_fulfill
@@ -235,7 +236,6 @@ harness:
           state: sealed
           disposition: closed
           reason_code: graph_closed
-
 runners:
   mpp:
     default: true
@@ -244,31 +244,31 @@ runners:
       payment_signal:
         type: object
         required: true
-        description: "Payment-required signal or challenge."
+        description: Payment-required signal or challenge.
       parent_payment_authority:
         type: object
         required: true
-        description: "Parent payment authority term or authority reference."
+        description: Parent payment authority term or authority reference.
       rail_profile_ref:
         type: string
         required: true
-        description: "Configured rail profile reference."
+        description: Configured rail profile reference.
       realm:
         type: string
         required: false
-        description: "Authority realm."
+        description: Authority realm.
       spend_policy:
         type: object
         required: false
-        description: "Policy limits and approval thresholds."
+        description: Policy limits and approval thresholds.
       approval_context:
         type: object
         required: false
-        description: "Prior approval evidence."
+        description: Prior approval evidence.
       idempotency_seed:
         type: string
         required: false
-        description: "Stable idempotency material."
+        description: Stable idempotency material.
     graph:
       name: mpp-pay
       steps:
@@ -329,8 +329,8 @@ runners:
             idempotency: reserve.payment_reservation_packet.data.idempotency
             quote_packet: quote.payment_quote_packet.data
           artifacts:
-            wrap_as: payment_rail_packet
-            packet: runx.payment.rail.v1
+            wrap_as: effect_evidence_packet
+            packet: runx.effect.evidence.v1
       policy:
         transitions:
           - to: fulfill

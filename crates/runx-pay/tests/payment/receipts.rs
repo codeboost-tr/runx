@@ -23,8 +23,6 @@ fn payment_rail_receipts_carry_supervisor_evidence_refs() -> Result<(), Box<dyn 
         idempotency_key: "payment:demo-search-001".to_owned(),
         settlement_status: Some("fulfilled".to_owned()),
         provider_event_ref: Some("provider:event:demo-search-001".to_owned()),
-        shared_payment_token_ref: None,
-        admission_token_digest: None,
     };
     metadata.insert(
         PAYMENT_RAIL_SUPERVISOR_EVIDENCE_METADATA.to_owned(),
@@ -36,7 +34,7 @@ fn payment_rail_receipts_carry_supervisor_evidence_refs() -> Result<(), Box<dyn 
     )?;
     let output = SkillOutput {
         status: InvocationStatus::Success,
-        stdout: r#"{"payment_rail_packet":{"data":{"rail_result":{"status":"fulfilled","rail":"mock","amount_minor":125,"currency":"USD"},"rail_proof":{"proof_ref":"receipt-proof:mock:demo-search-001","idempotency_key":"payment:demo-search-001"},"credential_envelope":{"form":"paid_tool_credential","credential_ref":"credential:mock:demo-search-001"}}}}"#.to_owned(),
+        stdout: r#"{"effect_evidence_packet":{"data":{"rail_result":{"status":"fulfilled","rail":"mock","amount_minor":125,"currency":"USD"},"rail_proof":{"proof_ref":"receipt-proof:mock:demo-search-001","idempotency_key":"payment:demo-search-001"},"credential_envelope":{"form":"paid_tool_credential","credential_ref":"credential:mock:demo-search-001"}}}}"#.to_owned(),
         stderr: String::new(),
         exit_code: Some(0),
         duration_ms: 10,
@@ -55,7 +53,7 @@ fn payment_rail_receipts_carry_supervisor_evidence_refs() -> Result<(), Box<dyn 
         reference.reference_type == ReferenceType::Verification
             && reference.uri == "receipt-proof:mock:demo-search-001"
             && reference.locator.as_deref() == Some("payment:demo-search-001")
-            && reference.proof_kind.as_ref() == Some(&ProofKind::PaymentRail)
+            && reference.proof_kind.as_ref() == Some(&ProofKind::EffectEvidence)
     }));
     Ok(())
 }

@@ -27,7 +27,7 @@ keys, webhook secrets, card data, PANs, or raw unrestricted provider tokens.
   payment governance path.
 - Audience: agent hosts, operators, approval reviewers, and receipt verifiers.
 - Artifact contract: `payment_execution`, `payment_quote_packet`,
-  `payment_reservation_packet`, `payment_rail_packet`, and `recovery_packet`
+  `payment_reservation_packet`, `effect_evidence_packet`, and `recovery_packet`
   when needed.
 - Evidence bar: every successful execution carries a quote, selected decision,
   reserved child authority, idempotency key, Stripe charge id, provider event id,
@@ -43,7 +43,7 @@ keys, webhook secrets, card data, PANs, or raw unrestricted provider tokens.
 - `payment_quote_packet`: normalized quote output.
 - `payment_reservation_packet`: selected reservation decision and child
   authority term.
-- `payment_rail_packet`: rail proof and credential envelope.
+- `effect_evidence_packet`: rail proof and credential envelope.
 - `recovery_packet`: recovery assessment when a rail result is ambiguous.
 
 ## Inputs

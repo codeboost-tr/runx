@@ -504,9 +504,13 @@ fn spawn_tokio_mcp_server(
         .stdout(Stdio::piped())
         .stderr(Stdio::piped());
     configure_process_group(&mut command);
-    let child = command
-        .spawn()
-        .map_err(|_| McpTransportError::failed("MCP server failed to spawn."))?;
+    let child = command.spawn().map_err(|error| {
+        McpTransportError::failed(format!(
+            "MCP server failed to spawn command '{}' in cwd '{}': {error}",
+            plan.command,
+            plan.cwd.display()
+        ))
+    })?;
     spawn_count.fetch_add(1, Ordering::SeqCst);
     Ok(child)
 }

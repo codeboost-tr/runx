@@ -17,5 +17,5 @@ inputs: {}
 
 Emit a deterministic reservation packet for the x402 broader-child authority
 fixture. The spend capability binding is internally consistent for the requested
-mock spend, but the child `AuthorityTerm` widens `max_per_call_minor` beyond the
+mock spend, but the child `AuthorityTerm` widens `max_per_call_units` beyond the
 parent so native authority admission must reject before rail fulfillment.

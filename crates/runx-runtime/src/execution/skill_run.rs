@@ -592,9 +592,90 @@ fn execute_graph_skill_run(
                     request_value.clone(),
                 )));
             }
+            Err(RuntimeError::GraphBlocked { step_id, reason }) => {
+                return seal_blocked_graph_skill_run(BlockedGraphSkillRun {
+                    request,
+                    workspace,
+                    receipts,
+                    manifest,
+                    graph: graph.clone(),
+                    checkpoint: previous_checkpoint,
+                    run_id: &run_id,
+                    runtime: &runtime,
+                    step_id: &step_id,
+                    reason_code: "graph_blocked",
+                    summary: format!("graph {} blocked at {step_id}: {reason}", graph.name),
+                });
+            }
+            Err(RuntimeError::AuthorityDenied {
+                verb,
+                step_id,
+                reason,
+            }) => {
+                return seal_blocked_graph_skill_run(BlockedGraphSkillRun {
+                    request,
+                    workspace,
+                    receipts,
+                    manifest,
+                    graph: graph.clone(),
+                    checkpoint: previous_checkpoint,
+                    run_id: &run_id,
+                    runtime: &runtime,
+                    step_id: &step_id,
+                    reason_code: "authority_denied",
+                    summary: format!(
+                        "graph {} denied {verb:?} at {step_id}: {reason}",
+                        graph.name
+                    ),
+                });
+            }
             Err(error) => return Err(error.into()),
         }
     }
+}
+
+struct BlockedGraphSkillRun<'a> {
+    request: &'a SkillRunRequest,
+    workspace: &'a WorkspaceEnv,
+    receipts: &'a ReceiptServices,
+    manifest: &'a SkillRunnerManifest,
+    graph: ExecutionGraph,
+    checkpoint: GraphCheckpoint,
+    run_id: &'a str,
+    runtime: &'a Runtime<SkillRunGraphAdapter>,
+    step_id: &'a str,
+    reason_code: &'a str,
+    summary: String,
+}
+
+fn seal_blocked_graph_skill_run(
+    context: BlockedGraphSkillRun<'_>,
+) -> Result<JsonValue, SkillRunError> {
+    let mut final_host = SkillRunGraphHost::new(JsonObject::new());
+    let run = context.runtime.seal_blocked_graph_checkpoint_with_host(
+        context.graph,
+        context.checkpoint,
+        context.step_id,
+        context.reason_code,
+        context.summary,
+        &mut final_host,
+    )?;
+    write_skill_receipt(
+        context.request,
+        context.workspace,
+        context.receipts,
+        &run.receipt,
+    )?;
+    let payload = graph_payload(&run)?;
+    let output = graph_skill_output(&payload, &run)?;
+    Ok(JsonValue::Object(sealed_output(
+        context.manifest,
+        context.run_id,
+        &output,
+        &payload,
+        &run.receipt,
+        contract_json_value(&run.receipt)?,
+    )))
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
@@ -663,6 +744,11 @@ fn builtin_source_handlers() -> Vec<SourceHandler> {
             source_type: "http",
             handler: invoke_graph_http,
         },
+        #[cfg(feature = "mcp")]
+        SourceHandler {
+            source_type: "mcp",
+            handler: invoke_graph_mcp,
+        },
     ]
 }
 
@@ -707,6 +793,11 @@ fn invoke_graph_external_adapter(request: SkillInvocation) -> Result<SkillOutput
 #[cfg(feature = "http")]
 fn invoke_graph_http(request: SkillInvocation) -> Result<SkillOutput, RuntimeError> {
     crate::adapters::http::HttpSkillAdapter.invoke(request)
+}
+
+#[cfg(feature = "mcp")]
+fn invoke_graph_mcp(request: SkillInvocation) -> Result<SkillOutput, RuntimeError> {
+    crate::adapter::SkillAdapter::invoke(&crate::adapters::mcp::McpAdapter::default(), request)
 }
 
 #[derive(Default)]

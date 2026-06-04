@@ -397,6 +397,36 @@ where
         Ok(execution.finish(graph, receipt))
     }
 
+    pub(crate) fn seal_blocked_graph_checkpoint_with_host(
+        &self,
+        graph: ExecutionGraph,
+        checkpoint: GraphCheckpoint,
+        step_id: &str,
+        reason_code: impl Into<String>,
+        summary: impl Into<String>,
+        host: &mut dyn Host,
+    ) -> Result<GraphRun, RuntimeError> {
+        let mut execution = GraphExecution::from_checkpoint(&graph, checkpoint)?;
+        let receipt = graph_receipt_with_disposition_and_policy(
+            &graph.name,
+            &mut execution.runs,
+            execution.sync_points.clone(),
+            &self.options.created_at,
+            crate::receipts::GraphClosure {
+                disposition: ClosureDisposition::Blocked,
+                reason_code: reason_code.into(),
+                summary: summary.into(),
+            },
+            self.options.effects.clone(),
+            self.options.signature_policy(),
+        )?;
+        execution.record_lifecycle(
+            host,
+            LifecycleEvent::graph_blocked(&graph.name, step_id, &receipt),
+        )?;
+        Ok(execution.finish(graph, receipt))
+    }
+
     pub fn resume_graph_until_steps_with_host(
         &self,
         graph_dir: &Path,

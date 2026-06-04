@@ -88,8 +88,8 @@ runners:
     name: "cross-package-reach-in",
     expectedExitCode: 1,
     files: [
-      file("packages/cli/src/index.ts", `import "../../core/src/index.js";\n`),
-      file("packages/core/src/index.ts", "export const core = true;\n"),
+      file("packages/cli/src/index.ts", `import "../../contracts/src/index.js";\n`),
+      file("packages/contracts/src/index.ts", "export const contracts = true;\n"),
     ],
   },
 ];
