@@ -2,8 +2,8 @@
 spec_version: '2.0'
 task_id: runx-byo-connect-portfolio-v1
 created: '2026-06-04T06:20:35Z'
-updated: '2026-06-04T09:09:45Z'
-status: draft
+updated: '2026-06-04T20:40:15Z'
+status: completed
 harden_status: not_run
 size: medium
 risk_level: medium
@@ -13,17 +13,14 @@ risk_level: medium
 
 ## Current State
 
-Status: draft
-Current phase: none
-Next: approve
-Reason: draft created
+Status: completed
+Current phase: final
+Next: done
+Reason: task completed
 Blockers: none
-Allowed follow-up command: `scafld approve runx-byo-connect-portfolio-v1`
-Latest runner update: none
-Review gate: not_started
-
-Roadmap: Wave 2 (the local provider unlock) feeding Wave 3 (the non-GitHub
-portfolio). The highest-leverage OSS work after the magnet + heroes.
+Allowed follow-up command: `none`
+Latest runner update: 2026-06-04T20:40:15Z
+Review gate: pass
 
 ## Summary
 
@@ -80,6 +77,11 @@ Out of scope:
 - The HTTP front (`adapters/http.rs`), graph skill execution
   (`execution/skill_run.rs`), local credential provision tests, the BYO HTTP
   example, and the new portfolio skills + official lock + maturity tiers.
+- `skills/sql-analyst`, `skills/inbox-and-calendar-exec`,
+  `skills/knowledge-router`, `skills/lead-enrichment`, and the existing
+  `skills/deep-research-brief`.
+- `packages/cli/src/official-skills.lock.json` and `scripts/harness-sweep.mjs`
+  for first-party skill maturity/lock coverage.
 
 ## Risks
 
@@ -102,41 +104,41 @@ Validation:
 
 ## Phase 1: Local credential descriptor + graph HTTP demo
 
-Status: pending
+Status: completed
 Dependencies: HTTP front (shipped), local credential descriptors (shipped)
 
 Objective: a locally supplied credential descriptor reaches a non-GitHub HTTP
-graph step and seals a receipt without exposing secret material.
+graph step as a scoped secret header, without leaking the raw secret.
 
 Changes:
 - Thread `--credential` + `--secret-env` delivery through graph execution options.
-- Verify `examples/byo-http-graph` + `examples/byo-http-tool` using
-  `${secret:RUNX_EXAMPLE_CRM_TOKEN}` against a local non-GitHub HTTP fixture.
+- Verify `examples/byo-http-graph` + `examples/byo-http-tool` using `${secret:RUNX_EXAMPLE_CRM_TOKEN}` against a local non-GitHub HTTP fixture.
 
 Acceptance:
-- [ ] `ac1` command - non-GitHub local credential read seals
+- [x] `ac1` command - non-GitHub local credential read seals
   - Command: `sh examples/byo-http-graph/run.sh`
   - Expected kind: `exit_code_zero`
-  - Status: pending
+  - Status: pass
+  - Evidence: exit code was 0
+  - Source event: entry-6
 
 ## Phase 2: The first non-GitHub portfolio skills
 
-Status: pending
+Status: completed
 Dependencies: Phase 1
 
-Objective: the demand-shaped seeds run over the http/external-adapter fronts using
-local/fixture descriptors in OSS.
+Objective: the demand-shaped seeds run over the http/external-adapter fronts using local/fixture descriptors in OSS.
 
 Changes:
-- Build sql-analyst, inbox-and-calendar-exec, knowledge-router,
-  deep-research-brief, lead-enrichment; harness + maturity. Keep live hosted OAuth
-  provider brokerage as a cloud/private dependency.
+- Build sql-analyst, inbox-and-calendar-exec, knowledge-router, deep-research-brief, lead-enrichment; harness + maturity. Keep live hosted OAuth provider brokerage as a cloud/private dependency.
 
 Acceptance:
-- [ ] `ac2` command - portfolio skills run + are tiered
-  - Command: `runx harness skills/<each-seed>/<case>.yaml --json`
+- [x] `ac2` command - portfolio skills run + are tiered
+  - Command: `export RUNX_RECEIPT_SIGN_KID=runx-demo-key RUNX_RECEIPT_SIGN_ED25519_SEED_BASE64=QkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkI= RUNX_RECEIPT_SIGN_ISSUER_TYPE=hosted; for s in sql-analyst inbox-and-calendar-exec knowledge-router lead-enrichment deep-research-brief; do rdir="$(mktemp -d)"; crates/target/debug/runx harness "skills/$s" --json --receipt-dir "$rdir" >/tmp/runx-$s-harness.json || exit $?; node -e "const fs=require('fs'); const r=JSON.parse(fs.readFileSync('/tmp/runx-' + process.argv[1] + '-harness.json','utf8')); if(r.status !== 'passed') { console.error(JSON.stringify(r,null,2)); process.exit(1); }" "$s"; done`
   - Expected kind: `exit_code_zero`
-  - Status: pending
+  - Status: pass
+  - Evidence: exit code was 0
+  - Source event: entry-11
 
 ## Rollback
 
@@ -146,8 +148,20 @@ Acceptance:
 
 ## Review
 
-Status: not_started
-Verdict: none
+Status: completed
+Verdict: pass
+Mode: discover
+Provider: command
+Output: command.stdout
+Summary: Command-provider review passed. Verified scafld review scope includes the new portfolio skill paths, official lock, and sweep script; the BYO active spec validates; the five portfolio harnesses passed; the official skill lock contains 56 entries including the four new seeds; the focused harness sweep passed with only pre-existing MCP fixture failures allowed; and no hosted OAuth/connect/custody identifiers appear in the new skill/code paths.
+
+Attack log:
+- `scafld review scope`: print review context and verify new skill directories, official lock, and harness sweep are task-scoped rather than ambient -> clean
+- `portfolio harness acceptance`: run sql-analyst, inbox-and-calendar-exec, knowledge-router, lead-enrichment, and deep-research-brief inline harnesses with isolated receipt dirs -> clean
+- `official skill maturity lock`: regenerate official-skills.lock.json and verify lock length is 56 with new seed skill ids present -> clean
+- `full official skill sweep`: run harness-sweep with expected-count 56 and allow only pre-existing MCP fixture failures issue-triage and pr-review-note -> clean
+- `hosted credential boundary`: scan new skill/code paths for OAuth, connect-session, Nango, hosted connect, custody, and RUNX_CONNECT identifiers -> clean
+- `manifest and spec validity`: run scafld validate and inspect new X.yaml harness/artifact markers -> clean
 
 Findings:
 - none
