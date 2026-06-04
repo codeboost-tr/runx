@@ -19,7 +19,7 @@ use sha2::{Digest, Sha256};
 use thiserror::Error;
 
 use crate::RuntimeError;
-#[cfg(feature = "cli-tool")]
+#[cfg(any(feature = "cli-tool", feature = "thread-outbox-provider"))]
 use crate::adapter::SkillAdapter;
 use crate::adapter::{InvocationStatus, SkillInvocation, SkillOutput};
 #[cfg(feature = "cli-tool")]
@@ -732,6 +732,11 @@ fn builtin_source_handlers() -> Vec<SourceHandler> {
             source_type: "mcp",
             handler: invoke_graph_mcp,
         },
+        #[cfg(feature = "thread-outbox-provider")]
+        SourceHandler {
+            source_type: "thread-outbox-provider",
+            handler: invoke_graph_thread_outbox_provider,
+        },
     ]
 }
 
@@ -781,6 +786,14 @@ fn invoke_graph_http(request: SkillInvocation) -> Result<SkillOutput, RuntimeErr
 #[cfg(feature = "mcp")]
 fn invoke_graph_mcp(request: SkillInvocation) -> Result<SkillOutput, RuntimeError> {
     crate::adapter::SkillAdapter::invoke(&crate::adapters::mcp::McpAdapter::default(), request)
+}
+
+#[cfg(feature = "thread-outbox-provider")]
+fn invoke_graph_thread_outbox_provider(
+    request: SkillInvocation,
+) -> Result<SkillOutput, RuntimeError> {
+    crate::adapters::thread_outbox_provider::ThreadOutboxProviderSkillAdapter::default()
+        .invoke(request)
 }
 
 #[derive(Default)]
@@ -1699,6 +1712,53 @@ mod tests {
             matches!(&result, Err(RuntimeError::SkillFailed { .. })),
             "external-adapter source should route to the external adapter and fail on the \
              missing manifest, not fall through as UnsupportedSource; got: {result:?}"
+        );
+    }
+
+    #[cfg(feature = "thread-outbox-provider")]
+    #[test]
+    fn graph_source_registry_routes_thread_outbox_provider() {
+        let mut raw = JsonObject::new();
+        raw.insert(
+            "type".to_owned(),
+            JsonValue::String("thread-outbox-provider".to_owned()),
+        );
+        let invocation = SkillInvocation {
+            skill_name: "fixture-thread-outbox-provider".to_owned(),
+            source: SkillSource {
+                source_type: SourceKind::ThreadOutboxProvider,
+                command: None,
+                args: Vec::new(),
+                cwd: None,
+                timeout_seconds: None,
+                input_mode: None,
+                sandbox: None,
+                server: None,
+                catalog_ref: None,
+                tool: None,
+                arguments: None,
+                agent_card_url: None,
+                agent_identity: None,
+                agent: None,
+                task: None,
+                hook: None,
+                outputs: None,
+                graph: None,
+                http: None,
+                raw,
+            },
+            inputs: JsonObject::new(),
+            resolved_inputs: JsonObject::new(),
+            skill_directory: PathBuf::from("."),
+            env: BTreeMap::new(),
+            credential_delivery: crate::credentials::CredentialDelivery::none(),
+        };
+
+        let result = SkillRunGraphAdapter::default().invoke(invocation);
+        assert!(
+            matches!(&result, Err(RuntimeError::SkillFailed { .. })),
+            "thread-outbox-provider source should route to the Rust provider front and fail on \
+             missing config, not fall through as UnsupportedSource; got: {result:?}"
         );
     }
 }

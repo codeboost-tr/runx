@@ -122,7 +122,8 @@ runx-runtime      impure: filesystem, subprocess, network, built-in adapter
                   sandbox admission/metadata, and future OS enforcement
                     default features: none
                     opt-in features: cli-tool, mcp, mcp-http-server, a2a,
-                                     agent, catalog, external-adapter, http
+                                     agent, catalog, external-adapter, http,
+                                     thread-outbox-provider
                     deps: runx-contracts, runx-core, runx-parser,
                           runx-receipts; async/network dependencies require
                           explicit adapter-tier exception specs
@@ -203,7 +204,8 @@ There is also no `runx-adapters` crate in the initial Rust shape. Built-in
 adapter execution and external execution-adapter protocol supervision live under
 `runx-runtime` feature flags
 (`cli-tool`, `mcp`, `mcp-http-server`, `a2a`, `agent`, `catalog`,
-`external-adapter`, `http`) until a family has an independent publishing story;
+`external-adapter`, `http`, `thread-outbox-provider`) until a family has an
+independent publishing story;
 `a2a` is contract-defined but not enabled in `runx-cli`. External execution adapter implementations live
 outside the trusted core and talk to runx over language-neutral protocols. The
 extension author's stable surface is a lane-specific manifest and wire contract,
@@ -689,8 +691,8 @@ Async and blocking rules:
   `crates/deny.toml`; until then the workspace ban is deliberate.
 - `runx-runtime` defaults to no adapter features. Built-in protocol host
   families are opt-in: `cli-tool`, `mcp`, `mcp-http-server`, `a2a`, `agent`,
-  `catalog`, `external-adapter`, and `http`; `a2a` is contract-defined but not
-  enabled in `runx-cli`.
+  `catalog`, `external-adapter`, `http`, and `thread-outbox-provider`; `a2a` is
+  contract-defined but not enabled in `runx-cli`.
 - `runx-sdk` v0 is explicitly a blocking CLI-backed client and depends on
   `runx-contracts`, not `runx-core` or `runx-runtime`. A future async SDK path
   requires its own spec and contract fixtures.

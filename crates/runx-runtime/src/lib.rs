@@ -61,7 +61,8 @@ pub use execution::skill_run;
     feature = "a2a",
     feature = "agent",
     feature = "external-adapter",
-    feature = "http"
+    feature = "http",
+    feature = "thread-outbox-provider"
 ))]
 pub mod adapters;
 

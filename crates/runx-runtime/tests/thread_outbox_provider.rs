@@ -3,16 +3,21 @@ use std::time::Duration;
 
 use runx_contracts::{
     CredentialDeliveryMode, CredentialDeliveryObservation, CredentialDeliveryObservationStatus,
-    CredentialDeliveryPurpose, CredentialMaterialRole, Reference, ReferenceType,
-    ThreadOutboxProviderFetch, ThreadOutboxProviderIdempotencyStatus, ThreadOutboxProviderManifest,
-    ThreadOutboxProviderObservationStatus, ThreadOutboxProviderOperation, ThreadOutboxProviderPush,
+    CredentialDeliveryPurpose, CredentialMaterialRole, JsonObject, JsonValue, Reference,
+    ReferenceType, ThreadOutboxProviderFetch, ThreadOutboxProviderIdempotencyStatus,
+    ThreadOutboxProviderManifest, ThreadOutboxProviderObservationStatus,
+    ThreadOutboxProviderOperation, ThreadOutboxProviderPush,
 };
 use runx_core::policy::{CredentialBindingDecision, CredentialEnvelope};
+#[cfg(feature = "thread-outbox-provider")]
+use runx_runtime::adapters::thread_outbox_provider::ThreadOutboxProviderSkillAdapter;
 use runx_runtime::{
     CredentialDelivery, CredentialDeliveryProfile, InMemoryMaterialResolver,
     ResolvedCredentialMaterial, ThreadOutboxProviderProcessSupervisor,
     ThreadOutboxProviderSupervisorError, ThreadOutboxProviderSupervisorOptions,
 };
+#[cfg(feature = "thread-outbox-provider")]
+use runx_runtime::{InvocationStatus, SkillAdapter, SkillInvocation};
 
 #[derive(Debug, serde::Deserialize)]
 struct Fixture<T> {
@@ -262,6 +267,55 @@ fn provider_process_timeout_kills_process_group_descendants()
     Ok(())
 }
 
+#[cfg(feature = "thread-outbox-provider")]
+#[test]
+fn provider_front_dispatches_push_from_skill_source() -> Result<(), Box<dyn std::error::Error>> {
+    let temp = tempfile::tempdir()?;
+    let skill_dir = temp.path();
+    let mut manifest = manifest_with_fixture_args(&["push", "created"])?;
+    manifest.transport.args = Some(vec![
+        fixture_script()?.to_string_lossy().into_owned(),
+        "push".to_owned(),
+        "created".to_owned(),
+    ]);
+    std::fs::write(
+        skill_dir.join("manifest.json"),
+        serde_json::to_string_pretty(&manifest)?,
+    )?;
+    std::fs::write(
+        skill_dir.join("push.json"),
+        serde_json::to_string_pretty(&push_fixture()?)?,
+    )?;
+
+    let output = ThreadOutboxProviderSkillAdapter::default().invoke(SkillInvocation {
+        skill_name: "fixture-thread-outbox-provider-push".to_owned(),
+        source: thread_outbox_source("push", "push.json"),
+        inputs: JsonObject::new(),
+        resolved_inputs: JsonObject::new(),
+        skill_directory: skill_dir.to_path_buf(),
+        env: Default::default(),
+        credential_delivery: CredentialDelivery::none(),
+    })?;
+
+    assert_eq!(output.status, InvocationStatus::Success);
+    assert!(output.stdout.contains("\"request_id\":\"thread_push_123\""));
+    assert_eq!(
+        output
+            .metadata
+            .get("thread_outbox_provider_operation")
+            .and_then(JsonValue::as_str),
+        Some("push")
+    );
+    assert_eq!(
+        output
+            .metadata
+            .get("thread_outbox_provider_locator")
+            .and_then(JsonValue::as_str),
+        Some("runxhq/runx#77/comment-1001")
+    );
+    Ok(())
+}
+
 fn manifest_with_fixture_args(
     fixture_args: &[&str],
 ) -> Result<ThreadOutboxProviderManifest, Box<dyn std::error::Error>> {
@@ -299,6 +353,54 @@ fn fixture_script() -> Result<PathBuf, std::io::Error> {
         PathBuf::from(env!("CARGO_MANIFEST_DIR"))
             .join("../../fixtures/runtime/thread-outbox-provider/mock-provider.sh"),
     )
+}
+
+#[cfg(feature = "thread-outbox-provider")]
+fn thread_outbox_source(operation: &str, frame_path: &str) -> runx_parser::SkillSource {
+    let mut config = JsonObject::new();
+    config.insert(
+        "operation".to_owned(),
+        JsonValue::String(operation.to_owned()),
+    );
+    config.insert(
+        "manifest_path".to_owned(),
+        JsonValue::String("manifest.json".to_owned()),
+    );
+    config.insert(
+        format!("{operation}_path"),
+        JsonValue::String(frame_path.to_owned()),
+    );
+    let mut raw = JsonObject::new();
+    raw.insert(
+        "type".to_owned(),
+        JsonValue::String("thread-outbox-provider".to_owned()),
+    );
+    raw.insert(
+        "thread_outbox_provider".to_owned(),
+        JsonValue::Object(config),
+    );
+    runx_parser::SkillSource {
+        source_type: runx_parser::SourceKind::ThreadOutboxProvider,
+        command: None,
+        args: Vec::new(),
+        cwd: None,
+        timeout_seconds: None,
+        input_mode: None,
+        sandbox: None,
+        server: None,
+        catalog_ref: None,
+        tool: None,
+        arguments: None,
+        agent_card_url: None,
+        agent_identity: None,
+        agent: None,
+        task: None,
+        hook: None,
+        outputs: None,
+        graph: None,
+        http: None,
+        raw,
+    }
 }
 
 fn credential_delivery() -> Result<CredentialDelivery, Box<dyn std::error::Error>> {

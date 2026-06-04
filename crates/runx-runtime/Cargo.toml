@@ -32,6 +32,7 @@ agent = ["async-http", "catalog"]
 catalog = ["cli-tool"]
 external-adapter = []
 http = ["async-http"]
+thread-outbox-provider = []
 
 [dependencies]
 aes-gcm = "0.10.3"

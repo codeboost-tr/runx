@@ -139,6 +139,26 @@ source:
 }
 
 #[test]
+fn thread_outbox_provider_source_parses_as_closed_builtin() -> Result<(), String> {
+    let skill = parse_strict(
+        r#"---
+name: thread-outbox-provider-push
+source:
+  type: thread-outbox-provider
+  thread_outbox_provider:
+    operation: push
+    manifest_path: manifest.json
+    push_path: push.json
+---
+# Thread outbox provider
+"#,
+    )?;
+    assert_eq!(skill.source.source_type, SourceKind::ThreadOutboxProvider);
+    assert_eq!(skill.source.source_type.as_str(), "thread-outbox-provider");
+    Ok(())
+}
+
+#[test]
 fn unknown_source_type_fails_closed() -> Result<(), String> {
     let raw = parse_skill_markdown(
         r#"---

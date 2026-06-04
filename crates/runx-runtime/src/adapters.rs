@@ -30,3 +30,6 @@ pub mod http;
 
 #[cfg(feature = "mcp")]
 pub mod mcp;
+
+#[cfg(feature = "thread-outbox-provider")]
+pub mod thread_outbox_provider;

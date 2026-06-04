@@ -70,6 +70,7 @@ fn parse_source_kind(value: &str, field: &str) -> Result<SourceKind, ValidationE
         "graph" => Ok(SourceKind::Graph),
         "http" => Ok(SourceKind::Http),
         "external-adapter" => Ok(SourceKind::ExternalAdapter),
+        "thread-outbox-provider" => Ok(SourceKind::ThreadOutboxProvider),
         other => Err(validation_error(format!(
             "{field} {other} is not a supported source type."
         ))),

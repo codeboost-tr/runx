@@ -2,7 +2,7 @@
 spec_version: '2.0'
 task_id: runx-thread-outbox-provider-front-v1
 created: '2026-06-04T06:20:35Z'
-updated: '2026-06-04T22:53:15Z'
+updated: '2026-06-05T00:00:00Z'
 status: active
 harden_status: needs_revision
 size: medium
@@ -14,9 +14,9 @@ risk_level: high
 ## Current State
 
 Status: active
-Current phase: phase2
+Current phase: phase3
 Next: build
-Reason: phase phase1 completed; phase phase2 opened
+Reason: phase phase2 completed; phase phase3 opened
 Blockers: none
 Allowed follow-up command: `scafld handoff runx-thread-outbox-provider-front-v1`
 Latest runner update: 2026-06-04T22:53:15Z
@@ -156,7 +156,7 @@ Acceptance:
 
 ## Phase 2: Non-default dispatch route, fixture-only
 
-Status: active
+Status: completed
 Dependencies: Phase 1
 
 Objective: dispatch a thread-outbox-provider graph/source route through the Rust
@@ -166,18 +166,20 @@ Changes:
 - Seal push/fetch observations as receipts and preserve `CredentialDelivery` behavior.
 
 Acceptance:
-- [ ] `ac3` command - fixture graph dispatch seals provider push/readback
-  - Command: `runx harness examples/thread-outbox-provider/<case>.yaml --json`
+- [x] `ac3` command - fixture graph dispatch seals provider push/readback
+  - Command: `runx harness examples/thread-outbox-provider-graph --json`
   - Expected kind: `exit_code_zero`
-  - Status: pending
-- [ ] `ac4` command - protocol surface remains frozen
+  - Status: pass
+  - Evidence: `RUNX_RECEIPT_DIR=$(mktemp -d) ... cargo run --manifest-path crates/Cargo.toml -p runx-cli -- harness examples/thread-outbox-provider-graph --json` passed with status `passed`, case `push-and-fetch`, receipt `sha256:914f4bcf7382359175cf481006ed725ebe976a5978df9bfe9b99aac3ccf266c3`.
+- [x] `ac4` command - protocol surface remains frozen
   - Command: `pnpm vitest run packages/contracts/src/schemas/thread-outbox-provider.test.ts packages/contracts/src/index.test.ts && cargo nextest run --manifest-path crates/Cargo.toml -p runx-contracts --all-features thread_outbox_provider`
   - Expected kind: `exit_code_zero`
-  - Status: pending
+  - Status: pass
+  - Evidence: TS command passed 2 files / 27 tests. Local macOS Rust test binaries blocked in dyld before Rust code; equivalent Linux Docker execution passed `cargo test --manifest-path crates/Cargo.toml -p runx-contracts --all-features thread_outbox_provider` with 5 thread-outbox-provider integration tests passing. Runtime front coverage also passed in Linux Docker: `cargo test --manifest-path crates/Cargo.toml -p runx-runtime --features thread-outbox-provider --test integration thread_outbox_provider -- --nocapture` with 8 tests passing.
 
 ## Phase 3: issue-to-pr cutover + post-merge publisher
 
-Status: pending
+Status: active
 Dependencies: Phase 2
 
 Objective: move the live provider push and post-merge publisher onto the Rust

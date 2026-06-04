@@ -39,7 +39,9 @@ pub struct SkillIdempotencyPolicy {
 
 /// Closed set of built-in skill source kinds. The extension lane is the
 /// `ExternalAdapter` variant; custom adapters are identified by the
-/// external-adapter manifest, not by an open `source.type` string.
+/// external-adapter manifest, not by an open `source.type` string. First-party
+/// governed fronts that carry their own protocol, such as thread outbox
+/// publication, get explicit variants.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "kebab-case")]
 pub enum SourceKind {
@@ -54,6 +56,7 @@ pub enum SourceKind {
     Graph,
     Http,
     ExternalAdapter,
+    ThreadOutboxProvider,
 }
 
 impl SourceKind {
@@ -69,6 +72,7 @@ impl SourceKind {
             SourceKind::Graph => "graph",
             SourceKind::Http => "http",
             SourceKind::ExternalAdapter => "external-adapter",
+            SourceKind::ThreadOutboxProvider => "thread-outbox-provider",
         }
     }
 }
