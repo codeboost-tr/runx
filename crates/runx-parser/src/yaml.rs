@@ -69,7 +69,7 @@ pub fn assert_yaml_scalar_subset(field: &str, literal: &str) -> Result<(), Parse
 fn strip_yaml_comment(line: &str) -> Option<&str> {
     let mut scanner = QuoteScanner::new();
     for (index, char) in line.char_indices() {
-        if scanner.is_plain() && char == '#' && is_comment_start(line, index) {
+        if scanner.is_plain_at(char) && char == '#' && is_comment_start(line, index) {
             return Some(&line[..index]);
         }
         scanner.consume(char);
@@ -105,7 +105,7 @@ fn top_level_plain_key(trimmed: &str) -> Option<&str> {
     }
     let mut scanner = QuoteScanner::new();
     for (index, char) in trimmed.char_indices() {
-        if scanner.is_plain() && char == ':' && is_mapping_delimiter(trimmed, index) {
+        if scanner.is_plain_at(char) && char == ':' && is_mapping_delimiter(trimmed, index) {
             return Some(trimmed[..index].trim());
         }
         scanner.consume(char);
@@ -145,26 +145,21 @@ impl QuoteScanner {
         }
     }
 
-    fn is_plain(&self) -> bool {
-        // PendingApostrophe means the prior `'` could be a terminator or the
-        // first half of a `''` escape. If the caller's current char is not
-        // `'`, the prior `'` was a terminator and the scanner is effectively
-        // plain. The `consume` call that follows resolves the state for the
-        // next iteration. Treating pending as plain here keeps a `:` at this
-        // position visible to the mapping-delimiter check.
-        matches!(
-            self.state,
-            QuoteState::Plain | QuoteState::InSinglePendingApostrophe
-        )
+    fn is_plain_at(&self, char: char) -> bool {
+        // PendingApostrophe means the prior `'` could be either a terminator
+        // or the first half of a `''` escape. The current char decides which:
+        // another `'` keeps us in the single-quoted scalar; anything else is
+        // plain text after the closed scalar.
+        match self.state {
+            QuoteState::Plain => true,
+            QuoteState::InSinglePendingApostrophe => char != '\'',
+            QuoteState::InDouble | QuoteState::InDoubleEscape | QuoteState::InSingle => false,
+        }
     }
 
     fn consume(&mut self, char: char) {
         self.state = match self.state {
-            QuoteState::Plain => match char {
-                '\'' => QuoteState::InSingle,
-                '"' => QuoteState::InDouble,
-                _ => QuoteState::Plain,
-            },
+            QuoteState::Plain => Self::plain_state_after(char),
             QuoteState::InDouble => match char {
                 '\\' => QuoteState::InDoubleEscape,
                 '"' => QuoteState::Plain,
@@ -180,10 +175,17 @@ impl QuoteScanner {
             // route the current char through the Plain transition table).
             QuoteState::InSinglePendingApostrophe => match char {
                 '\'' => QuoteState::InSingle,
-                '"' => QuoteState::InDouble,
-                _ => QuoteState::Plain,
+                _ => Self::plain_state_after(char),
             },
         };
+    }
+
+    fn plain_state_after(char: char) -> QuoteState {
+        match char {
+            '\'' => QuoteState::InSingle,
+            '"' => QuoteState::InDouble,
+            _ => QuoteState::Plain,
+        }
     }
 }
 
@@ -232,7 +234,7 @@ fn plain_scalar_contains_colon_space(value: &str) -> bool {
 fn contains_unquoted_colon_space(value: &str) -> bool {
     let mut scanner = QuoteScanner::new();
     for (index, char) in value.char_indices() {
-        if scanner.is_plain() && char == ':' && is_mapping_delimiter(value, index) {
+        if scanner.is_plain_at(char) && char == ':' && is_mapping_delimiter(value, index) {
             return true;
         }
         scanner.consume(char);
