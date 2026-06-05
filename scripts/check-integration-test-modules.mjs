@@ -51,10 +51,12 @@ function listRustFiles(dir) {
 }
 
 function topLevelModNames(integrationSource) {
-  // Only `mod name;` declarations at column 0 are crate-root test modules.
+  // Only column-0 module declarations are crate-root test modules.
   const names = new Set();
   for (const line of integrationSource.split("\n")) {
-    const match = /^mod\s+([A-Za-z_][A-Za-z0-9_]*)\s*;/.exec(line);
+    const match = /^(?:pub(?:\s*\([^)]*\))?\s+)?mod\s+([A-Za-z_][A-Za-z0-9_]*)\s*;/.exec(
+      line,
+    );
     if (match) names.add(match[1]);
   }
   return names;
