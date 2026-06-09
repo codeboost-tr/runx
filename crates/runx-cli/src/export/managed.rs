@@ -3,7 +3,8 @@ use std::fs;
 use std::path::{Path, PathBuf};
 
 use super::{
-    CODEX_RULE, CODEX_RULE_END, CODEX_RULE_START, ExportError, GeneratedFile, Target, display_path,
+    CODEX_RULE_END, CODEX_RULE_RUNX_ON_PATH, CODEX_RULE_START, ExportError, GeneratedFile, Target,
+    display_path,
 };
 
 pub(super) fn write_files(files: &[GeneratedFile]) -> Result<(), ExportError> {
@@ -68,7 +69,7 @@ pub(super) fn prune_managed_files(
     Ok(pruned)
 }
 
-pub(super) fn merge_codex_rules(path: &Path) -> Result<PathBuf, ExportError> {
+pub(super) fn merge_codex_rules(path: &Path, runx_bin: &Path) -> Result<PathBuf, ExportError> {
     if let Some(parent) = path.parent() {
         fs::create_dir_all(parent).map_err(|source| ExportError::Io {
             context: format!("creating {}", display_path(parent)),
@@ -85,13 +86,23 @@ pub(super) fn merge_codex_rules(path: &Path) -> Result<PathBuf, ExportError> {
             });
         }
     };
-    let block = format!("{CODEX_RULE_START}\n{CODEX_RULE}\n{CODEX_RULE_END}\n");
+    let block = format!(
+        "{CODEX_RULE_START}\n{CODEX_RULE_RUNX_ON_PATH}\n{}\n{CODEX_RULE_END}\n",
+        codex_rule_for_binary(runx_bin)
+    );
     let contents = replace_or_append_block(&existing, &block);
     fs::write(path, contents).map_err(|source| ExportError::Io {
         context: format!("writing {}", display_path(path)),
         source,
     })?;
     Ok(path.to_path_buf())
+}
+
+fn codex_rule_for_binary(runx_bin: &Path) -> String {
+    format!(
+        "prefix_rule(pattern = [{}, \"skill\"], decision = \"allow\", justification = \"runx skill invocations are trusted\")",
+        serde_json::to_string(&display_path(runx_bin)).unwrap_or_else(|_| "\"runx\"".to_owned())
+    )
 }
 
 fn replace_or_append_block(existing: &str, block: &str) -> String {

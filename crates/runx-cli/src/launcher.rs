@@ -180,6 +180,14 @@ pub fn plan_launcher(args: Vec<OsString>) -> LauncherAction {
     }
 
     if first_arg_is(&args, "export") {
+        if args.len() == 2
+            && args
+                .get(1)
+                .and_then(|arg| arg.to_str())
+                .is_some_and(|arg| matches!(arg, "--help" | "-h"))
+        {
+            return LauncherAction::PrintHelp;
+        }
         return crate::export::parse_export_plan(&args)
             .map_or_else(LauncherAction::Error, LauncherAction::RunExport);
     }

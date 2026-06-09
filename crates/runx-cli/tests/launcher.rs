@@ -22,6 +22,7 @@ fn top_level_help_and_version_are_native() {
     assert_eq!(plan(&[]), LauncherAction::PrintHelp);
     assert_eq!(plan(&["--help"]), LauncherAction::PrintHelp);
     assert_eq!(plan(&["--version"]), LauncherAction::PrintVersion);
+    assert_eq!(plan(&["export", "--help"]), LauncherAction::PrintHelp);
 
     let help = help_text();
     assert_help_line(

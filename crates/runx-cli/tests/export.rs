@@ -27,8 +27,8 @@ fn exports_public_skills_to_claude_global_with_absolute_delegation()
     assert_eq!(report.exported.len(), 1);
     assert_eq!(report.exported[0].skill, "visible");
     let shim = fixture.read_home_file(".claude/skills/visible/SKILL.md")?;
-    assert!(shim.contains("allowed-tools: Bash(runx skill *)"));
-    assert!(shim.contains("runx skill"));
+    assert!(shim.contains("allowed-tools: Bash(/opt/runx/bin/runx skill *)"));
+    assert!(shim.contains("/opt/runx/bin/runx skill"));
     assert!(
         shim.contains(
             fixture
@@ -44,7 +44,8 @@ fn exports_public_skills_to_claude_global_with_absolute_delegation()
 }
 
 #[test]
-fn exports_claude_project_scope_with_bare_skill_ref() -> Result<(), Box<dyn std::error::Error>> {
+fn exports_claude_project_scope_with_project_relative_skill_ref()
+-> Result<(), Box<dyn std::error::Error>> {
     let fixture = ExportFixture::new("runx-export-claude-project")?;
     fixture.write_skill("visible", None)?;
 
@@ -60,7 +61,8 @@ fn exports_claude_project_scope_with_bare_skill_ref() -> Result<(), Box<dyn std:
     )?;
 
     let shim = fixture.read_project_file(".claude/skills/visible/SKILL.md")?;
-    assert!(shim.contains("runx skill visible"));
+    assert!(shim.contains("/opt/runx/bin/runx skill skills/visible"));
+    assert!(shim.contains("--objective \"<objective>\""));
     assert!(!shim.contains(&format!(
         "runx skill {}",
         fixture.project.to_str().unwrap_or_default()
@@ -125,6 +127,8 @@ fn codex_global_writes_shim_and_idempotent_permission_block()
     let shim = fixture.read_home_file(".codex/skills/visible/SKILL.md")?;
     assert!(shim.contains("name: visible"));
     assert!(!shim.contains("allowed-tools"));
+    assert!(shim.contains("--objective \"<objective>\""));
+    assert!(shim.contains("RUNX_RECEIPT_SIGN_ED25519_SEED_BASE64"));
     assert!(shim.contains("runx-export:codex"));
     let rules = fixture.read_home_file(".codex/rules/default.rules")?;
     assert!(rules.contains("# existing approval"));
@@ -135,6 +139,63 @@ fn codex_global_writes_shim_and_idempotent_permission_block()
             .count(),
         1
     );
+    assert_eq!(
+        rules
+            .matches("prefix_rule(pattern = [\"/opt/runx/bin/runx\", \"skill\"]")
+            .count(),
+        1
+    );
+    Ok(())
+}
+
+#[test]
+fn codex_global_initializes_missing_codex_home() -> Result<(), Box<dyn std::error::Error>> {
+    let fixture = ExportFixture::new("runx-export-codex-first-run")?;
+    fixture.write_skill("visible", None)?;
+
+    let report = run_export_command(
+        &ExportPlan {
+            target: Target::Codex,
+            refs: Vec::new(),
+            project: false,
+            json: false,
+        },
+        &fixture.project,
+        &fixture.env,
+    )?;
+
+    assert_eq!(report.exported.len(), 1);
+    assert_eq!(report.exported[0].skill, "visible");
+    assert!(fixture.home.join(".codex/skills/visible/SKILL.md").exists());
+    assert!(fixture.home.join(".codex/rules/default.rules").exists());
+    let rules = fixture.read_home_file(".codex/rules/default.rules")?;
+    assert!(rules.contains("prefix_rule(pattern = [\"runx\", \"skill\"]"));
+    assert!(rules.contains("prefix_rule(pattern = [\"/opt/runx/bin/runx\", \"skill\"]"));
+    Ok(())
+}
+
+#[test]
+fn exports_default_runner_inputs_when_skill_frontmatter_has_none()
+-> Result<(), Box<dyn std::error::Error>> {
+    let fixture = ExportFixture::new("runx-export-runner-inputs")?;
+    fixture.write_skill_with_runner_inputs("send-as")?;
+
+    run_export_command(
+        &ExportPlan {
+            target: Target::Codex,
+            refs: Vec::new(),
+            project: false,
+            json: false,
+        },
+        &fixture.project,
+        &fixture.env,
+    )?;
+
+    let shim = fixture.read_home_file(".codex/skills/send-as/SKILL.md")?;
+    assert!(shim.contains("--objective \"<objective>\""));
+    assert!(shim.contains("--principal \"<principal>\""));
+    assert!(shim.contains("- objective (required) - Bounded send objective."));
+    assert!(shim.contains("- provider_context (optional) - Provider readiness."));
     Ok(())
 }
 
@@ -197,6 +258,97 @@ fn codex_project_scope_fails_closed() -> Result<(), Box<dyn std::error::Error>> 
     Ok(())
 }
 
+#[test]
+fn rejects_skill_names_that_escape_export_directory() -> Result<(), Box<dyn std::error::Error>> {
+    let fixture = ExportFixture::new("runx-export-path-traversal")?;
+    let dir = fixture.project.join("skills").join("bad");
+    fs::create_dir_all(&dir)?;
+    fs::write(
+        dir.join("SKILL.md"),
+        "---\nname: ../outside\ndescription: Escape attempt.\n---\n# bad\n",
+    )?;
+
+    let error = match run_export_command(
+        &ExportPlan {
+            target: Target::Claude,
+            refs: Vec::new(),
+            project: false,
+            json: false,
+        },
+        &fixture.project,
+        &fixture.env,
+    ) {
+        Ok(_) => return Err("unsafe skill name should fail".into()),
+        Err(error) => error,
+    };
+
+    match error {
+        ExportError::InvalidArgs(message) => {
+            assert!(message.contains("cannot be exported"));
+        }
+        other => return Err(format!("unexpected error: {other}").into()),
+    }
+    assert!(!fixture.home.join(".claude/outside/SKILL.md").exists());
+    Ok(())
+}
+
+#[test]
+fn rejects_input_names_that_are_not_safe_shell_flags() -> Result<(), Box<dyn std::error::Error>> {
+    let fixture = ExportFixture::new("runx-export-unsafe-input")?;
+    fixture.write_skill_with_input("bad", "bad$name")?;
+
+    let error = match run_export_command(
+        &ExportPlan {
+            target: Target::Claude,
+            refs: Vec::new(),
+            project: false,
+            json: false,
+        },
+        &fixture.project,
+        &fixture.env,
+    ) {
+        Ok(_) => return Err("unsafe input name should fail".into()),
+        Err(error) => error,
+    };
+
+    match error {
+        ExportError::InvalidArgs(message) => {
+            assert!(message.contains("not a safe runx skill flag"));
+        }
+        other => return Err(format!("unexpected error: {other}").into()),
+    }
+    Ok(())
+}
+
+#[test]
+fn rejects_input_names_that_collide_with_runx_skill_flags() -> Result<(), Box<dyn std::error::Error>>
+{
+    let fixture = ExportFixture::new("runx-export-reserved-input")?;
+    fixture.write_skill_with_input("bad", "json")?;
+
+    let error = match run_export_command(
+        &ExportPlan {
+            target: Target::Claude,
+            refs: Vec::new(),
+            project: false,
+            json: false,
+        },
+        &fixture.project,
+        &fixture.env,
+    ) {
+        Ok(_) => return Err("reserved input name should fail".into()),
+        Err(error) => error,
+    };
+
+    match error {
+        ExportError::InvalidArgs(message) => {
+            assert!(message.contains("not a safe runx skill flag"));
+        }
+        other => return Err(format!("unexpected error: {other}").into()),
+    }
+    Ok(())
+}
+
 struct ExportFixture {
     root: PathBuf,
     project: PathBuf,
@@ -211,9 +363,15 @@ impl ExportFixture {
         let home = root.join("home");
         fs::create_dir_all(&project)?;
         fs::create_dir_all(&home)?;
-        let env = [("HOME".to_owned(), path_string(&home)?)]
-            .into_iter()
-            .collect();
+        let env = [
+            ("HOME".to_owned(), path_string(&home)?),
+            (
+                "RUNX_EXPORT_BIN".to_owned(),
+                "/opt/runx/bin/runx".to_owned(),
+            ),
+        ]
+        .into_iter()
+        .collect();
         Ok(Self {
             root,
             project,
@@ -227,12 +385,29 @@ impl ExportFixture {
         name: &str,
         visibility: Option<&str>,
     ) -> Result<(), Box<dyn std::error::Error>> {
+        self.write_skill_with_input_and_visibility(name, "objective", visibility)
+    }
+
+    fn write_skill_with_input(
+        &self,
+        name: &str,
+        input_name: &str,
+    ) -> Result<(), Box<dyn std::error::Error>> {
+        self.write_skill_with_input_and_visibility(name, input_name, None)
+    }
+
+    fn write_skill_with_input_and_visibility(
+        &self,
+        name: &str,
+        input_name: &str,
+        visibility: Option<&str>,
+    ) -> Result<(), Box<dyn std::error::Error>> {
         let dir = self.project.join("skills").join(name);
         fs::create_dir_all(&dir)?;
         fs::write(
             dir.join("SKILL.md"),
             format!(
-                "---\nname: {name}\ndescription: Export {name} through runx.\ninputs:\n  objective:\n    type: string\n    required: true\n    description: Work to perform.\n---\n# {name}\n\nRun the governed skill.\n"
+                "---\nname: {name}\ndescription: Export {name} through runx.\ninputs:\n  {input_name}:\n    type: string\n    required: true\n    description: Work to perform.\n---\n# {name}\n\nRun the governed skill.\n"
             ),
         )?;
         if let Some(visibility) = visibility {
@@ -243,6 +418,22 @@ impl ExportFixture {
                 ),
             )?;
         }
+        Ok(())
+    }
+
+    fn write_skill_with_runner_inputs(&self, name: &str) -> Result<(), Box<dyn std::error::Error>> {
+        let dir = self.project.join("skills").join(name);
+        fs::create_dir_all(&dir)?;
+        fs::write(
+            dir.join("SKILL.md"),
+            format!("---\nname: {name}\ndescription: Export {name} through runx.\n---\n# {name}\n"),
+        )?;
+        fs::write(
+            dir.join("X.yaml"),
+            format!(
+                "skill: {name}\ncatalog:\n  kind: skill\n  audience: public\n  visibility: public\n  role: canonical\nrunners:\n  plan:\n    default: true\n    type: agent-task\n    agent: reviewer\n    task: {name}\n    inputs:\n      objective:\n        type: string\n        required: true\n        description: Bounded send objective.\n      principal:\n        type: string\n        required: true\n        description: Principal represented by the send.\n      provider_context:\n        type: json\n        required: false\n        description: Provider readiness.\n"
+            ),
+        )?;
         Ok(())
     }
 

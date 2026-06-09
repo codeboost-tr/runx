@@ -3,8 +3,8 @@ use std::fs;
 use std::path::{Path, PathBuf};
 
 use runx_parser::{
-    CatalogVisibility, parse_runner_manifest_yaml, parse_skill_markdown, validate_runner_manifest,
-    validate_skill,
+    CatalogVisibility, SkillInput, SkillRunnerDefinition, SkillRunnerManifest, ValidatedSkill,
+    parse_runner_manifest_yaml, parse_skill_markdown, validate_runner_manifest, validate_skill,
 };
 
 #[derive(Clone, Debug, Eq, PartialEq)]
@@ -62,13 +62,15 @@ pub fn load_export_skills(
             continue;
         }
         let skill = read_validated_skill(&skill_dir)?;
+        let inputs = export_skill_inputs(&skill, manifest.as_ref());
+        validate_export_skill_name(&skill.name)?;
+        validate_export_skill_inputs(&inputs)?;
         skills.push(RunxExportSkill {
             name: skill.name,
             description: skill
                 .description
                 .unwrap_or_else(|| "Run this skill through runx governance.".to_owned()),
-            inputs: skill
-                .inputs
+            inputs: inputs
                 .into_iter()
                 .map(|(name, input)| {
                     (
@@ -85,6 +87,77 @@ pub fn load_export_skills(
     }
     skills.sort_by(|left, right| left.name.cmp(&right.name));
     Ok(skills)
+}
+
+fn export_skill_inputs(
+    skill: &ValidatedSkill,
+    manifest: Option<&SkillRunnerManifest>,
+) -> BTreeMap<String, SkillInput> {
+    if !skill.inputs.is_empty() {
+        return skill.inputs.clone();
+    }
+    default_runner(manifest)
+        .map(|runner| runner.inputs.clone())
+        .unwrap_or_default()
+}
+
+fn default_runner(manifest: Option<&SkillRunnerManifest>) -> Option<&SkillRunnerDefinition> {
+    let manifest = manifest?;
+    manifest
+        .runners
+        .values()
+        .find(|runner| runner.default)
+        .or_else(|| {
+            (manifest.runners.len() == 1)
+                .then(|| manifest.runners.values().next())
+                .flatten()
+        })
+}
+
+fn validate_export_skill_name(name: &str) -> Result<(), RunxExportLoadError> {
+    if name == "." || name == ".." || name.contains('/') || name.contains('\\') {
+        return Err(RunxExportLoadError::InvalidArgs(format!(
+            "skill name {name:?} cannot be exported because it is not a safe path segment"
+        )));
+    }
+    Ok(())
+}
+
+fn validate_export_skill_inputs(
+    inputs: &BTreeMap<String, runx_parser::SkillInput>,
+) -> Result<(), RunxExportLoadError> {
+    for name in inputs.keys() {
+        if !is_export_input_name(name) || is_reserved_skill_flag(name) {
+            return Err(RunxExportLoadError::InvalidArgs(format!(
+                "skill input {name:?} cannot be exported because it is not a safe runx skill flag"
+            )));
+        }
+    }
+    Ok(())
+}
+
+fn is_export_input_name(name: &str) -> bool {
+    let mut chars = name.chars();
+    let Some(first) = chars.next() else {
+        return false;
+    };
+    if !(first.is_ascii_alphabetic() || first == '_') {
+        return false;
+    }
+    chars.all(|character| character.is_ascii_alphanumeric() || character == '_')
+}
+
+fn is_reserved_skill_flag(name: &str) -> bool {
+    matches!(
+        name,
+        "answers"
+            | "credential"
+            | "json"
+            | "non_interactive"
+            | "receipt_dir"
+            | "run_id"
+            | "secret_env"
+    )
 }
 
 fn discover_skill_paths(root: &Path) -> Result<Vec<PathBuf>, RunxExportLoadError> {

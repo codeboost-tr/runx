@@ -18,7 +18,7 @@ const CLAUDE_MARKER: &str = "runx-export:claude";
 const CODEX_MARKER: &str = "runx-export:codex";
 const CODEX_RULE_START: &str = "# >>> runx-export start (managed) >>>";
 const CODEX_RULE_END: &str = "# <<< runx-export end <<<";
-const CODEX_RULE: &str = "prefix_rule(pattern = [\"runx\", \"skill\"], decision = \"allow\", justification = \"runx skill invocations are trusted\")";
+const CODEX_RULE_RUNX_ON_PATH: &str = "prefix_rule(pattern = [\"runx\", \"skill\"], decision = \"allow\", justification = \"runx skill invocations are trusted\")";
 
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct ExportPlan {
@@ -188,22 +188,42 @@ pub fn run_export_command(
 ) -> Result<ExportReport, ExportError> {
     validate_export_plan(plan)?;
     let root = canonicalize(cwd, "canonicalizing export root")?;
-    if let Some(report) = codex_missing_home_report(plan, cwd, env) {
-        return Ok(report);
-    }
-
     let skills = runx_runtime::export::load_export_skills(&root, &plan.refs)?;
     let skill_dir = target_skill_dir(plan.target, plan.project, cwd, env);
-    let files = shim::plan_files(plan.target, plan.project, &skills, &skill_dir);
+    let runx_bin = exported_runx_binary(env)?;
+    let files = shim::plan_files(
+        plan.target,
+        plan.project,
+        &root,
+        &skills,
+        &skill_dir,
+        &runx_bin,
+    );
     let pruned = managed::prune_managed_files(plan.target, &skill_dir, &files)?;
     managed::write_files(&files)?;
     let rules_file = if plan.target == Target::Codex && !plan.project {
-        Some(managed::merge_codex_rules(&codex_rules_file(env, cwd))?)
+        Some(managed::merge_codex_rules(
+            &codex_rules_file(env, cwd),
+            &runx_bin,
+        )?)
     } else {
         None
     };
 
     Ok(export_report(plan, &files, pruned, rules_file))
+}
+
+fn exported_runx_binary(env: &BTreeMap<String, String>) -> Result<PathBuf, ExportError> {
+    if let Some(value) = env
+        .get("RUNX_EXPORT_BIN")
+        .filter(|value| !value.trim().is_empty())
+    {
+        return Ok(PathBuf::from(value));
+    }
+    std::env::current_exe().map_err(|source| ExportError::Io {
+        context: "resolving current runx binary for export shim".to_owned(),
+        source,
+    })
 }
 
 fn validate_export_plan(plan: &ExportPlan) -> Result<(), ExportError> {
@@ -213,31 +233,6 @@ fn validate_export_plan(plan: &ExportPlan) -> Result<(), ExportError> {
         ));
     }
     Ok(())
-}
-
-fn codex_missing_home_report(
-    plan: &ExportPlan,
-    cwd: &Path,
-    env: &BTreeMap<String, String>,
-) -> Option<ExportReport> {
-    if plan.target != Target::Codex || plan.project {
-        return None;
-    }
-    let codex_home = home_dir(env, cwd).join(".codex");
-    if codex_home.exists() {
-        return None;
-    }
-    Some(ExportReport {
-        target: plan.target.as_str().to_owned(),
-        scope: scope_name(plan.project).to_owned(),
-        exported: Vec::new(),
-        pruned: Vec::new(),
-        rules_file: None,
-        warnings: vec![format!(
-            "Codex home {} was not found; no files written",
-            display_path(&codex_home)
-        )],
-    })
 }
 
 fn export_report(
