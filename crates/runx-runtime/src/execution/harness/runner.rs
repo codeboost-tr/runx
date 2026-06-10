@@ -353,6 +353,9 @@ where
 {
     let (skill_name, invocation) = skill_fixture_invocation(fixture, skill_dir, &options)?;
     if invocation.source.source_type == runx_parser::SourceKind::Graph {
+        if is_fixture_replay_graph(fixture) {
+            return run_graph_replay_fixture(fixture, options);
+        }
         return run_graph_skill_fixture(fixture, skill_name, invocation, adapter, options);
     }
     let (skill_output, disposition, reason_code, summary) =
