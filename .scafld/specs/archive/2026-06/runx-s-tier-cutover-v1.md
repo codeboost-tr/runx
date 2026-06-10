@@ -2,8 +2,8 @@
 spec_version: '2.0'
 task_id: runx-s-tier-cutover-v1
 created: '2026-06-10T02:54:53Z'
-updated: '2026-06-10T02:57:20Z'
-status: approved
+updated: '2026-06-10T03:37:38Z'
+status: completed
 harden_status: not_run
 size: large
 risk_level: high
@@ -13,14 +13,14 @@ risk_level: high
 
 ## Current State
 
-Status: approved
-Current phase: none
-Next: build
-Reason: draft created
+Status: completed
+Current phase: final
+Next: done
+Reason: task completed
 Blockers: none
-Allowed follow-up command: `scafld build runx-s-tier-cutover-v1`
-Latest runner update: none
-Review gate: not_started
+Allowed follow-up command: `none`
+Latest runner update: 2026-06-10T03:37:38Z
+Review gate: pass
 
 ## Summary
 
@@ -212,159 +212,137 @@ Validation:
 
 ## Phase 1: Grant Evidence In Sealed Receipts
 
-Status: pending
+Status: completed
 Dependencies: none
 
 Objective: Every sealed privileged effect names the operator authority that
-admitted it, using existing wire shapes.
 
 Changes:
-- Provider permission: when the effect admits via
-  `RUNX_PROVIDER_PERMISSION_GRANT_ID`, emit a `Reference` carrying the grant
-  id (e.g. uri `runx:grant:<id>`, `reference_type: Verification` or the
-  existing grant reference shape used by `ReceiptAuthority.grant_refs`) into
-  the sealed receipt's authority evidence for that step.
-- Payment: emit the admitted `spend_capability_ref` and the child authority
-  resource ref into the same receipt authority evidence during effect
-  sealing, so the spend names its capability.
-- Granted-scope lists stay in admission context/metadata as today; only
-  identifiers go into grant evidence. Never secret material.
-- Add runtime tests asserting the sealed receipt for a provider-permission
-  step and a payment step contains the expected grant references, and that a
-  step without privileged effects gains no grant refs.
-- Regenerate only the receipt fixtures whose flows now legitimately carry
-  grant evidence; record each regenerated fixture in Deviations.
+- Provider permission: when the effect admits via `RUNX_PROVIDER_PERMISSION_GRANT_ID`, emit a `Reference` carrying the grant id (e.g. uri `runx:grant:<id>`, `reference_type: Verification` or the existing grant reference shape used by `ReceiptAuthority.grant_refs`) into the sealed receipt's authority evidence for that step.
+- Payment: emit the admitted `spend_capability_ref` and the child authority resource ref into the same receipt authority evidence during effect sealing, so the spend names its capability.
+- Granted-scope lists stay in admission context/metadata as today; only identifiers go into grant evidence. Never secret material.
+- Add runtime tests asserting the sealed receipt for a provider-permission step and a payment step contains the expected grant references, and that a step without privileged effects gains no grant refs.
+- Regenerate only the receipt fixtures whose flows now legitimately carry grant evidence; record each regenerated fixture in Deviations.
 
 Acceptance:
-- [ ] `ac1` command - Provider permission tests pass with grant evidence
+- [x] `ac1` command - Provider permission tests pass with grant evidence
   - Command: `cd crates && CARGO_TARGET_DIR=target/runx-s-tier-cutover cargo test -p runx-runtime --features "http agent catalog mcp mcp-http-server" provider_permission`
   - Expected kind: `exit_code_zero`
-  - Status: pending
-- [ ] `ac2` command - Payment runtime tests pass with grant evidence
+  - Status: pass
+  - Evidence: exit code was 0
+  - Source event: entry-6
+- [x] `ac2` command - Payment runtime tests pass with grant evidence
   - Command: `cd crates && CARGO_TARGET_DIR=target/runx-s-tier-cutover cargo test -p runx-pay`
   - Expected kind: `exit_code_zero`
-  - Status: pending
+  - Status: pass
+  - Evidence: exit code was 0
+  - Source event: entry-7
 
 ## Phase 2: Scope-Adherence Verification
 
-Status: pending
+Status: completed
 Dependencies: phase1
 
 Objective: Verification proves admitted authority bounded the run, offline.
 
 Changes:
-- Add a pure check in `runx-receipts::verify`: for each act whose
-  verification refs include a typed `ProofKind::EffectEvidence` reference,
-  the receipt must carry grant evidence (non-empty
-  `authority.grant_refs` or an act-level grant reference). Reuse
-  `AuthorityProofMissing` or add one narrowly-named finding code such as
-  `EffectGrantEvidenceMissing`; do not add a parallel verification entry
-  point.
-- Wire the check into the existing `verify_receipt` structural pass so every
-  caller (CLI, tree verification, hosted readers) gets it without opt-in.
-- `runx verify` requires no new flags: the finding flows through the
-  existing report and non-zero exit.
-- Tests: a receipt sealed with privileged evidence and grant refs verifies
-  clean; the same receipt with grant refs absent fails with the new finding;
-  a plain skill receipt with no privileged effects stays clean.
+- Add a pure check in `runx-receipts::verify`: for each act whose verification refs include a typed `ProofKind::EffectEvidence` reference, the receipt must carry grant evidence (non-empty `authority.grant_refs` or an act-level grant reference). Reuse `AuthorityProofMissing` or add one narrowly-named finding code such as `EffectGrantEvidenceMissing`; do not add a parallel verification entry point.
+- Wire the check into the existing `verify_receipt` structural pass so every caller (CLI, tree verification, hosted readers) gets it without opt-in.
+- `runx verify` requires no new flags: the finding flows through the existing report and non-zero exit.
+- Tests: a receipt sealed with privileged evidence and grant refs verifies clean; the same receipt with grant refs absent fails with the new finding; a plain skill receipt with no privileged effects stays clean.
 
 Acceptance:
-- [ ] `ac3` command - Receipt verification tests pass including scope pass
+- [x] `ac3` command - Receipt verification tests pass including scope pass
   - Command: `cd crates && CARGO_TARGET_DIR=target/runx-s-tier-cutover cargo test -p runx-receipts`
   - Expected kind: `exit_code_zero`
-  - Status: pending
-- [ ] `ac4` command - CLI verify tests pass including scope finding surfacing
+  - Status: pass
+  - Evidence: exit code was 0
+  - Source event: entry-12
+- [x] `ac4` command - CLI verify tests pass including scope finding surfacing
   - Command: `cd crates && CARGO_TARGET_DIR=target/runx-s-tier-cutover cargo test -p runx-cli verify`
   - Expected kind: `exit_code_zero`
-  - Status: pending
+  - Status: pass
+  - Evidence: exit code was 0
+  - Source event: entry-13
 
 ## Phase 3: Durable State Retention
 
-Status: pending
+Status: completed
 Dependencies: phase2
 
 Objective: The effect state file stays bounded under long-lived operation.
 
 Changes:
-- During period-spend reservation (inside the existing locked-state
-  transaction), prune `period_spend_ledger` entries for the same
-  family/authority/currency/period whose `window_start` is older than the
-  previous window relative to the reservation being recorded. Lexicographic
-  comparison of the stored ISO `window_start` strings is sufficient; no
-  clock reads in pure code.
-- Never prune the active window, run-spend ledgers, idempotency entries,
-  finality records or events, or consumed capabilities.
-- Tests: spend in window N prunes window N-2 but keeps N-1 and N; replay of
-  an already-sealed step against a pruned store remains idempotent; a
-  state file written before pruning existed still loads.
+- During period-spend reservation (inside the existing locked-state transaction), prune `period_spend_ledger` entries for the same family/authority/currency/period whose `window_start` is older than the previous window relative to the reservation being recorded. Lexicographic comparison of the stored ISO `window_start` strings is sufficient; no clock reads in pure code.
+- Never prune the active window, run-spend ledgers, idempotency entries, finality records or events, or consumed capabilities.
+- Tests: spend in window N prunes window N-2 but keeps N-1 and N; replay of an already-sealed step against a pruned store remains idempotent; a state file written before pruning existed still loads.
 
 Acceptance:
-- [ ] `ac5` command - Payment state tests pass including retention
+- [x] `ac5` command - Payment state tests pass including retention
   - Command: `cd crates && CARGO_TARGET_DIR=target/runx-s-tier-cutover cargo test -p runx-pay`
   - Expected kind: `exit_code_zero`
-  - Status: pending
+  - Status: pass
+  - Evidence: exit code was 0
+  - Source event: entry-18
 
 ## Phase 4: Operator Authority Diagnostics
 
-Status: pending
+Status: completed
 Dependencies: phase3
 
 Objective: One view answers "is this runtime ready to exercise authority,
-and if not, what exactly do I set."
 
 Changes:
-- Add an authority section to `runx doctor` (subcommand or section
-  `runx doctor authority`): receipt signer configuration status (env names
-  and key ids only), verify-key configuration status
-  (`RUNX_RECEIPT_VERIFY_KID` / `RUNX_RECEIPT_VERIFY_ED25519_PUBLIC_KEY_BASE64`),
-  resolved effect-state path (and the cross-run spend-cap consequence when it
-  is unset), and provider-permission grant env presence.
-- Every "not configured" line names the exact env var or flag that fixes it.
-  No secret values, ever.
-- Keep launcher help text in sync; extend launcher tests for the new
-  subcommand path.
-- Update `docs/security-authority-proof.md` with the grant-evidence shape,
-  the verify scope pass, and the state retention policy.
+- Add an authority section to `runx doctor` (subcommand or section `runx doctor authority`): receipt signer configuration status (env names and key ids only), verify-key configuration status (`RUNX_RECEIPT_VERIFY_KID` / `RUNX_RECEIPT_VERIFY_ED25519_PUBLIC_KEY_BASE64`), resolved effect-state path (and the cross-run spend-cap consequence when it is unset), and provider-permission grant env presence.
+- Every "not configured" line names the exact env var or flag that fixes it. No secret values, ever.
+- Keep launcher help text in sync; extend launcher tests for the new subcommand path.
+- Update `docs/security-authority-proof.md` with the grant-evidence shape, the verify scope pass, and the state retention policy.
 
 Acceptance:
-- [ ] `ac6` command - Doctor tests pass with authority section
+- [x] `ac6` command - Doctor tests pass with authority section
   - Command: `cd crates && CARGO_TARGET_DIR=target/runx-s-tier-cutover cargo test -p runx-cli doctor`
   - Expected kind: `exit_code_zero`
-  - Status: pending
-- [ ] `ac7` command - Launcher routing tests pass
+  - Status: pass
+  - Evidence: exit code was 0
+  - Source event: entry-23
+- [x] `ac7` command - Launcher routing tests pass
   - Command: `cd crates && CARGO_TARGET_DIR=target/runx-s-tier-cutover cargo test -p runx-cli launcher`
   - Expected kind: `exit_code_zero`
-  - Status: pending
+  - Status: pass
+  - Evidence: exit code was 0
+  - Source event: entry-24
 
 ## Phase 5: Final Integration Gate
 
-Status: pending
+Status: completed
 Dependencies: phase4
 
 Objective: Prove the cutover is narrow, formatted, and free of authority
-regressions.
 
 Changes:
-- Run the security grep first and again as the final gate; it locks the
-  Tier 0 invariants (no invented grant ids, no explicit manifest path
-  resolution for model-selected tools) across this spec's edits.
+- Run the security grep first and again as the final gate; it locks the Tier 0 invariants (no invented grant ids, no explicit manifest path resolution for model-selected tools) across this spec's edits.
 - Run formatting, the full focused test list, and whitespace checks.
-- Record any broader workspace failures as out-of-scope only with exact
-  command output as evidence.
+- Record any broader workspace failures as out-of-scope only with exact command output as evidence.
 
 Acceptance:
-- [ ] `ac8` command - Rust formatting is clean
+- [x] `ac8` command - Rust formatting is clean
   - Command: `cd crates && cargo fmt --check`
   - Expected kind: `exit_code_zero`
-  - Status: pending
-- [ ] `ac9` command - Security grep finds no authority regression
+  - Status: pass
+  - Evidence: exit code was 0
+  - Source event: entry-29
+- [x] `ac9` command - Security grep finds no authority regression
   - Command: `! rg -n "operator-provider-grant|allow_explicit_manifest_path: true" crates/runx-runtime/src/effects/provider_permission.rs crates/runx-runtime/src/adapters/agent_tools.rs`
   - Expected kind: `exit_code_zero`
-  - Status: pending
-- [ ] `ac10` command - Diff has no whitespace errors
+  - Status: pass
+  - Evidence: exit code was 0
+  - Source event: entry-30
+- [x] `ac10` command - Diff has no whitespace errors
   - Command: `git diff --check`
   - Expected kind: `exit_code_zero`
-  - Status: pending
+  - Status: pass
+  - Evidence: exit code was 0
+  - Source event: entry-31
 
 ## Follow-Up Specs
 
@@ -392,8 +370,18 @@ Acceptance:
 
 ## Review
 
-Status: not_started
-Verdict: none
+Status: completed
+Verdict: pass
+Mode: verify
+Provider: codex
+Output: codex.output_file
+Summary: No completion-blocking findings found. I treated recorded acceptance evidence as already executed per provider instruction and did not run build/test/mutation commands.
+
+Attack log:
+- `crates/runx-runtime/src/effects/provider_permission.rs; crates/runx-pay/src/runtime.rs; crates/runx-runtime/src/execution/runner/steps.rs; crates/runx-runtime/src/receipts/seal.rs`: Grant evidence emission trace -> clean (Inspected provider-permission and payment `RuntimeEffect::authority_grant_refs` implementations plus runner receipt sealing paths for normal, catalog, and replayed effect steps. Grant refs are passed into receipt authority before sealing.)
+- `crates/runx-receipts/src/verify.rs; crates/runx-receipts/src/verify/finding.rs; crates/runx-cli/src/verify.rs`: Scope-adherence verification integration -> clean (Inspected `verify_receipt` structural pass and CLI report mapping. `EffectGrantEvidenceMissing` is wired into all receipt verification through the existing path and surfaces through `runx verify` findings without a new flag.)
+- `crates/runx-pay/src/state.rs; crates/runx-pay/tests/payment/state.rs`: Durable period spend retention -> clean (Inspected period ledger pruning and focused tests. Retention is scoped to the same family/authority/currency/period tuple and preserves current/previous/newer windows while leaving idempotency/finality/run ledgers outside the prune path.)
+- `crates/runx-cli/src/doctor.rs; crates/runx-cli/src/launcher.rs; crates/runx-cli/tests/doctor.rs; crates/runx-cli/tests/launcher.rs`: Operator authority diagnostics and redaction -> clean (Inspected `runx doctor authority` routing, diagnostic output, and tests. Missing configuration names the exact env vars, resolved state path is reported, key ids are allowed, and secret/grant/scope values are not emitted.)
 
 Findings:
 - none
