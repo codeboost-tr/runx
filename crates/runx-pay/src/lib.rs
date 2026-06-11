@@ -20,7 +20,7 @@ pub use payment_admission::{
     payment_admission_token_digest,
 };
 pub use runtime::{
-    DeterministicPaymentFinalitySupervisor, PAYMENT_EFFECT_FAMILY, PaymentFinalitySupervisor,
-    PaymentFinalitySupervisorError, PaymentFinalitySupervisorEvidence,
+    DeterministicPaymentFinalitySupervisor, INFERENCE_EFFECT_FAMILY, PAYMENT_EFFECT_FAMILY,
+    PaymentFinalitySupervisor, PaymentFinalitySupervisorError, PaymentFinalitySupervisorEvidence,
     PaymentFinalitySupervisorRequest, PaymentRuntimeEffect,
 };

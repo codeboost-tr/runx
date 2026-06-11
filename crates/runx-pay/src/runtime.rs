@@ -41,6 +41,7 @@ use crate::supervisor::{
 };
 
 pub const PAYMENT_EFFECT_FAMILY: &str = "payment";
+pub const INFERENCE_EFFECT_FAMILY: &str = "inference";
 
 pub trait PaymentFinalitySupervisor: Send + Sync {
     fn supervise(

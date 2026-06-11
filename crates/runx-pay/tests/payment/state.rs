@@ -6,7 +6,6 @@ use std::collections::BTreeMap;
 
 use runx_contracts::EffectFinalityPhase;
 use runx_contracts::{JsonObject, JsonValue, Receipt};
-use runx_pay::PAYMENT_EFFECT_FAMILY;
 use runx_pay::state::{
     EffectCapabilityConsumption, EffectFinalityEventRecord, EffectFinalityIntent,
     EffectFinalityIntentStatus, EffectFinalityRecord, EffectIdempotencyEntry, EffectIdempotencyKey,
@@ -17,6 +16,7 @@ use runx_pay::state::{
     persist_effect_step_state, record_effect_finality_intent,
 };
 use runx_pay::supervisor::{PAYMENT_RAIL_SUPERVISOR_VERIFIER_ID, PaymentSupervisorProof};
+use runx_pay::{INFERENCE_EFFECT_FAMILY, PAYMENT_EFFECT_FAMILY};
 use runx_runtime::RUNX_RECEIPT_DIR_ENV;
 use runx_runtime::receipts::step_receipt;
 use runx_runtime::{InvocationStatus, SkillOutput};
@@ -274,6 +274,44 @@ fn period_window_start_computes_calendar_windows() -> Result<(), Box<dyn std::er
     let error =
         period_window_start("fortnightly", now).expect_err("unrecognized periods must fail closed");
     assert!(error.to_string().contains("not supported"));
+    Ok(())
+}
+
+#[test]
+fn inference_family_uses_generic_run_and_period_accounting()
+-> Result<(), Box<dyn std::error::Error>> {
+    let temp = tempfile::tempdir()?;
+    let state_path = temp.path().join("effect-state.json");
+    let env = BTreeMap::from([(
+        RUNX_EFFECT_STATE_PATH_ENV.to_owned(),
+        state_path.display().to_string(),
+    )]);
+
+    let inference_first =
+        inference_run_and_period_input("inference:claude-001", 300, 500, 700, "2026-06-10");
+    let inference_second =
+        inference_run_and_period_input("inference:claude-002", 200, 500, 700, "2026-06-10");
+    let inference_over_run =
+        inference_run_and_period_input("inference:claude-003", 1, 500, 700, "2026-06-10");
+    let payment_same_window = period_spend_input("payment:same-window", 250, 250, "2026-06-10");
+
+    record_effect_finality_intent(&env, temp.path(), &inference_first)?;
+    record_effect_finality_intent(&env, temp.path(), &inference_second)?;
+    record_effect_finality_intent(&env, temp.path(), &payment_same_window)?;
+    let error = record_effect_finality_intent(&env, temp.path(), &inference_over_run)
+        .expect_err("inference token budget should be denied at the run cap");
+
+    assert!(
+        error.to_string().contains("would exceed max_per_run_units"),
+        "unexpected error: {error}"
+    );
+    let state = std::fs::read_to_string(&state_path)?;
+    assert!(state.contains("\"inference\""));
+    assert!(state.contains("\"payment\""));
+    assert!(state.contains("\"currency\": \"tokens\""));
+    assert!(state.contains("\"reserved_minor\": 500"));
+    assert!(!state.contains("inference:claude-003"));
+
     Ok(())
 }
 
@@ -925,6 +963,54 @@ fn payment_step_input() -> EffectStepStateInput {
         act_id: "act_fulfill".to_owned(),
         run_spend: None,
         period_spend: None,
+    }
+}
+
+fn inference_step_input() -> EffectStepStateInput {
+    EffectStepStateInput {
+        family: INFERENCE_EFFECT_FAMILY,
+        idempotency_key: EffectIdempotencyKey::new(
+            "tokens",
+            "model:anthropic:claude-test",
+            "inference:claude-001",
+        ),
+        spend_capability_ref: "runx:inference-capability:claude-test".to_owned(),
+        rail: "tokens".to_owned(),
+        counterparty: "model:anthropic:claude-test".to_owned(),
+        amount_minor: 125,
+        currency: "tokens".to_owned(),
+        act_id: "act_infer".to_owned(),
+        run_spend: None,
+        period_spend: None,
+    }
+}
+
+fn inference_run_and_period_input(
+    idempotency_key: &str,
+    token_units: u64,
+    max_per_run_units: u64,
+    max_per_period_units: u64,
+    window_start: &str,
+) -> EffectStepStateInput {
+    EffectStepStateInput {
+        idempotency_key: EffectIdempotencyKey::new(
+            "tokens",
+            "model:anthropic:claude-test",
+            idempotency_key,
+        ),
+        amount_minor: token_units,
+        run_spend: Some(EffectRunSpendReservation {
+            run_id: "run:inference-demo".to_owned(),
+            authority_ref: "runx:inference-grant:claude-test".to_owned(),
+            max_per_run_units,
+        }),
+        period_spend: Some(EffectPeriodSpendReservation {
+            authority_ref: "runx:inference-grant:claude-test".to_owned(),
+            max_per_period_units,
+            period: "daily".to_owned(),
+            window_start: window_start.to_owned(),
+        }),
+        ..inference_step_input()
     }
 }
 
