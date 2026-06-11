@@ -36,10 +36,6 @@ export type SignalTrustLevelContract = string;
 export type ClosureDispositionContract = string;
 export type DecisionChoiceContract = string;
 export type ActFormContract = string;
-export type TargetLifecycleStateContract = string;
-export type ThesisProofStrengthContract = string;
-export type AuthorityCostLevelContract = string;
-export type SelectionCycleStateContract = string;
 export type CriterionStatusContract = string;
 export type VerificationStatusContract = string;
 export type AuthorityResourceFamilyContract = string;
@@ -69,7 +65,6 @@ export type ActReferenceContract = DeepReadonly<{
 }>;
 export type HashCommitmentContract = ContractObject;
 export type RedactionContract = ContractObject;
-export type FingerprintContract = ContractObject;
 export type LinksContract = ContractObject;
 export type SignalAuthenticityContract = ContractObject;
 export type SignalContract = ContractObject;
@@ -148,16 +143,6 @@ export type ReceiptSignatureContract = DeepReadonly<{
   value: string;
 }>;
 export type FanoutReceiptSyncPointContract = ContractObject;
-export type TargetCooldownContract = ContractObject;
-export type TargetContract = ContractObject;
-export type OpportunityContract = ContractObject;
-export type ThesisAssessmentContract = ContractObject;
-export type SelectionContract = ContractObject;
-export type SkillBindingContract = ContractObject;
-export type TargetTransitionEntryContract = ContractObject;
-export type SelectionCycleContract = ContractObject;
-export type ReflectionEntryContract = ContractObject;
-export type FeedEntryContract = ContractObject;
 
 export const referenceSchema = generatedSchema<ReferenceContract>("reference.schema.json");
 export const referenceLinkSchema = generatedSchema<ReferenceLinkContract>("reference-link.schema.json");
@@ -171,25 +156,6 @@ export const verificationSchema = generatedSchema<VerificationContract>("verific
 export const actSchema = generatedSchema<ActContract>("act.schema.json");
 export const decisionSchema = generatedSchema<DecisionContract>("decision.schema.json");
 export const artifactSchema = generatedSchema<ArtifactContract>("artifact.schema.json");
-export const targetSchema = generatedSchema<TargetContract>("target.schema.json");
-export const opportunitySchema = generatedSchema<OpportunityContract>("opportunity.schema.json");
-export const thesisAssessmentSchema = generatedSchema<ThesisAssessmentContract>(
-  "thesis-assessment.schema.json",
-);
-export const selectionSchema = generatedSchema<SelectionContract>("selection.schema.json");
-export const skillBindingSchema = generatedSchema<SkillBindingContract>(
-  "skill-binding.schema.json",
-);
-export const targetTransitionEntrySchema = generatedSchema<TargetTransitionEntryContract>(
-  "target-transition-entry.schema.json",
-);
-export const selectionCycleSchema = generatedSchema<SelectionCycleContract>(
-  "selection-cycle.schema.json",
-);
-export const reflectionEntrySchema = generatedSchema<ReflectionEntryContract>(
-  "reflection-entry.schema.json",
-);
-export const feedEntrySchema = generatedSchema<FeedEntryContract>("feed-entry.schema.json");
 
 const receiptRootSchema = generatedSchema<ContractObject>("receipt.schema.json");
 
@@ -232,11 +198,6 @@ export const signalTrustLevelSchema = schemaAt<SignalTrustLevelContract>(
   signalAuthenticitySchema,
   ["properties", "trust_level"],
   "signal.authenticity.trust_level",
-);
-export const fingerprintSchema = schemaAt<FingerprintContract>(
-  targetSchema,
-  ["properties", "fingerprint"],
-  "target.fingerprint",
 );
 export const linksSchema = schemaAt<LinksContract>(
   signalSchema,
@@ -413,32 +374,6 @@ export const fanoutReceiptSyncPointSchema = schemaAt<FanoutReceiptSyncPointContr
   "receipt.lineage.sync[]",
 );
 
-export const targetCooldownSchema = schemaAt<TargetCooldownContract>(
-  targetSchema,
-  ["properties", "cooldown"],
-  "target.cooldown",
-);
-export const targetLifecycleStateSchema = schemaAt<TargetLifecycleStateContract>(
-  targetSchema,
-  ["properties", "lifecycle_state"],
-  "target.lifecycle_state",
-);
-export const thesisProofStrengthSchema = schemaAt<ThesisProofStrengthContract>(
-  thesisAssessmentSchema,
-  ["properties", "proof_strength"],
-  "thesis_assessment.proof_strength",
-);
-export const authorityCostLevelSchema = schemaAt<AuthorityCostLevelContract>(
-  thesisAssessmentSchema,
-  ["properties", "authority_cost"],
-  "thesis_assessment.authority_cost",
-);
-export const selectionCycleStateSchema = schemaAt<SelectionCycleStateContract>(
-  selectionCycleSchema,
-  ["properties", "state"],
-  "selection_cycle.state",
-);
-
 export const referenceTypes = enumValues(referenceTypeSchema, "reference.type");
 /**
  * Canonical signal type identifiers. The wire schema accepts any non-empty
@@ -463,10 +398,6 @@ export const signalTrustLevels = enumValues(signalTrustLevelSchema, "signal.auth
 export const closureDispositions = enumValues(closureDispositionSchema, "act.closure.disposition");
 export const decisionChoices = enumValues(decisionChoiceSchema, "decision.choice");
 export const actForms = enumValues(actFormSchema, "act.form");
-export const targetLifecycleStates = enumValues(targetLifecycleStateSchema, "target.lifecycle_state");
-export const thesisProofStrengths = enumValues(thesisProofStrengthSchema, "thesis_assessment.proof_strength");
-export const authorityCostLevels = enumValues(authorityCostLevelSchema, "thesis_assessment.authority_cost");
-export const selectionCycleStates = enumValues(selectionCycleStateSchema, "selection_cycle.state");
 export const criterionStatuses = enumValues(criterionStatusSchema, "act.criterion_bindings[].status");
 export const verificationStatuses = enumValues(verificationStatusSchema, "verification.status");
 export const authorityResourceFamilies = enumValues(authorityResourceFamilySchema, "authority.terms[].resource_family");
@@ -516,54 +447,6 @@ export function validateSpineArtifactContract(value: unknown, label = "artifact"
 
 export function validateRedactionContract(value: unknown, label = "redaction"): RedactionContract {
   return validateContractSchema(redactionSchema, value, label) as RedactionContract;
-}
-
-export function validateTargetContract(value: unknown, label = "target"): TargetContract {
-  return validateContractSchema(targetSchema, value, label) as TargetContract;
-}
-
-export function validateOpportunityContract(value: unknown, label = "opportunity"): OpportunityContract {
-  return validateContractSchema(opportunitySchema, value, label) as OpportunityContract;
-}
-
-export function validateThesisAssessmentContract(
-  value: unknown,
-  label = "thesis_assessment",
-): ThesisAssessmentContract {
-  return validateContractSchema(thesisAssessmentSchema, value, label) as ThesisAssessmentContract;
-}
-
-export function validateSelectionContract(value: unknown, label = "selection"): SelectionContract {
-  return validateContractSchema(selectionSchema, value, label) as SelectionContract;
-}
-
-export function validateSkillBindingContract(value: unknown, label = "skill_binding"): SkillBindingContract {
-  return validateContractSchema(skillBindingSchema, value, label) as SkillBindingContract;
-}
-
-export function validateTargetTransitionEntryContract(
-  value: unknown,
-  label = "target_transition_entry",
-): TargetTransitionEntryContract {
-  return validateContractSchema(targetTransitionEntrySchema, value, label) as TargetTransitionEntryContract;
-}
-
-export function validateSelectionCycleContract(
-  value: unknown,
-  label = "selection_cycle",
-): SelectionCycleContract {
-  return validateContractSchema(selectionCycleSchema, value, label) as SelectionCycleContract;
-}
-
-export function validateReflectionEntryContract(
-  value: unknown,
-  label = "reflection_entry",
-): ReflectionEntryContract {
-  return validateContractSchema(reflectionEntrySchema, value, label) as ReflectionEntryContract;
-}
-
-export function validateFeedEntryContract(value: unknown, label = "feed_entry"): FeedEntryContract {
-  return validateContractSchema(feedEntrySchema, value, label) as FeedEntryContract;
 }
 
 function assertActFormDetails(act: ActContract, label: string): void {

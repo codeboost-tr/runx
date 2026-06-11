@@ -6,7 +6,6 @@
 //! See .scafld/specs/active/test-surface-build-consolidation.md.
 
 mod act_assignment_fixtures;
-mod aster_control_fixtures;
 mod credential_delivery_fixtures;
 mod doctor_fixtures;
 mod execution_fixtures;

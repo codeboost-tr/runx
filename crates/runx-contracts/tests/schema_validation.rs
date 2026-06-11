@@ -48,51 +48,6 @@ const CONTRACT_FIXTURE_SCHEMA_MAPPINGS: &[FixtureSchemaMapping] = &[
         "act-assignment.schema.json",
     ),
     FixtureSchemaMapping::new(
-        "fixtures/contracts/aster-control/public-feed-proof.json",
-        "/expected/feed_entry",
-        "feed-entry.schema.json",
-    ),
-    FixtureSchemaMapping::new(
-        "fixtures/contracts/aster-control/public-feed-proof.json",
-        "/expected/opportunity",
-        "opportunity.schema.json",
-    ),
-    FixtureSchemaMapping::new(
-        "fixtures/contracts/aster-control/public-feed-proof.json",
-        "/expected/reflection_entry",
-        "reflection-entry.schema.json",
-    ),
-    FixtureSchemaMapping::new(
-        "fixtures/contracts/aster-control/public-feed-proof.json",
-        "/expected/selection",
-        "selection.schema.json",
-    ),
-    FixtureSchemaMapping::new(
-        "fixtures/contracts/aster-control/public-feed-proof.json",
-        "/expected/selection_cycle",
-        "selection-cycle.schema.json",
-    ),
-    FixtureSchemaMapping::new(
-        "fixtures/contracts/aster-control/public-feed-proof.json",
-        "/expected/skill_binding",
-        "skill-binding.schema.json",
-    ),
-    FixtureSchemaMapping::new(
-        "fixtures/contracts/aster-control/public-feed-proof.json",
-        "/expected/target",
-        "target.schema.json",
-    ),
-    FixtureSchemaMapping::new(
-        "fixtures/contracts/aster-control/public-feed-proof.json",
-        "/expected/target_transition_entry",
-        "target-transition-entry.schema.json",
-    ),
-    FixtureSchemaMapping::new(
-        "fixtures/contracts/aster-control/public-feed-proof.json",
-        "/expected/thesis_assessment",
-        "thesis-assessment.schema.json",
-    ),
-    FixtureSchemaMapping::new(
         "fixtures/contracts/credential-delivery/response.json",
         "/expected",
         "credential-delivery-response.schema.json",
@@ -271,7 +226,6 @@ fn contract_fixture_schema_mapping_has_only_declared_exemptions()
         .collect::<BTreeSet<_>>();
     for directory in [
         "fixtures/contracts/act-assignment",
-        "fixtures/contracts/aster-control",
         "fixtures/contracts/execution",
         "fixtures/contracts/external-adapter",
         "fixtures/contracts/harness-spine",

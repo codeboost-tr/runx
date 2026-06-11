@@ -7,7 +7,6 @@ extern crate self as runx_contracts;
 pub mod act;
 pub mod agent_context;
 pub mod artifact;
-pub mod aster;
 pub mod authority;
 pub mod cli;
 pub mod credential_delivery;
@@ -66,13 +65,6 @@ pub use agent_context::{
     QualityProfile, QualityProfileSource,
 };
 pub use artifact::{ARTIFACT_SCHEMA, Artifact, ArtifactProducedBy, ArtifactSchema};
-pub use aster::{
-    AuthorityCostLevel, FeedEntry, FeedEntrySchema, Opportunity, OpportunitySchema,
-    ReflectionEntry, ReflectionEntrySchema, Selection, SelectionCycle, SelectionCycleSchema,
-    SelectionCycleState, SelectionSchema, SkillBinding, SkillBindingSchema, Target, TargetCooldown,
-    TargetCooldownState, TargetLifecycleState, TargetSchema, TargetTransitionEntry,
-    TargetTransitionEntrySchema, ThesisAssessment, ThesisAssessmentSchema, ThesisProofStrength,
-};
 pub use authority::{
     Authority, AuthorityApproval, AuthorityAttenuation, AuthorityBounds, AuthorityCapability,
     AuthorityCondition, AuthorityConditionPredicate, AuthorityEffectCredentialForm,

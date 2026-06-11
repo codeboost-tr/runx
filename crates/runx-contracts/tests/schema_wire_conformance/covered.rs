@@ -3,10 +3,6 @@ use runx_contracts::act::assignment::ActAssignment;
 use runx_contracts::act::result::ActResultEnvelope;
 use runx_contracts::agent_context::AgentContextEnvelope;
 use runx_contracts::artifact::Artifact;
-use runx_contracts::aster::{
-    FeedEntry, Opportunity, ReflectionEntry, Selection, SelectionCycle, SkillBinding, Target,
-    TargetTransitionEntry, ThesisAssessment,
-};
 use runx_contracts::authority::{Authority, AuthoritySubsetProof};
 use runx_contracts::credential_delivery::{
     CredentialDeliveryObservation, CredentialDeliveryProfile, CredentialDeliveryRequest,
@@ -110,51 +106,6 @@ pub(super) fn covered() -> Vec<Covered> {
             file_name: "decision.schema.json",
             emitted: Decision::json_schema(),
             corpus: decision_corpus(),
-        },
-        Covered {
-            file_name: "target.schema.json",
-            emitted: Target::json_schema(),
-            corpus: target_corpus(),
-        },
-        Covered {
-            file_name: "opportunity.schema.json",
-            emitted: Opportunity::json_schema(),
-            corpus: opportunity_corpus(),
-        },
-        Covered {
-            file_name: "thesis-assessment.schema.json",
-            emitted: ThesisAssessment::json_schema(),
-            corpus: thesis_assessment_corpus(),
-        },
-        Covered {
-            file_name: "selection.schema.json",
-            emitted: Selection::json_schema(),
-            corpus: selection_corpus(),
-        },
-        Covered {
-            file_name: "skill-binding.schema.json",
-            emitted: SkillBinding::json_schema(),
-            corpus: skill_binding_corpus(),
-        },
-        Covered {
-            file_name: "target-transition-entry.schema.json",
-            emitted: TargetTransitionEntry::json_schema(),
-            corpus: target_transition_entry_corpus(),
-        },
-        Covered {
-            file_name: "selection-cycle.schema.json",
-            emitted: SelectionCycle::json_schema(),
-            corpus: selection_cycle_corpus(),
-        },
-        Covered {
-            file_name: "reflection-entry.schema.json",
-            emitted: ReflectionEntry::json_schema(),
-            corpus: reflection_entry_corpus(),
-        },
-        Covered {
-            file_name: "feed-entry.schema.json",
-            emitted: FeedEntry::json_schema(),
-            corpus: feed_entry_corpus(),
         },
         Covered {
             file_name: "credential-delivery-profile.schema.json",
