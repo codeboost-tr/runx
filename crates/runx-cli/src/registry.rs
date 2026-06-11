@@ -957,7 +957,7 @@ fn render_install(
     signed_manifest: Option<&runx_runtime::registry::RegistrySignedManifest>,
 ) -> String {
     format!(
-        "\n  registry install {registry_ref}\n  source           {source}\n  status           {}\n  skill            {}\n  version          {}\n  digest           {}\n  trust            {}\n  signed           {}\n  destination      {}\n\n",
+        "\n  registry install {registry_ref}\n  source           {source}\n  status           {}\n  skill            {}\n  version          {}\n  digest           {}\n  trust            {}\n  signed           {}\n  destination      {}\n  next             {}\n\n",
         install_status_label(&install.status),
         install.skill_id.as_deref().unwrap_or(&install.skill_name),
         install.version.as_deref().unwrap_or("unknown"),
@@ -968,7 +968,15 @@ fn render_install(
             .map_or("unknown", trust_tier_label),
         signed_manifest_label(signed_manifest),
         install.destination.display(),
+        install_run_command(install),
     )
+}
+
+fn install_run_command(install: &runx_runtime::registry::InstallLocalSkillResult) -> String {
+    match (&install.skill_id, &install.version) {
+        (Some(skill_id), Some(version)) => format!("runx skill {skill_id}@{version}"),
+        _ => format!("runx skill {}", install.skill_name),
+    }
 }
 
 fn signed_manifest_label(
@@ -1172,5 +1180,36 @@ impl From<runx_runtime::registry::InstallError> for RegistryCliError {
             Some(kind) => internal_error(format!("registry install {kind}: {error}")),
             None => internal_error(error.to_string()),
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use runx_runtime::registry::{InstallLocalSkillResult, TrustTier};
+
+    #[test]
+    fn registry_install_render_shows_direct_skill_run_command() {
+        let rendered = render_install(
+            "local",
+            "acme/echo@1.2.3",
+            &InstallLocalSkillResult {
+                status: InstallStatus::Installed,
+                destination: PathBuf::from("/tmp/runx/skills/acme/echo/SKILL.md"),
+                skill_name: "echo".to_owned(),
+                source: "local".to_owned(),
+                source_label: "local registry".to_owned(),
+                skill_id: Some("acme/echo".to_owned()),
+                version: Some("1.2.3".to_owned()),
+                digest: "sha256:abc".to_owned(),
+                profile_digest: None,
+                profile_state_path: None,
+                runner_names: Vec::new(),
+                trust_tier: Some(TrustTier::Community),
+            },
+            None,
+        );
+
+        assert!(rendered.contains("next             runx skill acme/echo@1.2.3"));
     }
 }

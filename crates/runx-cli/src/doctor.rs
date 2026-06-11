@@ -721,6 +721,13 @@ fn render_doctor_report(report: &DoctorReport) -> String {
             diagnostic.location.path
         ));
         lines.push(format!("     {}", diagnostic.message));
+        if let Some(repair) = diagnostic.repairs.first() {
+            if let Some(command) = repair.command.as_ref() {
+                lines.push(format!("     next: {command}"));
+            } else if let Some(contents) = repair.contents.as_ref() {
+                lines.push(format!("     next: {contents}"));
+            }
+        }
     }
     lines.push(String::new());
     lines.join("\n")
@@ -760,5 +767,59 @@ impl std::fmt::Display for DoctorCliError {
 impl From<RuntimeError> for DoctorCliError {
     fn from(value: RuntimeError) -> Self {
         Self::Runtime(value)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn doctor_render_surfaces_first_repair_next_action() {
+        let report = DoctorReport {
+            schema: DoctorReportSchema::V1,
+            status: DoctorStatus::Success,
+            summary: DoctorSummary {
+                errors: 0,
+                warnings: 1,
+                infos: 0,
+            },
+            diagnostics: vec![DoctorDiagnostic {
+                id: "runx.registry.installation_id".to_owned(),
+                instance_id: "runx:doctor-registry:runx.registry.installation_id".to_owned(),
+                severity: DoctorDiagnosticSeverity::Warning,
+                title: "Registry install identity".to_owned(),
+                message: "Remote registry install identity not configured.".to_owned(),
+                target: object([
+                    ("kind", string_value("registry")),
+                    ("ref", string_value("runx.registry.installation_id")),
+                ]),
+                location: DoctorLocation {
+                    path: "environment".to_owned(),
+                    json_pointer: None,
+                },
+                evidence: None,
+                repairs: vec![DoctorRepair {
+                    id: "runx.registry.installation_id.configure_env".to_owned(),
+                    kind: DoctorRepairKind::Manual,
+                    confidence: DoctorRepairConfidence::High,
+                    risk: DoctorRepairRisk::Low,
+                    path: Some("environment".to_owned()),
+                    json_pointer: None,
+                    contents: Some(
+                        "Set RUNX_INSTALLATION_ID before remote registry install.".to_owned(),
+                    ),
+                    patch: None,
+                    command: None,
+                    requires_human_review: true,
+                }],
+            }],
+        };
+
+        let rendered = render_doctor_report(&report);
+
+        assert!(
+            rendered.contains("next: Set RUNX_INSTALLATION_ID before remote registry install.")
+        );
     }
 }

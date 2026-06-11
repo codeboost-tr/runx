@@ -126,7 +126,7 @@ export function renderUrlAddResult(result: UrlAddIndexResult): string {
     lines.push(`  ${listing.skill_id}@${listing.version} · ${listing.trust_tier}${tag}`);
     lines.push(`    → ${listing.permalink}`);
     lines.push(`    install: runx add ${registryRef}`);
-    lines.push(`    run:     runx ${listing.name}`);
+    lines.push(`    run:     runx skill ${registryRef}`);
     lines.push("");
   }
   if (result.warnings.length > 0) {

@@ -163,7 +163,8 @@ describe("renderUrlAddResult", () => {
     expect(text).toContain("kam/echo@sha-abc");
     expect(text).toContain("https://runx.ai/x/kam/echo");
     expect(text).toContain("runx add kam/echo@sha-abc");
-    expect(text).toContain("runx echo");
+    expect(text).toContain("runx skill kam/echo@sha-abc");
+    expect(text).not.toContain("runx echo");
     expect(text).not.toContain("runx claim");
   });
 

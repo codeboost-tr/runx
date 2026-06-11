@@ -90,13 +90,14 @@ pub(crate) fn resolve_skill_ref_details(
             );
         }
         return Err(format!(
-            "could not resolve skill ref '{}'; tried {} and {}",
+            "could not resolve skill ref '{}'; tried {} and {}. Search with `runx skill search {}` or run a registry ref directly with `runx skill <owner>/<name>@<version>`.",
             skill_ref.display(),
             cwd.join("skills").join(skill_ref).display(),
             registry::workspace_base(options.env, cwd)
                 .join("skills")
                 .join(skill_ref)
-                .display()
+                .display(),
+            raw_ref
         ));
     }
 
@@ -731,5 +732,23 @@ mod tests {
         assert_ne!(without_profile, with_profile);
         assert!(without_profile.starts_with("sha256:"));
         assert!(with_profile.starts_with("sha256:"));
+    }
+
+    #[test]
+    fn unresolved_bare_skill_points_to_search_and_direct_registry_run() {
+        let env = BTreeMap::new();
+        let error = resolve_skill_ref_details(
+            Path::new("missing-skill"),
+            Path::new("/tmp/runx-cli-resolver-test"),
+            SkillResolverOptions {
+                env: &env,
+                registry: None,
+                expected_digest: None,
+            },
+        )
+        .expect_err("missing bare skill should fail");
+
+        assert!(error.contains("runx skill search missing-skill"));
+        assert!(error.contains("runx skill <owner>/<name>@<version>"));
     }
 }
