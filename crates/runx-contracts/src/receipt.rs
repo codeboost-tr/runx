@@ -1,3 +1,6 @@
+// rust-style-allow: large-file - receipt contracts keep the signed envelope,
+// lineage, and effect-finality schemas together for cross-language schema
+// generation.
 //! Governance receipt contracts: the flat `runx.receipt.v1` shape, seals,
 //! fanout sync, lineage, and signatures.
 //!
@@ -315,8 +318,12 @@ pub struct ReceiptSignature {
 /// `decisions[]` (the reasoning, with `proposed_intent` + `justification`) and
 /// `acts[]` (intent, success criteria, criterion bindings) are inline: the proof
 /// and the training signal are the same artifact. `metadata` is a runtime-local
-/// read aid (skill name, source type, actor labels for history projection) and
-/// is NOT part of the canonical signed body (the canonicalizer strips it).
+/// read aid (legacy skill name, source type, actor labels for local projection)
+/// and is NOT part of the canonical signed body (the canonicalizer strips it).
+/// It is non-authoritative and must never be the source of a trust-bearing
+/// identity label. Display identity comes from signed fields:
+/// `subject.kind`, `subject.ref`, `issuer`, `authority.actor_ref`, and
+/// `acts[].by`.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, RunxSchema)]
 #[serde(deny_unknown_fields)]
 #[runx_schema(id = "runx.receipt.v1")]

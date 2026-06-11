@@ -7,10 +7,10 @@ use std::io::ErrorKind;
 use std::path::Path;
 
 use runx_contracts::schema::NonEmptyString;
-use runx_contracts::{
-    ClosureDisposition, ExecutionEvent, JsonObject, JsonValue, Receipt, ReferenceType,
+use runx_contracts::{ClosureDisposition, ExecutionEvent, Receipt, ReferenceType};
+use runx_receipts::{
+    ReceiptFindingCode, ReceiptProofContextProvider, signed_display_identity, verify_receipt_proof,
 };
-use runx_receipts::{ReceiptFindingCode, ReceiptProofContextProvider, verify_receipt_proof};
 use serde::{Deserialize, Serialize};
 use thiserror::Error;
 
@@ -349,18 +349,18 @@ fn history_row_with_policy(
     receipt: &Receipt,
     signature_policy: RuntimeReceiptSignaturePolicy<'_>,
 ) -> LocalHistoryReceipt {
+    let identity = signed_display_identity(receipt);
     LocalHistoryReceipt {
         id: receipt.id.to_string(),
         receipt_ref: receipt_uri(&receipt.id),
-        name: metadata_string(receipt.metadata.as_ref(), &["skill_name", "name"])
-            .unwrap_or_else(|| receipt.subject.reference.uri.clone().into_string()),
+        name: identity.subject_ref.clone(),
         status: closure_status(&receipt.seal.disposition),
         created_at: receipt.created_at.to_string(),
-        harness_id: receipt.subject.reference.uri.clone().into_string(),
+        harness_id: identity.subject_ref,
         harness_state: subject_state(&receipt.subject.kind, &receipt.seal.disposition),
         summary: receipt.seal.summary.to_string(),
-        source_type: metadata_string(receipt.metadata.as_ref(), &["source_type", "source"]),
-        actors: metadata_values(receipt.metadata.as_ref(), &["actor", "runner", "provider"]),
+        source_type: Some(identity.source_type),
+        actors: identity.actors,
         artifact_types: artifact_types(receipt),
         verification: ReceiptVerificationProjection {
             status: verification_status(receipt, signature_policy),
@@ -492,65 +492,6 @@ fn artifact_types(receipt: &Receipt) -> Vec<String> {
         }
     }
     types.into_iter().map(|label| label.into_string()).collect()
-}
-
-fn metadata_string(metadata: Option<&JsonObject>, keys: &[&str]) -> Option<String> {
-    let metadata = metadata?;
-    find_metadata_string(metadata, keys)
-}
-
-fn find_metadata_string(metadata: &JsonObject, keys: &[&str]) -> Option<String> {
-    keys.iter()
-        .find_map(|key| match metadata.get(*key) {
-            Some(JsonValue::String(value)) if !value.trim().is_empty() => {
-                Some(value.trim().to_owned())
-            }
-            _ => None,
-        })
-        .or_else(|| {
-            metadata.values().find_map(|value| match value {
-                JsonValue::Object(object) => find_metadata_string(object, keys),
-                JsonValue::Null
-                | JsonValue::Bool(_)
-                | JsonValue::Number(_)
-                | JsonValue::String(_)
-                | JsonValue::Array(_) => None,
-            })
-        })
-}
-
-fn metadata_values(metadata: Option<&JsonObject>, keys: &[&str]) -> Vec<String> {
-    let mut values = BTreeSet::new();
-    if let Some(metadata) = metadata {
-        collect_metadata_values(metadata, keys, &mut values);
-    }
-    values.into_iter().collect()
-}
-
-fn collect_metadata_values(value: &JsonObject, keys: &[&str], values: &mut BTreeSet<String>) {
-    for (key, item) in value {
-        if keys.contains(&key.as_str()) {
-            collect_string_values(item, values);
-        }
-        if let JsonValue::Object(object) = item {
-            collect_metadata_values(object, keys, values);
-        }
-    }
-}
-
-fn collect_string_values(value: &JsonValue, values: &mut BTreeSet<String>) {
-    match value {
-        JsonValue::String(text) if !text.trim().is_empty() => {
-            values.insert(text.trim().to_owned());
-        }
-        JsonValue::Array(items) => {
-            for item in items {
-                collect_string_values(item, values);
-            }
-        }
-        JsonValue::Object(object) => collect_metadata_values(object, &["actor"], values),
-        JsonValue::Null | JsonValue::Bool(_) | JsonValue::Number(_) | JsonValue::String(_) => {}
-    }
 }
 
 #[derive(Clone, Debug, Default, PartialEq, Eq)]

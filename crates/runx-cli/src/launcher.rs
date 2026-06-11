@@ -10,6 +10,7 @@ use crate::mcp::McpPlan;
 use crate::parser::{ParserInputSource, ParserPlan};
 use crate::payment::{PaymentAction, PaymentAdmissionPlan, PaymentInputSource, PaymentPlan};
 use crate::policy::{PolicyAction, PolicyPlan};
+use crate::publish::PublishPlan;
 use crate::registry::{RegistryAction, RegistryPlan};
 use crate::skill::SkillPlan;
 
@@ -32,12 +33,14 @@ pub enum LauncherAction {
     RunPayment(PaymentPlan),
     RunConfig(ConfigPlan),
     RunPolicy(PolicyPlan),
+    RunPublish(PublishPlan),
     RunRegistry(RegistryPlan),
     RunSkill(SkillPlan),
     RunTool(ToolPlan),
     RunUrlAdd(UrlAddPlan),
     PrintHelp,
     PrintHistoryHelp,
+    PrintPublishHelp,
     PrintSkillHelp,
     PrintVerifyHelp,
     PrintVersion,
@@ -180,6 +183,14 @@ pub fn plan_launcher(args: Vec<OsString>) -> LauncherAction {
             .map_or_else(LauncherAction::Error, LauncherAction::RunPolicy);
     }
 
+    if first_arg_is(&args, "publish") {
+        if nested_help_requested(&args) {
+            return LauncherAction::PrintPublishHelp;
+        }
+        return crate::publish::parse_publish_plan(&args)
+            .map_or_else(LauncherAction::Error, LauncherAction::RunPublish);
+    }
+
     if first_arg_is(&args, "kernel") {
         return parse_kernel_plan(&args)
             .map_or_else(LauncherAction::Error, LauncherAction::RunKernel);
@@ -265,10 +276,7 @@ pub fn plan_launcher(args: Vec<OsString>) -> LauncherAction {
     }
 
     if first_arg_is(&args, "add") {
-        return parse_add_plan(&args).map_or_else(
-            |message| json_or_human_error(&args, message),
-            |action| action,
-        );
+        return parse_add_plan(&args).unwrap_or_else(|message| json_or_human_error(&args, message));
     }
 
     if first_arg_is(&args, "skill") {
@@ -312,6 +320,7 @@ Commands:
   runx list [tools|skills|graphs|packets|overlays] [--ok-only|--invalid-only] [--json]
   runx config set|get|list [agent.provider|agent.model|agent.api_key] [value] [--json]
   runx policy inspect|lint <policy.json> [--json]
+  runx publish <receipt.json> [--api-base-url url] [--token token] [--json]
   runx kernel eval --input <file|-> --json
   runx payment admission issue --input <file|-> --json
   runx parser eval --input <file|-> --json
@@ -347,6 +356,21 @@ Options:
   --until iso
   --receipt-dir dir
   --json
+"
+    .to_owned()
+}
+
+pub fn publish_help_text() -> String {
+    "\
+runx publish
+
+Usage:
+  runx publish <receipt.json> [--api-base-url url] [--token token] [--json]
+
+Options:
+  --api-base-url url  Hosted API base URL (default: RUNX_PUBLIC_API_BASE_URL or https://runx.ai)
+  --token token       Hosted API token (default: RUNX_PUBLIC_API_TOKEN or RUNX_CONNECT_ACCESS_TOKEN)
+  --json              Print the raw notary response as JSON
 "
     .to_owned()
 }

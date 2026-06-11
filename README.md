@@ -366,6 +366,18 @@ policy, approvals, and resolution requests still behave the same way.
 
 Local receipts are append-only JSON files under `.runx/receipts` unless `RUNX_RECEIPT_DIR` is set. `runx history` verifies receipt signatures and surfaces `verified`, `unverified`, or `invalid` status.
 
+Publish a local receipt to the hosted notary with:
+
+```bash
+runx publish ./.runx/receipts/<receipt-id>.json
+```
+
+`runx publish` posts the full sealed receipt to `POST /v1/receipts/notarize`
+with `publish: true`, then prints the public `/r` link and content hash returned
+by the notary. Configure the hosted API with `RUNX_PUBLIC_API_BASE_URL` (default
+`https://runx.ai`) and authenticate with `RUNX_PUBLIC_API_TOKEN`,
+`RUNX_CONNECT_ACCESS_TOKEN`, or `--token`.
+
 ## Workspace Policy
 
 Projects can opt into stricter local `cli-tool` admission with

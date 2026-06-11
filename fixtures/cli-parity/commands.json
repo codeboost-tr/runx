@@ -344,6 +344,38 @@
       ]
     },
     {
+      "id": "publish",
+      "usage": "runx publish <receipt.json> [--api-base-url url] [--token token] [--json]",
+      "aliases": [],
+      "requiredPositionals": [
+        "<receipt.json>"
+      ],
+      "flags": [
+        "--api-base-url",
+        "--token",
+        "--json"
+      ],
+      "exitCodes": [
+        0,
+        1,
+        2,
+        64
+      ],
+      "parity": {
+        "humanOutput": "semantic",
+        "jsonOutput": "schema-exact",
+        "receipt": "schema-exact",
+        "sideEffect": "external-stub",
+        "surfaces": [
+          "receipts",
+          "cli-presentation"
+        ]
+      },
+      "cases": [
+        "publish.validate"
+      ]
+    },
+    {
       "id": "payment",
       "usage": "runx payment admission issue --input <file|-> --json",
       "aliases": [],

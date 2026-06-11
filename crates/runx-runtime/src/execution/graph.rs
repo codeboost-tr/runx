@@ -337,7 +337,7 @@ fn materialize_registry_step_skill(
         runner_names: resolution.runner_names,
         trust_tier: Some(resolution.trust_tier),
         manifest_source_authority: crate::registry::registry_manifest_source_authority_from_env(
-            &options.env,
+            options.env,
         ),
     };
     let trusted_manifest_keys = trusted_registry_manifest_keys_from_env(options.env).map_err(

@@ -4,6 +4,7 @@
 //! proof of a harness node, with acts and decisions proven through that seal.
 
 mod canonical;
+mod identity;
 mod tree;
 mod verify;
 
@@ -11,6 +12,7 @@ pub use canonical::{
     canonical_receipt_body_digest, canonical_receipt_body_json, canonical_receipt_digest,
     canonical_receipt_identity_json, canonical_receipt_json, content_addressed_receipt_id,
 };
+pub use identity::{SignedDisplayIdentity, signed_display_identity};
 pub use runx_contracts::{
     RECEIPT_CANONICALIZATION, RECEIPT_SCHEMA, Receipt, ReceiptIssuer, ReceiptIssuerType,
     ReceiptSchema, ReceiptSignature, Seal, SignatureAlgorithm,

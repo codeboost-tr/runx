@@ -203,7 +203,10 @@ fn registry_install_reports_typed_trust_anchor_errors() -> Result<(), Box<dyn st
     for (error_kind, mutate) in cases {
         let root = temp_root(&format!("registry-{error_kind}"));
         let registry_dir = publish_registry_fixture(&root)?;
-        mutate_registry_version(&registry_dir, mutate)?;
+        mutate_registry_version(&registry_dir, |version| {
+            mutate(version);
+            Ok(())
+        })?;
         let install_dir = root.join("installed");
 
         let install = runx_command()?
@@ -457,12 +460,12 @@ fn sign_registry_version(
 
 fn mutate_registry_version(
     registry_dir: &std::path::Path,
-    mutate: fn(&mut serde_json::Value),
+    mutate: impl FnOnce(&mut serde_json::Value) -> Result<(), Box<dyn std::error::Error>>,
 ) -> Result<(), Box<dyn std::error::Error>> {
     let version_path = registry_dir.join("acme").join("echo").join("1.0.0.json");
     let mut version =
         serde_json::from_str::<serde_json::Value>(&fs::read_to_string(&version_path)?)?;
-    mutate(&mut version);
+    mutate(&mut version)?;
     fs::write(
         version_path,
         format!("{}\n", serde_json::to_string_pretty(&version)?),
@@ -470,9 +473,11 @@ fn mutate_registry_version(
     Ok(())
 }
 
-fn insert_signed_manifest(version: &mut serde_json::Value) {
-    version["signed_manifest"] =
-        signed_manifest(version).expect("test registry version should sign");
+fn insert_signed_manifest(
+    version: &mut serde_json::Value,
+) -> Result<(), Box<dyn std::error::Error>> {
+    version["signed_manifest"] = signed_manifest(version)?;
+    Ok(())
 }
 
 fn signed_manifest(

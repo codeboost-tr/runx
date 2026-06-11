@@ -65,6 +65,7 @@ const commands: readonly CommandMatrixEntry[] = [
   command("config.list", "runx config list", [], ["--json"], "filesystem", ["config", "cli-presentation"], ["config.list.execute"]),
   command("policy.inspect", "runx policy inspect <policy.json>", [], ["--json"], "none", ["policy", "cli-presentation"], ["policy.inspect.validate"]),
   command("policy.lint", "runx policy lint <policy.json>", [], ["--json"], "none", ["policy", "cli-presentation"], ["policy.lint.validate"]),
+  command("publish", "runx publish <receipt.json> [--api-base-url url] [--token token] [--json]", [], ["--api-base-url", "--token", "--json"], "external-stub", ["receipts", "cli-presentation"], ["publish.validate"]),
   command("payment", "runx payment admission issue --input <file|-> --json", [], ["--input", "--json"], "local-runtime", ["authority", "cli-presentation"], ["payment.validate"]),
   command("kernel", "runx kernel eval --input <file|-> --json", [], ["--input", "--json"], "local-runtime", ["graph-runtime", "cli-presentation"], ["kernel.validate"]),
   command("parser", "runx parser eval --input <file|-> --json", [], ["--input", "--json"], "local-runtime", ["parser", "cli-presentation"], ["parser.validate"]),

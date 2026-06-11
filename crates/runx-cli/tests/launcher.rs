@@ -4,7 +4,7 @@ use runx_cli::kernel::{KernelInputSource, KernelPlan};
 use runx_cli::launcher::{
     DevPlan, DoctorMode, DoctorPlan, FilterMode, HarnessPlan, HistoryPlan, InitPlan, JsonErrorPlan,
     LauncherAction, ListKind, ListPlan, NewPlan, ToolAction, ToolPlan, UrlAddPlan, help_text,
-    history_help_text, plan_launcher, skill_help_text, verify_help_text,
+    history_help_text, plan_launcher, publish_help_text, skill_help_text, verify_help_text,
 };
 use runx_cli::mcp::McpPlan;
 use runx_cli::parser::{ParserInputSource, ParserPlan};
@@ -63,7 +63,7 @@ fn top_level_help_and_version_are_native() {
 }
 
 #[test]
-fn nested_skill_history_and_verify_help_are_native() {
+fn nested_skill_history_verify_and_publish_help_are_native() {
     assert_eq!(plan(&["skill", "--help"]), LauncherAction::PrintSkillHelp);
     assert_eq!(plan(&["skill", "-h"]), LauncherAction::PrintSkillHelp);
     assert_eq!(
@@ -85,6 +85,11 @@ fn nested_skill_history_and_verify_help_are_native() {
         plan(&["verify", "receipt-123", "--help"]),
         LauncherAction::PrintVerifyHelp
     );
+    assert_eq!(
+        plan(&["publish", "--help"]),
+        LauncherAction::PrintPublishHelp
+    );
+    assert_eq!(plan(&["publish", "-h"]), LauncherAction::PrintPublishHelp);
 
     assert_help_line(
         &skill_help_text(),
@@ -97,6 +102,10 @@ fn nested_skill_history_and_verify_help_are_native() {
     assert_help_line(
         &verify_help_text(),
         "runx verify [receipt-id] [--receipt-dir dir] [--receipt <path|->] [--notary <path|-> --notary-key trusted.pem] [--json]",
+    );
+    assert_help_line(
+        &publish_help_text(),
+        "runx publish <receipt.json> [--api-base-url url] [--token token] [--json]",
     );
 }
 

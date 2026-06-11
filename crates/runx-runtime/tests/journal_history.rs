@@ -21,6 +21,8 @@ use runx_runtime::{InvocationStatus, LocalReceiptStore, SkillOutput};
 use serde_json::json;
 
 const JOURNAL_ORACLE: &str = include_str!("../../../fixtures/journal/history-oracle.json");
+const SIGNED_LOCAL_ACTOR: &str = "runx:principal:local_runtime";
+const SIGNED_RUNTIME_SUBJECT: &str = "hrn_journal-history_strict-proof";
 
 #[test]
 fn missing_history_store_projects_empty_safe_result() -> Result<(), Box<dyn std::error::Error>> {
@@ -103,9 +105,9 @@ fn history_lists_receipts_newest_first_with_safe_refs_and_filters()
             .collect::<Vec<_>>(),
         expected_order
     );
-    assert_eq!(history.receipts[0].name, "Deploy Skill");
+    assert_eq!(history.receipts[0].name, SIGNED_RUNTIME_SUBJECT);
     assert_eq!(history.receipts[0].source_type.as_deref(), Some("local"));
-    assert_eq!(history.receipts[1].actors, vec!["runner-a"]);
+    assert_eq!(history.receipts[1].actors, vec![SIGNED_LOCAL_ACTOR]);
     assert!(
         history.receipts[0]
             .artifact_types
@@ -117,6 +119,35 @@ fn history_lists_receipts_newest_first_with_safe_refs_and_filters()
             .starts_with(RECEIPT_REF_PREFIX)
     );
     assert_no_local_paths(&serde_json::to_string(&history)?);
+    Ok(())
+}
+
+#[test]
+fn history_display_identity_ignores_unsigned_metadata() -> Result<(), Box<dyn std::error::Error>> {
+    let temp = TestDir::new()?;
+    let workspace = temp.path().join("workspace");
+    let project_runx_dir = workspace.join(".runx");
+    let store = LocalReceiptStore::new(project_runx_dir.join("receipts"));
+    store.write_receipt(&receipt_with_metadata(
+        InvocationStatus::Success,
+        "hrn_rcpt_forged_metadata",
+        "2026-05-18T00:00:00Z",
+        "Forged Skill",
+        "forged-source",
+        "forged-runner",
+    )?)?;
+
+    let history = list_local_history(
+        &store,
+        &workspace,
+        &project_runx_dir,
+        &HistoryFilter::default(),
+    )?;
+
+    assert_eq!(history.receipts[0].name, SIGNED_RUNTIME_SUBJECT);
+    assert_eq!(history.receipts[0].harness_id, SIGNED_RUNTIME_SUBJECT);
+    assert_eq!(history.receipts[0].source_type.as_deref(), Some("local"));
+    assert_eq!(history.receipts[0].actors, vec![SIGNED_LOCAL_ACTOR]);
     Ok(())
 }
 
@@ -148,9 +179,9 @@ fn history_filter_matches_actor_status_skill_and_date() -> Result<(), Box<dyn st
         &workspace,
         &project_runx_dir,
         &HistoryFilter {
-            skill: Some("revision".to_owned()),
+            skill: Some("journal-history".to_owned()),
             status: Some("closed".to_owned()),
-            actor: Some("runner-a".to_owned()),
+            actor: Some(SIGNED_LOCAL_ACTOR.to_owned()),
             until: Some("2026-05-18T23:59:59Z".to_owned()),
             ..HistoryFilter::default()
         },
@@ -191,17 +222,6 @@ fn history_filter_intersects_skill_status_source_artifact_and_date_range()
     set_artifact_label(&mut wrong_artifact, "diagnostic-log")?;
     store.write_receipt(&wrong_artifact)?;
 
-    let mut wrong_source = receipt_with_metadata(
-        InvocationStatus::Success,
-        "hrn_rcpt_wrong_source",
-        "2026-05-18T13:00:00Z",
-        "Deploy Skill",
-        "remote",
-        "runner-a",
-    )?;
-    set_artifact_label(&mut wrong_source, "deploy-bundle")?;
-    store.write_receipt(&wrong_source)?;
-
     let mut outside_window = receipt_with_metadata(
         InvocationStatus::Success,
         "hrn_rcpt_outside_window",
@@ -218,7 +238,7 @@ fn history_filter_intersects_skill_status_source_artifact_and_date_range()
         &workspace,
         &project_runx_dir,
         &HistoryFilter {
-            skill: Some("deploy".to_owned()),
+            skill: Some("journal-history".to_owned()),
             status: Some("CLOSED".to_owned()),
             source: Some("LOCAL".to_owned()),
             artifact_type: Some("deploy-bundle".to_owned()),

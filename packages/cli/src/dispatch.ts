@@ -217,6 +217,18 @@ export async function dispatchCli(
     );
   }
 
+  if (parsed.command === "publish") {
+    if (!parsed.receiptPublishPath) {
+      io.stderr.write("runx publish: receipt JSON path is required\n");
+      return 64;
+    }
+    const args = ["publish", resolvePathFromUserInput(parsed.receiptPublishPath, env)];
+    pushOptionalFlag(args, "--api-base-url", parsed.receiptPublishApiBaseUrl);
+    pushOptionalFlag(args, "--token", parsed.receiptPublishToken);
+    if (parsed.json) args.push("--json");
+    return await streamNativeRunxToIo(io, args, env);
+  }
+
   if (parsed.command === "add" && parsed.addRef && isGithubRepoUrl(parsed.addRef)) {
     if (parsed.registryUrl) {
       return writeAddValidationError(io, parsed, "GitHub URL indexing uses --api-base-url for the hosted index API, not --registry.");

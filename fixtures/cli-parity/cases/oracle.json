@@ -186,6 +186,15 @@
       ]
     },
     {
+      "id": "publish.validate",
+      "commandId": "publish",
+      "mode": "validate",
+      "proves": [
+        "receipts",
+        "cli-presentation"
+      ]
+    },
+    {
       "id": "payment.validate",
       "commandId": "payment",
       "mode": "validate",

@@ -78,7 +78,7 @@ fn metadata_string<'a>(output: &'a HarnessReplayOutput, key: &str) -> Option<&'a
 
 enum ConfiguredPaymentFinalitySupervisor {
     Deterministic(DeterministicPaymentFinalitySupervisor),
-    External(ExternalAdapterPaymentFinalitySupervisor),
+    External(Box<ExternalAdapterPaymentFinalitySupervisor>),
     Unavailable(String),
 }
 
@@ -89,7 +89,7 @@ impl ConfiguredPaymentFinalitySupervisor {
         };
         let path = PathBuf::from(path);
         match ExternalAdapterPaymentFinalitySupervisor::from_manifest_path(path.clone()) {
-            Ok(supervisor) => Self::External(supervisor),
+            Ok(supervisor) => Self::External(Box::new(supervisor)),
             Err(message) => Self::Unavailable(format!(
                 "{}={} is invalid: {message}",
                 RUNX_PAYMENT_FINALITY_SUPERVISOR_MANIFEST_ENV,

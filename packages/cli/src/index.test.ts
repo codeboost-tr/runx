@@ -1023,6 +1023,52 @@ Answer the prompt directly.
     ]);
   });
 
+  it("forwards receipt publish to the native subprocess", async () => {
+    const tempDir = await mkdtemp(path.join(os.tmpdir(), "runx-cli-publish-"));
+    tempDirs.push(tempDir);
+    const nativeBin = path.join(tempDir, "fake-runx.js");
+    const receiptPath = path.join(tempDir, "receipt.json");
+    await writeFile(receiptPath, "{\"id\":\"receipt_1\"}\n");
+    await writeFile(
+      nativeBin,
+      "#!/usr/bin/env node\nprocess.stdout.write(JSON.stringify({ argv: process.argv.slice(2) }));\n",
+    );
+    await chmod(nativeBin, 0o755);
+
+    const stdout = createMemoryStream();
+    const stderr = createMemoryStream();
+    const exitCode = await runCli(
+      [
+        "publish",
+        receiptPath,
+        "--api-base-url",
+        "https://runx.example.test",
+        "--token",
+        "rxk_test",
+        "--json",
+      ],
+      { stdin: process.stdin, stdout, stderr },
+      {
+        ...process.env,
+        RUNX_CWD: process.cwd(),
+        RUNX_DEV_RUST_CLI_BIN: nativeBin,
+      },
+    );
+
+    expect(exitCode).toBe(0);
+    expect(stderr.contents()).toBe("");
+    const argv = JSON.parse(stdout.contents()).argv as string[];
+    expect(argv).toEqual([
+      "publish",
+      receiptPath,
+      "--api-base-url",
+      "https://runx.example.test",
+      "--token",
+      "rxk_test",
+      "--json",
+    ]);
+  });
+
   it("indexes GitHub URL adds through the configured API endpoint", async () => {
     const stdout = createMemoryStream();
     const stderr = createMemoryStream();

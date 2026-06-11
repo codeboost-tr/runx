@@ -260,7 +260,11 @@ function functionLength(lines, startIndex) {
   let depth = 0;
   let seenBody = false;
   for (let index = startIndex; index < lines.length; index += 1) {
-    for (const char of stripLineComment(lines[index])) {
+    const code = stripLineComment(lines[index]);
+    if (!seenBody && depth === 0 && code.includes(";")) {
+      return 1;
+    }
+    for (const char of code) {
       if (char === "{") {
         depth += 1;
         seenBody = true;

@@ -77,28 +77,7 @@ pub(crate) fn resolve_skill_ref_details(
     }
 
     if is_bare_skill_ref(skill_ref) {
-        if let Some(path) = resolve_installed_or_workspace_skill(&raw_ref, cwd, &options)? {
-            return Ok(path);
-        }
-        if let Some(entry) = official_skill_entry_by_name(&raw_ref) {
-            return resolve_official_skill(
-                entry.skill_id,
-                entry.version,
-                entry.digest,
-                cwd,
-                options,
-            );
-        }
-        return Err(format!(
-            "could not resolve skill ref '{}'; tried {} and {}. Search with `runx skill search {}` or run a registry ref directly with `runx skill <owner>/<name>@<version>`.",
-            skill_ref.display(),
-            cwd.join("skills").join(skill_ref).display(),
-            registry::workspace_base(options.env, cwd)
-                .join("skills")
-                .join(skill_ref)
-                .display(),
-            raw_ref
-        ));
+        return resolve_bare_skill_ref(skill_ref, &raw_ref, cwd, options);
     }
 
     if is_explicit_registry_ref(&raw_ref, &parsed.skill_id) {
@@ -108,6 +87,30 @@ pub(crate) fn resolve_skill_ref_details(
     Ok(local_resolved(
         SkillRefKind::ExplicitPath,
         skill_ref.to_path_buf(),
+    ))
+}
+
+fn resolve_bare_skill_ref(
+    skill_ref: &Path,
+    raw_ref: &str,
+    cwd: &Path,
+    options: SkillResolverOptions<'_>,
+) -> Result<ResolvedSkillRef, String> {
+    if let Some(path) = resolve_installed_or_workspace_skill(raw_ref, cwd, &options)? {
+        return Ok(path);
+    }
+    if let Some(entry) = official_skill_entry_by_name(raw_ref) {
+        return resolve_official_skill(entry.skill_id, entry.version, entry.digest, cwd, options);
+    }
+    Err(format!(
+        "could not resolve skill ref '{}'; tried {} and {}. Search with `runx skill search {}` or run a registry ref directly with `runx skill <owner>/<name>@<version>`.",
+        skill_ref.display(),
+        cwd.join("skills").join(skill_ref).display(),
+        registry::workspace_base(options.env, cwd)
+            .join("skills")
+            .join(skill_ref)
+            .display(),
+        raw_ref
     ))
 }
 
@@ -735,9 +738,9 @@ mod tests {
     }
 
     #[test]
-    fn unresolved_bare_skill_points_to_search_and_direct_registry_run() {
+    fn unresolved_bare_skill_points_to_search_and_direct_registry_run() -> Result<(), String> {
         let env = BTreeMap::new();
-        let error = resolve_skill_ref_details(
+        let error = match resolve_skill_ref_details(
             Path::new("missing-skill"),
             Path::new("/tmp/runx-cli-resolver-test"),
             SkillResolverOptions {
@@ -745,10 +748,13 @@ mod tests {
                 registry: None,
                 expected_digest: None,
             },
-        )
-        .expect_err("missing bare skill should fail");
+        ) {
+            Ok(_) => return Err("missing bare skill should fail".to_owned()),
+            Err(error) => error,
+        };
 
         assert!(error.contains("runx skill search missing-skill"));
         assert!(error.contains("runx skill <owner>/<name>@<version>"));
+        Ok(())
     }
 }

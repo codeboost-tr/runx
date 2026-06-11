@@ -5,7 +5,8 @@ use std::path::{Path, PathBuf};
 use std::process::ExitCode;
 
 use runx_cli::launcher::{
-    HarnessPlan, LauncherAction, help_text, history_help_text, skill_help_text, verify_help_text,
+    HarnessPlan, LauncherAction, help_text, history_help_text, publish_help_text, skill_help_text,
+    verify_help_text,
 };
 
 fn main() -> ExitCode {
@@ -21,6 +22,7 @@ fn main() -> ExitCode {
         }
         LauncherAction::PrintHelp => write_stdout(&help_text()),
         LauncherAction::PrintHistoryHelp => write_stdout(&history_help_text()),
+        LauncherAction::PrintPublishHelp => write_stdout(&publish_help_text()),
         LauncherAction::PrintSkillHelp => write_stdout(&skill_help_text()),
         LauncherAction::PrintVerifyHelp => write_stdout(&verify_help_text()),
         LauncherAction::PrintVersion => {
@@ -38,6 +40,7 @@ fn main() -> ExitCode {
         LauncherAction::RunParser(plan) => runx_cli::parser::run_native_parser(plan),
         LauncherAction::RunConfig(plan) => run_native_config(plan),
         LauncherAction::RunPolicy(plan) => runx_cli::policy::run_native_policy(plan),
+        LauncherAction::RunPublish(plan) => runx_cli::publish::run_native_publish(plan),
         LauncherAction::RunRegistry(plan) => runx_cli::registry::run_native_registry(plan),
         LauncherAction::RunSkill(plan) => runx_cli::skill::run_native_skill(plan),
         LauncherAction::RunDoctor(plan) => runx_cli::doctor::run_native_doctor(plan),

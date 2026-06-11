@@ -30,6 +30,9 @@ export interface ParsedArgs {
   readonly searchQuery?: string;
   readonly addRef?: string;
   readonly publishPath?: string;
+  readonly receiptPublishPath?: string;
+  readonly receiptPublishApiBaseUrl?: string;
+  readonly receiptPublishToken?: string;
   readonly receiptId?: string;
   readonly runId?: string;
   readonly replayRef?: string;
@@ -150,6 +153,7 @@ export function parseArgs(argv: readonly string[]): ParsedArgs {
   const isTopLevelAdd = command === "add";
   const isRetiredSkillAdd = command === "skill" && positionals[0] === "add";
   const isSkillPublish = command === "skill" && positionals[0] === "publish";
+  const isReceiptPublish = command === "publish";
   const isSkillInspect = command === "skill" && positionals[0] === "inspect";
   const isSkillRun =
     command === "skill" && !isSkillSearch && !isRetiredSkillAdd && !isSkillPublish && !isSkillInspect;
@@ -185,6 +189,12 @@ export function parseArgs(argv: readonly string[]): ParsedArgs {
   const publishOwner = isSkillPublish && typeof inputs.owner === "string" ? inputs.owner : undefined;
   const publishVersion = isSkillPublish && typeof inputs.version === "string" ? inputs.version : undefined;
   const publishProfile = isSkillPublish && typeof inputs.profile === "string" ? inputs.profile : undefined;
+  const receiptPublishPath = isReceiptPublish ? positionals[0] : undefined;
+  const receiptPublishApiBaseUrl =
+    isReceiptPublish && typeof (inputs.apiBaseUrl ?? inputs["api-base-url"]) === "string"
+      ? String(inputs.apiBaseUrl ?? inputs["api-base-url"])
+      : undefined;
+  const receiptPublishToken = isReceiptPublish && typeof inputs.token === "string" ? inputs.token : undefined;
   const registryUrl = (isSkillSearch || isTopLevelAdd || isSkillPublish || isSkillRun) && typeof inputs.registry === "string" ? inputs.registry : undefined;
   const expectedDigest = (isTopLevelAdd || isSkillRun) && typeof inputs.digest === "string" ? normalizeDigest(inputs.digest) : undefined;
   const newDirectory = isNew && typeof inputs.directory === "string"
@@ -202,6 +212,8 @@ export function parseArgs(argv: readonly string[]): ParsedArgs {
     ? omitInputs(inputs, ["source", "registry"])
     : isTopLevelAdd
       ? omitInputs(inputs, ["version", "ref", "apiBaseUrl", "api-base-url", "to", "registry", "digest", "installationId", "installation-id"])
+      : isReceiptPublish
+        ? omitInputs(inputs, ["apiBaseUrl", "api-base-url", "token"])
       : isRetiredSkillAdd
         ? {}
         : isSkillPublish
@@ -261,6 +273,9 @@ export function parseArgs(argv: readonly string[]): ParsedArgs {
         : undefined,
     addRef: isTopLevelAdd ? positionals.join(" ") || undefined : undefined,
     publishPath: isSkillPublish ? positionals[1] : undefined,
+    receiptPublishPath,
+    receiptPublishApiBaseUrl,
+    receiptPublishToken,
     receiptId: isSkillInspect ? inspectPositionals[0] : undefined,
     replayRef: isReplay ? positionals[0] : undefined,
     diffLeft: isDiff ? positionals[0] : undefined,
@@ -349,6 +364,9 @@ export function isSupportedCommand(parsed: ParsedArgs): boolean {
     return true;
   }
   if (parsed.command === "skill" && parsed.skillAction === "publish" && parsed.publishPath) {
+    return true;
+  }
+  if (parsed.command === "publish" && parsed.receiptPublishPath) {
     return true;
   }
   if (parsed.skillPath) {
