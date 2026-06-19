@@ -1,0 +1,39 @@
+skill: discord-notify
+version: "0.1.0"
+
+catalog:
+  kind: skill
+  audience: public
+  visibility: public
+  role: canonical
+
+runners:
+  plan:
+    default: true
+    type: agent-task
+    agent: operator
+    task: discord-notify
+    outputs:
+      notify_plan: object
+    artifacts:
+      wrap_as: notify_plan_packet
+      packet: runx.notify.v1
+    runx:
+      category: ops
+    inputs:
+      channel:
+        type: string
+        required: true
+        description: "Destination Discord channel, by id or name."
+      content:
+        type: json
+        required: true
+        description: "Message as { message } for inline text, or { content_ref, digest } for digest-bound content. Raw secrets and PII must not appear."
+      principal:
+        type: string
+        required: true
+        description: "Principal the notification is posted as."
+      provider_context:
+        type: json
+        required: false
+        description: "Discord connector and workspace readiness, e.g. a connector status snapshot."
