@@ -8,7 +8,7 @@ source:
   args:
     - run.mjs
 links:
-  source: https://github.com/runxhq/runx/tree/main/oss/skills/support-triage-reply
+  source: https://github.com/runxhq/runx/tree/main/skills/support-triage-reply
 runx:
   category: ops
   input_resolution:
