@@ -70,3 +70,30 @@ The public catalog test enforces the required sections for every skill with
 `catalog.visibility: public`. Runnable internals belong in owner-local graph
 stages at `skills/<name>/graph/<stage>/X.yaml`; they are not hidden catalog
 skills and should not carry public-skill documentation requirements.
+
+## Execution Profile Discipline
+
+Use the term **execution profile** for `X.yaml`. The filename stays `X.yaml` for
+v1, but public docs and reviews should describe what it is instead of treating
+the letter as the concept.
+
+`X.yaml` owns capability and governance:
+
+- named runners and default runner choice;
+- typed runner inputs and outputs;
+- model-vs-deterministic step boundaries;
+- tool, adapter, context-skill, and graph wiring;
+- authority, approval, and receipt-act mappings;
+- side-effect posture: read, draft, plan, mutate, send, pay, or manual-gated;
+- inline `harness.cases`.
+
+Author `X.yaml` in the strict profile YAML subset: no anchors, aliases, merge
+keys, custom tags, multi-document markers, duplicate mapping keys, or unknown
+profile fields. Capability mappings should be explicit at the runner that uses
+them.
+
+`X.yaml` must not become the home for long strategy, target registries, campaign
+copy, generated state, or secrets. Put operating guidance in `SKILL.md`,
+`context/`, or `references/`; put deterministic implementation in `tools/` or
+explicit runner files. Doctor and catalog review should treat a bloated,
+strategy-heavy profile as a maintainability defect even when it parses.

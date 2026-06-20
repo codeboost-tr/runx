@@ -8,11 +8,14 @@ use crate::skill::{
     validate_harness_manifest, validate_runner_definition,
 };
 use crate::{
-    ParseError, ValidationError, assert_yaml_parity_subset,
+    ParseError, ValidationError, assert_execution_profile_yaml_subset,
     json_fields::{self, JsonFieldReader},
 };
 
 const FIELDS: JsonFieldReader = JsonFieldReader::new("runner_manifest");
+const MANIFEST_FIELDS: &[&str] = &[
+    "skill", "version", "runx", "policy", "emits", "catalog", "runners", "harness",
+];
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 pub struct RawRunnerManifestIr {
@@ -25,6 +28,14 @@ pub struct SkillRunnerManifest {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub skill: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
+    pub version: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub runx: Option<runx_contracts::JsonObject>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub policy: Option<runx_contracts::JsonValue>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub emits: Option<runx_contracts::JsonValue>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub catalog: Option<CatalogMetadata>,
     pub runners: BTreeMap<String, SkillRunnerDefinition>,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -33,7 +44,7 @@ pub struct SkillRunnerManifest {
 }
 
 pub fn parse_runner_manifest_yaml(yaml: &str) -> Result<RawRunnerManifestIr, ParseError> {
-    assert_yaml_parity_subset("runner_manifest", yaml)?;
+    assert_execution_profile_yaml_subset("runner_manifest", yaml)?;
     let parsed: JsonValue =
         serde_norway::from_str(yaml).map_err(|error| ParseError::InvalidYaml {
             field: "runner_manifest".to_owned(),
@@ -54,6 +65,7 @@ pub fn parse_runner_manifest_yaml(yaml: &str) -> Result<RawRunnerManifestIr, Par
 pub fn validate_runner_manifest(
     raw: RawRunnerManifestIr,
 ) -> Result<SkillRunnerManifest, ValidationError> {
+    FIELDS.reject_unknown_fields(&raw.document, "runner_manifest", MANIFEST_FIELDS)?;
     let runners_record = FIELDS.required_object(raw.document.get("runners"), "runners")?;
     let mut runners = BTreeMap::new();
     for (name, value) in runners_record {
@@ -74,6 +86,10 @@ pub fn validate_runner_manifest(
 
     Ok(SkillRunnerManifest {
         skill: FIELDS.optional_string(raw.document.get("skill"), "skill")?,
+        version: FIELDS.optional_string(raw.document.get("version"), "version")?,
+        runx: FIELDS.optional_object(raw.document.get("runx"), "runx")?,
+        policy: raw.document.get("policy").cloned(),
+        emits: raw.document.get("emits").cloned(),
         catalog: validate_catalog_metadata(
             FIELDS.optional_object(raw.document.get("catalog"), "catalog")?,
             "catalog",

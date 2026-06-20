@@ -1,6 +1,8 @@
 // rust-style-allow: large-file the QuoteScanner state machine and its
 // quote-aware scanners belong next to the parity-subset rules they enforce;
 // splitting the scanner from the rules trades clarity for two-file traversal.
+use std::collections::HashSet;
+
 use serde::de::DeserializeOwned;
 
 use crate::ParseError;
@@ -20,18 +22,53 @@ where
 }
 
 pub fn assert_yaml_parity_subset(field: &str, source: &str) -> Result<(), ParseError> {
+    let mut block_scalar_indent = None;
     for (line_index, line) in source.lines().enumerate() {
         let line_number = line_index + 1;
         let Some(content) = strip_yaml_comment(line) else {
             continue;
         };
         let trimmed = content.trim();
+        if let Some(indent) = block_scalar_indent {
+            if trimmed.is_empty() || leading_spaces(content) > indent {
+                continue;
+            }
+            block_scalar_indent = None;
+        }
         if trimmed.is_empty() || trimmed.starts_with("---") || trimmed.starts_with("...") {
             continue;
         }
         reject_explicit_mapping_key(field, line_number, trimmed)?;
         reject_embedded_colon_key(field, line_number, trimmed)?;
         reject_colon_space_plain_scalar(field, line_number, content)?;
+        block_scalar_indent = block_scalar_indent_after(content).or(block_scalar_indent);
+    }
+    Ok(())
+}
+
+pub fn assert_execution_profile_yaml_subset(field: &str, source: &str) -> Result<(), ParseError> {
+    assert_yaml_parity_subset(field, source)?;
+    let mut mapping_stack = Vec::new();
+    let mut block_scalar_indent = None;
+    for (line_index, line) in source.lines().enumerate() {
+        let line_number = line_index + 1;
+        let Some(content) = strip_yaml_comment(line) else {
+            continue;
+        };
+        let trimmed = content.trim();
+        if let Some(indent) = block_scalar_indent {
+            if trimmed.is_empty() || leading_spaces(content) > indent {
+                continue;
+            }
+            block_scalar_indent = None;
+        }
+        if trimmed.is_empty() {
+            continue;
+        }
+        reject_document_marker(field, line_number, trimmed)?;
+        reject_yaml_reference_syntax(field, line_number, content)?;
+        reject_duplicate_mapping_key(field, line_number, content, &mut mapping_stack)?;
+        block_scalar_indent = block_scalar_indent_after(content).or(block_scalar_indent);
     }
     Ok(())
 }
@@ -222,6 +259,181 @@ fn reject_colon_space_plain_scalar(
     Ok(())
 }
 
+fn reject_document_marker(
+    field: &str,
+    line_number: usize,
+    trimmed: &str,
+) -> Result<(), ParseError> {
+    if trimmed == "---"
+        || trimmed == "..."
+        || trimmed.starts_with("--- ")
+        || trimmed.starts_with("... ")
+    {
+        return Err(ParseError::InvalidYaml {
+            field: field.to_owned(),
+            message: format!(
+                "YAML document markers are not supported in X.yaml at line {line_number}; use one plain profile document."
+            ),
+        });
+    }
+    Ok(())
+}
+
+fn reject_yaml_reference_syntax(
+    field: &str,
+    line_number: usize,
+    content: &str,
+) -> Result<(), ParseError> {
+    for token in [": &", ": *", ": !", "- &", "- *", "- !"] {
+        if contains_plain_token(content, token) {
+            return Err(ParseError::InvalidYaml {
+                field: field.to_owned(),
+                message: format!(
+                    "YAML anchors, aliases, and tags are not supported in X.yaml at line {line_number}; write the profile explicitly."
+                ),
+            });
+        }
+    }
+    let trimmed = content.trim_start();
+    if trimmed.starts_with(['&', '*', '!']) {
+        return Err(ParseError::InvalidYaml {
+            field: field.to_owned(),
+            message: format!(
+                "YAML anchors, aliases, and tags are not supported in X.yaml at line {line_number}; write the profile explicitly."
+            ),
+        });
+    }
+    Ok(())
+}
+
+fn contains_plain_token(content: &str, token: &str) -> bool {
+    let mut scanner = QuoteScanner::new();
+    for (index, char) in content.char_indices() {
+        if scanner.is_plain_at(char) && content[index..].starts_with(token) {
+            return true;
+        }
+        scanner.consume(char);
+    }
+    false
+}
+
+struct MappingFrame {
+    indent: usize,
+    keys: HashSet<String>,
+}
+
+fn reject_duplicate_mapping_key(
+    field: &str,
+    line_number: usize,
+    content: &str,
+    stack: &mut Vec<MappingFrame>,
+) -> Result<(), ParseError> {
+    let indent = leading_spaces(content);
+    let trimmed = content.trim_start();
+    let (key_indent, key, sequence_item) = match sequence_item_key(trimmed, indent) {
+        Some(value) => value,
+        None => {
+            let Some((key, _)) = top_level_plain_key(trimmed) else {
+                return Ok(());
+            };
+            (indent, key, false)
+        }
+    };
+    if key == "<<" {
+        return Err(ParseError::InvalidYaml {
+            field: field.to_owned(),
+            message: format!(
+                "YAML merge keys are not supported in X.yaml at line {line_number}; write the profile explicitly."
+            ),
+        });
+    }
+    if sequence_item {
+        while stack.last().is_some_and(|frame| frame.indent >= key_indent) {
+            stack.pop();
+        }
+    } else {
+        while stack.last().is_some_and(|frame| frame.indent > key_indent) {
+            stack.pop();
+        }
+    }
+    if stack.last().is_none_or(|frame| frame.indent != key_indent) {
+        stack.push(MappingFrame {
+            indent: key_indent,
+            keys: HashSet::new(),
+        });
+    }
+    let frame = stack
+        .last_mut()
+        .expect("mapping frame is created before key insertion");
+    if !frame.keys.insert(key.to_owned()) {
+        return Err(ParseError::InvalidYaml {
+            field: field.to_owned(),
+            message: format!(
+                "duplicate mapping key {key:?} in X.yaml at line {line_number}; keep profile keys unique."
+            ),
+        });
+    }
+    Ok(())
+}
+
+fn sequence_item_key(trimmed: &str, indent: usize) -> Option<(usize, &str, bool)> {
+    let rest = trimmed.strip_prefix("- ")?;
+    let item = rest.trim_start();
+    let leading = rest.len() - item.len();
+    let (key, _) = top_level_plain_key(item)?;
+    Some((indent + 2 + leading, key, true))
+}
+
+fn leading_spaces(content: &str) -> usize {
+    content.bytes().take_while(|byte| *byte == b' ').count()
+}
+
+fn block_scalar_indent_after(content: &str) -> Option<usize> {
+    block_scalar_value_candidates(content)
+        .iter()
+        .any(|value| is_block_scalar_header(value))
+        .then(|| leading_spaces(content))
+}
+
+fn block_scalar_value_candidates(content: &str) -> Vec<&str> {
+    let mut candidates = Vec::new();
+    if let Some((_, value)) = split_plain_mapping_value(content) {
+        candidates.push(value);
+    }
+    let trimmed = content.trim_start();
+    if let Some(rest) = trimmed.strip_prefix("- ") {
+        let item = rest.trim_start();
+        candidates.push(item);
+        if let Some((_, value)) = split_plain_mapping_value(item) {
+            candidates.push(value);
+        }
+    }
+    candidates
+}
+
+fn is_block_scalar_header(value: &str) -> bool {
+    let trimmed = value.trim();
+    let mut chars = trimmed.chars();
+    let Some(first) = chars.next() else {
+        return false;
+    };
+    if !matches!(first, '|' | '>') {
+        return false;
+    }
+    let mut seen_chomp = false;
+    let mut seen_indent = false;
+    for char in chars {
+        if matches!(char, '+' | '-') && !seen_chomp {
+            seen_chomp = true;
+        } else if char.is_ascii_digit() && !seen_indent {
+            seen_indent = true;
+        } else {
+            return false;
+        }
+    }
+    true
+}
+
 fn split_plain_mapping_value(content: &str) -> Option<(&str, &str)> {
     let trimmed = content.trim_start();
     let (key, delimiter_index) = top_level_plain_key(trimmed)?;
@@ -303,7 +515,10 @@ fn is_special_float(value: &str) -> bool {
 
 #[cfg(test)]
 mod tests {
-    use super::{assert_yaml_parity_subset, assert_yaml_scalar_subset, yaml_scalar_subset_allows};
+    use super::{
+        assert_execution_profile_yaml_subset, assert_yaml_parity_subset, assert_yaml_scalar_subset,
+        yaml_scalar_subset_allows,
+    };
 
     #[test]
     fn scalar_subset_rejects_divergent_forms() {
@@ -357,6 +572,47 @@ mod tests {
     fn parity_subset_rejects_explicit_mapping_keys() {
         let result = assert_yaml_parity_subset("fixture", "? >\r 2>-: ");
         assert!(result.is_err(), "expected rejection, got {result:?}");
+    }
+
+    #[test]
+    fn execution_profile_subset_rejects_yaml_references_and_document_markers() {
+        for literal in [
+            "---\nskill: example",
+            "runners:\n  one:\n    outputs: &shared\n      result: string",
+            "runners:\n  one:\n    outputs: *shared",
+            "runners:\n  one:\n    runx:\n      <<: *shared",
+            "runners:\n  one:\n    type: !custom graph",
+        ] {
+            let result = assert_execution_profile_yaml_subset("runner_manifest", literal);
+            assert!(result.is_err(), "expected rejection, got {result:?}");
+        }
+    }
+
+    #[test]
+    fn execution_profile_subset_rejects_duplicate_keys_but_allows_sequence_reuse() {
+        let result =
+            assert_execution_profile_yaml_subset("runner_manifest", "skill: one\nskill: two\n");
+        assert!(
+            result.is_err(),
+            "expected duplicate key rejection, got {result:?}"
+        );
+
+        assert_execution_profile_yaml_subset(
+            "runner_manifest",
+            r#"
+runners:
+  demo:
+    type: graph
+    graph:
+      name: demo
+      steps:
+        - id: first
+          tool: one.tool
+        - id: second
+          tool: two.tool
+"#,
+        )
+        .expect("sequence item maps may reuse keys in separate items");
     }
 
     // Regression cases for the single-quote `''` escape. The earlier toggle

@@ -76,6 +76,7 @@ function parseSkillFrontmatter(markdown) {
 }
 
 function parseRunnerManifest(profileDocument) {
+  assertExecutionProfileYamlSubset("runner_manifest", profileDocument);
   const manifest = YAML.parse(profileDocument);
   if (!manifest || typeof manifest !== "object") {
     throw new Error("Official X.yaml must parse to an object.");
@@ -169,4 +170,171 @@ function rustOfficialLock(entries) {
     "",
   );
   return lines.join("\n");
+}
+
+function assertExecutionProfileYamlSubset(field, source) {
+  const stack = [];
+  let blockScalarIndent;
+  for (const [lineIndex, line] of source.split(/\r?\n/).entries()) {
+    const lineNumber = lineIndex + 1;
+    const content = stripYamlComment(line);
+    if (content === undefined) continue;
+    const trimmed = content.trim();
+    if (blockScalarIndent !== undefined) {
+      if (trimmed === "" || leadingSpaces(content) > blockScalarIndent) continue;
+      blockScalarIndent = undefined;
+    }
+    if (trimmed === "") continue;
+    if (trimmed === "---" || trimmed === "..." || trimmed.startsWith("--- ") || trimmed.startsWith("... ")) {
+      throw new Error(`${field}: YAML document markers are not supported in X.yaml at line ${lineNumber}; use one plain profile document.`);
+    }
+    for (const token of [": &", ": *", ": !", "- &", "- *", "- !"]) {
+      if (containsPlainToken(content, token)) {
+        throw new Error(`${field}: YAML anchors, aliases, and tags are not supported in X.yaml at line ${lineNumber}; write the profile explicitly.`);
+      }
+    }
+    const trimmedStart = content.trimStart();
+    if (trimmedStart.startsWith("&") || trimmedStart.startsWith("*") || trimmedStart.startsWith("!")) {
+      throw new Error(`${field}: YAML anchors, aliases, and tags are not supported in X.yaml at line ${lineNumber}; write the profile explicitly.`);
+    }
+    rejectDuplicateMappingKey(field, lineNumber, content, stack);
+    blockScalarIndent = blockScalarIndentAfter(content) ?? blockScalarIndent;
+  }
+}
+
+function stripYamlComment(line) {
+  const scanner = createQuoteScanner();
+  for (let index = 0; index < line.length; index += 1) {
+    const char = line[index];
+    if (scanner.isPlainAt(char) && char === "#" && (index === 0 || /\s/.test(line[index - 1]))) {
+      return line.slice(0, index);
+    }
+    scanner.consume(char);
+  }
+  return line;
+}
+
+function containsPlainToken(content, token) {
+  const scanner = createQuoteScanner();
+  for (let index = 0; index < content.length; index += 1) {
+    const char = content[index];
+    if (scanner.isPlainAt(char) && content.startsWith(token, index)) {
+      return true;
+    }
+    scanner.consume(char);
+  }
+  return false;
+}
+
+function createQuoteScanner() {
+  let state = "plain";
+  return {
+    isPlainAt(char) {
+      if (state === "plain") return true;
+      if (state === "in-single-pending-apostrophe") return char !== "'";
+      return false;
+    },
+    consume(char) {
+      if (state === "plain") {
+        state = plainStateAfter(char);
+      } else if (state === "in-double") {
+        state = char === "\\" ? "in-double-escape" : char === "\"" ? "plain" : "in-double";
+      } else if (state === "in-double-escape") {
+        state = "in-double";
+      } else if (state === "in-single") {
+        state = char === "'" ? "in-single-pending-apostrophe" : "in-single";
+      } else {
+        state = char === "'" ? "in-single" : plainStateAfter(char);
+      }
+    },
+  };
+
+  function plainStateAfter(char) {
+    if (char === "'") return "in-single";
+    if (char === "\"") return "in-double";
+    return "plain";
+  }
+}
+
+function rejectDuplicateMappingKey(field, lineNumber, content, stack) {
+  const indent = leadingSpaces(content);
+  const trimmed = content.trimStart();
+  const sequence = sequenceItemKey(trimmed, indent);
+  const plain = sequence ?? topLevelPlainKey(trimmed)?.map((value, index) => index === 0 ? value : indent);
+  if (!plain) return;
+  const keyIndent = sequence ? sequence[0] : indent;
+  const key = sequence ? sequence[1] : plain[0];
+  const sequenceItem = Boolean(sequence);
+  if (key === "<<") {
+    throw new Error(`${field}: YAML merge keys are not supported in X.yaml at line ${lineNumber}; write the profile explicitly.`);
+  }
+  while (stack.at(-1) && (sequenceItem ? stack.at(-1).indent >= keyIndent : stack.at(-1).indent > keyIndent)) {
+    stack.pop();
+  }
+  if (!stack.at(-1) || stack.at(-1).indent !== keyIndent) {
+    stack.push({ indent: keyIndent, keys: new Set() });
+  }
+  const frame = stack.at(-1);
+  if (frame.keys.has(key)) {
+    throw new Error(`${field}: duplicate mapping key ${JSON.stringify(key)} in X.yaml at line ${lineNumber}; keep profile keys unique.`);
+  }
+  frame.keys.add(key);
+}
+
+function blockScalarIndentAfter(content) {
+  return blockScalarValueCandidates(content).some(isBlockScalarHeader) ? leadingSpaces(content) : undefined;
+}
+
+function blockScalarValueCandidates(content) {
+  const candidates = [];
+  const mapping = splitPlainMappingValue(content);
+  if (mapping) candidates.push(mapping[1]);
+  const trimmed = content.trimStart();
+  if (trimmed.startsWith("- ")) {
+    const item = trimmed.slice(2).trimStart();
+    candidates.push(item);
+    const itemMapping = splitPlainMappingValue(item);
+    if (itemMapping) candidates.push(itemMapping[1]);
+  }
+  return candidates;
+}
+
+function isBlockScalarHeader(value) {
+  return /^[|>](?:[+-]?\d?|\d?[+-]?)$/.test(value.trim());
+}
+
+function splitPlainMappingValue(content) {
+  const trimmed = content.trimStart();
+  const split = topLevelPlainKey(trimmed);
+  return split ? [split[0], trimmed.slice(split[1] + 1)] : undefined;
+}
+
+function leadingSpaces(content) {
+  return content.length - content.trimStart().length;
+}
+
+function sequenceItemKey(trimmed, indent) {
+  if (!trimmed.startsWith("- ")) return undefined;
+  const rest = trimmed.slice(2);
+  const item = rest.trimStart();
+  const key = topLevelPlainKey(item)?.[0];
+  return key === undefined ? undefined : [indent + 2 + rest.length - item.length, key];
+}
+
+function topLevelPlainKey(trimmed) {
+  const first = trimmed[0];
+  if (!first || ["-", "?", "{", "[", "\"", "'"].includes(first)) return undefined;
+  const scanner = createQuoteScanner();
+  for (let index = 0; index < trimmed.length; index += 1) {
+    const char = trimmed[index];
+    if (scanner.isPlainAt(char) && char === ":" && isMappingDelimiter(trimmed, index)) {
+      return [trimmed.slice(0, index).trim(), index];
+    }
+    scanner.consume(char);
+  }
+  return undefined;
+}
+
+function isMappingDelimiter(value, index) {
+  return value[index + 1] === undefined || /\s/.test(value[index + 1]);
 }

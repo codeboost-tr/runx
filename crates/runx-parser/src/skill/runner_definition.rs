@@ -6,17 +6,75 @@ use super::{
     FIELDS, SkillGovernance, SkillRunnerDefinition, field_value, first_value, nested_value,
     validate_allowed_tools, validate_artifact_contract, validate_execution_semantics,
     validate_idempotency, validate_inputs, validate_mutating, validate_retry, validate_source,
+    validate_source_fields,
 };
+
+const RUNNER_FIELDS: &[&str] = &[
+    "act",
+    "agent",
+    "agent_card_url",
+    "agent_identity",
+    "allowed_tools",
+    "args",
+    "arguments",
+    "artifacts",
+    "auth",
+    "catalog_ref",
+    "command",
+    "context",
+    "context_skills",
+    "cwd",
+    "default",
+    "execution",
+    "external_adapter",
+    "external_adapter_manifest",
+    "external_adapter_manifest_path",
+    "graph",
+    "headers",
+    "hook",
+    "http",
+    "idempotency",
+    "input_mode",
+    "inputs",
+    "instructions",
+    "invocation_id",
+    "method",
+    "mutating",
+    "outputs",
+    "policy",
+    "retry",
+    "risk",
+    "run_id",
+    "runx",
+    "runtime",
+    "sandbox",
+    "server",
+    "skill_ref",
+    "scopes",
+    "source",
+    "task",
+    "timeout_seconds",
+    "tool",
+    "type",
+    "url",
+    "allow_private_network",
+];
 
 pub(crate) fn validate_runner_definition(
     name: &str,
     runner: JsonObject,
 ) -> Result<SkillRunnerDefinition, ValidationError> {
+    FIELDS.reject_unknown_fields(&runner, &format!("runners.{name}"), RUNNER_FIELDS)?;
     let runx = FIELDS.optional_object(runner.get("runx"), &format!("runners.{name}.runx"))?;
     crate::runner::resolve_post_run_reflect_policy(runx.as_ref(), &format!("runners.{name}.runx"))?;
-    let source_record = FIELDS
-        .optional_object(runner.get("source"), &format!("runners.{name}.source"))?
-        .unwrap_or_else(|| runner.clone());
+    let source_record =
+        match FIELDS.optional_object(runner.get("source"), &format!("runners.{name}.source"))? {
+            Some(source) => {
+                validate_source_fields(&source, &format!("runners.{name}.source"))?;
+                source
+            }
+            None => runner.clone(),
+        };
     let risk = runner.get("risk").cloned();
     let governance = validate_runner_governance(name, &runner, runx.as_ref(), risk.as_ref())?;
     Ok(SkillRunnerDefinition {

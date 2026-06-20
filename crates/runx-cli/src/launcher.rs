@@ -336,7 +336,7 @@ Commands:
   runx dev [root] [--lane lane] [--json]
   runx export <claude|codex> [skill-ref...] [--project] [--json]
   runx mcp serve <skill-ref...> [--receipt-dir dir] [--http-listen [addr]] [--http-allow-non-loopback]
-  runx skill <skill-ref|owner/name@version|skill-dir|SKILL.md> [-p profile] [-i key=value] [-j] [--runner name] [--registry url|path] [--digest sha256] [--flag value] [-R dir] [--run-id id --answers file]
+  runx skill <skill-ref|owner/name@version|skill-dir|SKILL.md> [-p profile] [-i key=value] [-j] [--runner name] [--registry url|path] [--digest sha256] [--flag value] [--credential descriptor --secret-env NAME] [-R dir] [--run-id id --answers file]
   runx add <skill-ref|github-url> [--registry url|path] [--version version] [--ref git-ref] [--digest sha256] [--to dir] [--installation-id id] [--api-base-url url] [--json]
   runx harness <fixture.yaml...|skill-dir|SKILL.md> [-R dir] [-j|--json]
   runx tool build <tool-dir>|--all [--json]
@@ -408,7 +408,7 @@ pub fn skill_help_text() -> String {
 runx skill
 
 Usage:
-  runx skill <skill-ref|owner/name@version|skill-dir|SKILL.md> [-p profile] [-i key=value] [-j] [--runner name] [--registry url|path] [--digest sha256] [--flag value] [-R dir] [--run-id id --answers file]
+  runx skill <skill-ref|owner/name@version|skill-dir|SKILL.md> [-p profile] [-i key=value] [-j] [--runner name] [--registry url|path] [--digest sha256] [--flag value] [--credential descriptor --secret-env NAME] [-R dir] [--run-id id --answers file]
 
 Options:
   -p, --profile name       Use a local credential profile from .runx/credentials.json

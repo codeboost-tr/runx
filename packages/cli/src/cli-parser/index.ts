@@ -1,6 +1,11 @@
 import { parseDocument } from "yaml";
 
 import { validateGraphDocument, type ExecutionGraph } from "./graph.js";
+import {
+  assertExecutionProfileYamlSubset,
+  assertYamlParitySubset,
+  YamlSubsetError,
+} from "./yaml-subset.js";
 import { normalizeSandboxDeclaration } from "../cli-sandbox.js";
 import { GOVERNED_DISPOSITIONS, type ExecutionSemantics } from "../cli-execution-semantics.js";
 import { errorMessage, isRecord, readField } from "../cli-util.js";
@@ -53,7 +58,39 @@ export interface SkillSource {
   readonly hook?: string;
   readonly outputs?: Readonly<Record<string, unknown>>;
   readonly graph?: ExecutionGraph;
+  readonly http?: SkillHttpSource;
+  readonly act?: ActDeclaration;
   readonly raw: Record<string, unknown>;
+}
+
+export interface SkillHttpSource {
+  readonly url: string;
+  readonly method?: string;
+  readonly headers?: Readonly<Record<string, string>>;
+  readonly allowPrivateNetwork?: boolean;
+}
+
+export interface ActDeclaration {
+  readonly form?: string;
+  readonly form_from?: string;
+  readonly purpose?: string;
+  readonly purpose_from?: string;
+  readonly legitimacy?: string;
+  readonly legitimacy_from?: string;
+  readonly reason_from?: string;
+  readonly target_from?: string;
+  readonly decision_from?: string;
+  readonly effect_from?: string;
+  readonly effect_field_from?: string;
+  readonly effect_from_input?: string;
+  readonly effect_type?: string;
+  readonly effect_prefix?: string;
+  readonly effect_prefix_from?: string;
+  readonly actor_from?: string;
+  readonly authority_from?: string;
+  readonly previous_from?: string;
+  readonly reason_step?: string;
+  readonly effect_step?: string;
 }
 
 export interface SkillArtifactContract {
@@ -133,7 +170,7 @@ export interface SkillRunnerDefinition {
 export type PostRunReflectPolicy = "auto" | "always" | "never";
 
 export type CatalogKind = "skill" | "graph";
-export type CatalogAudience = "public" | "builder" | "operator";
+export type CatalogAudience = "public" | "builder" | "operator" | "system";
 export type CatalogVisibility = "public" | "internal";
 export type CatalogRole =
   | "canonical"
@@ -196,6 +233,10 @@ export interface RunnerHarnessManifest {
 
 export interface SkillRunnerManifest {
   readonly skill?: string;
+  readonly version?: string;
+  readonly runx?: Readonly<Record<string, unknown>>;
+  readonly policy?: unknown;
+  readonly emits?: unknown;
   readonly catalog?: CatalogMetadata;
   readonly runners: Readonly<Record<string, SkillRunnerDefinition>>;
   readonly harness?: RunnerHarnessManifest;
@@ -261,6 +302,7 @@ export function parseSkillMarkdown(markdown: string): RawSkillIR {
 }
 
 export function parseRunnerManifestYaml(yaml: string): RawRunnerManifestIR {
+  assertYamlSubset("runner_manifest", yaml, "execution-profile");
   const document = parseDocument(yaml, { prettyErrors: false });
   if (document.errors.length > 0) {
     throw new SkillParseError(document.errors.map((error) => error.message).join("; "));
@@ -278,6 +320,7 @@ export function parseRunnerManifestYaml(yaml: string): RawRunnerManifestIR {
 }
 
 export function parseToolManifestYaml(yaml: string): RawToolManifestIR {
+  assertYamlSubset("tool_manifest", yaml, "parity");
   const document = parseDocument(yaml, { prettyErrors: false });
   if (document.errors.length > 0) {
     throw new SkillParseError(document.errors.map((error) => error.message).join("; "));
@@ -384,13 +427,18 @@ export function extractSkillQualityProfile(body: string): SkillQualityProfile | 
 
 export function validateRunnerManifest(raw: RawRunnerManifestIR): SkillRunnerManifest {
   const runnersRecord = requiredNullableRecord(raw.document.runners, "runners");
+  rejectUnknownFields(raw.document, "runner_manifest", ["skill", "version", "runx", "policy", "emits", "catalog", "runners", "harness"]);
   const runners: Record<string, SkillRunnerDefinition> = {};
 
   for (const [name, value] of Object.entries(runnersRecord)) {
     const runner = requiredNullableRecord(value, `runners.${name}`);
+    rejectUnknownFields(runner, `runners.${name}`, runnerFields);
     const runx = optionalNullableRecord(runner.runx, `runners.${name}.runx`);
     validatePostRunReflectPolicy(runx, `runners.${name}.runx`);
     const sourceRecord = optionalNullableRecord(runner.source, `runners.${name}.source`) ?? runner;
+    if (runner.source !== undefined) {
+      rejectUnknownFields(sourceRecord, `runners.${name}.source`, sourceFields);
+    }
     const risk = runner.risk;
     runners[name] = {
       name,
@@ -426,6 +474,10 @@ export function validateRunnerManifest(raw: RawRunnerManifestIR): SkillRunnerMan
 
   return {
     skill: optionalNullableString(raw.document.skill, "skill"),
+    version: optionalNullableString(raw.document.version, "version"),
+    runx: optionalNullableRecord(raw.document.runx, "runx"),
+    policy: raw.document.policy,
+    emits: raw.document.emits,
     catalog: validateCatalogMetadata(optionalNullableRecord(raw.document.catalog, "catalog"), "catalog"),
     runners,
     harness,
@@ -449,8 +501,8 @@ function validateCatalogMetadata(value: Record<string, unknown> | undefined, lab
   if (kind !== "skill" && kind !== "graph") {
     throw new SkillValidationError(`${label}.kind must be skill or graph.`);
   }
-  if (audience !== "public" && audience !== "builder" && audience !== "operator") {
-    throw new SkillValidationError(`${label}.audience must be public, builder, or operator.`);
+  if (audience !== "public" && audience !== "builder" && audience !== "operator" && audience !== "system") {
+    throw new SkillValidationError(`${label}.audience must be public, builder, operator, or system.`);
   }
   if (visibility !== "public" && visibility !== "internal") {
     throw new SkillValidationError(`${label}.visibility must be public or internal.`);
@@ -586,6 +638,7 @@ export function resolvePostRunReflectPolicy(
 
 function validateSource(source: Record<string, unknown>, runx: Record<string, unknown> | undefined): SkillSource {
   const type = requiredNullableString(source.type, "source.type");
+  validateSourceType(type, "source.type");
   const args = optionalNullableStringArray(source.args, "source.args") ?? [];
   const inputMode = optionalInputMode(source.input_mode);
   const timeoutSeconds = optionalNullableNumber(source.timeout_seconds, "source.timeout_seconds");
@@ -615,6 +668,8 @@ function validateSource(source: Record<string, unknown>, runx: Record<string, un
     type === "harness-hook" ? requiredNullableString(source.hook, "source.hook") : optionalNullableString(source.hook, "source.hook");
   const outputs = optionalNullableRecord(source.outputs, "source.outputs");
   const graph = type === "graph" ? validateGraphSource(source.graph) : undefined;
+  const http = validateHttpSource(source, type);
+  const act = validateActDeclaration(source.act, "source.act");
   const sandbox = validateSandbox(source.sandbox ?? runx?.sandbox);
 
   if ((type === "agent-task" || type === "harness-hook") && (source.command !== undefined || source.args !== undefined)) {
@@ -640,6 +695,8 @@ function validateSource(source: Record<string, unknown>, runx: Record<string, un
     hook,
     outputs,
     graph,
+    http,
+    act,
     raw: source,
   };
 }
@@ -654,6 +711,88 @@ function validateToolSource(source: SkillSource, field: string): SkillSource {
     throw new SkillValidationError(`${field} must be one of cli-tool, mcp, a2a, catalog, or http for tool manifests.`);
   }
   return source;
+}
+
+function validateSourceType(value: string, field: string): void {
+  if ((sourceTypes as readonly string[]).includes(value)) {
+    return;
+  }
+  throw new SkillValidationError(`${field} ${value} is not a supported source type.`);
+}
+
+function validateHttpSource(source: Record<string, unknown>, type: string): SkillHttpSource | undefined {
+  if (type !== "http") {
+    return undefined;
+  }
+  const http = optionalNullableRecord(source.http, "source.http") ?? source;
+  return {
+    url: requiredNullableString(http.url, "source.url"),
+    method: validateHttpMethod(optionalNullableString(http.method, "source.method")),
+    headers: validateHttpHeaders(http.headers),
+    allowPrivateNetwork: optionalNullableBoolean(http.allow_private_network, "source.allow_private_network"),
+  };
+}
+
+function validateHttpMethod(method: string | undefined): string | undefined {
+  if (method === undefined) {
+    return undefined;
+  }
+  if (["GET", "POST", "PUT", "PATCH", "DELETE"].includes(method.toUpperCase())) {
+    return method;
+  }
+  throw new SkillValidationError(`source.method ${method} is not supported; use GET, POST, PUT, PATCH, or DELETE.`);
+}
+
+function validateHttpHeaders(value: unknown): Readonly<Record<string, string>> | undefined {
+  const headers = optionalNullableRecord(value, "source.headers");
+  if (!headers) {
+    return undefined;
+  }
+  for (const [key, entry] of Object.entries(headers)) {
+    if (typeof entry !== "string") {
+      throw new SkillValidationError(`source.headers.${key} must be a string.`);
+    }
+  }
+  return headers as Readonly<Record<string, string>>;
+}
+
+const actFields = [
+  "form",
+  "form_from",
+  "purpose",
+  "purpose_from",
+  "legitimacy",
+  "legitimacy_from",
+  "reason_from",
+  "target_from",
+  "decision_from",
+  "effect_from",
+  "effect_field_from",
+  "effect_from_input",
+  "effect_type",
+  "effect_prefix",
+  "effect_prefix_from",
+  "actor_from",
+  "authority_from",
+  "previous_from",
+  "reason_step",
+  "effect_step",
+] as const;
+
+function validateActDeclaration(value: unknown, field: string): ActDeclaration | undefined {
+  const record = optionalNullableRecord(value, field);
+  if (!record) {
+    return undefined;
+  }
+  rejectUnknownFields(record, field, actFields);
+  const validated: Record<string, string> = {};
+  for (const key of actFields) {
+    const entry = optionalNullableString(record[key], `${field}.${key}`);
+    if (entry !== undefined) {
+      validated[key] = entry;
+    }
+  }
+  return validated;
 }
 
 function validateSandbox(value: unknown): SkillSandbox | undefined {
@@ -1113,6 +1252,102 @@ function optionalCwdPolicy(value: unknown): SkillSandbox["cwdPolicy"] {
   }
   throw new SkillValidationError("sandbox.cwd_policy must be skill-directory, workspace, or custom.");
 }
+
+function rejectUnknownFields(
+  record: Record<string, unknown>,
+  field: string,
+  allowed: readonly string[],
+): void {
+  for (const key of Object.keys(record)) {
+    if (!allowed.includes(key)) {
+      throw new SkillValidationError(`${field}.${key} is not supported; allowed fields: ${allowed.join(", ")}.`);
+    }
+  }
+}
+
+function assertYamlSubset(field: string, yaml: string, kind: "execution-profile" | "parity"): void {
+  try {
+    if (kind === "execution-profile") {
+      assertExecutionProfileYamlSubset(field, yaml);
+    } else {
+      assertYamlParitySubset(field, yaml);
+    }
+  } catch (error) {
+    if (error instanceof YamlSubsetError) {
+      throw new SkillParseError(error.message, { cause: error });
+    }
+    throw error;
+  }
+}
+
+const sourceTypes = [
+  "cli-tool",
+  "mcp",
+  "catalog",
+  "a2a",
+  "agent",
+  "agent-task",
+  "harness-hook",
+  "graph",
+  "http",
+  "external-adapter",
+  "thread-outbox-provider",
+] as const;
+
+const sourceFields = [
+  "act",
+  "agent",
+  "agent_card_url",
+  "agent_identity",
+  "allow_private_network",
+  "args",
+  "arguments",
+  "catalog_ref",
+  "command",
+  "cwd",
+  "external_adapter",
+  "external_adapter_manifest",
+  "external_adapter_manifest_path",
+  "graph",
+  "headers",
+  "hook",
+  "http",
+  "input_mode",
+  "invocation_id",
+  "method",
+  "outputs",
+  "run_id",
+  "sandbox",
+  "server",
+  "skill_ref",
+  "task",
+  "timeout_seconds",
+  "tool",
+  "type",
+  "url",
+] as const;
+
+const runnerFields = [
+  ...sourceFields,
+  "allowed_tools",
+  "artifacts",
+  "auth",
+  "context",
+  "context_skills",
+  "default",
+  "execution",
+  "idempotency",
+  "inputs",
+  "instructions",
+  "mutating",
+  "policy",
+  "retry",
+  "risk",
+  "runx",
+  "runtime",
+  "scopes",
+  "source",
+] as const;
 
 
 export * from "./graph.js";

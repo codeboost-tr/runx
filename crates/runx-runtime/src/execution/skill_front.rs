@@ -356,29 +356,50 @@ fn build_domain_act_frame(
         .and_then(map_decision_choice)
         .unwrap_or(DecisionChoice::Close);
 
-    // The effect ref: a venue id read from the real governed tool result (never
-    // the model's restatement), wrapped into a domain uri. e.g. the `/v1`
-    // response's `id` becomes `frantic:judgment:<id>` for the venue to reconcile.
-    let artifact_refs = governed_effect
+    let reference_type = match act.effect_type.as_deref().unwrap_or("artifact") {
+        "act" => ReferenceType::Act,
+        "tracking_item" => ReferenceType::TrackingItem,
+        "receipt" => ReferenceType::Receipt,
+        "provider" | "provider_event" => ReferenceType::ProviderEvent,
+        "provider_thread" => ReferenceType::ProviderThread,
+        "provider_comment" => ReferenceType::ProviderComment,
+        "github_issue" => ReferenceType::GithubIssue,
+        "external_url" => ReferenceType::ExternalUrl,
+        _ => ReferenceType::Artifact,
+    };
+    let prefix = resolve(
+        act.effect_prefix_from.as_deref(),
+        act.effect_prefix.as_deref(),
+    )
+    .unwrap_or_default();
+    let effect_ref = |id: &str| {
+        let id = id.trim();
+        (!id.is_empty())
+            .then(|| Reference::with_uri(reference_type.clone(), format!("{prefix}{id}")))
+    };
+    let mut artifact_refs = Vec::new();
+    if let Some(reference) = act
+        .effect_from_input
+        .as_deref()
+        .and_then(|key| inputs.get(key))
+        .and_then(JsonValue::as_str)
+        .and_then(effect_ref)
+    {
+        artifact_refs.push(reference);
+    }
+    if let Some(reference) = governed_effect
         .and_then(|effect| {
-            let field = resolve(None, act.effect_from.as_deref())?;
-            let id = effect
+            let field = resolve(act.effect_field_from.as_deref(), act.effect_from.as_deref())?;
+            effect
                 .as_object()
                 .and_then(|object| object.get(field.as_str()))
                 .and_then(JsonValue::as_str)
-                .map(str::trim)
-                .filter(|value| !value.is_empty())?;
-            let reference_type = match act.effect_type.as_deref().unwrap_or("artifact") {
-                "act" => ReferenceType::Act,
-                "tracking_item" => ReferenceType::TrackingItem,
-                "receipt" => ReferenceType::Receipt,
-                _ => ReferenceType::Artifact,
-            };
-            let prefix = resolve(None, act.effect_prefix.as_deref()).unwrap_or_default();
-            Some(Reference::with_uri(reference_type, format!("{prefix}{id}")))
+                .and_then(effect_ref)
         })
-        .into_iter()
-        .collect::<Vec<_>>();
+        .filter(|reference| !artifact_refs.contains(reference))
+    {
+        artifact_refs.push(reference);
+    }
 
     Some(DomainActFrame {
         form,

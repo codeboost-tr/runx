@@ -40,6 +40,7 @@ use governance::{
 use sandbox::validate_sandbox;
 use source::default_agent_source;
 use source::validate_source;
+use source::validate_source_fields;
 
 const FIELDS: JsonFieldReader = JsonFieldReader::new("skill");
 

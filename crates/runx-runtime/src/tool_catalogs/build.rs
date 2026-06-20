@@ -86,8 +86,6 @@ fn build_tool_manifest(
     let manifest_path = tool_dir.join("manifest.json");
     let source = fs::read_to_string(&manifest_path)
         .map_err(|error| ToolCatalogError::io("reading tool manifest", &manifest_path, error))?;
-    let raw: RawToolManifest = serde_json::from_str(&source)
-        .map_err(|error| ToolCatalogError::json("parsing tool manifest", &manifest_path, error))?;
     let raw_payload: JsonPayload = serde_json::from_str(&source)
         .map_err(|error| ToolCatalogError::json("parsing tool manifest", &manifest_path, error))?;
     let JsonPayload::Object(raw_object) = raw_payload else {
@@ -96,6 +94,13 @@ fn build_tool_manifest(
             message: "manifest.json must be an object.".to_owned(),
         });
     };
+    let normalized_object = normalize_tool_manifest_shape(raw_object.clone());
+    let raw: RawToolManifest = serde_json::from_value(
+        serde_json::to_value(JsonPayload::Object(normalized_object.clone())).map_err(|error| {
+            ToolCatalogError::json("normalizing tool manifest", &manifest_path, error)
+        })?,
+    )
+    .map_err(|error| ToolCatalogError::json("parsing tool manifest", &manifest_path, error))?;
     let output = raw
         .output
         .unwrap_or_else(|| normalize_tool_output(raw.runx.as_ref()));
@@ -130,6 +135,29 @@ fn build_tool_manifest(
         source_hash: manifest.source_hash,
         schema_hash: manifest.schema_hash,
     })
+}
+
+fn normalize_tool_manifest_shape(mut raw: JsonPayloadObject) -> JsonPayloadObject {
+    let Some(JsonPayload::Object(source)) = raw.get_mut("source") else {
+        return raw;
+    };
+    if !matches!(
+        source.get("type"),
+        Some(JsonPayload::String(value)) if value == "http"
+    ) || source.contains_key("http")
+    {
+        return raw;
+    }
+    let mut http = JsonPayloadObject::new();
+    for key in ["url", "method", "headers", "allow_private_network"] {
+        if let Some(value) = source.remove(key) {
+            http.insert(key.to_owned(), value);
+        }
+    }
+    if !http.is_empty() {
+        source.insert("http".to_owned(), JsonPayload::Object(http));
+    }
+    raw
 }
 
 fn normalize_tool_output(runx: Option<&JsonPayloadObject>) -> ToolOutput {

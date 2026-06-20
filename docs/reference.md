@@ -254,6 +254,11 @@ skills/sourcey/
 Direct execution accepts the package directory or `SKILL.md` inside it. Flat
 `foo.md` skill files are no longer a supported execution surface.
 
+Execution profiles use a strict YAML subset: no anchors, aliases, merge keys,
+custom tags, multi-document markers, duplicate mapping keys, or unknown profile
+fields. Keep capability and receipt mappings explicit in the runner that uses
+them.
+
 See `../docs/skill-profile-model.md` for resolution rules, publication modes, trust tiers, MCP export, and composite skill behavior.
 
 See `../docs/evolution-model.md` for the evolve lane, the skill/tool boundary,

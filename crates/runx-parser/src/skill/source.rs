@@ -8,11 +8,51 @@ use super::{
     field_value, first_value, validate_sandbox,
 };
 
+const SOURCE_FIELDS: &[&str] = &[
+    "act",
+    "agent",
+    "agent_card_url",
+    "agent_identity",
+    "allow_private_network",
+    "args",
+    "arguments",
+    "catalog_ref",
+    "command",
+    "cwd",
+    "external_adapter",
+    "external_adapter_manifest",
+    "external_adapter_manifest_path",
+    "graph",
+    "headers",
+    "hook",
+    "http",
+    "input_mode",
+    "invocation_id",
+    "method",
+    "outputs",
+    "run_id",
+    "sandbox",
+    "server",
+    "skill_ref",
+    "task",
+    "timeout_seconds",
+    "tool",
+    "type",
+    "url",
+];
+
 pub fn validate_skill_source(
     source: &JsonObject,
     runx: Option<&JsonObject>,
 ) -> Result<SkillSource, ValidationError> {
     validate_source(source, runx)
+}
+
+pub(super) fn validate_source_fields(
+    source: &JsonObject,
+    field: &str,
+) -> Result<(), ValidationError> {
+    FIELDS.reject_unknown_fields(source, field, SOURCE_FIELDS)
 }
 
 pub(super) fn validate_source(
@@ -225,8 +265,11 @@ fn validate_http_source(
     if source_type != "http" {
         return Ok(None);
     }
-    let url = FIELDS.required_string(source.get("url"), "source.url")?;
-    let method = match FIELDS.optional_string(source.get("method"), "source.method")? {
+    let http = FIELDS
+        .optional_object(source.get("http"), "source.http")?
+        .unwrap_or_else(|| source.clone());
+    let url = FIELDS.required_string(http.get("url"), "source.url")?;
+    let method = match FIELDS.optional_string(http.get("method"), "source.method")? {
         Some(method) => {
             if !matches!(
                 method.to_ascii_uppercase().as_str(),
@@ -243,9 +286,9 @@ fn validate_http_source(
     Ok(Some(SkillHttpSource {
         url,
         method,
-        headers: validate_http_headers(source.get("headers"))?,
+        headers: validate_http_headers(http.get("headers"))?,
         allow_private_network: FIELDS.optional_bool(
-            source.get("allow_private_network"),
+            http.get("allow_private_network"),
             "source.allow_private_network",
         )?,
     }))

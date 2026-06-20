@@ -151,6 +151,23 @@ impl JsonFieldReader {
             Some(_) => Err(self.validation_error(format!("{field} must be a finite number."))),
         }
     }
+
+    pub(crate) fn reject_unknown_fields(
+        &self,
+        object: &JsonObject,
+        field: &str,
+        allowed: &[&str],
+    ) -> Result<(), ValidationError> {
+        for key in object.keys() {
+            if !allowed.contains(&key.as_str()) {
+                return Err(self.validation_error(format!(
+                    "{field}.{key} is not supported; allowed fields: {}.",
+                    allowed.join(", ")
+                )));
+            }
+        }
+        Ok(())
+    }
 }
 
 pub(crate) fn first_value<'a>(

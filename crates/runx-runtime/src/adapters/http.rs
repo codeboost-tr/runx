@@ -129,8 +129,9 @@ fn resolve_path_template(
     Ok((out, remaining))
 }
 
-fn json_body(inputs: &JsonObject) -> Result<String, RuntimeError> {
-    serde_json::to_string(&serde_json::to_value(inputs).unwrap_or(WireValue::Null))
+fn json_body(inputs: &JsonObject, secrets: &SecretEnv) -> Result<String, RuntimeError> {
+    let value = substitute_json_secrets(&JsonValue::Object(inputs.clone()), secrets)?;
+    serde_json::to_string(&serde_json::to_value(value).unwrap_or(WireValue::Null))
         .map_err(|error| failure(format!("serializing http request body: {error}")))
 }
 
@@ -140,6 +141,7 @@ pub fn execute_http_call<T: RuntimeHttpTransport>(
     transport: &T,
     call: &HttpCall,
     inputs: &JsonObject,
+    secrets: &SecretEnv,
 ) -> Result<SkillOutput, RuntimeError> {
     let (resolved_url, query_inputs) = resolve_path_template(&call.url, inputs)?;
     let mut headers = call.headers.clone();
@@ -151,7 +153,7 @@ pub fn execute_http_call<T: RuntimeHttpTransport>(
             {
                 headers.push(RuntimeHttpHeader::new("content-type", "application/json"));
             }
-            (resolved_url, Some(json_body(&query_inputs)?))
+            (resolved_url, Some(json_body(&query_inputs, secrets)?))
         }
         HttpMethod::Get | HttpMethod::Delete => (with_query(&resolved_url, &query_inputs), None),
     };
@@ -185,22 +187,22 @@ pub fn execute_http_call<T: RuntimeHttpTransport>(
 
 const SECRET_PREFIX: &str = "${secret:";
 
-/// Resolve `${secret:NAME}` references in a header value against the run's secret
-/// env, mirroring how the cli-tool front lets a command reference a delivered
-/// secret. A reference to a secret that was not delivered fails closed.
+/// Resolve `${secret:NAME}` references against the run's secret env, mirroring
+/// how the cli-tool front lets a command reference a delivered secret. A
+/// reference to a secret that was not delivered fails closed.
 fn substitute_secrets(value: &str, secrets: &SecretEnv) -> Result<String, RuntimeError> {
     let mut out = String::with_capacity(value.len());
     let mut rest = value;
     while let Some(start) = rest.find(SECRET_PREFIX) {
         out.push_str(&rest[..start]);
         let after = &rest[start + SECRET_PREFIX.len()..];
-        let end = after.find('}').ok_or_else(|| {
-            failure("http header secret reference is missing a closing '}'".to_owned())
-        })?;
+        let end = after
+            .find('}')
+            .ok_or_else(|| failure("http secret reference is missing a closing '}'".to_owned()))?;
         let name = &after[..end];
         let secret = secrets.get(name).ok_or_else(|| {
             failure(format!(
-                "http header references secret {name}, which was not delivered to this run"
+                "http references secret {name}, which was not delivered to this run"
             ))
         })?;
         out.push_str(secret);
@@ -208,6 +210,26 @@ fn substitute_secrets(value: &str, secrets: &SecretEnv) -> Result<String, Runtim
     }
     out.push_str(rest);
     Ok(out)
+}
+
+fn substitute_json_secrets(
+    value: &JsonValue,
+    secrets: &SecretEnv,
+) -> Result<JsonValue, RuntimeError> {
+    match value {
+        JsonValue::String(value) => substitute_secrets(value, secrets).map(JsonValue::String),
+        JsonValue::Array(values) => values
+            .iter()
+            .map(|value| substitute_json_secrets(value, secrets))
+            .collect::<Result<Vec<_>, _>>()
+            .map(JsonValue::Array),
+        JsonValue::Object(object) => object
+            .iter()
+            .map(|(key, value)| Ok((key.clone(), substitute_json_secrets(value, secrets)?)))
+            .collect::<Result<JsonObject, _>>()
+            .map(JsonValue::Object),
+        value => Ok(value.clone()),
+    }
 }
 
 /// Build the request headers from the source's validated `headers` map, resolving
@@ -327,7 +349,12 @@ impl SkillAdapter for HttpSkillAdapter {
             browser_user_agent(&request.env),
         )
         .map_err(|error| failure(format!("http transport unavailable: {error}")))?;
-        let mut output = execute_http_call(&transport, &call, &merged_inputs(&request))?;
+        let mut output = execute_http_call(
+            &transport,
+            &call,
+            &merged_inputs(&request),
+            request.credential_delivery.secret_env(),
+        )?;
         add_credential_delivery_metadata(&mut output, &request.credential_delivery)?;
         Ok(output)
     }
@@ -394,6 +421,10 @@ mod tests {
             .iter()
             .map(|(key, value)| ((*key).to_owned(), JsonValue::String((*value).to_owned())))
             .collect()
+    }
+
+    fn empty_secrets() -> SecretEnv {
+        SecretEnv::default()
     }
 
     fn http_invocation(
@@ -467,7 +498,12 @@ mod tests {
             url: "https://api.example.test/v1/pets".to_owned(),
             headers: Vec::new(),
         };
-        let output = execute_http_call(&transport, &call, &inputs(&[("id", "p-7")]))?;
+        let output = execute_http_call(
+            &transport,
+            &call,
+            &inputs(&[("id", "p-7")]),
+            &empty_secrets(),
+        )?;
         assert_eq!(output.status, InvocationStatus::Success);
         assert_eq!(output.stdout, r#"{"ok":true}"#);
         let sent = transport.requests.borrow();
@@ -487,7 +523,12 @@ mod tests {
             url: "https://api.example.test/v1/pets".to_owned(),
             headers: Vec::new(),
         };
-        execute_http_call(&transport, &call, &inputs(&[("name", "rex")]))?;
+        execute_http_call(
+            &transport,
+            &call,
+            &inputs(&[("name", "rex")]),
+            &empty_secrets(),
+        )?;
         let sent = transport.requests.borrow();
         assert!(
             sent[0]
@@ -495,6 +536,41 @@ mod tests {
                 .as_deref()
                 .is_some_and(|body| body.contains(r#""name":"rex""#)),
             "POST inputs must go in the JSON body; got: {:?}",
+            sent[0].body
+        );
+        Ok(())
+    }
+
+    #[test]
+    fn post_substitutes_secret_references_in_json_body() -> Result<(), RuntimeError> {
+        let delivery = crate::credentials::CredentialDelivery::from_local_descriptor(
+            "github",
+            "bearer",
+            "GITHUB_TOKEN",
+            "credential:test",
+            vec!["github.issue-create".to_owned()],
+            "ghp_secret",
+        )
+        .map_err(|error| failure(format!("building test credential: {error}")))?;
+        let transport = stub(201, "");
+        let call = HttpCall {
+            method: HttpMethod::Post,
+            url: "https://api.example.test/v1/pets".to_owned(),
+            headers: Vec::new(),
+        };
+        execute_http_call(
+            &transport,
+            &call,
+            &inputs(&[("token", "${secret:GITHUB_TOKEN}")]),
+            delivery.secret_env(),
+        )?;
+        let sent = transport.requests.borrow();
+        assert!(
+            sent[0]
+                .body
+                .as_deref()
+                .is_some_and(|body| body.contains(r#""token":"ghp_secret""#)),
+            "POST body should substitute delivered secret refs; got: {:?}",
             sent[0].body
         );
         Ok(())
@@ -513,6 +589,7 @@ mod tests {
             &transport,
             &call,
             &inputs(&[("id", "p-7"), ("fields", "name")]),
+            &empty_secrets(),
         )?;
         let sent = transport.requests.borrow();
         assert!(
@@ -534,23 +611,47 @@ mod tests {
             headers: Vec::new(),
         };
         assert!(
-            execute_http_call(&transport, &call, &JsonObject::new()).is_err(),
+            execute_http_call(&transport, &call, &JsonObject::new(), &empty_secrets()).is_err(),
             "a placeholder with no matching input must fail closed"
         );
         assert!(
-            execute_http_call(&transport, &call, &inputs(&[("id", "a/b")])).is_err(),
+            execute_http_call(
+                &transport,
+                &call,
+                &inputs(&[("id", "a/b")]),
+                &empty_secrets()
+            )
+            .is_err(),
             "a path value with a path separator must fail closed"
         );
         assert!(
-            execute_http_call(&transport, &call, &inputs(&[("id", "a#b")])).is_err(),
+            execute_http_call(
+                &transport,
+                &call,
+                &inputs(&[("id", "a#b")]),
+                &empty_secrets()
+            )
+            .is_err(),
             "a path value with a fragment delimiter must fail closed"
         );
         assert!(
-            execute_http_call(&transport, &call, &inputs(&[("id", "a%2Fb")])).is_err(),
+            execute_http_call(
+                &transport,
+                &call,
+                &inputs(&[("id", "a%2Fb")]),
+                &empty_secrets()
+            )
+            .is_err(),
             "a path value with an encoded path delimiter must fail closed"
         );
         assert!(
-            execute_http_call(&transport, &call, &inputs(&[("id", "a%3Fb")])).is_err(),
+            execute_http_call(
+                &transport,
+                &call,
+                &inputs(&[("id", "a%3Fb")]),
+                &empty_secrets()
+            )
+            .is_err(),
             "a path value with an encoded query delimiter must fail closed"
         );
     }
@@ -563,7 +664,12 @@ mod tests {
             url: "https://api.example.test/v1/pets/p-7".to_owned(),
             headers: Vec::new(),
         };
-        execute_http_call(&transport, &call, &inputs(&[("name", "rex")]))?;
+        execute_http_call(
+            &transport,
+            &call,
+            &inputs(&[("name", "rex")]),
+            &empty_secrets(),
+        )?;
         let sent = transport.requests.borrow();
         assert!(
             sent[0].method == HttpMethod::Put
@@ -585,7 +691,12 @@ mod tests {
             url: "https://api.example.test/v1/pets/p-7".to_owned(),
             headers: Vec::new(),
         };
-        execute_http_call(&transport, &call, &inputs(&[("name", "rex")]))?;
+        execute_http_call(
+            &transport,
+            &call,
+            &inputs(&[("name", "rex")]),
+            &empty_secrets(),
+        )?;
         let sent = transport.requests.borrow();
         assert!(
             sent[0].method == HttpMethod::Patch
@@ -607,7 +718,12 @@ mod tests {
             url: "https://api.example.test/v1/pets".to_owned(),
             headers: Vec::new(),
         };
-        execute_http_call(&transport, &call, &inputs(&[("id", "p-7")]))?;
+        execute_http_call(
+            &transport,
+            &call,
+            &inputs(&[("id", "p-7")]),
+            &empty_secrets(),
+        )?;
         let sent = transport.requests.borrow();
         assert!(
             sent[0].method == HttpMethod::Delete
@@ -631,7 +747,12 @@ mod tests {
                 RuntimeHttpHeader::new("content-type", "application/cbor"),
             ],
         };
-        execute_http_call(&transport, &call, &inputs(&[("name", "rex")]))?;
+        execute_http_call(
+            &transport,
+            &call,
+            &inputs(&[("name", "rex")]),
+            &empty_secrets(),
+        )?;
         let sent = transport.requests.borrow();
         let content_types = sent[0]
             .headers
@@ -717,7 +838,7 @@ mod tests {
             url: "https://api.example.test/v1/pets/none".to_owned(),
             headers: Vec::new(),
         };
-        let output = execute_http_call(&transport, &call, &JsonObject::new())?;
+        let output = execute_http_call(&transport, &call, &JsonObject::new(), &empty_secrets())?;
         assert_eq!(output.status, InvocationStatus::Failure);
         assert_eq!(output.stdout, "not found");
         Ok(())
@@ -731,7 +852,7 @@ mod tests {
             url: "https://api.example.test/v1/pets".to_owned(),
             headers: Vec::new(),
         };
-        let output = execute_http_call(&transport, &call, &JsonObject::new())?;
+        let output = execute_http_call(&transport, &call, &JsonObject::new(), &empty_secrets())?;
         assert_eq!(
             output.status,
             InvocationStatus::Failure,

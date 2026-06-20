@@ -37,6 +37,6 @@ pub use tool::{
     validate_tool_manifest,
 };
 pub use yaml::{
-    assert_yaml_parity_subset, assert_yaml_scalar_subset, parse_yaml_document,
-    yaml_scalar_subset_allows,
+    assert_execution_profile_yaml_subset, assert_yaml_parity_subset, assert_yaml_scalar_subset,
+    parse_yaml_document, yaml_scalar_subset_allows,
 };

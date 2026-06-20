@@ -158,6 +158,7 @@ pub struct SkillSource {
 /// the act's structure from these and the trusted inputs; the model authors only
 /// the reason prose. Absent an `act:` block, a run seals a generic observation.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
 pub struct ActDeclaration {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub form: Option<String>,
@@ -180,9 +181,15 @@ pub struct ActDeclaration {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub effect_from: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
+    pub effect_field_from: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub effect_from_input: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub effect_type: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub effect_prefix: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub effect_prefix_from: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub actor_from: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
