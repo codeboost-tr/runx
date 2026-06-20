@@ -148,7 +148,7 @@ fn try_inline_agent_resolution(
         id: agent_act.id.clone(),
         invocation: Box::new(agent_act),
     };
-    let transport = ReqwestHttpTransport::new().map_err(|error| {
+    let transport = ReqwestHttpTransport::for_managed_agent().map_err(|error| {
         SkillRunError::Invalid(format!("managed agent transport error: {error}"))
     })?;
     let resolver = AnthropicAgentResolver::new(

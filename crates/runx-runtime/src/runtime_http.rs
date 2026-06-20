@@ -120,6 +120,12 @@ pub struct ReqwestHttpTransport {
 
 #[cfg(feature = "async-http")]
 const MAX_HTTP_RESPONSE_BYTES: usize = 1024 * 1024;
+#[cfg(feature = "async-http")]
+const DEFAULT_HTTP_REQUEST_TIMEOUT: Duration = Duration::from_secs(30);
+#[cfg(feature = "async-http")]
+const DEFAULT_HTTP_CONNECT_TIMEOUT: Duration = Duration::from_secs(10);
+#[cfg(feature = "async-http")]
+const MANAGED_AGENT_REQUEST_TIMEOUT: Duration = Duration::from_secs(180);
 
 /// The default browser User-Agent the governed fetch transport presents (current
 /// stable Chrome). Overridable per run with `RUNX_HTTP_USER_AGENT`, opt-out with
@@ -176,8 +182,8 @@ fn chrome_default_headers() -> reqwest::header::HeaderMap {
 impl ReqwestHttpTransport {
     pub fn new() -> Result<Self, RuntimeHttpError> {
         Self::with_timeouts_and_private_networks(
-            Duration::from_secs(30),
-            Duration::from_secs(10),
+            DEFAULT_HTTP_REQUEST_TIMEOUT,
+            DEFAULT_HTTP_CONNECT_TIMEOUT,
             false,
             None,
         )
@@ -234,9 +240,22 @@ impl ReqwestHttpTransport {
     /// `allowPrivateNetwork`) before choosing it, never as a default.
     pub fn with_private_network_access() -> Result<Self, RuntimeHttpError> {
         Self::with_timeouts_and_private_networks(
-            Duration::from_secs(30),
-            Duration::from_secs(10),
+            DEFAULT_HTTP_REQUEST_TIMEOUT,
+            DEFAULT_HTTP_CONNECT_TIMEOUT,
             true,
+            None,
+        )
+    }
+
+    /// Build the model-provider transport for managed-agent calls. These calls can
+    /// legitimately spend more than the generic governed HTTP timeout while the
+    /// provider thinks and emits tool use, but they still keep the same public-DNS
+    /// guard and short connect timeout.
+    pub fn for_managed_agent() -> Result<Self, RuntimeHttpError> {
+        Self::with_timeouts_and_private_networks(
+            MANAGED_AGENT_REQUEST_TIMEOUT,
+            DEFAULT_HTTP_CONNECT_TIMEOUT,
+            false,
             None,
         )
     }
@@ -251,8 +270,8 @@ impl ReqwestHttpTransport {
         browser_user_agent: Option<String>,
     ) -> Result<Self, RuntimeHttpError> {
         Self::with_timeouts_and_private_networks(
-            Duration::from_secs(30),
-            Duration::from_secs(10),
+            DEFAULT_HTTP_REQUEST_TIMEOUT,
+            DEFAULT_HTTP_CONNECT_TIMEOUT,
             allow_private_networks,
             browser_user_agent,
         )
