@@ -16,7 +16,8 @@ use runx_pay::state::{
 use runx_runtime::{
     PROVIDER_PERMISSION_GRANT_ID_ENV, PROVIDER_PERMISSION_GRANTED_SCOPES_ENV,
     RUNX_RECEIPT_SIGN_ED25519_SEED_BASE64_ENV, RUNX_RECEIPT_SIGN_ISSUER_TYPE_ENV,
-    RUNX_RECEIPT_SIGN_KID_ENV, RuntimeError, default_doctor_options, run_doctor,
+    RUNX_RECEIPT_SIGN_KID_ENV, RuntimeError, default_doctor_options, load_runx_config_file,
+    resolve_runx_home_dir, run_doctor,
 };
 
 use crate::history::{
@@ -76,7 +77,18 @@ fn run_doctor_command(
     }
 
     let root = resolve_doctor_root(plan, env, cwd);
-    let report = run_doctor(&root, &default_doctor_options())?;
+    let mut report = run_doctor(&root, &default_doctor_options())?;
+    report
+        .diagnostics
+        .push(managed_agent_config_diagnostic(env, cwd));
+    report.summary = summary(&report.diagnostics);
+    if report
+        .diagnostics
+        .iter()
+        .any(|diagnostic| diagnostic.severity == DoctorDiagnosticSeverity::Error)
+    {
+        report.status = DoctorStatus::Failure;
+    }
     let exit_code = match report.status {
         DoctorStatus::Success => 0,
         DoctorStatus::Failure => 1,
@@ -87,6 +99,154 @@ fn run_doctor_command(
         render_doctor_report(&report)
     };
     Ok(DoctorCliOutput { stdout, exit_code })
+}
+
+fn managed_agent_config_diagnostic(env: &BTreeMap<String, String>, cwd: &Path) -> DoctorDiagnostic {
+    let config_dir = resolve_runx_home_dir(env, cwd);
+    let config_path = config_dir.join("config.json");
+    let config = load_runx_config_file(&config_path);
+    let mut evidence = JsonObject::new();
+    evidence.insert(
+        "config_path".to_owned(),
+        JsonValue::String(config_path.display().to_string()),
+    );
+
+    let (config_provider, config_model, config_key_ref, config_error) = match config {
+        Ok(config) => (
+            config
+                .agent
+                .as_ref()
+                .and_then(|agent| agent.provider.as_deref())
+                .map(str::to_owned),
+            config
+                .agent
+                .as_ref()
+                .and_then(|agent| agent.model.as_deref())
+                .map(str::to_owned),
+            config
+                .agent
+                .as_ref()
+                .and_then(|agent| agent.api_key_ref.as_deref())
+                .map(str::to_owned),
+            None,
+        ),
+        Err(error) => (None, None, None, Some(error.to_string())),
+    };
+
+    let provider = first_non_empty([
+        env.get("RUNX_AGENT_PROVIDER").map(String::as_str),
+        config_provider.as_deref(),
+    ]);
+    let model = first_non_empty([
+        env.get("RUNX_AGENT_MODEL").map(String::as_str),
+        config_model.as_deref(),
+    ]);
+    let provider_key_env = provider.and_then(provider_api_key_env);
+    let api_key_configured = env_contains_non_empty(env, "RUNX_AGENT_API_KEY")
+        || provider_key_env.is_some_and(|name| env_contains_non_empty(env, name))
+        || config_key_ref
+            .as_deref()
+            .is_some_and(|value| !value.trim().is_empty());
+
+    evidence.insert(
+        "provider_set".to_owned(),
+        JsonValue::Bool(provider.is_some()),
+    );
+    evidence.insert("model_set".to_owned(), JsonValue::Bool(model.is_some()));
+    evidence.insert(
+        "api_key_set".to_owned(),
+        JsonValue::Bool(api_key_configured),
+    );
+    if let Some(provider) = provider {
+        evidence.insert(
+            "provider".to_owned(),
+            JsonValue::String(provider.to_owned()),
+        );
+    }
+    if let Some(model) = model {
+        evidence.insert("model".to_owned(), JsonValue::String(model.to_owned()));
+    }
+    if let Some(name) = provider_key_env {
+        evidence.insert(
+            "provider_api_key_env".to_owned(),
+            JsonValue::String(name.to_owned()),
+        );
+    }
+    if let Some(error) = config_error.as_ref() {
+        evidence.insert("config_error".to_owned(), JsonValue::String(error.clone()));
+    }
+
+    let complete = provider.is_some() && model.is_some() && api_key_configured;
+    let partial = !complete
+        && (provider.is_some() || model.is_some() || api_key_configured || config_error.is_some());
+    let severity = if partial {
+        DoctorDiagnosticSeverity::Warning
+    } else {
+        DoctorDiagnosticSeverity::Info
+    };
+    let message = if let Some(error) = config_error {
+        format!("Managed-agent config could not be read: {error}.")
+    } else if complete {
+        "Managed-agent config is complete; agent-task runners can execute in-process.".to_owned()
+    } else if partial {
+        "Managed-agent config is partial; set provider, model, and API key or unset the partial values. Otherwise agent-task runners may yield to the host or fail later.".to_owned()
+    } else {
+        "Managed-agent config is not set; agent-task runners will use host-driven resolution unless a provider is configured.".to_owned()
+    };
+
+    DoctorDiagnostic {
+        id: "runx.agent.config".to_owned(),
+        instance_id: "runx:doctor:runx.agent.config".to_owned(),
+        severity,
+        title: "Managed-agent config".to_owned(),
+        message,
+        target: object([
+            ("kind", string_value("config")),
+            ("ref", string_value("runx.agent.config")),
+        ]),
+        location: DoctorLocation {
+            path: "runx config".to_owned(),
+            json_pointer: Some("/agent".to_owned()),
+        },
+        evidence: Some(evidence),
+        repairs: if partial {
+            vec![DoctorRepair {
+                id: "runx.agent.config.configure".to_owned(),
+                kind: DoctorRepairKind::Manual,
+                confidence: DoctorRepairConfidence::High,
+                risk: DoctorRepairRisk::Low,
+                path: Some("runx config".to_owned()),
+                json_pointer: Some("/agent".to_owned()),
+                contents: Some(
+                    "Set agent.provider, agent.model, and agent.api_key, or unset partial managed-agent config."
+                        .to_owned(),
+                ),
+                patch: None,
+                command: Some(
+                    "runx config set agent.provider anthropic && runx config set agent.model <model> && runx config set agent.api_key <key>".to_owned(),
+                ),
+                requires_human_review: false,
+            }]
+        } else {
+            Vec::new()
+        },
+    }
+}
+
+fn first_non_empty<'a>(values: impl IntoIterator<Item = Option<&'a str>>) -> Option<&'a str> {
+    values
+        .into_iter()
+        .flatten()
+        .map(str::trim)
+        .find(|value| !value.is_empty())
+}
+
+fn provider_api_key_env(provider: &str) -> Option<&'static str> {
+    match provider.trim().to_ascii_lowercase().as_str() {
+        "anthropic" => Some("ANTHROPIC_API_KEY"),
+        "openai" => Some("OPENAI_API_KEY"),
+        _ => None,
+    }
 }
 
 fn run_registry_doctor(env: &BTreeMap<String, String>, cwd: &Path) -> DoctorReport {
