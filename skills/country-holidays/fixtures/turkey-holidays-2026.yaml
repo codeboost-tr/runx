@@ -1,0 +1,48 @@
+name: turkey-holidays-2026
+kind: skill
+target: ..
+runner: get-holidays
+inputs:
+  countryCode: TR
+  year: 2026
+caller:
+  answers:
+    tool.nager.country_info.output:
+      commonName: Turkey
+      officialName: Republic of Turkey
+      countryCode: TR
+      region: Asia
+      borders:
+        - commonName: Armenia
+          officialName: Republic of Armenia
+          countryCode: AM
+          region: Asia
+    tool.nager.public_holidays.output:
+      - date: "2026-01-01"
+        localName: Yılbaşı
+        name: New Year's Day
+        countryCode: TR
+        fixed: true
+        global: true
+        counties: null
+        launchYear: null
+        types:
+          - Public
+      - date: "2026-10-29"
+        localName: Cumhuriyet Bayramı
+        name: Republic Day
+        countryCode: TR
+        fixed: true
+        global: true
+        counties: null
+        launchYear: null
+        types:
+          - Public
+expect:
+  status: sealed
+  receipt:
+    schema: runx.receipt.v1
+metadata:
+  public_skill: country-holidays
+  source_case: turkey-holidays-2026
+  source: skills-fixture

@@ -1,0 +1,52 @@
+skill: country-holidays
+version: 0.1.0
+
+catalog:
+  kind: graph
+  audience: public
+  visibility: public
+  role: canonical
+  provider: nager-date
+  runtime_path: http
+
+harness:
+  cases:
+    - name: turkey-holidays-2026
+      runner: get-holidays
+      inputs:
+        countryCode: TR
+        year: 2026
+      expect:
+        status: sealed
+
+runners:
+  get-holidays:
+    default: true
+    type: graph
+    inputs:
+      countryCode:
+        type: string
+        required: true
+        description: Two-letter country code (ISO 3166-1 alpha-2).
+      year:
+        type: integer
+        required: true
+        description: The year to fetch holidays for.
+    graph:
+      name: country-holidays
+      steps:
+        - id: info
+          tool: nager.country_info
+          inputs:
+            countryCode: "$input.countryCode"
+          artifacts:
+            wrap_as: country_info_packet
+            packet: nager.country.info.v1
+        - id: holidays
+          tool: nager.public_holidays
+          inputs:
+            year: "$input.year"
+            countryCode: "$input.countryCode"
+          artifacts:
+            wrap_as: public_holidays_packet
+            packet: nager.public.holidays.v1

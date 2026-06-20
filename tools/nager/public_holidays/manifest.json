@@ -1,0 +1,23 @@
+{
+  "schema": "runx.tool.manifest.v1",
+  "name": "nager.public_holidays",
+  "description": "Governed HTTP tool: Get public holidays for a specific year and country from Nager.Date API.",
+  "source": {
+    "type": "http",
+    "url": "https://date.nager.at/api/v3/PublicHolidays/{year}/{countryCode}",
+    "method": "GET"
+  },
+  "inputs": {
+    "year": {
+      "type": "integer",
+      "required": true,
+      "description": "The year to fetch holidays for."
+    },
+    "countryCode": {
+      "type": "string",
+      "required": true,
+      "description": "Two-letter country code (ISO 3166-1 alpha-2)."
+    }
+  },
+  "scopes": ["nager.public_holidays"]
+}

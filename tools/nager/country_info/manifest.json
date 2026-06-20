@@ -1,0 +1,18 @@
+{
+  "schema": "runx.tool.manifest.v1",
+  "name": "nager.country_info",
+  "description": "Governed HTTP tool: Get country information (name, region, borders) from Nager.Date API.",
+  "source": {
+    "type": "http",
+    "url": "https://date.nager.at/api/v3/CountryInfo/{countryCode}",
+    "method": "GET"
+  },
+  "inputs": {
+    "countryCode": {
+      "type": "string",
+      "required": true,
+      "description": "Two-letter country code (ISO 3166-1 alpha-2)."
+    }
+  },
+  "scopes": ["nager.country_info"]
+}
