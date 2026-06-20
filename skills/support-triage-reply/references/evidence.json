@@ -2,13 +2,13 @@
   "schema": "runx.support_triage_reply.evidence.v1",
   "skill": {
     "name": "support-triage-reply",
-    "published_ref": "godfood/support-triage-reply@sha-7fee56e60e96",
+    "published_ref": "godfood/support-triage-reply@sha-4887b7e3476f",
     "owner": "godfood",
     "publisher_principal": "user_godfood_2190fb7211ca",
     "registry": "https://api.runx.ai",
     "public_url": "https://runx.ai/x/godfood/support-triage-reply",
-    "source_url": "https://github.com/runxhq/runx/tree/main/oss/skills/support-triage-reply",
-    "digest": "544b57d054d74832815c67fc244407a36c308b05041e0d85007587e3ac78178b",
+    "source_url": "https://github.com/runxhq/runx/tree/main/skills/support-triage-reply",
+    "digest": "d9c8eda288ab87a3c48b3cd58152b00072eea54e8b882ac5b57601f3b29e3b63",
     "profile_digest": "362867317f6299483d754cef105e73057d1fe83ad7f60bd9c3086a844641765e",
     "trust_tier": "community"
   },
@@ -44,12 +44,12 @@
     },
     "clean_install": {
       "status": "installed",
-      "command": "runx add godfood/support-triage-reply@sha-7fee56e60e96 --registry https://api.runx.ai --installation-id godfood-support-triage-final --json"
+      "command": "runx add godfood/support-triage-reply@sha-4887b7e3476f --registry https://api.runx.ai --installation-id godfood-support-triage-final3 --json"
     },
     "dogfood_run": {
       "status": "passed",
-      "command": "runx skill godfood/support-triage-reply@sha-7fee56e60e96 --registry https://api.runx.ai --input support_request=<json> --input policy=<json> --receipts <dir> --json",
-      "receipt_id": "sha256:0cae135b62adf38fb8512096b85c0111f4b76b980e4401ab793c44b2f8a8d279",
+      "command": "runx skill godfood/support-triage-reply@sha-4887b7e3476f --registry https://api.runx.ai --input support_request=<json> --input policy=<json> --receipts <dir> --json",
+      "receipt_id": "sha256:c3c59e6d1cba7ea6333534fd7b2229dd24f6c192547ad5331024ea62cbc96600",
       "receipt_file": "dogfood-receipt.json",
       "verify_command": "runx verify --receipt dogfood-receipt.json --json",
       "verify_note": "Verified with the public Ed25519 verification key for the demo signing key used by the local runtime.",
@@ -79,13 +79,13 @@
     "runx_version": "runx-cli 0.6.6",
     "publisher_owner": "godfood",
     "package_name": "support-triage-reply",
-    "version": "sha-7fee56e60e96",
-    "registry_ref": "godfood/support-triage-reply@sha-7fee56e60e96",
+    "version": "sha-4887b7e3476f",
+    "registry_ref": "godfood/support-triage-reply@sha-4887b7e3476f",
     "public_url": "https://runx.ai/x/godfood/support-triage-reply",
-    "source_url": "https://github.com/runxhq/runx/tree/main/oss/skills/support-triage-reply",
+    "source_url": "https://github.com/runxhq/runx/tree/main/skills/support-triage-reply",
     "publish_method": "purpose-scoped godfood publish credential; credential revoked after publish",
-    "install_command": "runx add godfood/support-triage-reply@sha-7fee56e60e96 --registry https://api.runx.ai --installation-id godfood-support-triage-final --json",
-    "dogfood_command": "runx skill godfood/support-triage-reply@sha-7fee56e60e96 --registry https://api.runx.ai --input support_request=<json> --input policy=<json> --receipts <dir> --json",
+    "install_command": "runx add godfood/support-triage-reply@sha-4887b7e3476f --registry https://api.runx.ai --installation-id godfood-support-triage-final3 --json",
+    "dogfood_command": "runx skill godfood/support-triage-reply@sha-4887b7e3476f --registry https://api.runx.ai --input support_request=<json> --input policy=<json> --receipts <dir> --json",
     "verify_command": "runx verify --receipt dogfood-receipt.json --json",
     "verify_public_key_base64": "IVL40Zt5HSRFMkLhXy6rbLfP+ntqXtMAl5YOBpiB2xI=",
     "harness_case_names": [
@@ -95,7 +95,7 @@
     ],
     "local_harness_status": "passed",
     "hosted_registry_harness_status": "passed as the registry publish gate",
-    "receipt_ref": "sha256:0cae135b62adf38fb8512096b85c0111f4b76b980e4401ab793c44b2f8a8d279",
+    "receipt_ref": "sha256:c3c59e6d1cba7ea6333534fd7b2229dd24f6c192547ad5331024ea62cbc96600",
     "runx_verify_verdict": "valid",
     "classification_taxonomy_coverage": [
       "how_to",
@@ -107,8 +107,8 @@
     ],
     "safe_answer_case": "safe-how-to-reply-draft",
     "escalation_case": "account-access-escalates-without-draft",
-    "how_to_install": "runx add godfood/support-triage-reply@sha-7fee56e60e96 --registry https://api.runx.ai --installation-id <stable-id>",
-    "how_to_run": "runx skill godfood/support-triage-reply@sha-7fee56e60e96 --registry https://api.runx.ai --input support_request=<json> --input policy=<json> --json",
+    "how_to_install": "runx add godfood/support-triage-reply@sha-4887b7e3476f --registry https://api.runx.ai --installation-id <stable-id>",
+    "how_to_run": "runx skill godfood/support-triage-reply@sha-4887b7e3476f --registry https://api.runx.ai --input support_request=<json> --input policy=<json> --json",
     "how_to_verify": "Download dogfood-receipt.json from source, set RUNX_RECEIPT_VERIFY_KID=runx-demo-key and RUNX_RECEIPT_VERIFY_ED25519_PUBLIC_KEY_BASE64 to the public key in this evidence file, then run runx verify --receipt dogfood-receipt.json --json."
   },
   "value_assessment": {
