@@ -70,7 +70,7 @@ export function normalizeFranticThreadIntent(intent) {
   const bountyNumber = requiredPositiveInteger(intent.bounty_number, "intent.bounty_number");
   const occurredAt = requiredString(intent.occurred_at, "intent.occurred_at");
 
-  if (!["thread.create", "thread.comment", "thread.labels", "thread.close"].includes(kind)) {
+  if (!["thread.create", "thread.comment", "thread.labels", "thread.close", "thread.open"].includes(kind)) {
     throw new Error(`unsupported Frantic thread intent kind '${kind}'.`);
   }
 
@@ -240,7 +240,7 @@ function buildGitHubOutboxEntry(intent) {
       channel: "github_issue",
       source: "frantic",
       source_ref: intent.source_ref,
-      action: intent.kind === "thread.labels" ? "labels" : "close",
+      action: intent.kind === "thread.labels" ? "labels" : intent.kind === "thread.open" ? "open" : "close",
       add_labels: intent.add_labels,
       remove_labels: intent.remove_labels,
       close_reason: intent.reason,

@@ -1,5 +1,5 @@
 export interface FranticThreadIntent {
-  readonly kind: "thread.create" | "thread.comment" | "thread.labels" | "thread.close";
+  readonly kind: "thread.create" | "thread.comment" | "thread.labels" | "thread.close" | "thread.open";
   readonly outbox_id: string;
   readonly provider: string;
   readonly thread_locator?: string;

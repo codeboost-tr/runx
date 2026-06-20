@@ -47,14 +47,15 @@ TypeScript helper package.
 
 Frantic uses that provider lane for source-thread continuity. Frantic emits a
 typed outbox (`thread.create`, `thread.comment`, `thread.labels`,
-`thread.close`) derived from its ledger; runx maps each intent to a provider
-push frame with `tools/thread/frantic_thread_outbox.mjs`. `thread.create`
-creates or updates the missing GitHub issue by deterministic outbox marker and
-returns the observed provider locator. Bound lifecycle intents hydrate the
-GitHub issue before writing, then apply comments, labels, or completion closure
-through the GitHub provider adapter. Frantic remains the completion authority:
-a GitHub issue may close only after a Frantic `thread.close` intent, and GitHub
-state never completes a Frantic bounty.
+`thread.open`, `thread.close`) derived from its ledger; runx maps each intent to
+a provider push frame with `tools/thread/frantic_thread_outbox.mjs`.
+`thread.create` creates or updates the missing GitHub issue by deterministic
+outbox marker and returns the observed provider locator. Bound lifecycle intents
+hydrate the GitHub issue before writing, then apply comments, labels, reopening,
+or non-claimable closure through the GitHub provider adapter. Frantic remains
+the completion authority: a GitHub issue may close only after a Frantic
+`thread.close` intent, may reopen only after a Frantic `thread.open` intent, and
+GitHub state never completes or reopens a Frantic bounty.
 
 The operational driver for that integration is
 `scripts/frantic-github-thread-sync.mjs` (`pnpm frantic:github-thread-sync` in
