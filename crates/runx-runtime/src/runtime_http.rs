@@ -130,8 +130,7 @@ const MAX_HTTP_RESPONSE_BYTES: usize = 1024 * 1024;
 /// rustls handshake, are expected to still block us; we surface that as a non-2xx
 /// rather than escalate.
 #[allow(dead_code)] // consumed by the feature-gated http adapter and the transport tests
-pub const DEFAULT_BROWSER_USER_AGENT: &str =
-    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36";
+pub const DEFAULT_BROWSER_USER_AGENT: &str = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36";
 
 /// The Chrome navigation header set, applied as client default headers so a per-request
 /// (manifest/caller) header of the same name still overrides it. The User-Agent is set
@@ -150,7 +149,10 @@ fn chrome_default_headers() -> reqwest::header::HeaderMap {
         ),
     );
     headers.insert("sec-ch-ua-mobile", HeaderValue::from_static("?0"));
-    headers.insert("sec-ch-ua-platform", HeaderValue::from_static("\"Windows\""));
+    headers.insert(
+        "sec-ch-ua-platform",
+        HeaderValue::from_static("\"Windows\""),
+    );
     headers.insert("upgrade-insecure-requests", HeaderValue::from_static("1"));
     headers.insert(
         "accept",
@@ -162,7 +164,10 @@ fn chrome_default_headers() -> reqwest::header::HeaderMap {
     headers.insert("sec-fetch-mode", HeaderValue::from_static("navigate"));
     headers.insert("sec-fetch-user", HeaderValue::from_static("?1"));
     headers.insert("sec-fetch-dest", HeaderValue::from_static("document"));
-    headers.insert("accept-language", HeaderValue::from_static("en-US,en;q=0.9"));
+    headers.insert(
+        "accept-language",
+        HeaderValue::from_static("en-US,en;q=0.9"),
+    );
     headers.insert("priority", HeaderValue::from_static("u=0, i"));
     headers
 }
@@ -1124,8 +1129,14 @@ mod tests {
             .map_err(|_| RuntimeHttpTestError::ServerThread)??;
 
         let lower = request.to_ascii_lowercase();
-        assert!(lower.contains("chrome/143"), "browser UA should be sent: {request}");
-        assert!(lower.contains("sec-ch-ua"), "client-hint headers should be sent: {request}");
+        assert!(
+            lower.contains("chrome/143"),
+            "browser UA should be sent: {request}"
+        );
+        assert!(
+            lower.contains("sec-ch-ua"),
+            "client-hint headers should be sent: {request}"
+        );
         assert!(
             lower.contains("sec-fetch-mode"),
             "fetch-metadata headers should be sent: {request}"
