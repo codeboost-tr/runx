@@ -152,7 +152,7 @@ runx treats it like every other governed action, with no special-casing:
   ```bash
   runx registry search <your-skill>
   runx registry read <publisher>/<skill>@<version> --json
-  runx add <publisher>/<skill>            # the friendly install path
+  runx add <publisher>/<skill>@<version>  # the friendly install path
   ```
 
 ## Links

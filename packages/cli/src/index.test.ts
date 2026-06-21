@@ -225,8 +225,6 @@ Return the provided task id.
       "https://runx.example.test",
       "--to",
       "skills",
-      "--installation-id",
-      "inst_user",
       "--digest",
       "sha256:abc123",
     ]);
@@ -235,7 +233,6 @@ Return the provided task id.
     expect(parsed.addRef).toBe("acme/sourcey");
     expect(parsed.addVersion).toBe("1.0.0");
     expect(parsed.addTo).toBe("skills");
-    expect(parsed.addInstallationId).toBe("inst_user");
     expect(parsed.registryUrl).toBe("https://runx.example.test");
     expect(parsed.expectedDigest).toBe("abc123");
     expect(parsed.inputs).toEqual({});
@@ -495,7 +492,7 @@ Return the provided task id.
     const stdout = createMemoryStream();
     const stderr = createMemoryStream();
     const exitCode = await runCli(
-      ["policy", "inspect", "fixtures/operational-policy/nitrosend-like.json", "--json"],
+      ["policy", "inspect", "fixtures/operational-policy/provider-like.json", "--json"],
       { stdin: process.stdin, stdout, stderr },
       { ...process.env, RUNX_CWD: process.cwd() },
     );
@@ -510,11 +507,11 @@ Return the provided task id.
       };
     };
     expect(result.status).toBe("success");
-    expect(result.policy.policy_id).toBe("nitrosend-issue-flow");
+    expect(result.policy.policy_id).toBe("provider-issue-flow");
     expect(result.policy.sources[0]?.locator_count).toBe(1);
     expect(stdout.contents()).not.toContain(process.cwd());
-    expect(stdout.contents()).not.toContain("slack://nitrosend/C0APFMY0V8Q");
-    expect(stdout.contents()).not.toContain("sentry://nitrosend/production");
+    expect(stdout.contents()).not.toContain("slack://example/C0APFMY0V8Q");
+    expect(stdout.contents()).not.toContain("sentry://example/production");
   });
 
   it("fails policy lint when target actions have no available runner", async () => {
@@ -991,8 +988,8 @@ Answer the prompt directly.
     await expect(readFile(path.join(installDir, "acme", "sourcey", "SKILL.md"), "utf8")).rejects.toThrow();
   });
 
-  it("forwards explicit add installation ids to the native subprocess", async () => {
-    const tempDir = await mkdtemp(path.join(os.tmpdir(), "runx-cli-add-installation-id-"));
+  it("delegates registry add without installation identity flags", async () => {
+    const tempDir = await mkdtemp(path.join(os.tmpdir(), "runx-cli-add-no-installation-id-"));
     tempDirs.push(tempDir);
     const nativeBin = path.join(tempDir, "fake-runx.js");
     await writeFile(
@@ -1011,8 +1008,6 @@ Answer the prompt directly.
         "https://runx.example.test",
         "--to",
         path.join(tempDir, "skills"),
-        "--installation-id",
-        "inst_user",
         "--json",
       ],
       { stdin: process.stdin, stdout, stderr },
@@ -1028,10 +1023,21 @@ Answer the prompt directly.
     expect(stderr.contents()).toBe("");
     const argv = JSON.parse(stdout.contents()).argv as string[];
     expect(argv).toEqual(expect.arrayContaining(["registry", "install", "acme/sourcey@1.0.0"]));
-    expect(argv.slice(argv.indexOf("--installation-id"), argv.indexOf("--installation-id") + 2)).toEqual([
-      "--installation-id",
-      "inst_user",
-    ]);
+    expect(argv).not.toContain("--installation-id");
+  });
+
+  it("rejects removed add installation identity flags", async () => {
+    const stdout = createMemoryStream();
+    const stderr = createMemoryStream();
+    const exitCode = await runCli(
+      ["add", "acme/sourcey@1.0.0", "--installation-id", "inst_user"],
+      { stdin: process.stdin, stdout, stderr },
+      { ...process.env, RUNX_CWD: process.cwd() },
+    );
+
+    expect(exitCode).toBe(64);
+    expect(stdout.contents()).toBe("");
+    expect(stderr.contents()).toContain("unknown add flag --installation-id");
   });
 
   it("forwards receipt publish to the native subprocess", async () => {
@@ -2404,7 +2410,7 @@ interface MutablePolicyFixture extends Record<string, unknown> {
 }
 
 async function readFixturePolicy(): Promise<MutablePolicyFixture> {
-  return JSON.parse(await readFile("fixtures/operational-policy/nitrosend-like.json", "utf8")) as MutablePolicyFixture;
+  return JSON.parse(await readFile("fixtures/operational-policy/provider-like.json", "utf8")) as MutablePolicyFixture;
 }
 
 async function createFakeAgentBin(commands: readonly string[]): Promise<string> {

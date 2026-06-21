@@ -179,7 +179,7 @@ fn doctor_registry_json_reports_readiness_without_key_material()
     assert_eq!(String::from_utf8(output.stderr)?, "");
     let report = serde_json::from_slice::<serde_json::Value>(&output.stdout)?;
     assert_eq!(report["status"], "success");
-    assert_eq!(report["summary"]["warnings"], 1);
+    assert_eq!(report["summary"]["warnings"], 0);
     let rendered = serde_json::to_string(&report)?;
     assert!(rendered.contains("https://registry.runx.test/api"));
     assert!(rendered.contains("official-skills"));
@@ -188,7 +188,7 @@ fn doctor_registry_json_reports_readiness_without_key_material()
     assert!(rendered.contains("acme/*"));
     assert!(rendered.contains("RUNX_INSTALLATION_ID"));
     assert!(!rendered.contains("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA="));
-    assert!(diagnostic_has_repair(
+    assert!(!diagnostic_has_repair(
         &report,
         "runx.registry.installation_id"
     ));

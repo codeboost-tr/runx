@@ -16,6 +16,7 @@ use runx_runtime::registry::{
     install_local_skill, publish_skill_markdown, read_registry_skill, resolve_registry_skill,
     search_registry_with_options,
 };
+use runx_runtime::scaffold::{InitGeneratedValues, ensure_runx_install_state};
 
 mod output;
 mod package;
@@ -45,7 +46,6 @@ pub struct RegistryPlan {
     pub version: Option<String>,
     pub expected_digest: Option<String>,
     pub destination: Option<PathBuf>,
-    pub installation_id: Option<String>,
     pub owner: Option<String>,
     pub profile: Option<PathBuf>,
     pub trust_tier: Option<TrustTier>,
@@ -217,7 +217,7 @@ fn run_install(
 ) -> Result<RegistryCliOutput, RegistryCliError> {
     let source = target.label();
     let source_authority = target.manifest_source_authority();
-    let (candidate, acquisition) = install_candidate(&plan, target, env)?;
+    let (candidate, acquisition) = install_candidate(&plan, target, env, cwd)?;
     let install = install_local_skill(
         &candidate,
         &InstallLocalSkillOptions {
@@ -349,6 +349,7 @@ pub(crate) fn install_candidate(
     plan: &RegistryPlan,
     target: RegistryTarget,
     env: &BTreeMap<String, String>,
+    cwd: &Path,
 ) -> Result<
     (
         InstallCandidate,
@@ -359,15 +360,11 @@ pub(crate) fn install_candidate(
     let source_authority = target.manifest_source_authority();
     match target {
         RegistryTarget::Remote { registry_url } => {
-            let installation_id = plan
-                .installation_id
-                .as_deref()
-                .or_else(|| env.get("RUNX_INSTALLATION_ID").map(String::as_str))
-                .ok_or_else(|| usage_error("remote registry install requires --installation-id"))?;
+            let installation_id = remote_installation_id(env, cwd)?;
             let acquired = RegistryClient::new(&registry_url)?.acquire(
                 &plan.subject,
                 AcquireOptions {
-                    installation_id,
+                    installation_id: &installation_id,
                     version: plan.version.as_deref(),
                     channel: Some("cli"),
                 },
@@ -397,6 +394,26 @@ pub(crate) fn install_candidate(
             ))
         }
     }
+}
+
+fn remote_installation_id(
+    env: &BTreeMap<String, String>,
+    cwd: &Path,
+) -> Result<String, RegistryCliError> {
+    if let Some(installation_id) = env
+        .get("RUNX_INSTALLATION_ID")
+        .map(String::as_str)
+        .map(str::trim)
+        .filter(|value| !value.is_empty())
+    {
+        return Ok(installation_id.to_owned());
+    }
+
+    let generated = InitGeneratedValues::generate();
+    let home = runx_runtime::resolve_runx_global_home_dir(env, cwd);
+    let state = ensure_runx_install_state(&home, &generated.installation_id, &generated.created_at)
+        .map_err(|error| usage_error(error.to_string()))?;
+    Ok(state.state.installation_id)
 }
 
 fn candidate_from_resolution(

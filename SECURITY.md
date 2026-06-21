@@ -6,7 +6,7 @@ runx keeps execution, state, and receipts on your machine. Fetching a skill from
 
 The crate that holds receipts has no network access by design, so there is no telemetry to send. This is a property of the build, not a setting you toggle.
 
-Credentials are supplied per run with `runx run --secret-env` and `runx run --credential`. They are never persisted.
+Credentials are supplied per run with `runx skill <ref> --secret-env` and `runx skill <ref> --credential`. They are never persisted.
 
 Authority narrows at every hop. A hop's scopes are a subset of the grant it inherits, and widening is denied by construction, so a skill deep in a graph cannot reach past the authority its caller held. Every act produces a signed, reproducible receipt.
 

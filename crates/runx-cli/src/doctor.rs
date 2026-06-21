@@ -291,7 +291,6 @@ fn registry_probe_plan() -> RegistryPlan {
         version: None,
         expected_digest: None,
         destination: None,
-        installation_id: None,
         owner: None,
         profile: None,
         trust_tier: None,
@@ -533,15 +532,11 @@ fn registry_remote_install_diagnostic(
 ) -> DoctorDiagnostic {
     let remote = matches!(target, registry::RegistryTarget::Remote { .. });
     let configured = env_contains_non_empty(env, "RUNX_INSTALLATION_ID");
-    let severity = if remote && !configured {
-        DoctorDiagnosticSeverity::Warning
-    } else {
-        DoctorDiagnosticSeverity::Info
-    };
+    let severity = DoctorDiagnosticSeverity::Info;
     let message = if remote && configured {
         "Remote registry install identity configured.".to_owned()
     } else if remote {
-        "Remote registry install identity not configured; set RUNX_INSTALLATION_ID before remote registry install.".to_owned()
+        "Remote registry installs will use the local runx install identity; set RUNX_INSTALLATION_ID only when an explicit shared identity is needed.".to_owned()
     } else {
         "Remote registry install identity is not required for the selected local registry target."
             .to_owned()
@@ -568,16 +563,7 @@ fn registry_remote_install_diagnostic(
             json_pointer: None,
         },
         evidence: Some(evidence),
-        repairs: if remote && !configured {
-            vec![manual_env_repair(
-                "runx.registry.installation_id.configure_env",
-                &["RUNX_INSTALLATION_ID"],
-                "Set RUNX_INSTALLATION_ID before remote registry install so acquisition is bound to an installation principal.",
-                DoctorRepairRisk::Low,
-            )]
-        } else {
-            Vec::new()
-        },
+        repairs: Vec::new(),
     }
 }
 
@@ -1029,9 +1015,10 @@ mod tests {
             diagnostics: vec![DoctorDiagnostic {
                 id: "runx.registry.installation_id".to_owned(),
                 instance_id: "runx:doctor-registry:runx.registry.installation_id".to_owned(),
-                severity: DoctorDiagnosticSeverity::Warning,
+                severity: DoctorDiagnosticSeverity::Info,
                 title: "Registry install identity".to_owned(),
-                message: "Remote registry install identity not configured.".to_owned(),
+                message: "Remote registry installs use an automatic local install identity."
+                    .to_owned(),
                 target: object([
                     ("kind", string_value("registry")),
                     ("ref", string_value("runx.registry.installation_id")),
@@ -1049,7 +1036,8 @@ mod tests {
                     path: Some("environment".to_owned()),
                     json_pointer: None,
                     contents: Some(
-                        "Set RUNX_INSTALLATION_ID before remote registry install.".to_owned(),
+                        "Set RUNX_INSTALLATION_ID only when you need a shared install identity."
+                            .to_owned(),
                     ),
                     patch: None,
                     command: None,
@@ -1060,8 +1048,8 @@ mod tests {
 
         let rendered = render_doctor_report(&report);
 
-        assert!(
-            rendered.contains("next: Set RUNX_INSTALLATION_ID before remote registry install.")
-        );
+        assert!(rendered.contains(
+            "next: Set RUNX_INSTALLATION_ID only when you need a shared install identity."
+        ));
     }
 }

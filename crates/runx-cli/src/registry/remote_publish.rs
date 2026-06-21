@@ -150,8 +150,8 @@ mod tests {
                     "version": "sha-123",
                     "digest": "abc",
                     "trust_tier": "community",
-                    "install_command": "runx skill add kam/hello@sha-123",
-                    "run_command": "runx skill hello",
+                    "install_command": "runx add kam/hello@sha-123",
+                    "run_command": "runx skill kam/hello@sha-123",
                     "public_url": "https://runx.test/x/kam/hello"
                 }
             })

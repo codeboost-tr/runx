@@ -8,7 +8,6 @@ use runx_runtime::registry::{
     InstallCandidate, InstallLocalSkillOptions, materialization_cache_path,
     materialization_digest_marker, parse_registry_ref, split_skill_id,
 };
-use runx_runtime::scaffold::{InitGeneratedValues, ensure_runx_install_state};
 
 use crate::official_skills::official_skill_entry_by_name;
 use crate::registry::{self, RegistryAction, RegistryPlan};
@@ -214,7 +213,6 @@ fn materialize_trusted_registry_skill(
         version: version.map(ToOwned::to_owned),
         expected_digest: expected_digest.map(ToOwned::to_owned),
         destination: None,
-        installation_id: remote_installation_id(registry, env, cwd)?,
         owner: None,
         profile: None,
         trust_tier: None,
@@ -226,8 +224,8 @@ fn materialize_trusted_registry_skill(
     let source_description = registry::registry_source_description(&target);
     let source_fingerprint = registry_source_fingerprint(&target);
     let source_authority = target.manifest_source_authority();
-    let (mut candidate, _acquisition) =
-        registry::install_candidate(&plan, target, env).map_err(|error| error.into_message())?;
+    let (mut candidate, _acquisition) = registry::install_candidate(&plan, target, env, cwd)
+        .map_err(|error| error.into_message())?;
     if cache_root == CacheRoot::Official {
         candidate.manifest_source_authority =
             Some(runx_runtime::registry::RegistryManifestSourceAuthority::OfficialRunx);
@@ -395,41 +393,6 @@ fn registry_source_fingerprint(target: &registry::RegistryTarget) -> String {
         .chars()
         .take(16)
         .collect()
-}
-
-fn remote_installation_id(
-    registry: Option<&str>,
-    env: &BTreeMap<String, String>,
-    cwd: &Path,
-) -> Result<Option<String>, String> {
-    let plan = RegistryPlan {
-        action: RegistryAction::Install,
-        subject: "runx/install-state-probe".to_owned(),
-        registry: registry.map(ToOwned::to_owned),
-        registry_dir: None,
-        version: None,
-        expected_digest: None,
-        destination: None,
-        installation_id: None,
-        owner: None,
-        profile: None,
-        trust_tier: None,
-        limit: None,
-        upsert: false,
-        json: true,
-    };
-    let target = registry::resolve_registry_target(&plan, env, cwd);
-    if !matches!(target, registry::RegistryTarget::Remote { .. }) {
-        return Ok(None);
-    }
-    if let Some(installation_id) = env.get("RUNX_INSTALLATION_ID") {
-        return Ok(Some(installation_id.clone()));
-    }
-    let generated = InitGeneratedValues::generate();
-    let home = runx_runtime::resolve_runx_global_home_dir(env, cwd);
-    let state = ensure_runx_install_state(&home, &generated.installation_id, &generated.created_at)
-        .map_err(|error| error.to_string())?;
-    Ok(Some(state.state.installation_id))
 }
 
 fn official_registry_override(

@@ -841,7 +841,6 @@
         "--ref",
         "--digest",
         "--to",
-        "--installation-id",
         "--api-base-url",
         "--json"
       ],

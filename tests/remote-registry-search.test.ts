@@ -49,7 +49,7 @@ process.stdout.write(JSON.stringify({
         trust_tier: "community",
         trust_signals: [],
         install_command: "runx add acme/sourcey@1.0.0 --registry https://runx.example.test",
-        run_command: "runx skill sourcey"
+        run_command: "runx skill acme/sourcey@1.0.0 --registry https://runx.example.test"
       }
     ]
   }

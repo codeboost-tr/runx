@@ -7,8 +7,8 @@ use std::path::{Path, PathBuf};
 use std::process::ExitCode;
 
 use runx_cli::launcher::{
-    HarnessPlan, LauncherAction, help_text, history_help_text, publish_help_text, skill_help_text,
-    verify_help_text,
+    HarnessPlan, LauncherAction, add_help_text, help_text, history_help_text, list_help_text,
+    login_help_text, publish_help_text, registry_help_text, skill_help_text, verify_help_text,
 };
 
 const INLINE_HARNESS_SIGNING_HINT: &str = "runx: hint: inline harnesses seal signed receipts; set RUNX_RECEIPT_SIGN_KID, RUNX_RECEIPT_SIGN_ED25519_SEED_BASE64, and RUNX_RECEIPT_SIGN_ISSUER_TYPE, or run the example's run.sh when one is provided.";
@@ -26,8 +26,16 @@ fn main() -> ExitCode {
             write_json_failure(&plan.message, &plan.code, plan.exit_code)
         }
         LauncherAction::PrintHelp => write_stdout(&help_text()),
+        LauncherAction::PrintAddHelp => write_stdout(&add_help_text()),
         LauncherAction::PrintHistoryHelp => write_stdout(&history_help_text()),
+        LauncherAction::PrintListHelp => write_stdout(&list_help_text()),
+        LauncherAction::PrintLoginHelp => write_stdout(&login_help_text()),
         LauncherAction::PrintPublishHelp => write_stdout(&publish_help_text()),
+        LauncherAction::PrintRegistryHelp => write_stdout(&registry_help_text()),
+        LauncherAction::PrintRegistryUsageError => {
+            let _ignored = write_stderr_line(&registry_help_text());
+            ExitCode::from(64)
+        }
         LauncherAction::PrintSkillHelp => write_stdout(&skill_help_text()),
         LauncherAction::PrintVerifyHelp => write_stdout(&verify_help_text()),
         LauncherAction::PrintVersion => {

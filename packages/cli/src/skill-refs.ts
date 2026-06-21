@@ -6,7 +6,6 @@ import { parseDocument } from "yaml";
 
 import {
   resolvePathFromUserInput,
-  resolveRunxGlobalHomeDir,
   resolveRunxOfficialSkillsDir,
   resolveRunxProjectDir,
   resolveSkillInstallRoot,
@@ -17,7 +16,6 @@ import { asRecord, errorMessage, firstNonEmpty, hashString, parsePositiveInt, re
 
 import { searchRegistryViaRustCli } from "./native-registry.js";
 import { runNativeRunx } from "./native-runx.js";
-import { ensureRunxInstallState } from "./runx-state.js";
 
 let cachedBundledSkillsDir: string | undefined | null = null;
 let cachedOfficialSkillLock: readonly OfficialSkillLockEntry[] | undefined;
@@ -103,13 +101,10 @@ export function createOfficialSkillResolver(env: NodeJS.ProcessEnv): OfficialSki
       if (parsed.version && entry.version !== parsed.version) {
         return undefined;
       }
-      const globalHomeDir = resolveRunxGlobalHomeDir(env);
-      const install = await ensureRunxInstallState(globalHomeDir);
       const registryBaseUrl = env.RUNX_REGISTRY_URL ?? "https://runx.ai";
       const cache = await ensureOfficialSkillCached({
         cacheRoot: resolveRunxOfficialSkillsDir(env),
         registryBaseUrl,
-        installationId: install.state.installation_id,
         entry,
         env,
       });
@@ -122,7 +117,6 @@ export function createOfficialSkillResolver(env: NodeJS.ProcessEnv): OfficialSki
 async function ensureOfficialSkillCached(options: {
   readonly cacheRoot: string;
   readonly registryBaseUrl: string;
-  readonly installationId: string;
   readonly entry: OfficialSkillLockEntry;
   readonly env: NodeJS.ProcessEnv;
 }): Promise<{ readonly skillPath: string; readonly fromCache: boolean }> {
@@ -150,8 +144,6 @@ async function ensureOfficialSkillCached(options: {
     options.entry.version,
     "--digest",
     options.entry.digest,
-    "--installation-id",
-    options.installationId,
     "--to",
     options.cacheRoot,
     "--json",

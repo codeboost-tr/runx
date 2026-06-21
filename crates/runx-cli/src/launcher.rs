@@ -41,8 +41,13 @@ pub enum LauncherAction {
     RunTool(ToolPlan),
     RunUrlAdd(UrlAddPlan),
     PrintHelp,
+    PrintAddHelp,
     PrintHistoryHelp,
+    PrintListHelp,
+    PrintLoginHelp,
     PrintPublishHelp,
+    PrintRegistryHelp,
+    PrintRegistryUsageError,
     PrintSkillHelp,
     PrintVerifyHelp,
     PrintVersion,
@@ -181,6 +186,9 @@ pub fn plan_launcher(args: Vec<OsString>) -> LauncherAction {
     }
 
     if first_arg_is(&args, "login") {
+        if nested_help_requested(&args) {
+            return LauncherAction::PrintLoginHelp;
+        }
         return crate::login::parse_login_plan(&args)
             .map_or_else(LauncherAction::Error, LauncherAction::RunLogin);
     }
@@ -236,6 +244,9 @@ pub fn plan_launcher(args: Vec<OsString>) -> LauncherAction {
     }
 
     if first_arg_is(&args, "list") {
+        if nested_help_requested(&args) {
+            return LauncherAction::PrintListHelp;
+        }
         return parse_list_plan(&args).map_or_else(LauncherAction::Error, LauncherAction::RunList);
     }
 
@@ -276,6 +287,12 @@ pub fn plan_launcher(args: Vec<OsString>) -> LauncherAction {
     }
 
     if first_arg_is(&args, "registry") {
+        if nested_help_requested(&args) {
+            return LauncherAction::PrintRegistryHelp;
+        }
+        if args.len() == 1 {
+            return LauncherAction::PrintRegistryUsageError;
+        }
         return parse_registry_plan(&args).map_or_else(
             |message| json_or_human_error(&args, message),
             LauncherAction::RunRegistry,
@@ -283,6 +300,9 @@ pub fn plan_launcher(args: Vec<OsString>) -> LauncherAction {
     }
 
     if first_arg_is(&args, "add") {
+        if nested_help_requested(&args) {
+            return LauncherAction::PrintAddHelp;
+        }
         return parse_add_plan(&args).unwrap_or_else(|message| json_or_human_error(&args, message));
     }
 
@@ -337,7 +357,7 @@ Commands:
   runx export <claude|codex> [skill-ref...] [--project] [--json]
   runx mcp serve <skill-ref...> [--receipt-dir dir] [--http-listen [addr]] [--http-allow-non-loopback]
   runx skill <skill-ref|owner/name@version|skill-dir|SKILL.md> [-p profile] [-i key=value] [-j] [--runner name] [--registry url|path] [--digest sha256] [--flag value] [--credential descriptor --secret-env NAME] [-R dir] [--run-id id --answers file]
-  runx add <skill-ref|github-url> [--registry url|path] [--version version] [--ref git-ref] [--digest sha256] [--to dir] [--installation-id id] [--api-base-url url] [--json]
+  runx add <skill-ref|github-url> [--registry url|path] [--version version] [--ref git-ref] [--digest sha256] [--to dir] [--api-base-url url] [--json]
   runx harness <fixture.yaml...|skill-dir|SKILL.md> [-R dir] [-j|--json]
   runx tool build <tool-dir>|--all [--json]
   runx tool search <query> [--source source] [--json]
@@ -368,6 +388,39 @@ Options:
     .to_owned()
 }
 
+pub fn list_help_text() -> String {
+    "\
+runx list
+
+Usage:
+  runx list [tools|skills|graphs|packets|overlays] [--ok-only|--invalid-only] [-j|--json]
+
+Options:
+  --ok-only
+  --invalid-only
+  -j, --json
+"
+    .to_owned()
+}
+
+pub fn login_help_text() -> String {
+    "\
+runx login
+
+Usage:
+  runx login [--provider github|google|gitlab] [--for default|publish] [--api-url url] [--local-api] [-j|--json]
+
+Options:
+  --provider provider
+  --for purpose
+  --api-url url
+  --api-base-url url
+  --local-api
+  -j, --json
+"
+    .to_owned()
+}
+
 pub fn publish_help_text() -> String {
     "\
 runx publish
@@ -382,6 +435,52 @@ Options:
   --local-api         Allow loopback/private public API URLs for local dogfood only
   --allow-local-api   Alias for --local-api
   -j, --json          Print the raw notary response as JSON
+"
+    .to_owned()
+}
+
+pub fn add_help_text() -> String {
+    "\
+runx add
+
+Usage:
+  runx add <skill-ref|github-url> [--registry url|path] [--version version] [--ref git-ref] [--digest sha256] [--to dir] [--api-base-url url] [--json]
+
+Options:
+  --registry url|path  Registry URL or local registry path for skill refs
+  --version version    Registry version for skill refs
+  --ref git-ref        Git ref for GitHub repository URLs
+  --digest sha256      Expected package digest for skill refs
+  --to dir             Install destination for skill refs
+  --api-base-url url   Hosted index API for GitHub repository URLs
+  -j, --json
+"
+    .to_owned()
+}
+
+pub fn registry_help_text() -> String {
+    "\
+runx registry
+
+Usage:
+  runx registry search <query> [--registry url|path] [--registry-dir dir] [--limit n] [-j|--json]
+  runx registry read <ref> [--registry url|path] [--registry-dir dir] [--version version] [-j|--json]
+  runx registry resolve <ref> [--registry url|path] [--registry-dir dir] [--version version] [-j|--json]
+  runx registry install <ref> [--registry url|path] [--registry-dir dir] [--version version] [--digest sha256] [--to dir] [-j|--json]
+  runx registry publish <SKILL.md|skill-dir> [--registry url|path] [--owner owner] [--version version] [--profile X.yaml] [--trust-tier tier] [--upsert] [-j|--json]
+
+Options:
+  --registry url|path
+  --registry-dir dir
+  --version version
+  --digest sha256
+  --to dir
+  --owner owner
+  --profile X.yaml
+  --trust-tier first_party|verified|community
+  --limit n
+  --upsert
+  -j, --json
 "
     .to_owned()
 }
@@ -626,7 +725,6 @@ struct AddParseState {
     repo_ref: Option<String>,
     expected_digest: Option<String>,
     destination: Option<PathBuf>,
-    installation_id: Option<String>,
     api_base_url: Option<String>,
     json: bool,
 }
@@ -678,9 +776,6 @@ fn parse_add_flag(
             parsed.destination = Some(PathBuf::from(value));
             Ok(next_index)
         }
-        "--installation-id" | "--installationId" => {
-            set_add_string(args, index, flag, inline_value, &mut parsed.installation_id)
-        }
         "--api-base-url" | "--apiBaseUrl" => {
             set_add_string(args, index, flag, inline_value, &mut parsed.api_base_url)
         }
@@ -716,9 +811,6 @@ fn add_url_plan(parsed: AddParseState) -> Result<UrlAddPlan, String> {
                 .to_owned(),
         );
     }
-    if parsed.installation_id.is_some() {
-        return Err("runx add <github-url> does not accept --installation-id".to_owned());
-    }
     Ok(UrlAddPlan {
         repo: parsed.subject.unwrap_or_default(),
         repo_ref: parsed.repo_ref,
@@ -744,7 +836,6 @@ fn add_registry_plan(parsed: AddParseState) -> Result<RegistryPlan, String> {
         version: parsed.version,
         expected_digest: parsed.expected_digest,
         destination: parsed.destination,
-        installation_id: parsed.installation_id,
         owner: None,
         profile: None,
         trust_tier: None,
@@ -1323,7 +1414,6 @@ fn parse_registry_plan(args: &[OsString]) -> Result<RegistryPlan, String> {
         version: state.version,
         expected_digest: state.expected_digest,
         destination: state.destination,
-        installation_id: state.installation_id,
         owner: state.owner,
         profile: state.profile,
         trust_tier: state.trust_tier,
@@ -1342,7 +1432,6 @@ struct RegistryParseState {
     version: Option<String>,
     expected_digest: Option<String>,
     destination: Option<PathBuf>,
-    installation_id: Option<String>,
     owner: Option<String>,
     profile: Option<PathBuf>,
     trust_tier: Option<runx_runtime::registry::TrustTier>,
@@ -1401,9 +1490,6 @@ fn parse_registry_flag(
         }
         "--to" | "--destination" => {
             set_registry_path_flag(args, index, flag, inline_value, &mut state.destination)
-        }
-        "--installation-id" | "--installationId" => {
-            set_registry_string_flag(args, index, flag, inline_value, &mut state.installation_id)
         }
         "--owner" => set_registry_string_flag(args, index, flag, inline_value, &mut state.owner),
         "--profile" => set_registry_path_flag(args, index, flag, inline_value, &mut state.profile),

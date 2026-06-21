@@ -369,7 +369,7 @@ function runxLinkForVersion(record: RegistrySkillVersion, registryUrl?: string):
     digest: record.digest,
     registry_url: registryUrl,
     install_command: `runx add ${ref}${registryFlag}`,
-    run_command: `runx skill ${record.name}`,
+    run_command: `runx skill ${ref}${registryFlag}`,
   };
 }
 

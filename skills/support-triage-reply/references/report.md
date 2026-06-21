@@ -51,7 +51,6 @@ Clean install:
 ```sh
 runx add godfood/support-triage-reply@<version> \
   --registry https://api.runx.ai \
-  --installation-id godfood-support-triage-final \
   --json
 ```
 

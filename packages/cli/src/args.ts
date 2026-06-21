@@ -63,7 +63,6 @@ export interface ParsedArgs {
   readonly addGitRef?: string;
   readonly addApiBaseUrl?: string;
   readonly addTo?: string;
-  readonly addInstallationId?: string;
   readonly publishOwner?: string;
   readonly publishVersion?: string;
   readonly publishProfile?: string;
@@ -185,9 +184,6 @@ export function parseArgs(argv: readonly string[]): ParsedArgs {
     ? String(inputs.apiBaseUrl ?? inputs["api-base-url"])
     : undefined;
   const addTo = isTopLevelAdd && typeof inputs.to === "string" ? inputs.to : undefined;
-  const addInstallationId = isTopLevelAdd && typeof (inputs.installationId ?? inputs["installation-id"]) === "string"
-    ? String(inputs.installationId ?? inputs["installation-id"])
-    : undefined;
   const publishOwner = isSkillPublish && typeof inputs.owner === "string" ? inputs.owner : undefined;
   const publishVersion = isSkillPublish && typeof inputs.version === "string" ? inputs.version : undefined;
   const publishProfile = isSkillPublish && typeof inputs.profile === "string" ? inputs.profile : undefined;
@@ -215,7 +211,7 @@ export function parseArgs(argv: readonly string[]): ParsedArgs {
   const effectiveInputs = isSkillSearch
     ? omitInputs(inputs, ["source", "registry"])
     : isTopLevelAdd
-      ? omitInputs(inputs, ["version", "ref", "apiBaseUrl", "api-base-url", "to", "registry", "digest", "installationId", "installation-id"])
+      ? omitInputs(inputs, ["version", "ref", "apiBaseUrl", "api-base-url", "to", "registry", "digest"])
       : isReceiptPublish
         ? omitInputs(inputs, ["apiBaseUrl", "api-base-url", "token", "allowLocalApi", "allow-local-api"])
       : isRetiredSkillAdd
@@ -316,7 +312,6 @@ export function parseArgs(argv: readonly string[]): ParsedArgs {
     addGitRef,
     addApiBaseUrl,
     addTo,
-    addInstallationId,
     publishOwner,
     publishVersion,
     publishProfile,

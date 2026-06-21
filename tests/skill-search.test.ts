@@ -146,7 +146,7 @@ process.stdout.write(JSON.stringify({
       profile_mode: "portable",
       runner_names: [],
       install_command: "runx add rust/sourcey@1.0.0",
-      run_command: "runx skill sourcey",
+      run_command: "runx skill rust/sourcey@1.0.0",
       version: "1.0.0"
     }]
   }

@@ -13,8 +13,8 @@
       "required_scopes": [],
       "tags": ["utility"],
       "trust_tier": "verified",
-      "install_command": "runx add acme/echo",
-      "run_command": "runx run acme/echo"
+      "install_command": "runx add acme/echo@1.0.0",
+      "run_command": "runx skill acme/echo@1.0.0"
     }
   ]
 }

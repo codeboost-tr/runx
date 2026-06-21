@@ -4,7 +4,6 @@ import {
   resolvePathFromUserInput,
   resolveRunxGlobalHomeDir,
   resolveRunxKnowledgeDir,
-  resolveRunxRegistryTarget,
   resolveSkillInstallRoot,
 } from "./cli-config.js";
 import { createFileKnowledgeStore } from "./cli-knowledge.js";
@@ -55,7 +54,6 @@ import {
   renderToolCommandResult,
   type ToolCommandArgs,
 } from "./commands/tool.js";
-import { ensureRunxInstallState } from "./runx-state.js";
 import { resolveBundledCliToolRoots } from "./runtime-assets.js";
 import { runSkillSearch } from "./skill-refs.js";
 import { streamTrainableReceipts } from "./trainable-receipts.js";
@@ -230,6 +228,13 @@ export async function dispatchCli(
     return await streamNativeRunxToIo(io, args, env);
   }
 
+  if (parsed.command === "add") {
+    const unknownFlag = firstUnknownAddFlag(parsed.inputs);
+    if (unknownFlag) {
+      return writeAddValidationError(io, parsed, `unknown add flag --${unknownFlag}`, 64);
+    }
+  }
+
   if (parsed.command === "add" && parsed.addRef && isGithubRepoUrl(parsed.addRef)) {
     if (parsed.registryUrl) {
       return writeAddValidationError(io, parsed, "GitHub URL indexing uses --api-base-url for the hosted index API, not --registry.");
@@ -247,9 +252,6 @@ export async function dispatchCli(
         parsed,
         "GitHub URL indexing does not support --to or --digest. Index the URL, then install the emitted registry ref with `runx add <skill-ref>`.",
       );
-    }
-    if (parsed.addInstallationId) {
-      return writeAddValidationError(io, parsed, "GitHub URL indexing does not accept --installation-id.");
     }
     try {
       const result = await publishUrlSkill({
@@ -277,10 +279,6 @@ export async function dispatchCli(
     if (parsed.addGitRef) {
       return writeAddValidationError(io, parsed, "--ref is only valid for GitHub repository URLs. Use --version for registry skill refs.");
     }
-    const registryTarget = resolveRunxRegistryTarget(env, { registry: parsed.registryUrl });
-    const installState = registryTarget.mode === "remote"
-      ? await ensureRunxInstallState(resolveRunxGlobalHomeDir(env))
-      : undefined;
     const args = [
       "registry",
       "install",
@@ -292,7 +290,6 @@ export async function dispatchCli(
     pushOptionalFlag(args, "--registry", parsed.registryUrl);
     pushOptionalFlag(args, "--version", parsed.addVersion);
     pushOptionalFlag(args, "--digest", parsed.expectedDigest);
-    pushOptionalFlag(args, "--installation-id", parsed.addInstallationId ?? installState?.state.installation_id);
     return await streamNativeRunxToIo(io, args, env);
   }
 
@@ -372,6 +369,10 @@ export async function dispatchCli(
     env,
   });
   return writeLocalSkillResult(io, env, parsed, result);
+}
+
+function firstUnknownAddFlag(inputs: Readonly<Record<string, unknown>>): string | undefined {
+  return Object.keys(inputs).sort()[0];
 }
 
 export function writeCliError(io: CliIo, message: string): number {

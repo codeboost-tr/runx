@@ -45,7 +45,7 @@
     },
     "clean_install": {
       "status": "installed",
-      "command": "runx add godfood/support-triage-reply@sha-4887b7e3476f --registry https://api.runx.ai --installation-id godfood-support-triage-final3 --json"
+      "command": "runx add godfood/support-triage-reply@sha-4887b7e3476f --registry https://api.runx.ai --json"
     },
     "dogfood_run": {
       "status": "passed",
@@ -108,7 +108,7 @@
     "runx --version returned runx-cli 0.6.6, satisfying the CLI floor for this bounty.",
     "The published registry ref is godfood/support-triage-reply@sha-4887b7e3476f under the godfood authenticated namespace.",
     "runx registry read godfood/support-triage-reply@sha-4887b7e3476f --registry https://api.runx.ai --json resolves the package metadata, digests, publisher, trust tier, and triage runner.",
-    "A clean install succeeded with runx add godfood/support-triage-reply@sha-4887b7e3476f --registry https://api.runx.ai --installation-id godfood-support-triage-final3 --json.",
+    "A clean install succeeded with runx add godfood/support-triage-reply@sha-4887b7e3476f --registry https://api.runx.ai --json.",
     "The local harness passed three cases: safe-how-to-reply-draft, account-access-escalates-without-draft, and missing-request-fails.",
     "The registry publish gate ran the hosted harness successfully before accepting the package.",
     "The dogfood command ran the published registry skill on a real support-domain input and produced receipt sha256:8e87b9c4c18bf2e39c976059bb480bb6825400f15bd62886d1592a57c7357b9f.",
@@ -126,7 +126,7 @@
     "public_url": "https://runx.ai/x/godfood/support-triage-reply",
     "source_url": "https://github.com/runxhq/runx/tree/main/skills/support-triage-reply",
     "publish_method": "purpose-scoped godfood publish credential; credential revoked after publish",
-    "install_command": "runx add godfood/support-triage-reply@sha-4887b7e3476f --registry https://api.runx.ai --installation-id godfood-support-triage-final3 --json",
+    "install_command": "runx add godfood/support-triage-reply@sha-4887b7e3476f --registry https://api.runx.ai --json",
     "dogfood_command": "runx skill godfood/support-triage-reply@sha-4887b7e3476f --registry https://api.runx.ai --input support_request=<json> --input policy=<json> --receipts <dir> --json",
     "verify_command": "runx verify --receipt dogfood-receipt.json --json",
     "verify_public_key_base64": "IVL40Zt5HSRFMkLhXy6rbLfP+ntqXtMAl5YOBpiB2xI=",
@@ -149,7 +149,7 @@
     ],
     "safe_answer_case": "safe-how-to-reply-draft",
     "escalation_case": "account-access-escalates-without-draft",
-    "how_to_install": "runx add godfood/support-triage-reply@sha-4887b7e3476f --registry https://api.runx.ai --installation-id <stable-id>",
+    "how_to_install": "runx add godfood/support-triage-reply@sha-4887b7e3476f --registry https://api.runx.ai",
     "how_to_run": "runx skill godfood/support-triage-reply@sha-4887b7e3476f --registry https://api.runx.ai --input support_request=<json> --input policy=<json> --json",
     "how_to_verify": "Download dogfood-receipt.json from source, set RUNX_RECEIPT_VERIFY_KID=runx-demo-key and RUNX_RECEIPT_VERIFY_ED25519_PUBLIC_KEY_BASE64 to the public key in this evidence file, then run runx verify --receipt dogfood-receipt.json --json.",
     "dogfood_draft_subject": "Re: How do I verify my sending domain?",

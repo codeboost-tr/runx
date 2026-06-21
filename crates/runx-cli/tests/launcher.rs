@@ -3,8 +3,9 @@ use runx_cli::export::{ExportPlan, Target};
 use runx_cli::kernel::{KernelInputSource, KernelPlan};
 use runx_cli::launcher::{
     DevPlan, DoctorMode, DoctorPlan, FilterMode, HarnessPlan, HistoryPlan, InitPlan, JsonErrorPlan,
-    LauncherAction, ListKind, ListPlan, NewPlan, ToolAction, ToolPlan, UrlAddPlan, help_text,
-    history_help_text, plan_launcher, publish_help_text, skill_help_text, verify_help_text,
+    LauncherAction, ListKind, ListPlan, NewPlan, ToolAction, ToolPlan, UrlAddPlan, add_help_text,
+    help_text, history_help_text, list_help_text, login_help_text, plan_launcher,
+    publish_help_text, registry_help_text, skill_help_text, verify_help_text,
 };
 use runx_cli::login::LoginPlan;
 use runx_cli::mcp::McpPlan;
@@ -37,7 +38,7 @@ fn top_level_help_and_version_are_native() {
     );
     assert_help_line(
         &help,
-        "runx add <skill-ref|github-url> [--registry url|path] [--version version] [--ref git-ref] [--digest sha256] [--to dir] [--installation-id id] [--api-base-url url] [--json]",
+        "runx add <skill-ref|github-url> [--registry url|path] [--version version] [--ref git-ref] [--digest sha256] [--to dir] [--api-base-url url] [--json]",
     );
     assert_help_line(&help, "runx parser eval --input <file|-> --json");
     assert_help_line(
@@ -116,6 +117,38 @@ fn nested_skill_history_verify_and_publish_help_are_native() {
         &publish_help_text(),
         "runx publish <receipt.json> [--api-url url] [--token token] [--local-api] [-j|--json]",
     );
+}
+
+#[test]
+fn documented_command_help_is_native() {
+    assert_eq!(plan(&["add", "--help"]), LauncherAction::PrintAddHelp);
+    assert_eq!(plan(&["add", "-h"]), LauncherAction::PrintAddHelp);
+    assert_eq!(plan(&["list", "--help"]), LauncherAction::PrintListHelp);
+    assert_eq!(plan(&["login", "--help"]), LauncherAction::PrintLoginHelp);
+    assert_eq!(
+        plan(&["registry", "--help"]),
+        LauncherAction::PrintRegistryHelp
+    );
+    assert_eq!(plan(&["registry"]), LauncherAction::PrintRegistryUsageError);
+
+    assert_help_line(
+        &add_help_text(),
+        "runx add <skill-ref|github-url> [--registry url|path] [--version version] [--ref git-ref] [--digest sha256] [--to dir] [--api-base-url url] [--json]",
+    );
+    assert!(!add_help_text().contains("--installation-id"));
+    assert_help_line(
+        &list_help_text(),
+        "runx list [tools|skills|graphs|packets|overlays] [--ok-only|--invalid-only] [-j|--json]",
+    );
+    assert_help_line(
+        &login_help_text(),
+        "runx login [--provider github|google|gitlab] [--for default|publish] [--api-url url] [--local-api] [-j|--json]",
+    );
+    assert_help_line(
+        &registry_help_text(),
+        "runx registry search <query> [--registry url|path] [--registry-dir dir] [--limit n] [-j|--json]",
+    );
+    assert!(!registry_help_text().contains("--installation-id"));
 }
 
 #[test]
@@ -447,12 +480,12 @@ fn routes_policy_to_native_plan_and_rejects_unknown_subcommands() {
         plan(&[
             "policy",
             "inspect",
-            "fixtures/operational-policy/nitrosend-like.json",
+            "fixtures/operational-policy/provider-like.json",
             "--json",
         ]),
         LauncherAction::RunPolicy(PolicyPlan {
             action: PolicyAction::Inspect,
-            path: PathBuf::from("fixtures/operational-policy/nitrosend-like.json"),
+            path: PathBuf::from("fixtures/operational-policy/provider-like.json"),
             json: true,
         })
     );
@@ -619,7 +652,6 @@ fn routes_registry_to_native_plan() {
             version: None,
             expected_digest: None,
             destination: None,
-            installation_id: None,
             owner: None,
             profile: None,
             trust_tier: None,
@@ -642,8 +674,6 @@ fn routes_add_to_native_plan() {
             "skills",
             "--digest",
             "sha256:abc",
-            "--installation-id",
-            "inst_123",
             "--json",
         ]),
         LauncherAction::RunRegistry(RegistryPlan {
@@ -654,7 +684,6 @@ fn routes_add_to_native_plan() {
             version: None,
             expected_digest: Some("sha256:abc".to_owned()),
             destination: Some(PathBuf::from("skills")),
-            installation_id: Some("inst_123".to_owned()),
             owner: None,
             profile: None,
             trust_tier: None,
