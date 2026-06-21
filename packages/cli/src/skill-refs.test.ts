@@ -65,6 +65,7 @@ const publicOfficialCatalogSkills = [
   "sql-analyst",
   "stripe-pay",
   "structured-extraction",
+  "support-triage-reply",
   "taste-profile",
   "vault-unseal",
   "vuln-scan",

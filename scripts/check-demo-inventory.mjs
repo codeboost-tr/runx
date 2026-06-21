@@ -29,7 +29,7 @@ for (const group of validGroups) {
   }
   for (const entry of entries) {
     const itemPath = typeof entry === "string" ? entry : entry?.path;
-    if (typeof itemPath !== "string" || !itemPath.startsWith("examples/")) {
+    if (typeof itemPath !== "string" || !isValidDemoPath(itemPath)) {
       failures.push(`${group} contains invalid path ${JSON.stringify(entry)}`);
       continue;
     }
@@ -38,7 +38,7 @@ for (const group of validGroups) {
       failures.push(`${itemPath} is classified as both ${previous} and ${group}`);
     }
     classified.set(itemPath, group);
-    if (!actualExampleDirs.includes(itemPath)) {
+    if (!demoPathExists(itemPath)) {
       failures.push(`${itemPath} is classified but no directory exists`);
     }
     if (group !== "fixture_support" && typeof entry.command !== "string") {
@@ -76,3 +76,28 @@ if (failures.length > 0) {
 }
 
 console.log(`demo inventory covers ${actualExampleDirs.length} example directories`);
+
+function isValidDemoPath(itemPath) {
+  return itemPath.startsWith("examples/") || itemPath.startsWith("skills/");
+}
+
+function demoPathExists(itemPath) {
+  if (itemPath.startsWith("examples/")) {
+    return actualExampleDirs.includes(itemPath);
+  }
+  if (!itemPath.startsWith("skills/")) {
+    return false;
+  }
+  const skillDir = path.join(root, itemPath);
+  return path.basename(itemPath) === itemPath.slice("skills/".length)
+    && hasFile(path.join(skillDir, "SKILL.md"))
+    && hasFile(path.join(skillDir, "X.yaml"));
+}
+
+function hasFile(filePath) {
+  try {
+    return statSync(filePath).isFile();
+  } catch {
+    return false;
+  }
+}
