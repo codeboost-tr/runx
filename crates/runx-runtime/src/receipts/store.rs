@@ -298,9 +298,11 @@ impl LocalReceiptStore {
     fn receipt_file_count(&self) -> Result<usize, ReceiptStoreError> {
         let mut count = 0usize;
         for entry in
-            fs::read_dir(&self.root).map_err(|source| ReceiptStoreError::StoreUnreadable {
-                path: self.root.clone(),
-                source,
+            fs::read_dir(&self.root).map_err(|source| {
+                ReceiptStoreError::StoreUnreadable {
+                    path: self.root.clone(),
+                    source,
+                }
             })?
         {
             let entry = entry.map_err(|source| ReceiptStoreError::StoreUnreadable {
@@ -342,10 +344,12 @@ impl LocalReceiptStore {
                     path: self.root.clone(),
                 })
             }
-            Err(source) => Err(ReceiptStoreError::StoreUnreadable {
-                path: self.root.clone(),
-                source,
-            }),
+            Err(source) => {
+                Err(ReceiptStoreError::StoreUnreadable {
+                    path: self.root.clone(),
+                    source,
+                })
+            },
         }
     }
 
@@ -355,15 +359,20 @@ impl LocalReceiptStore {
             Ok(_) => Err(ReceiptStoreError::StoreNotDirectory {
                 path: self.root.clone(),
             }),
-            Err(source) if source.kind() == ErrorKind::NotFound => fs::create_dir_all(&self.root)
-                .map_err(|source| ReceiptStoreError::StoreUnreadable {
+            Err(source) if source.kind() == ErrorKind::NotFound => {
+                fs::create_dir_all(&self.root).map_err(|source| {
+                    ReceiptStoreError::StoreUnreadable {
+                        path: self.root.clone(),
+                        source,
+                    }
+                })
+            },
+            Err(source) => {
+                Err(ReceiptStoreError::StoreUnreadable {
                     path: self.root.clone(),
                     source,
-                }),
-            Err(source) => Err(ReceiptStoreError::StoreUnreadable {
-                path: self.root.clone(),
-                source,
-            }),
+                })
+            },
         }
     }
 }
@@ -490,7 +499,12 @@ fn receipt_file_name(receipt_id: &str) -> Result<String, ReceiptStoreError> {
             receipt_id: receipt_id.to_owned(),
         });
     }
-    Ok(format!("{receipt_id}.json"))
+    #[cfg(windows)]
+    let receipt_id_norm = receipt_id.replace(":", "-");
+    #[cfg(not(windows))]
+    let receipt_id_norm = receipt_id.to_owned();
+
+    Ok(format!("{receipt_id_norm}.json"))
 }
 
 fn is_receipt_json_path(path: &Path) -> bool {
@@ -616,7 +630,16 @@ fn parse_receipt_contents_without_proof(
             message: source.to_string(),
         }
     })?;
-    if receipt.id != expected_id {
+    
+    let mut expected_id_norm = expected_id.to_owned();
+    let mut receipt_id_norm = receipt.id.to_string();
+    #[cfg(windows)]
+    {
+        expected_id_norm = expected_id_norm.replace(":", "-");
+        receipt_id_norm = receipt_id_norm.replace(":", "-");
+    }
+
+    if receipt_id_norm != expected_id_norm {
         return Err(ReceiptStoreError::IdFilenameMismatch {
             path: path.to_path_buf(),
             receipt_id: receipt.id.into_string(),
@@ -702,7 +725,15 @@ fn write_temp_file(path: &Path, contents: &[u8], durable: bool) -> Result<(), st
 }
 
 fn sync_directory(path: &Path) -> Result<(), std::io::Error> {
-    File::open(path)?.sync_all()
+    #[cfg(windows)]
+    {
+        let _ = path;
+        Ok(())
+    }
+    #[cfg(not(windows))]
+    {
+        File::open(path)?.sync_all()
+    }
 }
 
 fn temp_file_name(file_name: &str) -> String {
