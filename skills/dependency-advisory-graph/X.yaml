@@ -1,0 +1,67 @@
+skill: dependency-advisory-graph
+version: "0.1.0"
+
+catalog:
+  kind: skill
+  audience: public
+  visibility: internal
+  role: context
+
+harness:
+  cases:
+    - name: dependency-advisory-graph-sealed-case
+      runner: graph
+      inputs:
+        manifest: package.json
+        objective: Find vulnerabilities in dependencies
+      caller:
+        answers:
+          agent_task.dependency-advisory-graph.output:
+            advisories:
+              - package: lodash
+                installed_version: 4.17.15
+                advisory_id: GHSA-p6mc-m468-83gw
+                evidence_url: https://github.com/advisories/GHSA-p6mc-m468-83gw
+                advisory_source: GitHub Advisory Database
+                retrieved_at: "2026-06-22T00:00:00Z"
+                severity: high
+                fix_version: 4.17.21
+                confidence: high
+      expect:
+        status: sealed
+        receipt:
+          schema: runx.receipt.v1
+    - name: dependency-advisory-graph-clean-case
+      runner: graph
+      inputs:
+        manifest: clean-package.json
+        objective: Find vulnerabilities
+      caller:
+        answers:
+          agent_task.dependency-advisory-graph.output:
+            advisories: []
+      expect:
+        status: sealed
+        receipt:
+          schema: runx.receipt.v1
+
+runners:
+  graph:
+    default: true
+    type: agent-task
+    agent: reviewer
+    task: dependency-advisory-graph
+    outputs:
+      advisories: array
+    artifacts:
+      wrap_as: dependency_advisory_packet
+      packet: runx.security.dependency_advisory_graph.v1
+    inputs:
+      manifest:
+        type: string
+        required: true
+        description: "The dependency manifest file (e.g. package.json, requirements.txt, Cargo.toml)"
+      objective:
+        type: string
+        required: false
+        description: "Specific focus for the advisory graph"
