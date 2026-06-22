@@ -7,6 +7,6 @@
     "Harness Result: status: passed, 0 assertion errors",
     "Generated Receipt ID: sha256:01524c6bcfc353eeda58f9c5190836351e8a2eb8abb3cd00e31fdb7aae10df20",
     "OS Environment: Windows NT, issue 87 fixed by applying a file name sanitizer",
-    "Runx CLI version: runx-cli 0.6.0"
+    "Runx CLI version: runx-cli 0.6.13"
   ]
 }
