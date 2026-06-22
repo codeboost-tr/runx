@@ -29,8 +29,8 @@
   },
   {
     "skill_id": "runx/data-store",
-    "version": "sha-1b3887a55009",
-    "digest": "05ed91ab2873f7ccf1a898166f79c1ebae2542924e5444fa8b504a9aa2f22f76",
+    "version": "sha-413e44a73be2",
+    "digest": "5af0e2dd3dd2116874e4fb886e0424f4b944c136b3430a10c31e400a0249113b",
     "catalog_visibility": "public",
     "catalog_role": "canonical"
   },
@@ -323,7 +323,7 @@
   },
   {
     "skill_id": "runx/release",
-    "version": "sha-5e832bbf4d1c",
+    "version": "sha-76b9da654f43",
     "digest": "20b8f78fee305165f010e501d5349897a384f323a1b98dbef864dbbc763c5a07",
     "catalog_visibility": "public",
     "catalog_role": "context"
