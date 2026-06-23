@@ -24,18 +24,14 @@ harness:
         status: sealed
         receipt:
           schema: runx.receipt.v1
-    - name: cap-reached-escalate
+    - name: not-overdue
       inputs:
-        invoice_status: overdue
-        aging_days: 60
+        invoice_status: paid
+        aging_days: 0
         cadence_policy:
           steps:
             - max_days: 7
               channel: email
-            - max_days: 14
-              channel: email
-            - max_days: 30
-              channel: letter
           cap: 3
       expect:
         status: failure

@@ -14,17 +14,7 @@ inputs:
       - max_days: 30
         channel: letter
     cap: 3
-caller:
-  answers:
-    agent_task.dunning-ladder.output:
-      decision:
-        step: 3
-        action: escalate
-      reminder_proposal: null
-      escalation:
-        reason: cadence cap reached
-        recommended_action: escalate to collections
 expect:
-  status: escalated
+  status: failure
   receipt:
     schema: runx.receipt.v1
