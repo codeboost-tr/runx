@@ -1382,6 +1382,60 @@ function gitHubMessageOutboxMatchScore(candidate, outboxEntry) {
   return 1;
 }
 
+// One-shot snapshot of an issue for reconcile diffing: current state, label set,
+// and the entry markers of comments already posted. Lets a reconcile driver read
+// each issue once and decide writes in memory, instead of re-fetching per comment.
+export function readGitHubThreadSnapshot({ adapterRef, env, cwd }) {
+  const issueRef = parseGitHubIssueRef(adapterRef);
+  if (canUseGitHubRest(env)) {
+    const issue = parseGitHubRestJson(runGitHubRest({
+      method: "GET",
+      path: gitHubIssueApiPath(issueRef.repo_slug, issueRef.issue_number),
+      env,
+      acceptedStatuses: [200],
+    }));
+    const comments = parseGitHubRestArray(runGitHubRest({
+      method: "GET",
+      path: `${gitHubIssueApiPath(issueRef.repo_slug, issueRef.issue_number)}/comments?per_page=100`,
+      env,
+      acceptedStatuses: [200],
+    }));
+    return buildGitHubThreadSnapshot(issue.state, issue.labels, comments.map((comment) => comment.body));
+  }
+  const issue = runGhJson([
+    "issue",
+    "view",
+    issueRef.issue_number,
+    "--repo",
+    issueRef.repo_slug,
+    "--json",
+    "labels,state,comments",
+  ], { cwd, env }, { tokenFallback: true });
+  const comments = Array.isArray(issue.comments) ? issue.comments : [];
+  return buildGitHubThreadSnapshot(issue.state, issue.labels, comments.map((comment) => comment.body));
+}
+
+function buildGitHubThreadSnapshot(state, labels, commentBodies) {
+  const commentMarkers = [];
+  for (const body of commentBodies) {
+    const entryId = parseGitHubOutboxEntryMarker(body);
+    if (entryId) commentMarkers.push(entryId);
+  }
+  return {
+    state: firstNonEmptyString(state, "OPEN"),
+    labels: normalizeLabelNames(labels) ?? [],
+    comment_markers: commentMarkers,
+  };
+}
+
+function parseGitHubRestArray(response) {
+  if (!response?.body) {
+    return [];
+  }
+  const parsed = JSON.parse(response.body);
+  return Array.isArray(parsed) ? parsed.filter(isRecord) : [];
+}
+
 function getGitHubIssueState({ repoSlug, issueNumber, cwd, env }) {
   if (canUseGitHubRest(env)) {
     const response = runGitHubRest({

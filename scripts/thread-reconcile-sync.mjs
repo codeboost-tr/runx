@@ -8,7 +8,12 @@ import {
   buildLifecycleFrame,
   buildMessageFrame,
 } from "../tools/thread/thread_desired_state.mjs";
-import { firstNonEmptyString, parseGitHubIssueRef, prune } from "../tools/thread/github_adapter.mjs";
+import {
+  firstNonEmptyString,
+  parseGitHubIssueRef,
+  prune,
+  readGitHubThreadSnapshot,
+} from "../tools/thread/github_adapter.mjs";
 
 // Generic declarative thread-mirror driver. It pulls a tenant's desired thread
 // state (provider-agnostic, no domain meaning), reconciles each thread's provider
@@ -64,12 +69,17 @@ function reconcileThread(thread, config) {
     };
   }
 
-  // 1. Locate or create. An existing locator is the source's hint; without one we
-  //    find-or-create by the identity marker, so a brand-new thread is created and
-  //    a lost link self-heals to the existing issue.
+  const desiredLabels = Array.isArray(thread.labels) ? thread.labels : [];
+  const managedLabels = Array.isArray(thread.managed_labels) ? thread.managed_labels : [];
+  const comments = Array.isArray(thread.comments) ? thread.comments : [];
+
+  // 1. Locate or create. An existing locator means the source already has a link,
+  //    so we never create (and never re-observe). A brand-new thread is created
+  //    once; its fresh issue already carries the desired title/body/labels.
   let locator = firstNonEmptyString(thread.thread_locator);
   let providerThreadId;
   let created = false;
+  let snapshot;
   if (!locator) {
     const pushed = runProvider(buildCreateFrame(thread, frameOptions(config)), config.env);
     locator = threadLocatorFrom(pushed);
@@ -78,17 +88,28 @@ function reconcileThread(thread, config) {
     if (!locator) {
       throw new Error(`provider create yielded no locator for ${thread.identity_key}`);
     }
+    snapshot = { state: "OPEN", labels: desiredLabels, comment_markers: [] };
+  } else {
+    // 2. Read the live issue ONCE. Every write decision below is computed from
+    //    this single snapshot, so a fully-current thread costs one read and zero
+    //    writes (no per-comment re-fetch).
+    snapshot = readGitHubThreadSnapshot({ adapterRef: locator, env: config.env });
   }
 
-  // 2. Reconcile labels + open/closed to the desired state (the engine's core
-  //    job; idempotent, so a no-op when already correct).
-  const lifecycle = runProvider(buildLifecycleFrame(thread, locator, frameOptions(config)), config.env);
-  locator = threadLocatorFrom(lifecycle) ?? locator;
-  providerThreadId = providerThreadId ?? providerThreadIdFrom(lifecycle);
+  // 3. Reconcile labels + open/closed only when the snapshot shows drift.
+  const present = new Set(snapshot.labels);
+  const desiredSet = new Set(desiredLabels);
+  const labelAdds = desiredLabels.filter((label) => !present.has(label));
+  const labelRemoves = managedLabels.filter((label) => !desiredSet.has(label) && present.has(label));
+  const stateDrift = (String(snapshot.state).toUpperCase() !== "CLOSED") !== (thread.state === "open");
+  if (labelAdds.length > 0 || labelRemoves.length > 0 || stateDrift) {
+    runProvider(buildLifecycleFrame(thread, locator, frameOptions(config)), config.env);
+  }
 
-  // 3. Append any comment not already on the thread (provider dedupes by marker).
-  const comments = Array.isArray(thread.comments) ? thread.comments : [];
-  for (const comment of comments) {
+  // 4. Post only comments whose marker is not already on the issue.
+  const presentComments = new Set(snapshot.comment_markers);
+  const missingComments = comments.filter((comment) => !presentComments.has(comment.entry_id));
+  for (const comment of missingComments) {
     runProvider(buildMessageFrame(thread, comment, locator, frameOptions(config)), config.env);
   }
 
@@ -98,9 +119,12 @@ function reconcileThread(thread, config) {
       locator,
       created,
       state: thread.state,
-      comments: comments.length,
+      labels_changed: labelAdds.length + labelRemoves.length + (stateDrift ? 1 : 0),
+      comments_posted: missingComments.length,
     },
-    observation: buildObservation(thread, locator, providerThreadId),
+    // Only a freshly created thread needs an observation: an existing locator is
+    // already linked on the source, so re-posting it every run is pure churn.
+    observation: created ? buildObservation(thread, locator, providerThreadId) : undefined,
   };
 }
 
