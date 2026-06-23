@@ -1,0 +1,59 @@
+skill: dunning-ladder
+version: 0.1.0
+catalog:
+  kind: skill
+  audience: public
+  visibility: public
+  role: canonical
+harness:
+  cases:
+    - name: within-cap-reminder
+      inputs:
+        invoice_status: overdue
+        aging_days: 15
+        cadence_policy:
+          steps:
+            - max_days: 7
+              channel: email
+            - max_days: 21
+              channel: email
+            - max_days: 45
+              channel: letter
+          cap: 3
+      expect:
+        status: sealed
+        receipt:
+          schema: runx.receipt.v1
+    - name: not-overdue
+      inputs:
+        invoice_status: paid
+        aging_days: 0
+        cadence_policy:
+          steps:
+            - max_days: 7
+              channel: email
+          cap: 3
+      expect:
+        status: failure
+runners:
+  dunning:
+    default: true
+    type: cli-tool
+    command: node
+    args:
+      - ./run.mjs
+    timeout_seconds: 30
+    input_mode: none
+    inputs:
+      invoice_status:
+        type: string
+        required: true
+        description: Current status of the invoice.
+      aging_days:
+        type: number
+        required: true
+        description: Number of days the invoice is overdue.
+      cadence_policy:
+        type: object
+        required: true
+        description: Cadence policy with steps array and cap.

@@ -1,0 +1,30 @@
+name: cap-reached-escalate
+kind: skill
+target: .
+runner: dunning
+inputs:
+  invoice_status: overdue
+  aging_days: 60
+  cadence_policy:
+    steps:
+      - max_days: 7
+        channel: email
+      - max_days: 14
+        channel: email
+      - max_days: 30
+        channel: letter
+    cap: 3
+caller:
+  answers:
+    agent_task.dunning-ladder.output:
+      decision:
+        step: 3
+        action: escalate
+      reminder_proposal: null
+      escalation:
+        reason: cadence cap reached
+        recommended_action: escalate to collections
+expect:
+  status: escalated
+  receipt:
+    schema: runx.receipt.v1

@@ -1,0 +1,30 @@
+name: within-cap-reminder
+kind: skill
+target: .
+runner: dunning
+inputs:
+  invoice_status: overdue
+  aging_days: 15
+  cadence_policy:
+    steps:
+      - max_days: 7
+        channel: email
+      - max_days: 21
+        channel: email
+      - max_days: 45
+        channel: letter
+    cap: 3
+caller:
+  answers:
+    agent_task.dunning-ladder.output:
+      decision:
+        step: 1
+        action: remind
+      reminder_proposal:
+        channel: email
+        content_digest: sha256:aabbccddeeff00112233445566778899aabbccddeeff00112233445566778899
+      escalation: null
+expect:
+  status: sealed
+  receipt:
+    schema: runx.receipt.v1
