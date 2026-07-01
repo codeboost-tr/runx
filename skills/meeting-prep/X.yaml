@@ -24,6 +24,16 @@ harness:
           schema: runx.receipt.v1
           state: sealed
           disposition: closed
+    - name: missing-inputs-brief
+      runner: default
+      inputs:
+        event_context: '{}'
+      expect:
+        status: sealed
+        receipt:
+          schema: runx.receipt.v1
+          state: sealed
+          disposition: closed
 
 runners:
   default:

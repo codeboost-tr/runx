@@ -5,8 +5,18 @@ const public_link_notes = process.env.RUNX_INPUT_PUBLIC_LINK_NOTES || "";
 
 let event_context = {};
 try {
-  event_context = JSON.parse(event_context_raw);
-} catch(e) {}
+  const parsed = JSON.parse(event_context_raw);
+  if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) {
+    event_context = parsed;
+  } else if (event_context_raw.trim() !== "" && event_context_raw.trim() !== "{}") {
+    throw new Error("Invalid format");
+  }
+} catch(e) {
+  process.stdout.write(JSON.stringify({
+    needs_input: "Invalid JSON format for event_context."
+  }) + "\n");
+  process.exit(0);
+}
 
 if (!event_context.title && !provided_notes && !thread_snippets) {
   process.stdout.write(JSON.stringify({
