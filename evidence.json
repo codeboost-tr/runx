@@ -1,13 +1,13 @@
 {
-  "summary": "Evidence packet for gated-shell. This introduces true governance (Consumed Attenuation) over arbitrary shell execution, answering the #101 review requirement. A caller provides allowed_prefixes, and the wrapper enforces this boundary before executing the command. It provides operational value, not just supply-chain hygiene.",
+  "summary": "Evidence packet for overlay-open-skill-2. This introduces true governance (Consumed Attenuation) over arbitrary shell execution, answering the #101 review requirement. A caller provides allowed_prefixes, and the wrapper enforces this boundary before executing the command. It provides operational value, not just supply-chain hygiene.",
   "dogfood": {
-    "package": "codeboost-tr/gated-shell@1.0.0",
+    "package": "codeboost-tr/overlay-open-skill-2@1.0.0",
     "input": {
       "command": "echo Hello World",
       "allowed_prefixes": "[\"echo\", \"ls\"]"
     },
-    "command": "runx skill ./skills/gated-shell --json -i command='echo Hello World' -i allowed_prefixes='[\"echo\", \"ls\"]' -R ./receipts",
-    "receipt_ref": "runx:receipt:sha256:dde30a3bcd79d135927910176f8e30b570507aa3233ac37068385b1eb083428b",
+    "command": "runx skill ./skills/overlay-open-skill-2 --json -i command='echo Hello World' -i allowed_prefixes='[\"echo\", \"ls\"]' -R ./receipts",
+    "receipt_ref": "runx:receipt:sha256:3f6fc3ba318183cf9a3a88abf454131676563fdb05a55c1934a16345326bc69e",
     "verify_verdict": "valid",
     "output": {
       "executed": true,
@@ -37,7 +37,7 @@
     },
     {
       "type": "package_name",
-      "value": "gated-shell",
+      "value": "overlay-open-skill-2",
       "detail": "Name of the skill."
     },
     {
@@ -47,7 +47,7 @@
     },
     {
       "type": "source_url",
-      "value": "https://github.com/codeboost-tr/runx/tree/76f440826b772c3510341387531c7cccba5284f0",
+      "value": "https://github.com/codeboost-tr/runx/tree/ae081fb2767e0d786c64bc051ed0330ec01cdf68",
       "detail": "Public source revision."
     },
     {
