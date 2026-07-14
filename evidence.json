@@ -31,6 +31,11 @@
   },
   "observations": [
     {
+      "type": "governance_policy",
+      "value": "Consumed Attenuation",
+      "detail": "Implemented via allowed_prefixes list"
+    },
+    {
       "type": "runx_version",
       "value": "runx-cli 0.6.14",
       "detail": "Used for harness and dogfood."
@@ -47,7 +52,7 @@
     },
     {
       "type": "source_url",
-      "value": "https://github.com/codeboost-tr/runx/tree/ae081fb2767e0d786c64bc051ed0330ec01cdf68",
+      "value": "https://github.com/codeboost-tr/runx/tree/a1cef73e0a9c0a084c77a261903e9f3ee631739a",
       "detail": "Public source revision."
     },
     {
