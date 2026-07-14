@@ -1,0 +1,63 @@
+skill: gated-shell
+version: "1.0.0"
+
+catalog:
+  kind: skill
+  audience: public
+  visibility: public
+  role: canonical
+
+harness:
+  cases:
+    - name: allowed
+      runner: default
+      inputs:
+        command: "echo hello world"
+        allowed_prefixes: "[\"echo\", \"ls\"]"
+      expect:
+        status: sealed
+        receipt:
+          schema: runx.receipt.v1
+          state: sealed
+          disposition: closed
+    - name: blocked
+      runner: default
+      inputs:
+        command: "rm -rf /"
+        allowed_prefixes: "[\"echo\", \"ls\"]"
+      expect:
+        status: failure
+        receipt:
+          schema: runx.receipt.v1
+          state: sealed
+          disposition: failed
+    - name: invalid_schema
+      runner: default
+      inputs:
+        command: ""
+        allowed_prefixes: "invalid"
+      expect:
+        status: failure
+        receipt:
+          schema: runx.receipt.v1
+          state: sealed
+          disposition: failed
+
+runners:
+  default:
+    default: true
+    type: cli-tool
+    command: node
+    args:
+      - run.mjs
+    inputs:
+      command:
+        type: string
+        required: true
+      allowed_prefixes:
+        type: string
+        required: true
+    outputs:
+      governance_decision: string
+      executed: boolean
+      upstream_output: string
