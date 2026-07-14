@@ -1,0 +1,100 @@
+{
+    "summary":  "Evidence packet for overlay-open-skill-2 (bounty #101). Wraps anthropics/skills/skill-creator (DISTINCT from #100\u0027s brand-guidelines) under a runx overlay with three governance additions: (1) caller-supplied allowed_output_prefix attenuation, (2) caller-supplied max_skills budget, (3) receipt-emitting governance decision. Non-empty scope bounds [fs.read, fs.write] and explicit allowed_tools [fs.read, fs.write] declared. Upstream pinned by sha256. Harness: pinned-digest-seals (sealed), digest-stale-refuses (failed). PR: https://github.com/runxhq/runx/pull/318",
+    "dogfood":  {
+                    "output":  {
+                                   "governance":  {
+                                                      "allowed_output_prefix":  "/home/user/projects/skills",
+                                                      "max_skills":  5
+                                                  },
+                                   "wraps":  {
+                                                 "digest":  "sha256:dcd4803e61e913e6fc27294184cd3a71f09f5e924ff20c8a9a20173e7b3c2bcf",
+                                                 "path":  "https://raw.githubusercontent.com/anthropics/skills/9d2f1ae187231d8199c64b5b762e1bdf2244733d/skills/skill-creator/SKILL.md"
+                                             },
+                                   "decision":  "ready"
+                               },
+                    "harness_cases":  [
+                                          {
+                                              "status":  "sealed",
+                                              "name":  "pinned-digest-seals",
+                                              "disposition":  "closed"
+                                          },
+                                          {
+                                              "status":  "failure",
+                                              "name":  "digest-stale-refuses",
+                                              "disposition":  "failed"
+                                          }
+                                      ],
+                    "input":  {
+                                  "objective":  "Create a Python docstring skill under governance",
+                                  "allowed_output_prefix":  "/home/user/projects/skills",
+                                  "max_skills":  "5",
+                                  "resolved_digest":  "sha256:dcd4803e61e913e6fc27294184cd3a71f09f5e924ff20c8a9a20173e7b3c2bcf"
+                              },
+                    "command":  "runx skill codeboost-tr/overlay-open-skill-2@1.0.0 default -i objective=\u0027...\u0027 -i resolved_digest=\u0027sha256:...\u0027 -i allowed_output_prefix=\u0027...\u0027 -i max_skills=\u00275\u0027 --json",
+                    "receipt_ref":  "runx:receipt:sha256:fb1bcb6dd18892b433bf8a047bc90d4c51133fe8919ec4e9d6db5d67711f7d03",
+                    "package":  "codeboost-tr/overlay-open-skill-2@1.0.0",
+                    "verify_verdict":  "valid"
+                },
+    "observations":  [
+                         {
+                             "detail":  "Widely used, permissively licensed, actively maintained. Distinct from brand-guidelines used in #100.",
+                             "value":  "anthropics/skills/skill-creator",
+                             "type":  "upstream_skill"
+                         },
+                         {
+                             "detail":  "sha256 of skill-creator SKILL.md at anthropics/skills commit 9d2f1ae18723.",
+                             "value":  "sha256:dcd4803e61e913e6fc27294184cd3a71f09f5e924ff20c8a9a20173e7b3c2bcf",
+                             "type":  "upstream_digest"
+                         },
+                         {
+                             "detail":  "allowed_output_prefix and max_skills are supplied by caller and consumed by overlay. Bare skill-creator has no such bounds.",
+                             "value":  "caller-supplied attenuation",
+                             "type":  "governance_mechanism"
+                         },
+                         {
+                             "detail":  "run.mjs evaluates governance params and emits receipt recording decision with governance envelope.",
+                             "value":  "receipt-emitting act",
+                             "type":  "governance_mechanism"
+                         },
+                         {
+                             "detail":  "Upstream pinned by sha256. Mismatch raises runx.overlay.digest.stale and refuses admission.",
+                             "value":  "digest pinning",
+                             "type":  "governance_mechanism"
+                         },
+                         {
+                             "detail":  "scopes: [fs.read, fs.write]; allowed_tools: [fs.read, fs.write]; denied: shell.exec, network.access, task.spawn.",
+                             "value":  "non-empty scope bounds + explicit allowed_tools",
+                             "type":  "governance_mechanism"
+                         },
+                         {
+                             "detail":  "Previous rejection: \u0027bare digest-pinned wrapper, no operational value\u0027. Now wraps different upstream with real governance.",
+                             "value":  "not a bare digest-pinned wrapper",
+                             "type":  "rejection_addressed"
+                         },
+                         {
+                             "detail":  "Previous second delivery was standalone gated-shell. This revision is proper runx overlay with wraps declaration.",
+                             "value":  "not a standalone shell",
+                             "type":  "rejection_addressed"
+                         },
+                         {
+                             "detail":  "Published package version.",
+                             "value":  "1.0.0",
+                             "type":  "version"
+                         },
+                         {
+                             "detail":  "Public source revision (PR head commit).",
+                             "value":  "https://github.com/codeboost-tr/runx/tree/d303923800938cb0d59abfb91b076dd05499e0ef",
+                             "type":  "source_url"
+                         },
+                         {
+                             "detail":  "Used for harness, dogfood, and receipt signing.",
+                             "value":  "runx-cli 0.6.16",
+                             "type":  "runx_version"
+                         },
+                         {
+                             "detail":  "Dogfood receipt verified (runx verify returns valid: true).",
+                             "value":  "valid",
+                             "type":  "verification"
+                         }
+                     ]
+}

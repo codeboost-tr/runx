@@ -1,0 +1,9 @@
+public_url=https://runx.ai/x/codeboost-tr/overlay-open-skill-2
+source_url=https://github.com/codeboost-tr/runx/tree/93a0ca6e0c17073b115a8b702b9b3bfe6380006e
+x_yaml=https://raw.githubusercontent.com/codeboost-tr/runx/93a0ca6e0c17073b115a8b702b9b3bfe6380006e/skills/overlay-open-skill-2/X.yaml
+skill_md=https://raw.githubusercontent.com/codeboost-tr/runx/93a0ca6e0c17073b115a8b702b9b3bfe6380006e/skills/overlay-open-skill-2/SKILL.md
+evidence_json=https://raw.githubusercontent.com/codeboost-tr/runx/957371a097b1b91b4906ee782fcfae491bdb2079/evidence.json
+verification_json=https://raw.githubusercontent.com/codeboost-tr/runx/93a0ca6e0c17073b115a8b702b9b3bfe6380006e/verification.json
+dogfood_receipt=https://raw.githubusercontent.com/codeboost-tr/runx/93a0ca6e0c17073b115a8b702b9b3bfe6380006e/dogfood_receipt.json
+report=https://raw.githubusercontent.com/codeboost-tr/runx/957371a097b1b91b4906ee782fcfae491bdb2079/report.md
+receipt_ref=runx:receipt:sha256:1e8f72fd7ccb326348f0910b77e42392a92948ade155e01234649643ec629f3f
