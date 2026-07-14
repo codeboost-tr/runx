@@ -1,0 +1,27 @@
+{
+  "cli_version": "runx-cli 0.6.16",
+  "harness": {
+    "passed": 2,
+    "total": 2,
+    "cases": [
+      {"name": "pinned-digest-seals", "status": "sealed", "disposition": "closed"},
+      {"name": "digest-stale-refuses", "status": "failure", "disposition": "failed"}
+    ]
+  },
+  "dogfood": {
+    "command": "runx skill codeboost-tr/overlay-open-skill-2@1.0.0 default -i objective='Create a Python docstring skill under governance' -i resolved_digest='sha256:dcd4803e61e913e6fc27294184cd3a71f09f5e924ff20c8a9a20173e7b3c2bcf' -i allowed_output_prefix='/home/user/projects/skills' -i max_skills='5' --json",
+    "decision": "ready",
+    "receipt_ref": "runx:receipt:sha256:fb1bcb6dd18892b433bf8a047bc90d4c51133fe8919ec4e9d6db5d67711f7d03",
+    "verify_valid": true
+  },
+  "url_verification": {
+    "source_url": "200",
+    "pr_url": "200",
+    "public_url": "200",
+    "x_yaml": "200",
+    "skill_md": "200",
+    "evidence_json": "200",
+    "report": "200"
+  },
+  "verification_timestamp": "2026-07-14T12:00:00Z"
+}
