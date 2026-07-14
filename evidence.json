@@ -1,0 +1,59 @@
+{
+  "summary": "Evidence packet for gated-shell. This introduces true governance (Consumed Attenuation) over arbitrary shell execution, answering the #101 review requirement. A caller provides allowed_prefixes, and the wrapper enforces this boundary before executing the command. It provides operational value, not just supply-chain hygiene.",
+  "dogfood": {
+    "package": "codeboost-tr/gated-shell@1.0.0",
+    "input": {
+      "command": "echo Hello World",
+      "allowed_prefixes": "[\"echo\", \"ls\"]"
+    },
+    "command": "runx skill ./skills/gated-shell --json -i command='echo Hello World' -i allowed_prefixes='[\"echo\", \"ls\"]' -R ./receipts",
+    "receipt_ref": "runx:receipt:sha256:dde30a3bcd79d135927910176f8e30b570507aa3233ac37068385b1eb083428b",
+    "verify_verdict": "valid",
+    "output": {
+      "executed": true,
+      "governance_decision": "ALLOWED",
+      "upstream_output": "Hello World"
+    },
+    "harness_cases": [
+      {
+        "name": "allowed",
+        "status": "sealed"
+      },
+      {
+        "name": "blocked",
+        "status": "failed"
+      },
+      {
+        "name": "invalid_schema",
+        "status": "failed"
+      }
+    ]
+  },
+  "observations": [
+    {
+      "type": "runx_version",
+      "value": "runx-cli 0.6.14",
+      "detail": "Used for harness and dogfood."
+    },
+    {
+      "type": "package_name",
+      "value": "gated-shell",
+      "detail": "Name of the skill."
+    },
+    {
+      "type": "version",
+      "value": "1.0.0",
+      "detail": "Published package version."
+    },
+    {
+      "type": "source_url",
+      "value": "https://github.com/codeboost-tr/runx/tree/76f440826b772c3510341387531c7cccba5284f0",
+      "detail": "Public source revision."
+    },
+    {
+      "type": "governance_added",
+      "value": "Consumed Attenuation",
+      "detail": "Blocks shell commands not matching allowed prefixes, emitting a governance decision receipt."
+    }
+  ]
+}
