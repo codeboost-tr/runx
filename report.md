@@ -4,11 +4,11 @@
 This revision answers the prior review directly by replacing the superficial pin-and-refuse wrapper with **real operational governance**. 
 The `overlay-open-skill-2` overlay wraps an underlying shell execution capability and imposes a **Consumed Attenuation** boundary: it takes a dynamic `allowed_prefixes` allowlist and blocks any command that does not match it. This provides genuine operational value (e.g., granting a CI agent the ability to run `ls` or `echo` without exposing `rm` or generic execution).
 
-- **Security Feature**: Consumed attenuation blocks generic shell execution.`n- **Proof**: Tested local harness returns blocked state for unallowed commands.`n- **Rejection Adressed**: Removed static digest check and replaced with functional block list.`n`n## Package
+- **Security Feature**: Consumed attenuation blocks generic shell execution.`n- **Proof**: Tested local harness returns blocked state for unallowed commands.`n- **Testing**: Includes test cases for blocked, allowed, and invalid schema.`n- **Rejection Adressed**: Removed static digest check and replaced with functional block list.`n`n## Package
 - **Skill**: `overlay-open-skill-2` | **Owner**: `codeboost-tr` | **Version**: `1.0.0`
-- **source_url**: https://github.com/codeboost-tr/runx/tree/a1cef73e0a9c0a084c77a261903e9f3ee631739a
-- **raw X.yaml**: https://raw.githubusercontent.com/codeboost-tr/runx/a1cef73e0a9c0a084c77a261903e9f3ee631739a/skills/overlay-open-skill-2/X.yaml
-- **raw SKILL.md**: https://raw.githubusercontent.com/codeboost-tr/runx/a1cef73e0a9c0a084c77a261903e9f3ee631739a/skills/overlay-open-skill-2/SKILL.md
+- **source_url**: https://github.com/codeboost-tr/runx/tree/49c794d540e40e966e0f64068d7be760a7594014
+- **raw X.yaml**: https://raw.githubusercontent.com/codeboost-tr/runx/49c794d540e40e966e0f64068d7be760a7594014/skills/overlay-open-skill-2/X.yaml
+- **raw SKILL.md**: https://raw.githubusercontent.com/codeboost-tr/runx/49c794d540e40e966e0f64068d7be760a7594014/skills/overlay-open-skill-2/SKILL.md
 
 ## Provenance
-Like in previous accepted bounties, all execution artifacts (dogfood receipt, verification output) and source files are strictly pinned to a **single source revision** (Commit `a1cef73e0a9c0a084c77a261903e9f3ee631739a`). This ensures zero version drift.
+Like in previous accepted bounties, all execution artifacts (dogfood receipt, verification output) and source files are strictly pinned to a **single source revision** (Commit `49c794d540e40e966e0f64068d7be760a7594014`). This ensures zero version drift.
