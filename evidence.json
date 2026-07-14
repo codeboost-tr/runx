@@ -1,4 +1,5 @@
 {
+    "source_url": "https://github.com/codeboost-tr/runx/tree/d303923800938cb0d59abfb91b076dd05499e0ef",
     "summary":  "Evidence packet for overlay-open-skill-2 (bounty #101). Wraps anthropics/skills/skill-creator (DISTINCT from #100\u0027s brand-guidelines) under a runx overlay with three governance additions: (1) caller-supplied allowed_output_prefix attenuation, (2) caller-supplied max_skills budget, (3) receipt-emitting governance decision. Non-empty scope bounds [fs.read, fs.write] and explicit allowed_tools [fs.read, fs.write] declared. Upstream pinned by sha256. Harness: pinned-digest-seals (sealed), digest-stale-refuses (failed). PR: https://github.com/runxhq/runx/pull/318",
     "dogfood":  {
                     "output":  {
